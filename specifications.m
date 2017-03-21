@@ -12,10 +12,11 @@
 %
 % *Input arguments*
 %%
-% # Full path to the video *or* video as a 3D (or 4D array depending on the
-% existence of color channels).
+% # Full path to the video *or* video as a 3D. (Note that if there are
+% color channels, the program should convert it to grayscale before further 
+% processing).
 % # Full path to the reference frame image *or* the reference frame itself
-% as a 2D (3D array, if there are color channels).
+% as a 2D.
 % # A parameters structure specifying all necessary parameters for strip
 % analysis. Must-have fields: *strip height* and *strip width* in units of
 % pixels, output *sampling rate* (which will be used to compute number of
@@ -89,7 +90,44 @@
 % structure caught by |try|/ |catch|. If there no error has occured, this
 % argument will simply be an empty array. As the interpolation method, use
 % |spline| option in |interp2|.
-
-
-
-
+%
+%
+%
+%
+%% Frame Analysis Module
+% 
+% *Purpose* 
+% Extract eye movements in units of pixels at the frame rate of the video.
+%
+% *Method* 
+% Cross-correlation of whole frames with a pre-defined
+% reference frame.
+%
+% Functionally similar to the Strip analysis module but the only difference
+% is that this module will use whole frames rather than horizontal strips.
+%
+% 
+%
+%
+%% Make Coarse Montage Module
+% 
+% *Purpose* 
+% Create a retinal montage by using whole frames.
+%
+% *Method* 
+% Tiling a retinal montage by using the output of the Frame Analysis Module.
+%
+%
+%
+%
+%% Make Fine Montage Module
+% 
+% *Purpose* 
+% Create a retinal montage by using horizontal strips.
+%
+% *Method* 
+% Tiling a retinal montage by using the output of the Strip Analysis Module.
+%
+%
+%
+%
