@@ -3,9 +3,6 @@ function [interpolatedPixelCoordinates, errorStructure]...
 %2D INTERPOLATION Completes 2D Interpolation on a correlation map.
 %   Completes 2D Interpolation on a correlation map and returns the new
 %   interpolated peak coordinates. Uses the |spline| option in |interp2|.
-%   Optional parameters:
-%       - enableVerbosity: display surface plots in realtime if true. if
-%       not specified, assume false and will not display surface plots.
 
 %% Input Validation
 
@@ -43,20 +40,6 @@ correlationMap2D = correlationMap2D(...
 
 finerCorrelationMap2D = interp2(meshgridX, meshgridY, correlationMap2D,...
     finerMeshgridX, finerMeshgridY, 'spline');
-
-% Plot surface plots if verbosity is enabled
-if isfield(parametersStructure, 'enableVerbosity') ...
-        && parametersStructure.enableVerbosity
-    figure(2);
-    surf(meshgridX, meshgridY, correlationMap2D, 'linestyle','none');
-    title('Spline Interpolation Using Original Grid');
-    drawnow;
-    
-    figure(3);
-    surf(finerMeshgridX, finerMeshgridY, finerCorrelationMap2D, 'linestyle','none');
-    title('Spline Interpolation Using Finer Grid');
-    drawnow;
-end
 
 %% Find new peak of new
 % correlation map and calculate pixel coordinate.

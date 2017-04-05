@@ -1,6 +1,6 @@
-function [] = testerStripAnalysis()
-%TESTER FILE FOR STRIP ANALYSIS Run me to test stripAnalysis().
-%   Run me to test stripAnalysis().
+function [] = TesterStripAnalysis()
+%TESTER FILE FOR STRIP ANALYSIS Run me to test StripAnalysis().
+%   Run me to test StripAnalysis().
 
 %% Basic Functionality Test
 
@@ -12,12 +12,13 @@ function [] = testerStripAnalysis()
 clc;
 clear;
 close all;
+addpath(genpath('..'));
 
 tic;
 
 % videoPath = 'mna_os_10_12_1_45_0_stabfix_17_36_21_409.avi';
 videoPath = 'mna_dwt_nostim_nostim_gamscaled_bandfilt_meanrem.avi';
-videoFrames = videoPathToArray(videoPath);
+videoFrames = VideoPathToArray(videoPath);
 refererenceFrame = importdata('ref.mat');
 [~, videoWidth, ~] = size(videoFrames);
 
@@ -35,7 +36,7 @@ parametersStructure.axesHandles = [];
 
 [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
     statisticsStructure] ...
-    = stripAnalysis(videoPath, refererenceFrame, parametersStructure);
+    = StripAnalysis(videoPath, refererenceFrame, parametersStructure);
 
 figure(4);
 plot(timeArray, usefulEyePositionTraces);

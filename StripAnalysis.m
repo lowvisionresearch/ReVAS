@@ -1,6 +1,6 @@
 function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
     statisticsStructure]...
-    = stripAnalysis(videoInput, referenceFrame, parametersStructure)
+    = StripAnalysis(videoInput, referenceFrame, parametersStructure)
 %STRIP ANALYSIS Extract eye movements in units of pixels.
 %   Cross-correlation of horizontal strips with a pre-defined
 %   reference frame. 
@@ -11,7 +11,7 @@ function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
 % Attempt to convert it to a 3D or 4D array, depending on number of
 % color channels.
 if ischar(videoInput)
-    [videoInput, videoFrameRate] = videoPathToArray(videoInput);
+    [videoInput, videoFrameRate] = VideoPathToArray(videoInput);
 else
     % ASSUMPTION
     % If only a raw matrix is provided, then we will take the frame rate to
@@ -21,9 +21,9 @@ else
     videoFrameRate = 30;
 end
 
-validateVideoInput(videoInput);
-validateReferenceFrame(referenceFrame);
-validateParametersStructure(parametersStructure);
+ValidateVideoInput(videoInput);
+ValidateReferenceFrame(referenceFrame);
+ValidateParametersStructure(parametersStructure);
 
 % UNTESTED, needs testing on color video
 % Change 4D arrays to 3D by making video grayscale
@@ -39,7 +39,7 @@ end
 
 %% normxcorr2() on each strip
 
-stripIndices = divideIntoStrips(videoInput, videoFrameRate, parametersStructure);
+stripIndices = DivideIntoStrips(videoInput, videoFrameRate, parametersStructure);
 
 % Preallocate output and helper matrices
 numberOfStrips = size(stripIndices, 1);
@@ -110,11 +110,9 @@ parfor (stripNumber = (1:numberOfStrips), numberOfWorkers)
     
     % 2D Interpolation if enabled
     if localParametersStructure.enableSubpixelInterpolation
-        localParametersStructure.subpixelInterpolationParameters.enableVerbosity = ...
-            localParametersStructure.enableVerbosity;
         
         [interpolatedPeakCoordinates, errorStructure] = ...
-            interpolation2D(correlation, [xpeak, ypeak], ...
+            Interpolation2D(correlation, [xpeak, ypeak], ...
             localParametersStructure.subpixelInterpolationParameters);
         
         xpeak = interpolatedPeakCoordinates(1);
