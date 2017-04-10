@@ -3,7 +3,7 @@ function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
     = StripAnalysis(videoInput, referenceFrame, parametersStructure)
 %STRIP ANALYSIS Extract eye movements in units of pixels.
 %   Cross-correlation of horizontal strips with a pre-defined
-%   reference frame. 
+%   reference frame.
 
 %% Input Validation
 
@@ -25,8 +25,9 @@ ValidateVideoInput(videoInput);
 ValidateReferenceFrame(referenceFrame);
 ValidateParametersStructure(parametersStructure);
 
-% UNTESTED, needs testing on color video
-% Change 4D arrays to 3D by making video grayscale
+% *** TODO: needs testing on color video ***
+% Change 4D arrays to 3D by making video grayscale. Assumes 4D arrays are
+% in format (x, y, time, color).
 if ndims(videoInput) == 4
     numberOfFrames = size(videoInput, 3);
     newVideoInput = squeeze(videoInput(:,:,:,1));
@@ -48,8 +49,18 @@ rawEyePositionTraces = zeros(numberOfStrips, 2);
 % only one column for timeArray
 timeArray = zeros(numberOfStrips, 1);
 % arrays for peak and second highest peak values
-peakValues = zeros(numberOfStrips, 1);
-secondHighestPeakValues = zeros(numberOfStrips, 1);
+peakValueArray = zeros(numberOfStrips, 1);
+secondPeakValueArray = zeros(numberOfStrips, 1);
+% array for search windows
+searchWindowsArray = zeros(numberOfStrips, 4);
+
+% *** TODO: need GPU device to confirm ***
+% Check if a GPU device is connected. If so, run calculations on the GPU
+% (if enabled by the user).
+useGPU = (gpuDeviceCount > 0) & parametersStructure.enableGPU;
+if useGPU
+    referenceFrame = gpuArray(referenceFrame);
+end
 
 % We set the number of workers for the parfor loop below here.
 % If the verbosity flag in the parameters is disabled, then we use a normal
@@ -68,8 +79,15 @@ numberOfWorkers = numlabs * double(~parametersStructure.enableVerbosity);
 % parfor version for optimal execution.
 parfor (stripNumber = (1:numberOfStrips), numberOfWorkers)
 %for stripNumber = (1:numberOfStrips)
-    localParametersStructure = parametersStructure;
-    stripData = stripIndices(stripNumber,:);
+    task = getCurrentTask;
+    if useGPU
+        localParametersStructure = gpuArray(parametersStructure);
+        stripData = gpuArray(stripIndices(stripNumber,:));
+    else
+        localParametersStructure = parametersStructure;
+        stripData = stripIndices(stripNumber,:);
+    end
+
     rowStart = stripData(1,1);
     columnStart = stripData(1,2);
     frame = stripData(1,3);
@@ -80,33 +98,41 @@ parfor (stripNumber = (1:numberOfStrips), numberOfWorkers)
     columnEnd = columnStart + localParametersStructure.stripWidth - 1;
     
     strip = videoInput(rowStart:rowEnd, columnStart:columnEnd, frame);
-    
-    % correlation = normxcorr2(videoInput(...
-    %     rowStart:rowEnd, columnStart:columnEnd, frame),referenceFrame);
     correlation = normxcorr2(strip, referenceFrame);
     
-    % Show surface plot for this correlation if verbosity enabled
-    if localParametersStructure.enableVerbosity
-        figure(1);
-        [surfX,surfY] = meshgrid(1:size(correlation,2), 1:size(correlation,1));
-        surf(surfX, surfY, correlation,'linestyle','none');
-        title([num2str(stripNumber) ' out of ' num2str(numberOfStrips)]);
-        xlim([1 size(correlation,2)]);
-        ylim([1 size(correlation,1)]);
-        zlim([-1 1]);
-        drawnow;
-    end
+    % Make copy of correlation map to find peaks, using search windows.
+    % Assumes that search window size is between 0 and 1.
+    heightBoundary = floor(size(correlation, 1) * localParametersStructure.searchWindowSize);
+    widthBoundary = floor(localParametersStructure.stripWidth * ...
+        (1 - localParametersStructure.searchWindowSize));
     
-    % Make copy of correlation map to find peaks
-    correlationCopy = correlation;
+    searchWindowHeightMin = max(1, rowStart - heightBoundary);
+    searchWindowHeightMax = min(size(correlation, 1), rowEnd + heightBoundary);
+    searchWindowWidthMin = max(1, widthBoundary);
+    searchWindowWidthMax = min(size(correlation, 2), size(correlation, 2) + 1 - widthBoundary);
+
+    correlationCopy = correlation(searchWindowHeightMin:searchWindowHeightMax, ...
+        searchWindowWidthMin:searchWindowWidthMax);
     
     % Find peak of correlation map
     [ypeak, xpeak] = find(correlationCopy==max(correlationCopy(:)));
-    peakValues(stripNumber) = max(correlationCopy(:));
+    peakValue = max(correlationCopy(:));
     
     % Find second highest point of correlation map
-    correlationCopy(ypeak, xpeak) = -inf;
-    secondHighestPeakValues(stripNumber) = max(correlationCopy(:));
+    peakWindowMinX = max(1, xpeak - localParametersStructure.stripHeight);
+    peakWindowMaxX = min(size(correlationCopy, 2), xpeak + localParametersStructure.stripHeight);
+    peakWindowMinY = max(1, ypeak - localParametersStructure.stripHeight);
+    peakWindowMaxY = min(size(correlationCopy, 1), ypeak + localParametersStructure.stripHeight);
+    for y = (peakWindowMinY:peakWindowMaxY)
+        for x = (peakWindowMinX:peakWindowMaxX)
+            correlationCopy(y, x) = -inf; % remove highest peak
+        end
+    end
+    secondPeakValue = max(correlationCopy(:));
+    
+    % Adjust peak location due to search window
+    xpeak = xpeak + searchWindowWidthMin - 1;
+    ypeak = ypeak + searchWindowHeightMin - 1;
     
     % 2D Interpolation if enabled
     if localParametersStructure.enableSubpixelInterpolation
@@ -118,8 +144,35 @@ parfor (stripNumber = (1:numberOfStrips), numberOfWorkers)
         xpeak = interpolatedPeakCoordinates(1);
         ypeak = interpolatedPeakCoordinates(2);      
     end
+    
+    % If GPU was used, transfer peak values and peak locations
+    if useGPU
+        xpeak = gather(xpeak, task.ID);
+        ypeak = gather(ypeak, task.ID);
+        peakValue = gather(peakValue, task.ID);
+        secondPeakValue = gather(secondPeakValue, task.ID);
+    end
+    
+    % Show surface plot for this correlation if verbosity enabled
+    if localParametersStructure.enableVerbosity
+        if useGPU
+            correlation = gather(correlation, task.ID);
+        end
+        figure(1);
+        [surfX,surfY] = meshgrid(1:size(correlation,2), 1:size(correlation,1));
+        surf(surfX, surfY, correlation,'linestyle','none');
+        title([num2str(stripNumber) ' out of ' num2str(numberOfStrips)]);
+        xlim([1 size(correlation,2)]);
+        ylim([1 size(correlation,1)]);
+        zlim([-1 1]);
+        drawnow;
+    end
 
     rawEyePositionTraces(stripNumber,:) = [xpeak ypeak];
+    peakValueArray(stripNumber) = peakValue;
+    secondPeakValueArray(stripNumber) = secondPeakValue;
+    searchWindowsArray(stripNumber,:) = [searchWindowHeightMin searchWindowHeightMax ...
+        searchWindowWidthMin searchWindowWidthMax];
 end
 
 % Adjust for padding offsets added by normxcorr2()
@@ -138,16 +191,17 @@ rawEyePositionTraces = -rawEyePositionTraces;
 
 %% Populate statisticsStructure
 
-statisticsStructure.peakValues = peakValues;
-statisticsStructure.peakRatios = peakValues ./ secondHighestPeakValues;
-statisticsStructure.searchWindows = []; % TODO Unsure how to implement
-statisticsStructure.errorStructure = struct();
+statisticsStructure.peakValues = peakValueArray;
+statisticsStructure.peakRatios = secondPeakValueArray ./ peakValueArray;
+statisticsStructure.searchWindows = searchWindowsArray;
+statisticsStructure.errorStructure = struct(); %TODO needs to be implemented
 
 %% Populate usefulEyePositionTraces
 
 % Determine which eye traces to throw out
 % 1 = keep, 0 = toss
-eyeTracesToRemove = (statisticsStructure.peakRatios >= parametersStructure.minimumPeakRatio);
+eyeTracesToRemove = (statisticsStructure.peakRatios <= parametersStructure.minimumPeakRatio)...
+    & (statisticsStructure.peakValues >= parametersStructure.minimumPeakThreshold);
 
 % convert logical array to double array
 eyeTracesToRemove = double(eyeTracesToRemove);

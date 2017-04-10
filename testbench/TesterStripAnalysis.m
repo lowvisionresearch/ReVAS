@@ -19,8 +19,8 @@ tic;
 % videoPath = 'mna_os_10_12_1_45_0_stabfix_17_36_21_409.avi';
 videoPath = 'mna_dwt_nostim_nostim_gamscaled_bandfilt_meanrem.avi';
 videoFrames = VideoPathToArray(videoPath);
-refererenceFrame = importdata('ref.mat');
-[~, videoWidth, ~] = size(videoFrames);
+referenceFrame = importdata('ref.mat');
+videoWidth = size(videoFrames, 2);
 
 parametersStructure.stripHeight = 15;
 parametersStructure.stripWidth = videoWidth;
@@ -28,15 +28,18 @@ parametersStructure.samplingRate = 540;
 parametersStructure.enableSubpixelInterpolation = true;
 parametersStructure.subpixelInterpolationParameters.neighborhoodSize = 7;
 parametersStructure.subpixelInterpolationParameters.subpixelDepth = 2;
+parametersStructure.searchWindowSize = 0.5;
 parametersStructure.adaptiveSearch = false;
 parametersStructure.badFrames = 30;
-parametersStructure.minimumPeakRatio = -inf;
-parametersStructure.enableVerbosity = true;
+parametersStructure.minimumPeakRatio = 0.8;
+parametersStructure.minimumPeakThreshold = 0;
+parametersStructure.enableVerbosity = false;
 parametersStructure.axesHandles = [];
+parametersStructure.enableGPU = false;
 
 [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
     statisticsStructure] ...
-    = StripAnalysis(videoPath, refererenceFrame, parametersStructure);
+    = StripAnalysis(videoPath, referenceFrame, parametersStructure);
 
 figure(4);
 plot(timeArray, usefulEyePositionTraces);
