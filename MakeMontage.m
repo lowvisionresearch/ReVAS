@@ -1,14 +1,33 @@
 function [refFrame] = MakeMontage(params, fileName)
-% MakeMontage takes in a structure params, which contains information about
-% each strip (i.e., strip height, location, etc), and the name of the file. 
-% Using the information in params, MakeMontage constructs a reference frame 
-% using the average of all the strips.
-% params must have params.stripHeight, params.usefulEyePositionTraces, and
-% params.SamplingRate. 
+% MakeMontage    Reference frame.
+%   MakeMontage(params, fileName) generates a reference frame by averaging
+%   all the pixel values across all frames in a video.
+%   
+%   Note: The params variable should have the attributes stripHeight,
+%   params.usefulEyePositionTraces, params.time and params.samplingRate. 
+%   params.newStripHeight is an optional parameter.
+%
+%   Example: 
+%       params.stripHeight = 15;
+%       params.usefulEyePositionTraces = randn(540, 2);
+%       params.samplingRate = 540;
+%       MakeMontage(params,'fileName');
 
-
-%isfield 
+if isfield(params, 'newStripHeight')
+    % if params.newStripHeight is a field but no value is specified, then set
+    % params.newStripHeight equal to params.stripHeight
+    if isempty(params.newStripHeight)
+        params.newStripHeight = params.stripHeight;
+    end
+    
+    % if params.newStripHeight is not a field, set params.newStripHeight
+    % equal to params.stripHeight anyway
+else
+    params.newStripHeight = params.stripHeight;
+end
+    
 stripIndices = params.usefulEyePositionTraces;
+t1 = params.time;
 
 % grabbing info about the video and strips
 videoInfo = VideoReader(fileName);
@@ -16,8 +35,7 @@ frameHeight = videoInfo.Height;
 w = videoInfo.Width;
 frameRate = videoInfo.Framerate;
 totalFrames = frameRate * videoInfo.Duration;
-stripsPerFrame = round(params.SamplingRate/frameRate);
-stripInterval = round(frameHeight / stripsPerFrame);
+stripsPerFrame = round(frameHeight/params.newStripHeight);
 
 % setting up templates for reference frame and counter array
 counterArray = zeros(frameHeight*2);
@@ -31,50 +49,61 @@ mostNegative = max(-1*stripIndices);
 stripIndices(:, 1) = stripIndices(:, 1) + mostNegative(1) + 1;
 stripIndices(:, 2) = stripIndices(:, 2) + mostNegative(2) + 1;
 
+% scaling the time array to accomodate new strip height
+scalingFactor = ((params.stripHeight)/2)/(frameRate*frameHeight);
+t1 = t1 + scalingFactor;
+dt = params.newStripHeight / (frameRate * frameHeight);
+t2 = 0:dt:videoInfo.Duration + scalingFactor;
+
+% replace NaNs with a linear interpolation
+filteredStripIndices1 = filterStrips(stripIndices(:, 1));
+filteredStripIndices2 = filterStrips(stripIndices(:, 2));
+filteredStripIndices = [filteredStripIndices1 filteredStripIndices2];
+
+% interpolating positions between strips, using pchip
+interpolatedPositions = interp1(t1, filteredStripIndices, t2, 'pchip');
+
 for frameNumber = 1:totalFrames
     
     videoFrame = step(videoFReader);
     
     % get the appropriate strips from stripIndices for each frame
     n = frameNumber;
-    startFrameStrips = 1 + ((n-1)*(stripsPerFrame));
-    endFrameStrips = n * stripsPerFrame;
+    startFrameStrips = round(1 + ((n-1)*(stripsPerFrame)));
+    endFrameStrips = round(n * stripsPerFrame);
     
     % keep track of the strip number, so we can move it vertically
     % accordingly
     stripNumber = 1;
     
     for strip = startFrameStrips : endFrameStrips
-    
-        % if one of the coordinates is NaN, skip that iteration
-        if isnan(stripIndices(strip, 1)) || isnan(stripIndices(strip, 2))
-            
-            % increment stripNumber for the next iteration of the for-loop
-            stripNumber = stripNumber + 1;
-            continue
-        end
         
         % row and column "coordinates" of the top left pixel of each strip
-        topLeft = [stripIndices(strip, 1), stripIndices(strip, 2)];
+        topLeft = [interpolatedPositions(strip, 1), interpolatedPositions(strip, 2)];
         columnIndex = round(topLeft(2));
         rowIndex = round(topLeft(1));
         
-        % move strip to proper position assuming all strips are evenly
-        % spaced
-        rowIndex = rowIndex + ((stripNumber-1) * stripInterval);
-       
-        % transfer values of the strip pixels to the reference frame
-        for i = rowIndex : rowIndex + params.stripHeight -1
-            for j = columnIndex : columnIndex + w - 1
+        % move strip to proper position 
+        rowIndex = rowIndex + ((stripNumber-1) * params.newStripHeight);
+        
+        % get max row/column of the strip
+        maxRow = rowIndex + params.newStripHeight - 1;
+        maxColumn = columnIndex + w - 1;
+        
+        % making sure the row values don't exceed videoFrame dimensions
+        if maxRow > frameHeight
+            maxRow = frameHeight;
+        end
+        
+        % transfer values of the strip pixels to the reference frame, and
+        % increment the corresponding location on the counter array
+        for i = rowIndex : maxRow
+            for j = columnIndex : maxColumn
                 refFrame(i,j) = refFrame(i,j) + videoFrame(i,j);
+                counterArray(i, j) = counterArray(i, j) + 1;
             end
         end
-    
-        % increment the corresponding location on the counter array
-        counterArray(rowIndex:rowIndex+stripInterval-1, columnIndex:columnIndex+(w-1))...
-        = counterArray(rowIndex:rowIndex+stripInterval-1, columnIndex:columnIndex+(w-1))... 
-        + 1;
-    
+
         % increment stripNumber for the next iteration of the for-loop
         stripNumber = stripNumber + 1;
     end
@@ -83,5 +112,9 @@ end
 % divide each pixel in refFrame by the number of strips that contain that pixel
 refFrame = refFrame./counterArray;
 
+% crop out the 0 padding
+refFrame = Crop(refFrame, w*2, frameHeight*2);
+
 imshow(refFrame);
+
 end
