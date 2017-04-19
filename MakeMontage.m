@@ -3,7 +3,7 @@ function [refFrame] = MakeMontage(params, fileName)
 %   MakeMontage(params, fileName) generates a reference frame by averaging
 %   all the pixel values across all frames in a video.
 %   
-%   Note: The params variable should have the attributes stripHeight,
+%   Note: The params variable should have the attributes params.stripHeight,
 %   params.usefulEyePositionTraces, params.time and params.samplingRate. 
 %   params.newStripHeight is an optional parameter.
 %
@@ -46,8 +46,8 @@ videoFReader = vision.VideoFileReader(fileName);
 
 % scale the strip coordinates so that all values are positive
 mostNegative = max(-1*stripIndices);
-stripIndices(:, 1) = stripIndices(:, 1) + mostNegative(1) + 1;
-stripIndices(:, 2) = stripIndices(:, 2) + mostNegative(2) + 1;
+stripIndices(:, 1) = stripIndices(:, 1) + mostNegative(1) + 2;
+stripIndices(:, 2) = stripIndices(:, 2) + mostNegative(2) + 2;
 
 % scaling the time array to accomodate new strip height
 scalingFactor = ((params.stripHeight)/2)/(frameRate*frameHeight);
@@ -55,9 +55,10 @@ t1 = t1 + scalingFactor;
 dt = params.newStripHeight / (frameRate * frameHeight);
 t2 = 0:dt:videoInfo.Duration + scalingFactor;
 
-% replace NaNs with a linear interpolation
-filteredStripIndices1 = filterStrips(stripIndices(:, 1));
-filteredStripIndices2 = filterStrips(stripIndices(:, 2));
+% replace NaNs with a linear interpolation, done manually in a helper
+% function
+filteredStripIndices1 = FilterStrips(stripIndices(:, 1));
+filteredStripIndices2 = FilterStrips(stripIndices(:, 2));
 filteredStripIndices = [filteredStripIndices1 filteredStripIndices2];
 
 % interpolating positions between strips, using pchip
@@ -111,9 +112,6 @@ end
 
 % divide each pixel in refFrame by the number of strips that contain that pixel
 refFrame = refFrame./counterArray;
-
-% crop out the 0 padding
-refFrame = Crop(refFrame, w*2, frameHeight*2);
 
 imshow(refFrame);
 
