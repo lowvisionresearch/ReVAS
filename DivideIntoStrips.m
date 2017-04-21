@@ -1,4 +1,4 @@
-function [stripIndices] = divideIntoStrips(videoInputArray, videoFrameRate, parametersStructure)
+function [stripIndices, stripsPerFrame] = divideIntoStrips(videoInputArray, videoFrameRate, parametersStructure)
 %DIVIDE INTO STRIPS Returns coordinates of top left corner of strips.
 %   Takes the video input in array format and uses the given parameters
 %   to evenly divide the video into strips. It then will return the index
@@ -17,8 +17,8 @@ stripIndices = zeros(stripsPerFrame*numberOfFrames, ndims(videoInputArray));
 
 distanceBetweenStrips = frameHeight / stripsPerFrame;
 
-% compute the rows of stripIndices using parallel processing
-parfor stripNumber = (1:stripsPerFrame*numberOfFrames)
+% compute the rows of stripIndices
+for stripNumber = (1:stripsPerFrame*numberOfFrames)
     
     % Calculate row number and store in the 1st column of output array.
     rowNumber = mod(stripNumber - 1, stripsPerFrame) * distanceBetweenStrips + 1;

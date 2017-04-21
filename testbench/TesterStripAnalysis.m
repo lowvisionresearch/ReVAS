@@ -14,8 +14,6 @@ clear;
 close all;
 addpath(genpath('..'));
 
-tic;
-
 % videoPath = 'mna_os_10_12_1_45_0_stabfix_17_36_21_409.avi';
 videoPath = 'mna_dwt_nostim_nostim_gamscaled_bandfilt_meanrem.avi';
 videoFrames = VideoPathToArray(videoPath);
@@ -28,28 +26,29 @@ parametersStructure.samplingRate = 540;
 parametersStructure.enableSubpixelInterpolation = true;
 parametersStructure.subpixelInterpolationParameters.neighborhoodSize = 7;
 parametersStructure.subpixelInterpolationParameters.subpixelDepth = 2;
-parametersStructure.searchWindowSize = 0.5;
 parametersStructure.adaptiveSearch = false;
-parametersStructure.badFrames = 30;
+parametersStructure.adaptiveSearchScalingFactor = 8;
+parametersStructure.searchWindowHeight = 79;
+parametersStructure.badFrames = 30; % TODO this should be an array
 parametersStructure.minimumPeakRatio = 0.8;
 parametersStructure.minimumPeakThreshold = 0;
-parametersStructure.enableVerbosity = false;
-parametersStructure.axesHandles = [];
+parametersStructure.enableVerbosity = true;
+parametersStructure.axesHandles = []; % TODO
 parametersStructure.enableGPU = false;
+% Enable Gaussian Filtering:
+%   true => use Gaussian Filtering to determine useful peaks
+%   false => use max and second max peaks and peak ratio to determine
+%   useful peaks
+parametersStructure.enableGaussianFiltering = true; 
+parametersStructure.gaussianStandardDeviation = 10;
+
+tic;
 
 [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
     statisticsStructure] ...
     = StripAnalysis(videoPath, referenceFrame, parametersStructure);
 
-figure(4);
-plot(timeArray, usefulEyePositionTraces);
-title('Useful Eye Position Traces');
-xlabel('Time (sec)');
-ylabel('Eye Position Traces (pixels)');
-legend('show');
-legend('Horizontal Traces', 'Vertical Traces');
-
-toc;
+toc
 
 fprintf('Process Completed\n');
 

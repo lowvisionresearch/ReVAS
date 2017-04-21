@@ -1,5 +1,5 @@
 function [interpolatedPixelCoordinates, errorStructure]...
-    = interpolation2D(correlationMap2D, peakCoordinates, parametersStructure)
+    = Interpolation2D(correlationMap2D, peakCoordinates, parametersStructure)
 %2D INTERPOLATION Completes 2D Interpolation on a correlation map.
 %   Completes 2D Interpolation on a correlation map and returns the new
 %   interpolated peak coordinates. Uses the |spline| option in |interp2|.
@@ -34,9 +34,39 @@ gridSpacing = parametersStructure.subpixelDepth / 100;
     meshgrid(-halfNeighborhoodSize:gridSpacing:halfNeighborhoodSize);
 finerMeshgridX = finerMeshgridX + peakCoordinates(1);
 finerMeshgridY = finerMeshgridY + peakCoordinates(2);
+
+% Dealing with if the window defined by neighborhood size is too large
+% because we are at the border of the correlation map.
+trimYLow = (peakCoordinates(2)-1-halfNeighborhoodSize) * -1;
+trimXLow = (peakCoordinates(1)-1-halfNeighborhoodSize) * -1;
+trimYHigh = peakCoordinates(2)+halfNeighborhoodSize - size(correlationMap2D, 2);
+trimXHigh = peakCoordinates(1)+halfNeighborhoodSize - size(correlationMap2D, 1);
+
+% Clear trim variables if no trimming necessary.
+if trimYLow < 1
+    trimYLow = 0;
+end
+if trimXLow < 1
+    trimXLow = 0;
+end
+if trimYHigh < 0
+    trimYHigh = 0;
+end
+if trimXHigh < 0
+    trimXHigh = 0;
+end
+
+% Apply trimming to meshgrids as necessary.
+meshgridX = meshgridX(trimYLow+1:end-trimYHigh, trimXLow+1:end-trimXHigh);
+meshgridY = meshgridY(trimYLow+1:end-trimYHigh, trimXLow+1:end-trimXHigh);
+finerMeshgridX = finerMeshgridX((trimYLow+1-1)*gridSpacing^-1 + 1:end-((trimYHigh+1-1)*gridSpacing^-1),...
+    (trimXLow+1-1)*gridSpacing^-1 + 1:end-((trimXHigh+1-1)*gridSpacing^-1));
+finerMeshgridY = finerMeshgridY((trimYLow+1-1)*gridSpacing^-1 + 1:end-((trimYHigh+1-1)*gridSpacing^-1),...
+    (trimXLow+1-1)*gridSpacing^-1 + 1:end-((trimXHigh+1-1)*gridSpacing^-1));
+
 correlationMap2D = correlationMap2D(...
-    peakCoordinates(2)-halfNeighborhoodSize:peakCoordinates(2)+halfNeighborhoodSize,...
-    peakCoordinates(1)-halfNeighborhoodSize:peakCoordinates(1)+halfNeighborhoodSize);
+    max(1, peakCoordinates(1)-halfNeighborhoodSize):min(end, peakCoordinates(1)+halfNeighborhoodSize),...
+    max(1, peakCoordinates(2)-halfNeighborhoodSize):min(end, peakCoordinates(2)+halfNeighborhoodSize));
 
 finerCorrelationMap2D = interp2(meshgridX, meshgridY, correlationMap2D,...
     finerMeshgridX, finerMeshgridY, 'spline');
@@ -46,7 +76,7 @@ finerCorrelationMap2D = interp2(meshgridX, meshgridY, correlationMap2D,...
 [ypeak, xpeak] = find(finerCorrelationMap2D==max(finerCorrelationMap2D(:)));
 
 % Scale back down to pixel units
-interpolatedPixelCoordinates = [xpeak ypeak];
+interpolatedPixelCoordinates = [ypeak xpeak];
 interpolatedPixelCoordinates = ...
     floor((interpolatedPixelCoordinates - 1) / gridSpacing^-1) + 1 + ...
     (mod((interpolatedPixelCoordinates - 1), gridSpacing^-1) * gridSpacing);

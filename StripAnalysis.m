@@ -38,49 +38,106 @@ if ndims(videoInput) == 4
     videoInput = newVideoInput;
 end
 
-%% normxcorr2() on each strip
-
-stripIndices = DivideIntoStrips(videoInput, videoFrameRate, parametersStructure);
-
-% Preallocate output and helper matrices
+%% Preallocation and variable setup
+[stripIndices, stripsPerFrame] = DivideIntoStrips(videoInput, videoFrameRate, parametersStructure);
 numberOfStrips = size(stripIndices, 1);
+
 % two columns for horizontal and vertical movements
-rawEyePositionTraces = zeros(numberOfStrips, 2);
-% only one column for timeArray
-timeArray = zeros(numberOfStrips, 1);
+rawEyePositionTraces = NaN(numberOfStrips, 2);
+
 % arrays for peak and second highest peak values
 peakValueArray = zeros(numberOfStrips, 1);
 secondPeakValueArray = zeros(numberOfStrips, 1);
-% array for search windows
-searchWindowsArray = zeros(numberOfStrips, 4);
 
+% array for search windows
+estimatedStripYLocations = NaN(numberOfStrips, 1);
+searchWindowsArray = NaN(numberOfStrips, 4);
+
+%% Populate time array
+timeArray = (1:numberOfStrips)' / parametersStructure.samplingRate;
+
+%% GPU Preparation
 % *** TODO: need GPU device to confirm ***
 % Check if a GPU device is connected. If so, run calculations on the GPU
 % (if enabled by the user).
-useGPU = (gpuDeviceCount > 0) & parametersStructure.enableGPU;
-if useGPU
+enableGPU = (gpuDeviceCount > 0) & parametersStructure.enableGPU;
+if enableGPU
     referenceFrame = gpuArray(referenceFrame);
 end
 
-% We set the number of workers for the parfor loop below here.
-% If the verbosity flag in the parameters is disabled, then we use a normal
-% parfor loop with whatever number of workers is available. If the
-% verbosity flag is enabled, then we must run the loop in sequence in order
-% for the surface plots to be displayed in order (essentially by using 0
-% workers for our parfor loop).
-numberOfWorkers = numlabs * double(~parametersStructure.enableVerbosity);
+%% Populate search windows array if adaptive search is enabled
+% Scale down the reference frame to a smaller size
+scaledDownReferenceFrame = referenceFrame( ...
+    1:parametersStructure.adaptiveSearchScalingFactor:end, ...
+    1:parametersStructure.adaptiveSearchScalingFactor:end);
 
+for frameNumber = (1:size(videoInput, 3))
+    frame = videoInput(:,:,frameNumber);
+    
+    % Scale down the current frame to a smaller size as well
+    scaledDownFrame = frame( ...
+        1:parametersStructure.adaptiveSearchScalingFactor:end, ...
+        1:parametersStructure.adaptiveSearchScalingFactor:end);
+    
+    correlation = normxcorr2(scaledDownFrame, scaledDownReferenceFrame);
+    
+    [~, yPeak, ~, ~] = ...
+        FindPeak(correlation, parametersStructure);
+    
+    % Account for padding introduced by normxcorr2
+    yPeak = yPeak - (size(scaledDownFrame, 1) - 1);
+    
+    % Populate search windows array but only fill in coordinates for the
+    % top strip of each frame
+    estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + 1,:) = yPeak;
+end
+
+% Finish populating search window by taking the line between the top left
+% corner of the previous frame and the bottom left corner of the current
+% frame and dividing that line up by the number of strips per frame.
+for frameNumber = (2:size(videoInput, 3))
+    previousFrameYCoordinate = ...
+        estimatedStripYLocations((frameNumber - 1 - 1) * stripsPerFrame + 1);
+    currentFrameYCoordinate = ...
+        estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + 1) ...
+        + size(videoInput, 1);
+    
+    % change per strip is determined by drawing a line from the top left
+    % corner of the previous frame and the bottom left corner of the
+    % current frame and then dividing it by the number of strips. Each time
+    % we add change per strip, we thus take a step closer to the latter
+    % point from the previous point and will arrive there after taking the
+    % same number of steps as we have strips per frame.
+    changePerStrip = (currentFrameYCoordinate - previousFrameYCoordinate) ...
+        / stripsPerFrame;
+    
+    % For each strip, take the previous strip's value and add the change
+    % per strip.
+    for stripNumber = (2:stripsPerFrame)
+        estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + stripNumber) ...
+            = estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + stripNumber - 1) ...
+            + changePerStrip;
+    end
+end
+    
+% Scale back up
+estimatedStripYLocations = (estimatedStripYLocations - 1) ...
+    * parametersStructure.adaptiveSearchScalingFactor + 1;   
+
+%% Call normxcorr2() on each strip
 % Note that calculation for each array value does not end with this loop,
 % the logic below the loop in this section perform remaining operations on
 % the values but are done outside of the loop in order to take advantage of
-% vectorization.
-
-% Two for loop headers here. Use regular for loop for debugging, use
-% parfor version for optimal execution.
-parfor (stripNumber = (1:numberOfStrips), numberOfWorkers)
-%for stripNumber = (1:numberOfStrips)
-    task = getCurrentTask;
-    if useGPU
+% vectorization (that is, if verbosity is not enabled since if it was, then
+% these operations must be computed immediately so that the correct eye
+% trace values can be plotted as early as possible).
+for stripNumber = (1:numberOfStrips)
+    gpuTask = getCurrentTask;
+    
+    % Note that only one core should use the GPU at a time.
+    % i.e. when processing multiple videos in parallel, only one should
+    % use GPU.
+    if enableGPU
         localParametersStructure = gpuArray(parametersStructure);
         stripData = gpuArray(stripIndices(stripNumber,:));
     else
@@ -88,75 +145,57 @@ parfor (stripNumber = (1:numberOfStrips), numberOfWorkers)
         stripData = stripIndices(stripNumber,:);
     end
 
-    rowStart = stripData(1,1);
-    columnStart = stripData(1,2);
-    frame = stripData(1,3);
     if ismember(frame, localParametersStructure.badFrames)
         continue
     end
+    
+    rowStart = stripData(1,1);
+    columnStart = stripData(1,2);
+    frame = stripData(1,3);
     rowEnd = rowStart + localParametersStructure.stripHeight - 1;
     columnEnd = columnStart + localParametersStructure.stripWidth - 1;
     
     strip = videoInput(rowStart:rowEnd, columnStart:columnEnd, frame);
     correlation = normxcorr2(strip, referenceFrame);
     
-    % Make copy of correlation map to find peaks, using search windows.
-    % Assumes that search window size is between 0 and 1.
-    heightBoundary = floor(size(correlation, 1) * localParametersStructure.searchWindowSize);
-    widthBoundary = floor(localParametersStructure.stripWidth * ...
-        (1 - localParametersStructure.searchWindowSize));
-    
-    searchWindowHeightMin = max(1, rowStart - heightBoundary);
-    searchWindowHeightMax = min(size(correlation, 1), rowEnd + heightBoundary);
-    searchWindowWidthMin = max(1, widthBoundary);
-    searchWindowWidthMax = min(size(correlation, 2), size(correlation, 2) + 1 - widthBoundary);
-
-    correlationCopy = correlation(searchWindowHeightMin:searchWindowHeightMax, ...
-        searchWindowWidthMin:searchWindowWidthMax);
-    
-    % Find peak of correlation map
-    [ypeak, xpeak] = find(correlationCopy==max(correlationCopy(:)));
-    peakValue = max(correlationCopy(:));
-    
-    % Find second highest point of correlation map
-    peakWindowMinX = max(1, xpeak - localParametersStructure.stripHeight);
-    peakWindowMaxX = min(size(correlationCopy, 2), xpeak + localParametersStructure.stripHeight);
-    peakWindowMinY = max(1, ypeak - localParametersStructure.stripHeight);
-    peakWindowMaxY = min(size(correlationCopy, 1), ypeak + localParametersStructure.stripHeight);
-    for y = (peakWindowMinY:peakWindowMaxY)
-        for x = (peakWindowMinX:peakWindowMaxX)
-            correlationCopy(y, x) = -inf; % remove highest peak
-        end
+    if parametersStructure.adaptiveSearch
+        % cut out a smaller search window from correlation.
+        upperBound = floor(min(max(1, ...
+            estimatedStripYLocations(stripNumber) ...
+            - ((parametersStructure.searchWindowHeight - parametersStructure.stripHeight)/2)), ...
+            size(videoInput, 1)));
+        lowerBound = floor(min(size(videoInput, 1), ...
+            estimatedStripYLocations(stripNumber) ...
+            + ((parametersStructure.searchWindowHeight - parametersStructure.stripHeight)/2) ...
+            + parametersStructure.stripHeight));
+        correlation = correlation(upperBound:lowerBound,1:end);
     end
-    secondPeakValue = max(correlationCopy(:));
-    
-    % Adjust peak location due to search window
-    xpeak = xpeak + searchWindowWidthMin - 1;
-    ypeak = ypeak + searchWindowHeightMin - 1;
+      
+    [xPeak, yPeak, peakValue, secondPeakValue] = ...
+        FindPeak(correlation, parametersStructure);
     
     % 2D Interpolation if enabled
     if localParametersStructure.enableSubpixelInterpolation
-        
-        [interpolatedPeakCoordinates, errorStructure] = ...
-            Interpolation2D(correlation, [xpeak, ypeak], ...
+        [interpolatedPeakCoordinates, statisticsStructure.errorStructure] = ...
+            Interpolation2D(correlation, [yPeak, xPeak], ...
             localParametersStructure.subpixelInterpolationParameters);
         
-        xpeak = interpolatedPeakCoordinates(1);
-        ypeak = interpolatedPeakCoordinates(2);      
+        xPeak = interpolatedPeakCoordinates(2);
+        yPeak = interpolatedPeakCoordinates(1);      
     end
     
     % If GPU was used, transfer peak values and peak locations
-    if useGPU
-        xpeak = gather(xpeak, task.ID);
-        ypeak = gather(ypeak, task.ID);
-        peakValue = gather(peakValue, task.ID);
-        secondPeakValue = gather(secondPeakValue, task.ID);
+    if enableGPU
+        xPeak = gather(xPeak, gpuTask.ID);
+        yPeak = gather(yPeak, gpuTask.ID);
+        peakValue = gather(peakValue, gpuTask.ID);
+        secondPeakValue = gather(secondPeakValue, gpuTask.ID);
     end
     
     % Show surface plot for this correlation if verbosity enabled
     if localParametersStructure.enableVerbosity
-        if useGPU
-            correlation = gather(correlation, task.ID);
+        if enableGPU
+            correlation = gather(correlation, gpuTask.ID);
         end
         figure(1);
         [surfX,surfY] = meshgrid(1:size(correlation,2), 1:size(correlation,1));
@@ -165,32 +204,81 @@ parfor (stripNumber = (1:numberOfStrips), numberOfWorkers)
         xlim([1 size(correlation,2)]);
         ylim([1 size(correlation,1)]);
         zlim([-1 1]);
+        
+        % Mark the identified peak on the plot with an *.
+        text(xPeak, yPeak, peakValue, '\downarrow', 'Color', 'red', ...
+            'FontSize', 20, 'HorizontalAlignment', 'center', ...
+            'VerticalAlignment', 'bottom', 'FontWeight', 'bold');
+        
         drawnow;
     end
-
-    rawEyePositionTraces(stripNumber,:) = [xpeak ypeak];
+    
+    rawEyePositionTraces(stripNumber,:) = [xPeak yPeak];
     peakValueArray(stripNumber) = peakValue;
     secondPeakValueArray(stripNumber) = secondPeakValue;
-    searchWindowsArray(stripNumber,:) = [searchWindowHeightMin searchWindowHeightMax ...
-        searchWindowWidthMin searchWindowWidthMax];
+    searchWindowsArray(stripNumber,:) = []; % TODO
+    
+    % If verbosity is enabled, also show eye trace plot with points
+    % being plotted as they become available.
+    if localParametersStructure.enableVerbosity
+        
+        % Adjust for padding offsets added by normxcorr2()
+        % If we enable verbosity and demand that we plot the points as we
+        % go, then adjustments must be made here in order for the plot to
+        % be interpretable.
+        % Therefore, we will only perform these same operations after the
+        % loop to take advantage of vectorization only if they are not
+        % performed here, namely, if verbosity is not enabled and this
+        % if statement does not execute.
+        rawEyePositionTraces(stripNumber,2) = ...
+            rawEyePositionTraces(stripNumber,2) - (parametersStructure.stripHeight - 1);
+        rawEyePositionTraces(stripNumber,1) = ...
+            rawEyePositionTraces(stripNumber,1) - (parametersStructure.stripWidth - 1);
+
+        % Adjust in vertical direction.
+        % We must subtract back out the starting strip vertical coordinate in order
+        % to obtain the net vertical movement.
+        rawEyePositionTraces(stripNumber,1) = ...
+            rawEyePositionTraces(stripNumber,1) - stripIndices(stripNumber,2);
+        rawEyePositionTraces(stripNumber,2) = ...
+            rawEyePositionTraces(stripNumber,2) - stripIndices(stripNumber,1);
+
+        % Negate eye position traces to flip directions.
+        rawEyePositionTraces(stripNumber,:) = -rawEyePositionTraces(stripNumber,:);
+
+        figure(2);
+        plot(timeArray, rawEyePositionTraces);
+        title('Raw Eye Position Traces');
+        xlabel('Time (sec)');
+        ylabel('Eye Position Traces (pixels)');
+        legend('show');
+        legend('Horizontal Traces', 'Vertical Traces');
+    end
 end
 
-% Adjust for padding offsets added by normxcorr2()
+%% Adjust for padding offsets added by normxcorr2()
 % Do this after the loop to take advantage of vectorization
-rawEyePositionTraces(:,2) = rawEyePositionTraces(:,2) - (parametersStructure.stripHeight - 1);
-rawEyePositionTraces(:,1) = rawEyePositionTraces(:,1) - (parametersStructure.stripWidth - 1);
+% Only run this section if verbosity was not enabled. If verbosity was
+% enabled, then these operations were already performed for each point
+% before it was plotted to the eye traces graph. If verbosity was not
+% enabled, then we do it now in order to take advantage of vectorization.
+if ~localParametersStructure.enableVerbosity
+    rawEyePositionTraces(:,2) = ...
+        rawEyePositionTraces(:,2) - (parametersStructure.stripHeight - 1);
+    rawEyePositionTraces(:,1) = ...
+        rawEyePositionTraces(:,1) - (parametersStructure.stripWidth - 1);
 
-% Adjust in vertical direction.
-% We must subtract back out the starting strip vertical coordinate in order
-% to obtain the net vertical movement.
-rawEyePositionTraces(:,1) = rawEyePositionTraces(:,1) - stripIndices(:,2);
-rawEyePositionTraces(:,2) = rawEyePositionTraces(:,2) - stripIndices(:,1);
+    % Adjust in vertical direction.
+    % We must subtract back out the starting strip vertical coordinate in order
+    % to obtain the net vertical movement.
+    rawEyePositionTraces(:,1) = rawEyePositionTraces(:,1) - stripIndices(:,2);
+    rawEyePositionTraces(:,2) = rawEyePositionTraces(:,2) - stripIndices(:,1);
 
-% Negate eye position traces to flip directions.
-rawEyePositionTraces = -rawEyePositionTraces;
+    % Negate eye position traces to flip directions.
+    rawEyePositionTraces = -rawEyePositionTraces;
+end
 
 %% Populate statisticsStructure
-
 statisticsStructure.peakValues = peakValueArray;
 statisticsStructure.peakRatios = secondPeakValueArray ./ peakValueArray;
 statisticsStructure.searchWindows = searchWindowsArray;
@@ -213,8 +301,13 @@ eyeTracesToRemove(eyeTracesToRemove == 0) = NaN;
 eyeTracesToRemove = repmat(eyeTracesToRemove,1,2); % duplicate vector first
 usefulEyePositionTraces = rawEyePositionTraces .* eyeTracesToRemove;
 
-%% Populate timeArray
-
-timeArray = (1:numberOfStrips)' / parametersStructure.samplingRate;
+%% Plot Useful Eye Traces
+figure(3);
+plot(timeArray, usefulEyePositionTraces);
+title('Useful Eye Position Traces');
+xlabel('Time (sec)');
+ylabel('Eye Position Traces (pixels)');
+legend('show');
+legend('Horizontal Traces', 'Vertical Traces');
 
 end

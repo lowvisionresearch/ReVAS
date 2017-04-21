@@ -1,4 +1,4 @@
-function [videoInputArray, videoFrameRate] = videoPathToArray(videoInputPath)
+function [videoInputArray, videoFrameRate] = VideoPathToArray(videoInputPath)
 %VIDEO PATH TO ARRAY Takes the path to a video file and converts it to an
 %array.
 %   Takes the path to a video file and converts it to either a 3D or 4D
