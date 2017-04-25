@@ -4,12 +4,12 @@ function [refFrame] = MakeMontage(params, fileName)
 %   all the pixel values across all frames in a video.
 %   
 %   Note: The params variable should have the attributes params.stripHeight,
-%   params.usefulEyePositionTraces, params.time and params.samplingRate. 
+%   params.positions, params.time and params.samplingRate. 
 %   params.newStripHeight is an optional parameter.
 %
 %   Example: 
 %       params.stripHeight = 15;
-%       params.usefulEyePositionTraces = randn(540, 2);
+%       params.positions = randn(540, 2);
 %       params.samplingRate = 540;
 %       MakeMontage(params,'fileName');
 
@@ -26,7 +26,7 @@ else
     params.newStripHeight = params.stripHeight;
 end
     
-stripIndices = params.usefulEyePositionTraces;
+stripIndices = params.positions;
 t1 = params.time;
 
 % grabbing info about the video and strips
@@ -54,6 +54,9 @@ scalingFactor = ((params.stripHeight)/2)/(frameRate*frameHeight);
 t1 = t1 + scalingFactor;
 dt = params.newStripHeight / (frameRate * frameHeight);
 t2 = 0:dt:videoInfo.Duration + scalingFactor;
+
+% transpose t2 because t1 is a column vector
+t2 = t2';
 
 % replace NaNs with a linear interpolation, done manually in a helper
 % function
@@ -95,7 +98,7 @@ for frameNumber = 1:totalFrames
         if maxRow > frameHeight
             maxRow = frameHeight;
         end
-        
+      
         % transfer values of the strip pixels to the reference frame, and
         % increment the corresponding location on the counter array
         for i = rowIndex : maxRow
@@ -113,6 +116,7 @@ end
 % divide each pixel in refFrame by the number of strips that contain that pixel
 refFrame = refFrame./counterArray;
 
+refFrame = Crop(refFrame, w*2, frameHeight * 2, 100);
 imshow(refFrame);
 
 end

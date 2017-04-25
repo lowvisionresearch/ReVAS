@@ -16,6 +16,7 @@ function [filteredStripIndices] = FilterStrips(stripIndices)
 % get indices of all NaN values
 NaNIndices = find(isnan(stripIndices));
 NaNIndicesCopy = NaNIndices;
+NaNIndicesStorage = NaNIndices;
 
 % Every 3 items in startAndEndPairs will be, in this order: last number
 % before a strip of consecutive NaNs, first number after a strip of NaNs,
@@ -79,7 +80,7 @@ end
 % Now that the function has determined the values "bordering" the strips of
 % consecutive NaNs, reset the NaNIndices variable so we can insert
 % interpolated values into the original stripIndices.
-NaNIndices = find(isnan(stripIndices));
+NaNIndices = NaNIndicesStorage;
 
 while ~isempty(startAndEndPairs)
     
@@ -94,7 +95,7 @@ while ~isempty(startAndEndPairs)
         startAndEndPairs = [];
         
     % Remember that startAndEndPairs generally has chunks of 3 values: last
-    % number before NaNs start, first number after NaNs begin, and number
+    % number before NaNs start, first number after NaNs end, and number
     % of consecutive NaNs in a strip. Therefore, if we assume the change
     % in position between the two real values is linear, then dy is simply 
     % (last number before NaNs - first number after NaNs) / k. Then
