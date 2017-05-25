@@ -51,7 +51,7 @@ secondPeakValueArray = zeros(numberOfStrips, 1);
 
 % array for search windows
 estimatedStripYLocations = NaN(numberOfStrips, 1);
-searchWindowsArray = NaN(numberOfStrips, 4);
+searchWindowsArray = NaN(numberOfStrips, 2);
 
 %% Populate time array
 timeArray = (1:numberOfStrips)' / parametersStructure.samplingRate;
@@ -65,7 +65,9 @@ if enableGPU
     referenceFrame = gpuArray(referenceFrame);
 end
 
-%% Populate search windows array if adaptive search is enabled
+%% Adaptive Search
+% Estimate peak locations if adaptive search is enabled
+
 % Scale down the reference frame to a smaller size
 scaledDownReferenceFrame = referenceFrame( ...
     1:parametersStructure.adaptiveSearchScalingFactor:end, ...
@@ -95,12 +97,12 @@ end
 % Finish populating search window by taking the line between the top left
 % corner of the previous frame and the bottom left corner of the current
 % frame and dividing that line up by the number of strips per frame.
-for frameNumber = (2:size(videoInput, 3))
+for frameNumber = (1:size(videoInput, 3)-1)
     previousFrameYCoordinate = ...
-        estimatedStripYLocations((frameNumber - 1 - 1) * stripsPerFrame + 1);
+        estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + 1);
     currentFrameYCoordinate = ...
-        estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + 1) ...
-        + size(videoInput, 1);
+        estimatedStripYLocations((frameNumber) * stripsPerFrame + 1)...
+        + size(scaledDownFrame, 1);
     
     % change per strip is determined by drawing a line from the top left
     % corner of the previous frame and the bottom left corner of the
@@ -158,7 +160,10 @@ for stripNumber = (1:numberOfStrips)
     strip = videoInput(rowStart:rowEnd, columnStart:columnEnd, frame);
     correlation = normxcorr2(strip, referenceFrame);
     
-    if parametersStructure.adaptiveSearch
+    upperBound = 1;
+    
+    if parametersStructure.adaptiveSearch ...
+            && ~isnan(estimatedStripYLocations(stripNumber))
         % cut out a smaller search window from correlation.
         upperBound = floor(min(max(1, ...
             estimatedStripYLocations(stripNumber) ...
@@ -169,11 +174,13 @@ for stripNumber = (1:numberOfStrips)
             + ((parametersStructure.searchWindowHeight - parametersStructure.stripHeight)/2) ...
             + parametersStructure.stripHeight));
         correlation = correlation(upperBound:lowerBound,1:end);
+        
+        searchWindowsArray(stripNumber,:) = [upperBound lowerBound];
     end
       
     [xPeak, yPeak, peakValue, secondPeakValue] = ...
         FindPeak(correlation, parametersStructure);
-    
+        
     % 2D Interpolation if enabled
     if localParametersStructure.enableSubpixelInterpolation
         [interpolatedPeakCoordinates, statisticsStructure.errorStructure] = ...
@@ -205,7 +212,7 @@ for stripNumber = (1:numberOfStrips)
         ylim([1 size(correlation,1)]);
         zlim([-1 1]);
         
-        % Mark the identified peak on the plot with an *.
+        % Mark the identified peak on the plot with an arrow.
         text(xPeak, yPeak, peakValue, '\downarrow', 'Color', 'red', ...
             'FontSize', 20, 'HorizontalAlignment', 'center', ...
             'VerticalAlignment', 'bottom', 'FontWeight', 'bold');
@@ -213,10 +220,13 @@ for stripNumber = (1:numberOfStrips)
         drawnow;
     end
     
+    % If these peaks are in terms of a smaller correlation map, restore it
+    % back to in terms of the full map.
+    yPeak = yPeak + upperBound - 1;
+    
     rawEyePositionTraces(stripNumber,:) = [xPeak yPeak];
     peakValueArray(stripNumber) = peakValue;
     secondPeakValueArray(stripNumber) = secondPeakValue;
-    searchWindowsArray(stripNumber,:) = []; % TODO
     
     % If verbosity is enabled, also show eye trace plot with points
     % being plotted as they become available.

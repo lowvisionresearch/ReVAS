@@ -21,6 +21,13 @@ elseif ~isscalar(parametersStructure.subpixelDepth)
     error('Invalid Input for interpolation2D (subpixelDepth is not a scalar)');
 end
 
+if size(correlationMap2D, 1) == 1 || size(correlationMap2D, 2) == 1
+    warning('Interpolation not applied this iteration since correlationMap2D dimensions were %d, %d', size(correlationMap2D));
+    interpolatedPixelCoordinates = peakCoordinates;
+    errorStructure = struct();
+    return;
+end
+
 %% Apply |interp2|
 halfNeighborhoodSize = (parametersStructure.neighborhoodSize - 1) / 2;
 [meshgridX, meshgridY] = meshgrid(-halfNeighborhoodSize:halfNeighborhoodSize);
@@ -37,10 +44,10 @@ finerMeshgridY = finerMeshgridY + peakCoordinates(2);
 
 % Dealing with if the window defined by neighborhood size is too large
 % because we are at the border of the correlation map.
-trimYLow = (peakCoordinates(2)-1-halfNeighborhoodSize) * -1;
-trimXLow = (peakCoordinates(1)-1-halfNeighborhoodSize) * -1;
-trimYHigh = peakCoordinates(2)+halfNeighborhoodSize - size(correlationMap2D, 2);
-trimXHigh = peakCoordinates(1)+halfNeighborhoodSize - size(correlationMap2D, 1);
+trimYLow = (peakCoordinates(1)-1-halfNeighborhoodSize) * -1;
+trimXLow = (peakCoordinates(2)-1-halfNeighborhoodSize) * -1;
+trimYHigh = peakCoordinates(1)+halfNeighborhoodSize - size(correlationMap2D, 1);
+trimXHigh = peakCoordinates(2)+halfNeighborhoodSize - size(correlationMap2D, 2);
 
 % Clear trim variables if no trimming necessary.
 if trimYLow < 1

@@ -4,11 +4,6 @@ function [] = TesterStripAnalysis()
 
 %% Basic Functionality Test
 
-% Input:
-% videoInput = path to a 3D array
-% referenceFrame = first frame of video
-% parametersStructure = as defined below
-
 clc;
 clear;
 close all;
@@ -29,7 +24,7 @@ parametersStructure.subpixelInterpolationParameters.subpixelDepth = 2;
 parametersStructure.adaptiveSearch = false;
 parametersStructure.adaptiveSearchScalingFactor = 8;
 parametersStructure.searchWindowHeight = 79;
-parametersStructure.badFrames = 30; % TODO this should be an array
+parametersStructure.badFrames = [29 30];
 parametersStructure.minimumPeakRatio = 0.8;
 parametersStructure.minimumPeakThreshold = 0;
 parametersStructure.enableVerbosity = true;
