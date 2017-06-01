@@ -30,10 +30,10 @@ function [xPeak, yPeak, peakValue, secondPeakValue] = ...
         peakValue = max(correlationMap(:));
 
         % Find second highest point of correlation map
-        peakWindowMinX = max(1, xPeak - localParametersStructure.stripHeight);
-        peakWindowMaxX = min(size(correlationMap, 2), xPeak + localParametersStructure.stripHeight);
-        peakWindowMinY = max(1, yPeak - localParametersStructure.stripHeight);
-        peakWindowMaxY = min(size(correlationMap, 1), yPeak + localParametersStructure.stripHeight);
+        peakWindowMinX = max(1, xPeak - parametersStructure.stripHeight);
+        peakWindowMaxX = min(size(correlationMap, 2), xPeak + parametersStructure.stripHeight);
+        peakWindowMinY = max(1, yPeak - parametersStructure.stripHeight);
+        peakWindowMaxY = min(size(correlationMap, 1), yPeak + parametersStructure.stripHeight);
         for y = (peakWindowMinY:peakWindowMaxY)
             for x = (peakWindowMinX:peakWindowMaxX)
                 correlationMap(y, x) = -inf; % remove highest peak

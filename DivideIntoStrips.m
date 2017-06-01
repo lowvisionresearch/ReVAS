@@ -10,7 +10,7 @@ function [stripIndices, stripsPerFrame] = divideIntoStrips(videoInputArray, vide
 %
 %   Precondition: All inputs have already been validated.
 
-stripsPerFrame = parametersStructure.samplingRate / videoFrameRate;
+stripsPerFrame = round(parametersStructure.samplingRate / videoFrameRate);
 [frameHeight, frameWidth, numberOfFrames] = size(videoInputArray);
 
 stripIndices = zeros(stripsPerFrame*numberOfFrames, ndims(videoInputArray));
