@@ -41,15 +41,15 @@ fprintf('Process Completed for FindBadFrames()\n');
 
 %% Basic Functionality Test of Strip Analysis
 
-%clc;
-%clear;
-%close all;
-%addpath(genpath('..'));
+clc;
+clear;
+close all;
+addpath(genpath('..'));
 
 %videoPath = 'mna_os_10_12_1_45_0_stabfix_17_36_21_409.avi';
-%videoPath = 'mna_dwt_nostim_nostim_gamscaled_bandfilt_meanrem.avi';
-load([videoPath(1:end-4) '_badframes']);
-videoPath = [videoPath(1:end-4) '_nostim' videoPath(end-3:end)];
+videoPath = 'mna_dwt_nostim_nostim_gamscaled_bandfilt_meanrem.avi';
+%load([videoPath(1:end-4) '_badframes']);
+%videoPath = [videoPath(1:end-4) '_nostim' videoPath(end-3:end)];
 videoFrames = VideoPathToArray(videoPath);
 referenceFrame = importdata('ref.mat');
 videoWidth = size(videoFrames, 2);
@@ -63,8 +63,8 @@ parametersStructure.subpixelInterpolationParameters.subpixelDepth = 2;
 parametersStructure.adaptiveSearch = true;
 parametersStructure.adaptiveSearchScalingFactor = 8;
 parametersStructure.searchWindowHeight = 79;
-%parametersStructure.badFrames = [29 30];
-parametersStructure.badFrames = badFrames;
+parametersStructure.badFrames = [29 30];
+%parametersStructure.badFrames = badFrames;
 parametersStructure.minimumPeakRatio = 0.8;
 parametersStructure.minimumPeakThreshold = 0;
 parametersStructure.enableVerbosity = true;
