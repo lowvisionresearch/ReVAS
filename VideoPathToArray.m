@@ -8,20 +8,25 @@ function [videoInputArray, videoFrameRate] = VideoPathToArray(videoInputPath)
 
 if ischar(videoInputPath)    
     % Determine dimensions needed for purposes of preallocation.
-    videoReaderOfInput = VideoReader(videoInputPath);
-    numberOfFramesOfVideoInput = videoReaderOfInput.NumberOfFrames;
-    videoFrameRate = videoReaderOfInput.FrameRate;
-    videoWidth = videoReaderOfInput.Width;
-    videoHeight = videoReaderOfInput.Height;
+    reader = VideoReader(videoInputPath);
+    numberOfFramesOfVideoInput = reader.NumberOfFrames;
+    videoFrameRate = reader.FrameRate;
+    videoWidth = reader.Width;
+    videoHeight = reader.Height;
     videoInputArray = zeros(videoWidth, videoHeight, numberOfFramesOfVideoInput, 'uint8');
     
     % Remake this variable since readFrame() cannot be called after
     % NumberOfFrames property is accessed.
-    videoReaderOfInput = VideoReader(videoInputPath);
+    reader = VideoReader(videoInputPath);
     
     % Fill the output array with all of the frames.
     for k = (1:numberOfFramesOfVideoInput)
-        videoInputArray(:,:,k) = readFrame(videoReaderOfInput);
+        frame = readFrame(reader);
+        if ndims(frame) == 3
+            videoInputArray(:,:,k) = frame(:,:,1);
+        else
+            videoInputArray(:,:,k) = frame;
+        end
     end
         
 else

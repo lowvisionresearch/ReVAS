@@ -68,63 +68,66 @@ end
 %% Adaptive Search
 % Estimate peak locations if adaptive search is enabled
 
-% Scale down the reference frame to a smaller size
-scaledDownReferenceFrame = referenceFrame( ...
-    1:parametersStructure.adaptiveSearchScalingFactor:end, ...
-    1:parametersStructure.adaptiveSearchScalingFactor:end);
-
-for frameNumber = (1:size(videoInput, 3))
-    frame = videoInput(:,:,frameNumber);
-    
-    % Scale down the current frame to a smaller size as well
-    scaledDownFrame = frame( ...
+if parametersStructure.adaptiveSearch
+    % Scale down the reference frame to a smaller size
+    scaledDownReferenceFrame = referenceFrame( ...
         1:parametersStructure.adaptiveSearchScalingFactor:end, ...
         1:parametersStructure.adaptiveSearchScalingFactor:end);
-    
-    correlation = normxcorr2(scaledDownFrame, scaledDownReferenceFrame);
-    
-    [~, yPeak, ~, ~] = ...
-        FindPeak(correlation, parametersStructure);
-    
-    % Account for padding introduced by normxcorr2
-    yPeak = yPeak - (size(scaledDownFrame, 1) - 1);
-    
-    % Populate search windows array but only fill in coordinates for the
-    % top strip of each frame
-    estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + 1,:) = yPeak;
-end
 
-% Finish populating search window by taking the line between the top left
-% corner of the previous frame and the bottom left corner of the current
-% frame and dividing that line up by the number of strips per frame.
-for frameNumber = (1:size(videoInput, 3)-1)
-    previousFrameYCoordinate = ...
-        estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + 1);
-    currentFrameYCoordinate = ...
-        estimatedStripYLocations((frameNumber) * stripsPerFrame + 1)...
-        + size(scaledDownFrame, 1);
-    
-    % change per strip is determined by drawing a line from the top left
-    % corner of the previous frame and the bottom left corner of the
-    % current frame and then dividing it by the number of strips. Each time
-    % we add change per strip, we thus take a step closer to the latter
-    % point from the previous point and will arrive there after taking the
-    % same number of steps as we have strips per frame.
-    changePerStrip = (currentFrameYCoordinate - previousFrameYCoordinate) ...
-        / stripsPerFrame;
-    
-    % For each strip, take the previous strip's value and add the change
-    % per strip.
-    for stripNumber = (2:stripsPerFrame)
-        estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + stripNumber) ...
-            = estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + stripNumber - 1) ...
-            + changePerStrip;
+    for frameNumber = (1:size(videoInput, 3))
+        frame = videoInput(:,:,frameNumber);
+
+        % Scale down the current frame to a smaller size as well
+        scaledDownFrame = frame( ...
+            1:parametersStructure.adaptiveSearchScalingFactor:end, ...
+            1:parametersStructure.adaptiveSearchScalingFactor:end);
+
+        correlation = normxcorr2(scaledDownFrame, scaledDownReferenceFrame);
+
+        [~, yPeak, ~, ~] = ...
+            FindPeak(correlation, parametersStructure);
+
+        % Account for padding introduced by normxcorr2
+        yPeak = yPeak - (size(scaledDownFrame, 1) - 1);
+
+        % Populate search windows array but only fill in coordinates for the
+        % top strip of each frame
+        estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + 1,:) = yPeak;
     end
+
+    % Finish populating search window by taking the line between the top left
+    % corner of the previous frame and the bottom left corner of the current
+    % frame and dividing that line up by the number of strips per frame.
+    for frameNumber = (1:size(videoInput, 3)-1)
+        previousFrameYCoordinate = ...
+            estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + 1);
+        currentFrameYCoordinate = ...
+            estimatedStripYLocations((frameNumber) * stripsPerFrame + 1)...
+            + size(scaledDownFrame, 1);
+
+        % change per strip is determined by drawing a line from the top left
+        % corner of the previous frame and the bottom left corner of the
+        % current frame and then dividing it by the number of strips. Each time
+        % we add change per strip, we thus take a step closer to the latter
+        % point from the previous point and will arrive there after taking the
+        % same number of steps as we have strips per frame.
+        changePerStrip = (currentFrameYCoordinate - previousFrameYCoordinate) ...
+            / stripsPerFrame;
+
+        % For each strip, take the previous strip's value and add the change
+        % per strip.
+        for stripNumber = (2:stripsPerFrame)
+            estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + stripNumber) ...
+                = estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + stripNumber - 1) ...
+                + changePerStrip;
+        end
+    end
+
+    % Scale back up
+    estimatedStripYLocations = (estimatedStripYLocations - 1) ...
+        * parametersStructure.adaptiveSearchScalingFactor + 1;
+
 end
-    
-% Scale back up
-estimatedStripYLocations = (estimatedStripYLocations - 1) ...
-    * parametersStructure.adaptiveSearchScalingFactor + 1;   
 
 %% Call normxcorr2() on each strip
 % Note that calculation for each array value does not end with this loop,
@@ -147,17 +150,18 @@ for stripNumber = (1:numberOfStrips)
         stripData = stripIndices(stripNumber,:);
     end
 
+    frame = stripData(1,3);
+
     if ismember(frame, localParametersStructure.badFrames)
         continue
     end
     
     rowStart = stripData(1,1);
     columnStart = stripData(1,2);
-    frame = stripData(1,3);
     rowEnd = rowStart + localParametersStructure.stripHeight - 1;
     columnEnd = columnStart + localParametersStructure.stripWidth - 1;
-    
     strip = videoInput(rowStart:rowEnd, columnStart:columnEnd, frame);
+    
     correlation = normxcorr2(strip, referenceFrame);
     
     upperBound = 1;
@@ -217,7 +221,7 @@ for stripNumber = (1:numberOfStrips)
             'FontSize', 20, 'HorizontalAlignment', 'center', ...
             'VerticalAlignment', 'bottom', 'FontWeight', 'bold');
         
-        drawnow;
+        drawnow;  
     end
     
     % If these peaks are in terms of a smaller correlation map, restore it
