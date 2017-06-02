@@ -36,6 +36,7 @@ RemoveStimuli(videoPath, parametersStructure);
 fprintf('Process Completed for RemoveStimuli()\n');
 
 % Step 4: Detect blinks and bad frames
+parametersStructure.thresholdValue = 4;
 FindBadFrames(videoPath, parametersStructure);
 fprintf('Process Completed for FindBadFrames()\n');
 
