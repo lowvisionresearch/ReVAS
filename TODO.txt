@@ -1,0 +1,152 @@
+For every function:
+In the parameters, have an overwrite parameter.
+
+if overwrite = 1, go ahead and replace any existing output file
+if overwrite = 0, don't overwrite existing file.
+
+-------
+
+Video trimming
+cut off trimBordersAmount from the top and right edges of video.
+typically trimBordersAmount = 24px.
+save as new file.
+no parallelization.
+
+naming convention:
+input: myvideo.avi
+output: myvideo_dwt.avi
+
+-------
+
+Find Stimulus Location
+2 types of Inputs:
+ Type 1 (parameters structure to describe stimulus):
+  - size of cross (almost always 11 px) (make this a parameter)
+  - thickness (always 1 px)
+ Type 2 (image file representing the stimulus)
+  - white cross on black background image, for example (made in paint)
+  - convert to a 0 to 255 array to cross correlate.
+
+result: get how much stimulus moves from one frame to the other
+(cross correlating stimulus matrix to each frame)
+(just run the existing function with enhancements turned off)
+have verbosity options available
+  level 1: final result graph
+  level 2: frame by frame correlation map with the arrow pointing to peak
+
+why: we want to know where the stimulus is and then we can remove it
+so that later we can get the eye movement and not the stimulus location
+
+save result as a mat file.
+naming convention:
+input: myvideo_dwt.avi
+output: myvideo_dwt_stimlocs.mat (save input parameters, image path, delete everything else)
+
+add-on: also save the mean and sd of each frame into that mat file.
+
+-------
+
+Remove the stimulus
+Use output of previous step.
+
+take the location from mat file
+replace in the frames of the dwt version with noise
+noise need the mean and sd of the noise
+randn(xsize, ysize) ==> mean = 0, sd = 1.
+for mean = 60, sd = 30, you multiply by 30, add 60.
+
+(we have this from the save mat file, the mean and sd)
+so for each frame, we need the mean and sd of each frame (when cross still in)
+then use that to make random noise.
+put that noise rectangle, centered on top of the old cross.
+
+by default, use the parameters from mat file.
+but also allow for overriding: height and width of noise rectangle.
+
+output: myvideo_dwt_nostim.avi
+
+-----------
+
+Detect blinks and bad frames
+When this happens, entire frame is all black or close to that.
+
+the mean luminence will be generally steady, but at the blink, there will be a dip over the course of about 6 frames (a blink is 200 milliseconds)
+
+essentially we want to get "derivatives" and just mark the super negative ones as a blink
+  - start with mean of each frame (from previous mat output)
+  - get the diff() of these (you'll end up with a size one smaller)
+  - calculate med_diff_mu = the median of the diff_mu's.
+  - calculate std_med = sqrt( med(diff_mu ^2) - (med(diff_mu))^2 )    (note that the first term is squaring each value of diff_mu, before taking median)
+  - calculate threshold = med_diff_mu - 2 * std_med    (this 2 constant should be a parameter, defaulting to 2)
+  - define badFrames = [0, diff(mu)] < threshold
+  - then call conv() to grab the frames before and after the badFrames already identified
+      - conv() with array [1 1 1], badFrames, there is also an option to get the result of conv() to be the same size as badFrames.
+      - conv() will have 0,1,2,3 values. change this back to a logical array. array  = array >= 1 or something like that.
+  - repeat all of this for the sd of each frame
+  - logically OR the two resulting logical arrays from mean and sd frames together
+  - use find() to convert this logical array to the indices of badFrames.
+
+
+output: ..._blinkframes.mat  mat file of bad frames (where the blink ocurred)
+TODO
+
+--------------
+
+Gamma Correction
+
+gamma_exponent = 0.6
+imadjust(2darray, 'gamma', gamma_exponent)  (or something like that)
+
+output: myvideo_dwt_nostim_gamscaled.avi
+
+----------
+
+Bandpass filtering
+
+frequency domain vs. amplitude (power)
+
+take your signal
+pass through fourier transform
+
+pass through low pass filter (LPF) (sets one part to 1, the rest to 0)
+do the inverse fourier transform to get the original signal but low pass filtered
+see pics
+
+Signal - signal low pass filtered => signal high pass filtered
+
+spacial domain and frequency domain instead of time and frequency.
+
+
+we will do everything in spacial domain without going into frequency domain.
+you have your image and a small kernel in it (3x3, 5x5, etc. very small)
+calculate the average within the kernel and set the center to that value to blur the whole image. (blurring)
+
+x x x
+x 0 x
+x x x
+
+1 -1 1
+1 -1 1
+1 -1 1   use this as kernel to enhance vertical lines (similar for horizontal) (subtract middle column, add sides, then average)
+
+built-in matlab: imgausfilt(2darray, sigmasdofgaussianinpixels)      (kernel size is automatically selected)
+sigma = 0 means no weight means same as input image is the result.
+sigma = infinity = equal weights
+
+use sigma = 3 for now.
+imgausfilt is your low pass filter (no fourier necessary)
+
+.3 .5 .3
+.5 1  .5
+.3 .5 .3
+
+----------
+
+Make Coarse Reference Frame
+
+Adaptive search essentially.
+Takes videoName, takes params structure
+Params has which frame as reference frame. By default, 15? (grab the middle frame of total frames). Takes scaling factor to shrink. Start with 3 ish. 
+Read, shrink, store. Cross correlate using the middle frame. 
+Get frame shifts, multiply by the downscale factor. (now you have how much shift there is between frames). 
+CoarseRef
