@@ -98,7 +98,7 @@ for frameNumber = 1:totalFrames
         if maxRow > frameHeight
             maxRow = frameHeight;
         end
-      
+
         % transfer values of the strip pixels to the reference frame, and
         % increment the corresponding location on the counter array
         for i = rowIndex : maxRow
