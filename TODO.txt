@@ -103,6 +103,8 @@ output: myvideo_dwt_nostim_gamscaled.avi
 
 Bandpass filtering
 
+output: myvideo_dwt_nostim_gamscaled_bandfilt.avi
+
 frequency domain vs. amplitude (power)
 
 take your signal
@@ -150,3 +152,6 @@ Params has which frame as reference frame. By default, 15? (grab the middle fram
 Read, shrink, store. Cross correlate using the middle frame. 
 Get frame shifts, multiply by the downscale factor. (now you have how much shift there is between frames). 
 CoarseRef
+
+output: myvideo_dwt_nostim_gamscaled_bandfilt_coarseref.mat
+
