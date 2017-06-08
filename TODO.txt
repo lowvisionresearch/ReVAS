@@ -155,3 +155,5 @@ CoarseRef
 
 output: myvideo_dwt_nostim_gamscaled_bandfilt_coarseref.mat
 
+Save the reference frame as a 2D matrix. Call it coarseReferenceFrame.
+Also save the frame shifts (x and y shifts between each frame and the initial reference frame).
