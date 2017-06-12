@@ -1,14 +1,14 @@
 function FindBadFrames(inputVideoPath, parametersStructure)
 %REMOVE STIMULI Records in a mat file the location of the stimulus
 %in each frame of the video.
-%   The result is stored with '_nostim' appended to the input video file
+%   The result is stored with '_blinkframes' appended to the input video file
 %   name.
 %
 %   |parametersStructure.overwrite| determines whether an existing output
 %   file should be overwritten and replaced if it already exists.
 
 stimLocsMatFileName = [inputVideoPath(1:end-4) '_stimlocs'];
-badFramesMatFileName = [inputVideoPath(1:end-4) '_badframes'];
+badFramesMatFileName = [inputVideoPath(1:end-4) '_blinkframes'];
 
 %% Handle overwrite scenarios.
 if ~exist([badFramesMatFileName '.mat'], 'file')

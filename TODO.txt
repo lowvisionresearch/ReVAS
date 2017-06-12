@@ -88,7 +88,6 @@ essentially we want to get "derivatives" and just mark the super negative ones a
 
 
 output: ..._blinkframes.mat  mat file of bad frames (where the blink ocurred)
-TODO
 
 --------------
 
@@ -141,6 +140,8 @@ imgausfilt is your low pass filter (no fourier necessary)
 .3 .5 .3
 .5 1  .5
 .3 .5 .3
+
+output: format not sure... TODO
 
 ----------
 
