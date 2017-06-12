@@ -141,7 +141,7 @@ imgausfilt is your low pass filter (no fourier necessary)
 .5 1  .5
 .3 .5 .3
 
-output: format not sure... TODO
+output: ...bandfilt.avi
 
 ----------
 
