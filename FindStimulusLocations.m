@@ -132,7 +132,8 @@ for frameNumber = (1:numberOfFrames)
             stimulusLocationInEachFrame(frameNumber,1) - 1;
 
         % Negate to flip directions.
-        stimulusLocationInEachFrame(frameNumber,:) = -stimulusLocationInEachFrame(frameNumber,:);
+        stimulusLocationInEachFrame(frameNumber,:) = ...
+            stimulusLocationInEachFrame(frameNumber,:) + [frameWidth frameHeight];
 
         figure(2);
         plot(timeArray, stimulusLocationInEachFrame);

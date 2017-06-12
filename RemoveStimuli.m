@@ -20,7 +20,6 @@ else
     warning('RemoveStimuli() is proceeding and overwriting an existing file.');
 end
 
-
 %% Load mat file with output from |FindStimulusLocations|
 
 load(matFileName);
@@ -51,8 +50,8 @@ for frameNumber = 1:numberOfFrames
         noise * standardDeviationOfEachFrame(frameNumber) + meanOfEachFrame(frameNumber);
     
     location = stimulusLocationInEachFrame(frameNumber,:);
-    videoInputArray(location(1) : location(1)+stimulusSize(1)-1, ...
-        location(2) : location(2)+stimulusSize(2)-1, frameNumber) = noise;
+    videoInputArray(location(2)-stimulusSize(1)+1 : location(2), ...
+        location(1)-stimulusSize(2)+1 : location(1), frameNumber) = noise;
     
 end
 
