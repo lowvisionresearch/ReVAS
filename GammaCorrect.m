@@ -12,10 +12,10 @@ outputVideoPath = [inputVideoPath(1:end-4) '_gamscaled' inputVideoPath(end-3:end
 if ~exist(outputVideoPath, 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-    warning('RemoveStimuli() did not execute because it would overwrite existing file.');
+    warning('GammaCorrect() did not execute because it would overwrite existing file.');
     return;
 else
-    warning('RemoveStimuli() is proceeding and overwriting an existing file.');
+    warning('GammaCorrect() is proceeding and overwriting an existing file.');
 end
 
 %% Set gammaExponent
