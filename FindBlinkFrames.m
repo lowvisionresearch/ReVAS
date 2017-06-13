@@ -1,12 +1,13 @@
-function FindBadFrames(inputVideoPath, parametersStructure)
-%REMOVE STIMULI Records in a mat file the location of the stimulus
-%in each frame of the video.
+function FindBlinkFrames(inputVideoPath, parametersStructure)
+%FIND BLINK FRAMES Records in a mat file the frames in which a blink
+%occurred.
 %   The result is stored with '_blinkframes' appended to the input video file
 %   name.
 %
 %   |parametersStructure.overwrite| determines whether an existing output
 %   file should be overwritten and replaced if it already exists.
 
+importdata(inputVideoPath);
 stimLocsMatFileName = [inputVideoPath(1:end-4) '_stimlocs'];
 badFramesMatFileName = [inputVideoPath(1:end-4) '_blinkframes'];
 
