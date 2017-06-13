@@ -2,6 +2,9 @@ function [] = TestSuite()
 %TESTER FILE Run me to test ReVAS.
 %   Run me to test ReVAS.
 
+% new vid:
+% jap_os_10_12_1_45_-1_stabfix_13_09_01_87_dwt_nostim_nostim_gamscaled_bandfilt_meanrem
+
 %% Video Pre-Processing Test
 
 clc;
@@ -23,7 +26,7 @@ for videoPath = {video1, video2, video3, video4}
     % Overwrite parameter:
     % if true, recompute and replace existing output file if already present.
     % if false and output file already exists, abort current function/step and continue.
-    parametersStructure.overwrite = true;
+    parametersStructure.overwrite = false;
 
     % Step 1: Trim the video's upper and right edges.
     parametersStructure.borderTrimAmount = 24;
@@ -45,7 +48,7 @@ for videoPath = {video1, video2, video3, video4}
 
     % Step 4: Detect blinks and bad frames
     parametersStructure.thresholdValue = 4;
-    FindBadFrames(videoPath, parametersStructure);
+    FindBlinkFrames(videoPath, parametersStructure);
     fprintf('Process Completed for FindBadFrames()\n');
 
     % Step 5: Apply gamma correction
@@ -54,9 +57,11 @@ for videoPath = {video1, video2, video3, video4}
     GammaCorrect(videoPath, parametersStructure);
     fprintf('Process Completed for GammaCorrect()\n');
 
+    parametersStructure.overwrite = true;
     % Step 6: Apply bandpass filtering
     videoPath = [videoPath(1:end-4) '_gamscaled' videoPath(end-3:end)];
-    parametersStructure.bandpassSigma = 3;
+    parametersStructure.bandpassSigmaUpper = 3;
+    parametersStructure.bandpassSigmaLower = 25;
     BandpassFilter(videoPath, parametersStructure);
     fprintf('Process Completed for BandpassFilter()\n');
 end
@@ -68,12 +73,13 @@ clear;
 close all;
 addpath(genpath('..'));
 
-%videoPath = 'mna_os_10_12_1_45_0_stabfix_17_36_21_409.avi';
-videoPath = 'mna_dwt_nostim_nostim_gamscaled_bandfilt_meanrem.avi';
+%videoPath = 'testbench/mna_os_10_12_1_45_0_stabfix_17_36_21_409.avi';
+%videoPath = 'testbench/mna_dwt_nostim_nostim_gamscaled_bandfilt_meanrem.avi';
+videoPath = 'testbench/jap_os_10_12_1_45_-1_stabfix_13_09_01_87_dwt_nostim_nostim_gamscaled_bandfilt_meanrem.avi';
 %load([videoPath(1:end-4) '_badframes']);
 %videoPath = [videoPath(1:end-4) '_nostim' videoPath(end-3:end)];
 videoFrames = VideoPathToArray(videoPath);
-referenceFrame = importdata('ref.mat');
+referenceFramePath = 'ref.mat';
 videoWidth = size(videoFrames, 2);
 
 parametersStructure.stripHeight = 15;
@@ -103,9 +109,29 @@ tic;
 
 [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
     statisticsStructure] ...
-    = StripAnalysis(videoPath, referenceFrame, parametersStructure);
+    = StripAnalysis(videoPath, referenceFramePath, parametersStructure);
 
 toc
+
+fprintf('Process Completed\n');
+
+%% Post-processing Test
+
+parametersStructure.thresholdValue = 6;
+parametersStructure.secondaryThresholdValue = 2;
+parametersStructure.stitchCriteria = 15;
+parametersStructure.minAmplitude = 0.1;
+parametersStructure.maxDuration = 100;
+parametersStructure.detectionMethod = 2;
+parametersStructure.hardVelocityThreshold = 35;
+parametersStructure.velocityMethod = 2;
+
+parametersStructure.overwrite = true;
+
+eyePositionTracesPath = ...
+    'testbench/jap_os_10_12_1_45_-1_stabfix_13_09_01_87_dwt_nostim_nostim_gamscaled_bandfilt_meanrem_540_hz_final_mehmetsolution.mat';
+FindSaccadesAndDrifts(eyePositionTracesPath, [512 512], [10 10], ...
+    parametersStructure);
 
 fprintf('Process Completed\n');
 

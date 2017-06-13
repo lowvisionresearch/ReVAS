@@ -4,19 +4,7 @@ In the parameters, have an overwrite parameter.
 if overwrite = 1, go ahead and replace any existing output file
 if overwrite = 0, don't overwrite existing file.
 
--------
-
-Video trimming
-cut off trimBordersAmount from the top and right edges of video.
-typically trimBordersAmount = 24px.
-save as new file.
-no parallelization.
-
-naming convention:
-input: myvideo.avi
-output: myvideo_dwt.avi
-
--------
+---------
 
 Find Stimulus Location
 2 types of Inputs:
@@ -158,3 +146,49 @@ output: myvideo_dwt_nostim_gamscaled_bandfilt_coarseref.mat
 
 Save the reference frame as a 2D matrix. Call it coarseReferenceFrame.
 Also save the frame shifts (x and y shifts between each frame and the initial reference frame).
+
+---------
+
+Convert eye positions from pixels to degrees. (512 px x 512 px to 10 deg x 10 deg)
+Apply saccade detection algorithm to get saccades and drifts.
+(These are arrays of structures that contain info on different time segments of the eye traces)
+
+This info for saccades and drifts are both:
+ - onsetTime (time stamp of the start of that event)
+ - offsetTime (time stamp of end of that event)
+ - xStart, yStart, xEnd, yEnd
+ - duration (which is offsetTime - onsetTime)
+ - amplitude.x (absolute value of xStart - xEnd)
+ - amplitude.y
+ - amplitude.vector (which is pythagorean theorem of xStart to xEnd and yStart to yEnd length)
+ - direction (which is atand or atand2d (whichever gives 360 deg range), delta y / delta x) (initial point to end point)
+ - position.x (just cut out the original data from eye traces)
+ - position.y
+ - time (just cut out the original data)
+ - velocity.x  (which is [0; diff(position) ./ diff(time)]) (another way is to do: vel_n = (x_(n+1) - x_(n-1)) / 2 delta t) (implement them and make them user-selectable)
+ - velocity.y
+ - meanVelocity.x
+ - meanVelocity.y
+ - peakVelocity.x (which is the max velocity)
+ - peakVelocity.y
+ - acceleration.x (use the same method to take a second derivative)
+ - acceleration.y
+
+Saccade Detection
+Similar to blink detection, except we don't convolute.
+Instead, we use a high multiplier to get the peak, and then a smaller multiplier to make sure we grab the entire peak.
+Our multiplier is 6 in this case (typically) this gets the peak. then lower the multiplier to essentially convolute nearby stuff (see photo on phone).
+Threshold = multiplier * standarddev +- median. (Make sure to grab both upwards and downwards peaks).
+Do this for both x and y, and take logical OR.
+Input:
+path to final.mat file
+parametersStructure.thresholdValue (default 6)
+parametersStructure.secondaryThresholdValue (default 2)
+parametersStructure.stitchCriteria (default 15 ms) (this will be used to lump together 2 microsaccades that are too close because that was due to wobble in a second pass) (end of one to beginning of next)
+parametersStructure.minAmplitude (default 0.1 deg) (in a third pass, remove artifactial saccades that have amplitude less than this)
+parametersStructure.maxDuration (default 100 ms) (in a fourth pass, discard if they are longer than 100 ms)
+parametersStructure.detectionMethod (default 2) (median-based detection is 2, which we will use by default) (another method, method 1, is just a hard-coded threshold)
+parametersStructure.hardVelocityThreshold (default 35 deg/sec) (for hard-coded threshold purposes)
+parametersStructure.velocityMethod (1 is most basic, 2 is the one we will use) (default 2)
+Output:
+append whatever you like to full input name

@@ -7,10 +7,14 @@ function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
 
 %% Input Validation
 
+inputVideoPath = '';
+referenceFramePath = '';
+
 % If videoInput is a character array, then a path was passed in.
 % Attempt to convert it to a 3D or 4D array, depending on number of
 % color channels.
 if ischar(videoInput)
+    inputVideoPath = videoInput;
     [videoInput, videoFrameRate] = VideoPathToArray(videoInput);
 else
     % ASSUMPTION
@@ -19,6 +23,12 @@ else
     % TODO
     warning('A raw matrix was provided; assuming that frame rate is 30 fps.');
     videoFrameRate = 30;
+end
+
+% If referenceFrame is a character array, then a path was passed in.
+if ischar(referenceFrame)
+    referenceFramePath = referenceFrame;
+    referenceFrame = importdata(referenceFramePath);
 end
 
 ValidateVideoInput(videoInput);
@@ -36,6 +46,20 @@ if ndims(videoInput) == 4
         newVideoInput(:,:,frame) = rgb2gray(frame3D);
     end
     videoInput = newVideoInput;
+end
+
+%% Handle overwrite scenarios.
+
+outputFileName = [inputVideoPath(1:end-4) '_' ...
+    int2str(parametersStructure.samplingRate) '_hz_final'];
+
+if ~exist([outputFileName '.mat'], 'file')
+    % left blank to continue without issuing warning in this case
+elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
+    warning('StripAnalysis() did not execute because it would overwrite existing file.');
+    return;
+else
+    warning('StripAnalysis() is proceeding and overwriting an existing file.');
 end
 
 %% Preallocation and variable setup
@@ -323,5 +347,12 @@ xlabel('Time (sec)');
 ylabel('Eye Position Traces (pixels)');
 legend('show');
 legend('Horizontal Traces', 'Vertical Traces');
+
+%% Save to output mat file
+
+eyePositionTraces = usefulEyePositionTraces;
+
+save(outputFileName, 'eyePositionTraces', 'timeArray', ...
+    'parametersStructure', 'referenceFramePath');
 
 end
