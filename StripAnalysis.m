@@ -57,6 +57,10 @@ if ~exist([outputFileName '.mat'], 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
     warning('StripAnalysis() did not execute because it would overwrite existing file.');
+    rawEyePositionTraces = [];
+    usefulEyePositionTraces = [];
+    timeArray = [];
+    statisticsStructure = struct();
     return;
 else
     warning('StripAnalysis() is proceeding and overwriting an existing file.');

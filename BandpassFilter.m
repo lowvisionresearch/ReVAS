@@ -18,12 +18,22 @@ else
     warning('BandpassFilter() is proceeding and overwriting an existing file.');
 end
 
-%% Set bandpassSigma
+%% Set bandpassSigmaUpper and bandpassSigmaLower
 
-if ~isfield(parametersStructure, 'bandpassSigma')
-    bandpassSigma = 0.6;
+if ~isfield(parametersStructure, 'bandpassSigmaUpper')
+    bandpassSigmaUpper = 3;
 else
-    bandpassSigma = parametersStructure.bandpassSigma;
+    bandpassSigmaUpper = parametersStructure.bandpassSigmaUpper;
+end
+
+if ~isfield(parametersStructure, 'bandpassSigmaLower')
+    bandpassSigmaLower = 25;
+else
+    bandpassSigmaLower = parametersStructure.bandpassSigmaLower;
+end
+
+if parametersStructure.bandpassSigmaUpper > bandpassSigmaLower
+    error('bandpassSigmaUpper should not be > bandpassSigmaLower');
 end
 
 %% Gamma correct frame by frame
@@ -37,9 +47,13 @@ numberOfFrames = size(videoInputArray, 3);
 
 for frameNumber = 1:numberOfFrames
     
-    videoInputArray(:,:,frameNumber) = ...
-        imgaussfilt(videoInputArray(:,:,frameNumber), bandpassSigma);
+    I = videoInputArray(:,:,frameNumber);
+    I1 = imgaussfilt(I, bandpassSigmaUpper);
+    I2 = imgaussfilt(I1, bandpassSigmaLower);
     
+    videoInputArray(:,:,frameNumber) = histeq(I1 - I2);
+    
+    %Solution should look like: mna_os_10_12_1_45_0_stabfix_17_36_21_409_dwt_nostim_nostim_gamscaled_bandfilt_meanrem
 end
 
 writeVideo(writer, videoInputArray);
