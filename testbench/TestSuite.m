@@ -2,9 +2,6 @@ function [] = TestSuite()
 %TESTER FILE Run me to test ReVAS.
 %   Run me to test ReVAS.
 
-% new vid:
-% jap_os_10_12_1_45_-1_stabfix_13_09_01_87_dwt_nostim_nostim_gamscaled_bandfilt_meanrem
-
 %% Video Pre-Processing Test
 
 clc;
@@ -60,7 +57,7 @@ for videoPath = {video1, video2, video3, video4}
     parametersStructure.overwrite = true;
     % Step 6: Apply bandpass filtering
     videoPath = [videoPath(1:end-4) '_gamscaled' videoPath(end-3:end)];
-    parametersStructure.bandpassSigmaUpper = 3;
+    parametersStructure.bandpassSigmaUpper = 1;
     parametersStructure.bandpassSigmaLower = 25;
     BandpassFilter(videoPath, parametersStructure);
     fprintf('Process Completed for BandpassFilter()\n');
@@ -73,13 +70,19 @@ clear;
 close all;
 addpath(genpath('..'));
 
+% Video not pre-processed yet...
 %videoPath = 'testbench/mna_os_10_12_1_45_0_stabfix_17_36_21_409.avi';
+%referenceFramePath = 'testbench/mna_os_10_12_1_45_0_stabfix_17_36_21_409_dwt_nostim_nostim_gamscaled_bandfilt_meanrem_priorrefdata_720hz.mat';
+
 %videoPath = 'testbench/mna_dwt_nostim_nostim_gamscaled_bandfilt_meanrem.avi';
+%referenceFramePath = 'ref.mat';
+
 videoPath = 'testbench/jap_os_10_12_1_45_-1_stabfix_13_09_01_87_dwt_nostim_nostim_gamscaled_bandfilt_meanrem.avi';
+referenceFramePath = ''; % No reference frame available yet...
+
 %load([videoPath(1:end-4) '_badframes']);
 %videoPath = [videoPath(1:end-4) '_nostim' videoPath(end-3:end)];
 videoFrames = VideoPathToArray(videoPath);
-referenceFramePath = 'ref.mat';
 videoWidth = size(videoFrames, 2);
 
 parametersStructure.stripHeight = 15;
@@ -104,6 +107,8 @@ parametersStructure.enableGPU = false;
 %   useful peaks
 parametersStructure.enableGaussianFiltering = true; 
 parametersStructure.gaussianStandardDeviation = 10;
+
+parametersStructure.overwrite = true;
 
 tic;
 
