@@ -1,4 +1,4 @@
-function [stripIndices, stripsPerFrame] = divideIntoStrips(videoInputArray, videoFrameRate, parametersStructure)
+function [stripIndices, stripsPerFrame] = DivideIntoStrips(videoInputArray, videoFrameRate, parametersStructure)
 %DIVIDE INTO STRIPS Returns coordinates of top left corner of strips.
 %   Takes the video input in array format and uses the given parameters
 %   to evenly divide the video into strips. It then will return the index
