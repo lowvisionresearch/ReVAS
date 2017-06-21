@@ -108,8 +108,11 @@ while frameNumber <= totalFrames
     
     % Account for the padding that normxcorr2 adds.
     if enableGPU
-        yoffSet = gather(ypeak-size(currFrame,1));
-        xoffSet = gather(xpeak-size(currFrame,2));
+        yoffSet = gather(yPeak-size(currFrame,1));
+        xoffSet = gather(xPeak-size(currFrame,2));
+        xPeak = gather(xPeak);
+        yPeak = gather(yPeak);
+        peakValue = gather(peakValue);
     else
         yoffSet = yPeak-size(currFrame,1);
         xoffSet = xPeak-size(currFrame,2);
@@ -169,12 +172,16 @@ while frameNumber <= totalFrames
     
 end
 
-save('framePositions', 'framePositions');
+% UNCOMMENT THE SAVE STATEMENT IN FINAL VERSION
+%save('framePositions', 'framePositions');
 
 % Set up the counter array and the template for the coarse reference frame.
 height = size(sampleFrame, 1);
 counterArray = zeros(height*3);
 coarseRefFrame = zeros(height*3);
+
+% Negate all frame positions
+framePositions = -framePositions;
 
 % Scale the frame coordinates so that all values are positive. Take the
 % negative value with the highest magnitude in each column of
@@ -233,12 +240,12 @@ end
 % for each pixel.
 coarseRefFrame = coarseRefFrame./counterArray;
 
-% Crop out the leftover 0 padding from the original template.
-coarseRefFrame = Crop(coarseRefFrame);
-
 if enableGPU
     coarseRefFrame = gather(coarseRefFrame);
 end
+
+% Crop out the leftover 0 padding from the original template.
+coarseRefFrame = Crop(coarseRefFrame);
 
 % Write the output to a new MatLab file. First remove the '.avi' extension
 newFileName = params.fileName;
@@ -246,7 +253,9 @@ newFileName((end-3):end) = [];
 
 % Extend name because the file has been processed by coarseref
 newFileName(end + 1: end + 10) = '_coarseref';
-save(newFileName, 'coarseRefFrame');
+
+% UNCOMMENT THE SAVE STATEMENT IN FINAL VERSION
+% save(newFileName, 'coarseRefFrame');
 
 if params.enableVerbosity >= 1
     figure(3)
