@@ -141,7 +141,17 @@ end
 refFrame = refFrame./counterArray;
 
 refFrame = Crop(refFrame);
-save('Reference Frame', 'refFrame');
+
+% Convert any NaN values in the reference frame to a 0. Otherwise, running
+% strip analysis on this new frame will not work
+NaNindices = find(isnan(refFrame));
+for k = 1:size(NaNindices)
+    NaNindex = NaNindices(k);
+    refFrame(NaNindex) = 0;
+end
+
+% UNCOMMENT THE SAVE STATEMENT IN THE FINAL VERSION
+% save('Reference Frame', 'refFrame');
 figure(1)
 imshow(refFrame);
 

@@ -247,6 +247,14 @@ end
 % Crop out the leftover 0 padding from the original template.
 coarseRefFrame = Crop(coarseRefFrame);
 
+% Convert any NaN values in the reference frame to a 0. Otherwise, running
+% strip analysis on this new frame will not work
+NaNindices = find(isnan(coarseRefFrame));
+for k = 1:size(NaNindices)
+    NaNindex = NaNindices(k);
+    coarseRefFrame(NaNindex) = 0;
+end
+
 % Write the output to a new MatLab file. First remove the '.avi' extension
 newFileName = params.fileName;
 newFileName((end-3):end) = [];
