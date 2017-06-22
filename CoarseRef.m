@@ -245,7 +245,16 @@ if enableGPU
 end
 
 % Crop out the leftover 0 padding from the original template.
-coarseRefFrame = Crop(coarseRefFrame);
+column1 = framePositions(:, 1);
+column2 = framePositions(:, 2);
+minRow = min(column1);
+maxRow = max(column1);
+minColumn = min(column2);
+maxColumn = max(column2);
+coarseRefFrame(1:floor((minRow-1)), :) = [];
+coarseRefFrame(ceil((maxRow + size(frame, 1))):end, :) = [];
+coarseRefFrame(:, 1:floor((minColumn-1))) = [];
+coarseRefFrame(:, ceil((maxColumn+size(frame, 2))):end) = [];
 
 % Convert any NaN values in the reference frame to a 0. Otherwise, running
 % strip analysis on this new frame will not work
