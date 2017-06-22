@@ -3,8 +3,22 @@ function BandpassFilter(inputVideoPath, parametersStructure)
 %   The result is stored with '_bandfilt' appended to the input video file
 %   name.
 %
-%   |parametersStructure.overwrite| determines whether an existing output
-%   file should be overwritten and replaced if it already exists.
+%   Fields of the |parametersStructure| 
+%   -----------------------------------
+%   overwrite                   Determines whether an existing output file
+%                               should be overwritten and replaced if it
+%                               already exists.(default 0)
+%   smoothing                   Used to remove high-frequency noise in the
+%                               frames. Represents the standard deviation
+%                               of a Gaussian kernel, in pixels.(default 2)
+%   lowSpatialFrequencyCutoff   Used to remove low-frequency fluctuations
+%                               in the frames which messes up strip
+%                               analysis. For instance, brightness
+%                               gradients due to the way observer's head is
+%                               positioned in the TSLO, or just the darker
+%                               nature of the foveal pit compared to the
+%                               peripheral retina creates these low-freq.
+%                               fluctuations.(default 3 cycles/image)
 
 outputVideoPath = [inputVideoPath(1:end-4) '_bandfilt' inputVideoPath(end-3:end)];
 
@@ -18,40 +32,71 @@ else
     warning('BandpassFilter() is proceeding and overwriting an existing file.');
 end
 
-%% Set bandpassSigmaUpper and bandpassSigmaLower
+%% Set smoothing and lowSpatialFrequencyCutoff
 
-if ~isfield(parametersStructure, 'bandpassSigmaUpper')
-    bandpassSigmaUpper = 3;
+if ~isfield(parametersStructure, 'smoothing')
+    smoothing = 1; % standard deviation of the gaussian kernel, in pixels
 else
-    bandpassSigmaUpper = parametersStructure.bandpassSigmaUpper;
+    smoothing = parametersStructure.smoothing;
 end
 
-if ~isfield(parametersStructure, 'bandpassSigmaLower')
-    bandpassSigmaLower = 25;
+if ~isfield(parametersStructure, 'lowSpatialFrequencyCutoff')
+    lowSpatialFrequencyCutoff = 3; % cycles per image
 else
-    bandpassSigmaLower = parametersStructure.bandpassSigmaLower;
+    lowSpatialFrequencyCutoff = parametersStructure.lowSpatialFrequencyCutoff;
 end
 
-if parametersStructure.bandpassSigmaUpper > bandpassSigmaLower
-    error('bandpassSigmaUpper should not be > bandpassSigmaLower');
+if smoothing < 0
+    error('smoothing should not be non-negative');
+end
+
+if lowSpatialFrequencyCutoff < 0
+    error('lowSpatialFrequencyCutoff should not be non-negative');
 end
 
 %% Gamma correct frame by frame
 
+% create a video writer object and open it.
 writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
 open(writer);
 
+% read all frames and store them in memory (very inefficient for big videos)
 [videoInputArray, ~] = VideoPathToArray(inputVideoPath);
 
-numberOfFrames = size(videoInputArray, 3);
+% get the number of frames and their sizes
+[height, width, numberOfFrames] = size(videoInputArray);
 
+% create pixel position arrays. 
+xVector = (0:width - 1) - floor(width / 2); 
+yVector = flipud((0:height - 1)') - floor(height / 2); 
+radiusMatrix = sqrt((repmat(xVector,height,1) .^ 2) + ...
+                    (repmat(yVector,1,width) .^ 2));
+
+% create the amplitude response of the high-pass filter (which will remove
+% only the low spatial frequency components in the image such as luminance
+% gradient, darker foveal pit, etc.)
+highPassFilter = double(radiusMatrix > lowSpatialFrequencyCutoff);
+
+
+% now it's time to apply filters to each and every frame
 for frameNumber = 1:numberOfFrames
     
+    % get a single frame
     I = videoInputArray(:,:,frameNumber);
-    I1 = imgaussfilt(I, bandpassSigmaUpper);
-    I2 = imgaussfilt(I1, bandpassSigmaLower);
     
-    videoInputArray(:,:,frameNumber) = histeq(I1 - I2);
+    % apply smoothing
+    I1 = imgaussfilt(I, smoothing);
+    
+    % remove low spatial frequencies
+    I2 = abs(ifft2( abs(fft2(I1)) .* ifftshift(highPassFilter) ));
+    
+    % normalize to maximize contrast
+    maxMin = [max(I2(:))  min(I2(:))];
+    rangeOfValues = abs(diff(maxMin));
+    newFrame = uint8((I2 - maxMin(2))/rangeOfValues);
+    
+    % update the video array 
+    videoInputArray(:,:,frameNumber) = newFrame;
     
     %Solution should look like: mna_os_10_12_1_45_0_stabfix_17_36_21_409_dwt_nostim_nostim_gamscaled_bandfilt_meanrem
 end
