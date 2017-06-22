@@ -10,7 +10,7 @@ function BandpassFilter(inputVideoPath, parametersStructure)
 %                               already exists.(default 0)
 %   smoothing                   Used to remove high-frequency noise in the
 %                               frames. Represents the standard deviation
-%                               of a Gaussian kernel, in pixels.(default 2)
+%                               of a Gaussian kernel, in pixels.(default 1)
 %   lowSpatialFrequencyCutoff   Used to remove low-frequency fluctuations
 %                               in the frames which messes up strip
 %                               analysis. For instance, brightness
@@ -76,7 +76,7 @@ radiusMatrix = sqrt((repmat(xVector,height,1) .^ 2) + ...
 % only the low spatial frequency components in the image such as luminance
 % gradient, darker foveal pit, etc.)
 highPassFilter = double(radiusMatrix > lowSpatialFrequencyCutoff);
-
+highPassFilter(floor(height / 2)+1,floor(width / 2)+1) = 1;
 
 % now it's time to apply filters to each and every frame
 for frameNumber = 1:numberOfFrames
@@ -88,17 +88,18 @@ for frameNumber = 1:numberOfFrames
     I1 = imgaussfilt(I, smoothing);
     
     % remove low spatial frequencies
-    I2 = abs(ifft2( abs(fft2(I1)) .* ifftshift(highPassFilter) ));
+    I2 = abs(ifft2( (fft2(I1)) .* ifftshift(highPassFilter) ));
     
     % normalize to maximize contrast
     maxMin = [max(I2(:))  min(I2(:))];
     rangeOfValues = abs(diff(maxMin));
-    newFrame = uint8((I2 - maxMin(2))/rangeOfValues);
+    newFrame = uint8(255*(I2 - maxMin(2))/rangeOfValues);
     
     % update the video array 
     videoInputArray(:,:,frameNumber) = newFrame;
     
     %Solution should look like: mna_os_10_12_1_45_0_stabfix_17_36_21_409_dwt_nostim_nostim_gamscaled_bandfilt_meanrem
+
 end
 
 writeVideo(writer, videoInputArray);

@@ -57,8 +57,8 @@ for videoPath = {video1, video2, video3, video4}
     parametersStructure.overwrite = true;
     % Step 6: Apply bandpass filtering
     videoPath = [videoPath(1:end-4) '_gamscaled' videoPath(end-3:end)];
-    parametersStructure.bandpassSigmaUpper = 1;
-    parametersStructure.bandpassSigmaLower = 25;
+    parametersStructure.smoothing = 1;
+    parametersStructure.lowSpatialFrequencyCutoff = 3;
     BandpassFilter(videoPath, parametersStructure);
     fprintf('Process Completed for BandpassFilter()\n');
 end
