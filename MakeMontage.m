@@ -144,11 +144,9 @@ refFrame = refFrame./counterArray;
 column1 = interpolatedPositions(:, 1);
 column2 = interpolatedPositions(:, 2);
 minRow = min(column1);
-maxRow = max(column1);
 minColumn = min(column2);
 maxColumn = max(column2);
 refFrame(1:floor((minRow-1)), :) = [];
-refFrame(ceil(maxRow + params.newStripHeight):end, :) = [];
 refFrame(:, 1:floor((minColumn-1))) = [];
 refFrame(:, ceil(maxColumn+w):end) = [];
 
@@ -158,6 +156,17 @@ NaNindices = find(isnan(refFrame));
 for k = 1:size(NaNindices)
     NaNindex = NaNindices(k);
     refFrame(NaNindex) = 0;
+end
+
+% Need to take care of rows separately for cropping out 0 padding because 
+% strip locations do not give info about where the template frame ends
+k = 1;
+while k<= size(refFrame, 1)
+    if refFrame(k, :) == 0
+        refFrame(k, :) = [];
+        continue
+    end
+    k = k + 1;
 end
 
 % UNCOMMENT THE SAVE STATEMENT IN THE FINAL VERSION
