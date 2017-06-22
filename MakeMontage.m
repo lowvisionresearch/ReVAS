@@ -140,7 +140,17 @@ end
 % divide each pixel in refFrame by the number of strips that contain that pixel
 refFrame = refFrame./counterArray;
 
-refFrame = Crop(refFrame);
+% Crop out the leftover 0 padding from the original template.
+column1 = interpolatedPositions(:, 1);
+column2 = interpolatedPositions(:, 2);
+minRow = min(column1);
+maxRow = max(column1);
+minColumn = min(column2);
+maxColumn = max(column2);
+refFrame(1:floor((minRow-1)), :) = [];
+refFrame(ceil(maxRow + params.newStripHeight):end, :) = [];
+refFrame(:, 1:floor((minColumn-1))) = [];
+refFrame(:, ceil(maxColumn+w):end) = [];
 
 % Convert any NaN values in the reference frame to a 0. Otherwise, running
 % strip analysis on this new frame will not work
