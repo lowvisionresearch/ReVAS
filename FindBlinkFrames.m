@@ -47,8 +47,9 @@ medianOfMeanDiffs = median(meanDiffs);
 standardDeviationOfMeanDiffs = sqrt(median(meanDiffs.^2) - medianOfMeanDiffs^2);
 meanThreshold = medianOfMeanDiffs - thresholdValue * standardDeviationOfMeanDiffs;
 meanBadFrames = [0; meanDiffs]' < meanThreshold;
+
 % Mark frames near bad frames as bad as well
-meanBadFrames = conv(meanBadFrames, [1 1 1], 'same') >= 1;
+meanBadFrames = conv(single(meanBadFrames), single([1 1 1]), 'same') >= 1;
 
 % Use the differences of the standard deviations to identify bad frames
 standardDeviationDiffs = diff(standardDeviationOfEachFrame);
@@ -59,7 +60,7 @@ standardDeviationThreshold = ...
     medianOfStandardDeviationDiffs - thresholdValue * standardDeviationOfStandardDeviationDiffs;
 standardDeviationBadFrames = [0; standardDeviationDiffs]' < standardDeviationThreshold;
 % Mark frames near bad frames as bad as well
-standardDeviationBadFrames = conv(standardDeviationBadFrames, [1 1 1], 'same') >= 1;
+standardDeviationBadFrames = conv(single(standardDeviationBadFrames), single([1 1 1]), 'same') >= 1;
 
 % Combine results from both mean and standard deviation approaches.
 badFrames = or(meanBadFrames, standardDeviationBadFrames);

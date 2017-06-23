@@ -125,6 +125,11 @@ for frameNumber = 1:totalFrames
              templateSelectRow = rowIndex:(maxRow-difference);
          end
         
+        templateSelectRow = round(templateSelectRow);
+        templateSelectColumn = round(templateSelectColumn);
+        vidStart = round(vidStart);
+        vidEnd = round(vidEnd);
+        
         refFrame(templateSelectRow, templateSelectColumn) = refFrame(...
             templateSelectRow, templateSelectColumn) + videoFrame(...
             vidStart:vidEnd, :);
