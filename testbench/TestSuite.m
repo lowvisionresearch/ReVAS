@@ -23,7 +23,7 @@ for videoPath = {video1, video2, video3, video4}
     % Overwrite parameter:
     % if true, recompute and replace existing output file if already present.
     % if false and output file already exists, abort current function/step and continue.
-    parametersStructure.overwrite = false;
+    parametersStructure.overwrite = true;
 
     % Step 1: Trim the video's upper and right edges.
     parametersStructure.borderTrimAmount = 24;
@@ -139,6 +139,35 @@ FindSaccadesAndDrifts(eyePositionTracesPath, [512 512], [10 10], ...
     parametersStructure);
 
 fprintf('Process Completed\n');
+
+%% Fine Reference Frame Test
+videoPath = 'cmo_os_10_4_1_135_1_stabfix_09_33_36_910_dwt_nostim_gamscaled_bandfilt.avi';
+videoFrames = VideoPathToArray(videoPath);
+videoWidth = size(videoFrames, 2);
+
+params.videoPath = videoPath;
+params.enableSubpixelInterpolation = true;
+params.stripHeight = 15;
+params.enableGPU = false;
+params.samplingRate = 540;
+params.adaptiveSearch = false;
+params.stripWidth = videoWidth;
+params.enableVerbosity = 1;
+params.subpixelInterpolationParameters.neighborhoodSize = 7;
+params.subpixelInterpolationParameters.subpixelDepth = 2;
+params.fileName = 'cmo_os_10_4_1_135_1_stabfix_09_33_36_910_dwt_nostim_gamscaled_bandfilt.avi';
+params.badFrames = [29 30];
+params.enableGaussianFiltering = true; 
+params.gaussianStandardDeviation = 10;
+params.minimumPeakRatio = 0.8;
+params.minimumPeakThreshold = 0.2;
+params.axesHandles = [];
+params.enableGaussianFiltering = true; 
+params.gaussianStandardDeviation = 10;
+params.overwrite = true;
+params.numberOfIterations = 1;
+coarseRef = CoarseRef(params, 0.4);
+RefineReferenceFrame(coarseRef, params);
 
 end
 
