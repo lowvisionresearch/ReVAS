@@ -33,10 +33,10 @@ for videoPath = {video1, video2, video3, video4}
     % Step 2: Find stimulus location
     videoPath = [videoPath(1:end-4) '_dwt' videoPath(end-3:end)]; %#ok<*FXSET>
     parametersStructure.enableVerbosity = true;
-    FindStimulusLocations(videoPath, 'testbench/stimulus_cross.gif', parametersStructure);
-    %%stimulus.thickness = 1;
-    %%stimulus.size = 11;
-    %%FindStimulusLocations(videoPath, stimulus, parametersStructure);
+    %FindStimulusLocations(videoPath, 'testbench/stimulus_cross.gif', parametersStructure);
+    stimulus.thickness = 1;
+    stimulus.size = 51;
+    FindStimulusLocations(videoPath, stimulus, parametersStructure);
     fprintf('Process Completed for FindStimulusLocations()\n');
 
     % Step 3: Remove the stimulus

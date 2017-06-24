@@ -50,9 +50,34 @@ for frameNumber = 1:numberOfFrames
         noise * standardDeviationOfEachFrame(frameNumber) + meanOfEachFrame(frameNumber);
     
     location = stimulusLocationInEachFrame(frameNumber,:);
-    videoInputArray(location(2)-stimulusSize(1)+1 : location(2), ...
-        location(1)-stimulusSize(2)+1 : location(1), frameNumber) = noise;
     
+    % Account for removal target at edge of array
+    xLow = location(2)-stimulusSize(1)+1;
+    xHigh = location(2);
+    yLow = location(1)-stimulusSize(2)+1;
+    yHigh = location(1);
+    
+    xDiff = 0;
+    yDiff = 0;
+    
+    if xLow < 1
+        xDiff = -xLow+1;
+    elseif xHigh > size(videoInputArray, 2)
+        xDiff = size(videoInputArray, 2) - xHigh;
+    end
+    
+    if yLow < 1
+        yDiff = -yLow+1;
+    elseif yHigh > size(videoInputArray, 1)
+        yDiff = size(videoInputArray, 1) - yHigh;
+    end
+    
+    videoInputArray(max(location(2)-stimulusSize(1)+1, 1) : ...
+        min(location(2), size(videoInputArray, 2)),...
+        max(location(1)-stimulusSize(2)+1, 1) : ...
+        min(location(1), size(videoInputArray, 1)), ...
+        frameNumber) = ...
+        noise(1:end-xDiff, 1:end-yDiff);
 end
 
 writeVideo(writer, videoInputArray);
