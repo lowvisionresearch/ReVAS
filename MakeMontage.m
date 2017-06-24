@@ -52,9 +52,17 @@ stripIndices = -stripIndices;
 % a positive integer to make sure all values are > 0 (i.e., if we leave the
 % zero'd value in framePositions, there will be indexing problems later,
 % since MatLab indexing starts from 1 not 0).
-mostNegative = max(-1*stripIndices);
-stripIndices(:, 1) = stripIndices(:, 1) + mostNegative(1) + 2;
-stripIndices(:, 2) = stripIndices(:, 2) + mostNegative(2) + 2;
+column1 = stripIndices(:, 1);
+column2 = stripIndices(:, 2);
+if column1(column1<0)
+    mostNegative = max(-1*column1);
+    stripIndices(:, 1) = stripIndices(:, 1) + mostNegative + 2;
+end
+
+if column2(column2<0)
+    mostNegative = max(-1*column2);
+    stripIndices(:, 2) = stripIndices(:, 2) + mostNegative + 2;
+end
 
 % scaling the time array to accomodate new strip height CHANGE TOTALFRAMES
 % TO FRAMERATE MAYBE

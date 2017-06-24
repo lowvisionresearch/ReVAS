@@ -13,8 +13,12 @@ function refinedFrame = RefineReferenceFrame(coarseRefFrame, params)
 
 % First perform strip analysis on the coarseRefFrame to get a rough
 % estimate of the strip positions
-[~, usefulEyePositionTraces, timeArray, ~] = ...
-    StripAnalysis(params.fileName, coarseRefFrame, params);
+if params.numberOfIterations > 0
+    [~, usefulEyePositionTraces, timeArray, ~] = ...
+        StripAnalysis(params.fileName, coarseRefFrame, params);
+else
+    newRefFrame = coarseRefFrame;
+end
 
 % For a certain number of iterations specified by the user, pingpong back
 % and forth between extracting positions and generating reference frames

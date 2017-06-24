@@ -142,10 +142,11 @@ FindSaccadesAndDrifts(eyePositionTracesPath, [512 512], [10 10], ...
 fprintf('Process Completed\n');
 
 %% Fine Reference Frame Test
+
+% First video
 videoPath = 'cmo_os_10_4_1_135_1_stabfix_09_33_36_910_dwt_nostim_gamscaled_bandfilt.avi';
 videoFrames = VideoPathToArray(videoPath);
 videoWidth = size(videoFrames, 2);
-
 params.videoPath = videoPath;
 params.enableSubpixelInterpolation = true;
 params.stripHeight = 15;
@@ -161,12 +162,27 @@ params.badFrames = [29 30];
 params.enableGaussianFiltering = false; 
 params.gaussianStandardDeviation = 10;
 params.minimumPeakRatio = 0.8;
-params.minimumPeakThreshold = 0.2;
+params.minimumPeakThreshold = 0;
 params.axesHandles = [];
 params.overwrite = true;
-params.numberOfIterations = 1;
+params.numberOfIterations = 2;
 coarseRef = CoarseRef(params, 0.4);
 RefineReferenceFrame(coarseRef, params);
+
+% Second Video
+% videoPath = 'djw_os_10_12_1_45_1_stabfix_16_39_42_176_dwt_nostim_gamscaled_bandfilt.avi';
+% videoFrames = VideoPathToArray(videoPath);
+% videoWidth = size(videoFrames, 2);
+% params.videoPath = videoPath;
+% params.stripWidth = videoWidth;
+% params.fileName = 'djw_os_10_12_1_45_1_stabfix_16_39_42_176_dwt_nostim_gamscaled_bandfilt.avi';
+% params.numberOfIterations = 0;
+% params.enableGaussianFiltering = false; 
+% params.gaussianStandardDeviation = 10;
+% coarseRef = CoarseRef(params, 0.4);
+% RefineReferenceFrame(coarseRef, params);
+
+
 
 end
 
