@@ -63,15 +63,14 @@ for frameNumber = 1:numberOfFrames
     if xLow < 1
         xDiff = -xLow+1;
     elseif xHigh > size(videoInputArray, 2)
-        xDiff = size(videoInputArray, 2) - xHigh;
+        xDiff = xHigh - size(videoInputArray, 2);
     end
     
     if yLow < 1
         yDiff = -yLow+1;
     elseif yHigh > size(videoInputArray, 1)
-        yDiff = size(videoInputArray, 1) - yHigh;
+        yDiff = yHigh - size(videoInputArray, 1);
     end
-    
     videoInputArray(max(location(2)-stimulusSize(1)+1, 1) : ...
         min(location(2), size(videoInputArray, 2)),...
         max(location(1)-stimulusSize(2)+1, 1) : ...
