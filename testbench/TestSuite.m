@@ -40,6 +40,7 @@ for videoPath = {video1, video2, video3, video4}
     fprintf('Process Completed for FindStimulusLocations()\n');
 
     % Step 3: Remove the stimulus
+    parametersStructure.overwrite = true;
     RemoveStimuli(videoPath, parametersStructure);
     fprintf('Process Completed for RemoveStimuli()\n');
 

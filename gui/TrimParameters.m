@@ -22,7 +22,7 @@ function varargout = TrimParameters(varargin)
 
 % Edit the above text to modify the response to help TrimParameters
 
-% Last Modified by GUIDE v2.5 16-Jun-2017 12:55:04
+% Last Modified by GUIDE v2.5 23-Jun-2017 15:37:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,6 +55,13 @@ function TrimParameters_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for TrimParameters
 handles.output = hObject;
 
+% Loading previously saved or default parameters
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+
+handles.borderTrimAmount.String = mainHandles.trimBorderTrimAmount;
+handles.overwrite.Value = mainHandles.trimOverwrite;
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -83,34 +90,31 @@ path = fullfile(folder, file);
 set(handles.path1,'String',path);
 
 
-% --- Executes on button press in add.
-function add_Callback(hObject, eventdata, handles)
-% hObject    handle to add (see GCBO)
+% --- Executes on button press in save.
+function save_Callback(hObject, eventdata, handles)
+% hObject    handle to save (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 figureHandle = findobj(0, 'tag', 'jobQueue');
-jobQueueHandles = guidata(figureHandle);
+mainHandles = guidata(figureHandle);
 
-% Populate table
-jobQueueHandles.table.Data{1,1} = 'Pre-01: Trim';
-
-% Extract the file name from full path before displaying in the table
-path = get(handles.path1, 'String');
-index = strfind(path, '\');
-if isempty(index)
-    index = 1;
-else
-    index = index(end)+1;
+% Validate new configurations
+% borderTrimAmount
+borderTrimAmount = str2double(handles.borderTrimAmount.String);
+if isnan(borderTrimAmount) || ...
+        borderTrimAmount < 0 || ...
+        rem(borderTrimAmount,1) ~= 0
+    errordlg('Border Trim Amount must be a natural number', 'Invalid Parameter');
+    return;
 end
-jobQueueHandles.table.Data{1,2} = path(index:end);
 
-jobQueueHandles.table.Data{1,3} = [path(index:end-4) '_dwt' path(end-3:end)];
+% Save new configurations
+mainHandles.trimBorderTrimAmount = str2double(handles.borderTrimAmount.String);
+mainHandles.trimOverwrite = logical(handles.overwrite.Value);
 
-% Populate parameters into hiddenTable
-jobQueueHandles.hiddenTable.Data{1,1} = handles.path1.String;
-jobQueueHandles.hiddenTable.Data{1,2} = handles.borderTrimAmount.String;
-jobQueueHandles.hiddenTable.Data{1,3} = handles.overwrite.Value;
+% Update handles structure
+guidata(figureHandle, mainHandles);
 
 close;
 

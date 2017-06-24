@@ -1,17 +1,18 @@
 %% Specifications for Important Functions
-%
 
 %% Strip Analysis Module
-% 
-% *Purpose* 
+%
+% *Purpose*
+%
 % Extract eye movements in units of pixels.
 %
 % *Method* 
+%
 % Cross-correlation of horizontal strips with a pre-defined
 % reference frame. 
-%
+% 
 % *Input arguments*
-%%
+%
 % # Full path to the video *or* video as a 3D. (Note that if there are
 % color channels, the program should convert it to grayscale before further 
 % processing).
@@ -34,7 +35,7 @@
 % axes handles to be used to display progress if verbosity is enabled.
 %
 % *Output arguments*
-%%
+%
 % # Raw eye position traces (horizontal and vertical) in units of pixels.
 % # Useful eye position traces (horizontal and vertical) in units of
 % pixels. The difference between the raw and useful positions is as
@@ -63,15 +64,13 @@
 % running this module but later on was interested in looking at how the
 % analysis went.
 %
-%
-%%
 % *Notes*
-%%
-% * This function will use |normxcorr2| function available in MATLAB for
+%
+% # This function will use |normxcorr2| function available in MATLAB for
 % computing the cross-correlation maps. Since this function uses either
 % frequency domain or time domain computation depending on the size of the
-% arrays, it offers a good adaptive compromise. 
-% * |normxcorr2| does
+% arrays, it offers a good adaptive compromise.
+% # |normxcorr2| does
 % not automatically do the computations in GPU. To do so, the strip and the
 % reference frame must be transferred to GPU memory by using |gpuArray|
 % function, also available in MATLAB. When computations are done in GPU,
@@ -80,7 +79,7 @@
 % transferred but the peak locations and the peak value should be
 % transferred to properly store them in the third output argument described
 % above.
-% * 2D interpolation option can be implemented as a separate function since
+% # 2D interpolation option can be implemented as a separate function since
 % it may be needed in other modules of ReVAS. The specifications for this
 % helper function is very straightforward. Input arguments: 2D correlation
 % map, pixel coordinates of the peak location (e.g., x0 and y0), and a
@@ -90,44 +89,176 @@
 % structure caught by |try|/ |catch|. If there no error has occured, this
 % argument will simply be an empty array. As the interpolation method, use
 % |spline| option in |interp2|.
-%
-%
-%
-%
+
 %% Frame Analysis Module
 % 
-% *Purpose* 
+% *Purpose*
+%
 % Extract eye movements in units of pixels at the frame rate of the video.
 %
-% *Method* 
+% *Method*
+%
 % Cross-correlation of whole frames with a pre-defined
 % reference frame.
 %
 % Functionally similar to the Strip analysis module but the only difference
 % is that this module will use whole frames rather than horizontal strips.
-%
-% 
-%
-%
+
 %% Make Coarse Montage Module
 % 
-% *Purpose* 
+% *Purpose*
+%
 % Create a retinal montage by using whole frames.
 %
-% *Method* 
+% *Method*
+%
 % Tiling a retinal montage by using the output of the Frame Analysis Module.
-%
-%
-%
-%
+
 %% Make Fine Montage Module
-% 
-% *Purpose* 
+%
+% *Purpose*
+%
 % Create a retinal montage by using horizontal strips.
 %
-% *Method* 
+% *Method*
+%
 % Tiling a retinal montage by using the output of the Strip Analysis Module.
+
+%% Video Trimming Module
 %
+% *Purpose*
 %
+% Trim the video's upper and right edges.
 %
+% *Method* 
 %
+% Crop each frame of the video.
+% 
+% *Input arguments*
+%
+% # Full path to the video.
+% # A parameters structure specifying all necessary parameters for
+% video trimming. Fields: |borderTrimAmount|, the number of rows/columns
+% to be removed from the upper/right edges in pixels (assumed to be 24
+% pixels if not provided); |overwrite|, determines whether an existing
+% output file should be overwritten and replaced if it already exists.
+%
+% *Output arguments*
+%
+% None.
+%
+% *Notes*
+%
+% # Produces a trimmed version of this video that is stored in the same
+% location as the original video but with '_dwt' appended to the
+% original file name.
+
+%% Find Stimulus Location Module
+%
+% *Purpose*
+%
+% TODO
+%
+% *Method* 
+%
+% TODO
+% 
+% *Input arguments*
+%
+% # TODO
+%
+% *Output arguments*
+%
+% # TODO
+%
+% *Notes*
+%
+% # TODO
+
+%% Remove Stimulus Module
+%
+% *Purpose*
+%
+% TODO
+%
+% *Method* 
+%
+% TODO
+% 
+% *Input arguments*
+%
+% # TODO
+%
+% *Output arguments*
+%
+% # TODO
+%
+% *Notes*
+%
+% # TODO
+
+%% Detect Blink Frames Module
+%
+% *Purpose*
+%
+% TODO
+%
+% *Method* 
+%
+% TODO
+% 
+% *Input arguments*
+%
+% # TODO
+%
+% *Output arguments*
+%
+% # TODO
+%
+% *Notes*
+%
+% # TODO
+
+%% Gamma Correction Module
+%
+% *Purpose*
+%
+% TODO
+%
+% *Method* 
+%
+% TODO
+% 
+% *Input arguments*
+%
+% # TODO
+%
+% *Output arguments*
+%
+% # TODO
+%
+% *Notes*
+%
+% # TODO
+
+%% Bandpass Filtering Module
+%
+% *Purpose*
+%
+% TODO
+%
+% *Method* 
+%
+% TODO
+% 
+% *Input arguments*
+%
+% # TODO
+%
+% *Output arguments*
+%
+% # TODO
+%
+% *Notes*
+%
+% # TODO
