@@ -22,7 +22,7 @@ function varargout = JobQueue(varargin)
 
 % Edit the above text to modify the response to help JobQueue
 
-% Last Modified by GUIDE v2.5 23-Jun-2017 14:51:06
+% Last Modified by GUIDE v2.5 27-Jun-2017 14:24:33
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -120,6 +120,12 @@ handles.sacHardVelThreshold = 35;
 handles.sacDetectionMethod2 = true;
 handles.sacVelMethod1 = true;
 handles.sacVelMethod2 = false;
+
+% Pre-Disabled Toggle Values
+handles.preDisabledTogTrimValue = 1;
+handles.preDisabledTogStimValue = 1;
+handles.preDisabledTogGammaValue = 1;
+handles.preDisabledTogBandFiltValue = 1;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -246,16 +252,28 @@ function radioRaw_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of radioRaw
+handles.togTrim.Value = handles.preDisabledTogTrimValue;
+handles.togTrim.Enable = 'on';
+handles.configTrim.Enable = 'on';
+togTrim_Callback(handles.togTrim, eventdata, handles);
 
+handles.togStim.Value = handles.preDisabledTogStimValue;
+handles.togStim.Enable = 'on';
+handles.configStim.Enable = 'on';
+togStim_Callback(handles.togStim, eventdata, handles);
 
-% --- Executes on button press in radiobutton7.
-function radiobutton7_Callback(hObject, eventdata, handles)
-% hObject    handle to radiobutton7 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+handles.togGamma.Value = handles.preDisabledTogGammaValue;
+handles.togGamma.Enable = 'on';
+handles.configGamma.Enable = 'on';
+togGamma_Callback(handles.togGamma, eventdata, handles);
 
-% Hint: get(hObject,'Value') returns toggle state of radiobutton7
+handles.togBandFilt.Value = handles.preDisabledTogBandFiltValue;
+handles.togBandFilt.Enable = 'on';
+handles.configBandFilt.Enable = 'on';
+togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
 
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes on button press in selectFiles.
 function selectFiles_Callback(hObject, eventdata, handles)
@@ -327,7 +345,40 @@ function radioBandFilt_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of radioBandFilt
+if strcmp(handles.togTrim.Enable, 'on')
+    handles.preDisabledTogTrimValue = handles.togTrim.Value;
+end
+handles.togTrim.Value = 0;
+handles.togTrim.Enable = 'off';
+handles.configTrim.Enable = 'off';
+togTrim_Callback(handles.togTrim, eventdata, handles);
 
+if strcmp(handles.togStim.Enable, 'on')
+    handles.preDisabledTogStimValue = handles.togStim.Value;
+end
+handles.togStim.Value = 0;
+handles.togStim.Enable = 'off';
+handles.configStim.Enable = 'off';
+togStim_Callback(handles.togStim, eventdata, handles);
+
+if strcmp(handles.togGamma.Enable, 'on')
+    handles.preDisabledTogGammaValue = handles.togGamma.Value;
+end
+handles.togGamma.Value = 0;
+handles.togGamma.Enable = 'off';
+handles.configGamma.Enable = 'off';
+togGamma_Callback(handles.togGamma, eventdata, handles);
+
+if strcmp(handles.togBandFilt.Enable, 'on')
+    handles.preDisabledTogBandFiltValue = handles.togBandFilt.Value;
+end
+handles.togBandFilt.Value = 0;
+handles.togBandFilt.Enable = 'off';
+handles.configBandFilt.Enable = 'off';
+togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes when selected cell(s) is changed in inputList.
 function inputList_CellSelectionCallback(hObject, eventdata, handles)
@@ -361,113 +412,137 @@ end
 
 % --- Executes on button press in togTrim.
 function togTrim_Callback(hObject, eventdata, handles)
-    if get(hObject,'Value') == 1
-        hObject.String = 'ENABLED';
-        hObject.BackgroundColor = [.49 .18 .56];
-    else
-        hObject.String = 'DISABLED';
-        hObject.BackgroundColor = [.69 .49 .74];
-    end
-
-% --- Executes on button press in togBlink.
-function togBlink_Callback(hObject, eventdata, handles)
-    if get(hObject,'Value') == 1
-        hObject.String = 'ENABLED';
-        hObject.BackgroundColor = [.49 .18 .56];
-    else
-        hObject.String = 'DISABLED';
-        hObject.BackgroundColor = [.69 .49 .74];
-    end
+if hObject.Value == 1
+    hObject.String = 'ENABLED';
+    hObject.BackgroundColor = [.49 .18 .56];
+else
+    hObject.String = 'DISABLED';
+    hObject.BackgroundColor = [.69 .49 .74];
+end
 
 % --- Executes on button press in togStrip.
 function togStrip_Callback(hObject, eventdata, handles)
-    if get(hObject,'Value') == 1
-        hObject.String = 'ENABLED';
-        hObject.BackgroundColor = [.49 .18 .56];
-    else
-        hObject.String = 'DISABLED';
-        hObject.BackgroundColor = [.69 .49 .74];
+if hObject.Value == 1
+    hObject.String = 'ENABLED';
+    hObject.BackgroundColor = [.49 .18 .56];
+else
+    if handles.togFilt.Value == 1 || ...
+            handles.togReRef.Value == 1 || ...
+            handles.togSacDrift.Value == 1
+        errordlg(...
+            'Strip Analysis must be enabled if Filtering, Re-Referencing, or Saccade Detection is enabled.', 'Invalid Selection');
+        hObject.Value = 1;
+        return;
     end
+    hObject.String = 'DISABLED';
+    hObject.BackgroundColor = [.69 .49 .74];
+end
 
 % --- Executes on button press in togStim.
 function togStim_Callback(hObject, eventdata, handles)
-    if get(hObject,'Value') == 1
-        hObject.String = 'ENABLED';
-        hObject.BackgroundColor = [.49 .18 .56];
-    else
-        hObject.String = 'DISABLED';
-        hObject.BackgroundColor = [.69 .49 .74];
-    end
+if hObject.Value == 1
+    hObject.String = 'ENABLED';
+    hObject.BackgroundColor = [.49 .18 .56];
+else
+    hObject.String = 'DISABLED';
+    hObject.BackgroundColor = [.69 .49 .74];
+end
 
 % --- Executes on button press in togGamma.
 function togGamma_Callback(hObject, eventdata, handles)
-    if get(hObject,'Value') == 1
-        hObject.String = 'ENABLED';
-        hObject.BackgroundColor = [.49 .18 .56];
-    else
-        hObject.String = 'DISABLED';
-        hObject.BackgroundColor = [.69 .49 .74];
-    end
+if hObject.Value == 1
+    hObject.String = 'ENABLED';
+    hObject.BackgroundColor = [.49 .18 .56];
+else
+    hObject.String = 'DISABLED';
+    hObject.BackgroundColor = [.69 .49 .74];
+end
 
 % --- Executes on button press in togCoarse.
 function togCoarse_Callback(hObject, eventdata, handles)
-    if get(hObject,'Value') == 1
-        hObject.String = 'ENABLED';
-        hObject.BackgroundColor = [.49 .18 .56];
-    else
-        hObject.String = 'DISABLED';
-        hObject.BackgroundColor = [.69 .49 .74];
+if hObject.Value == 1
+    hObject.String = 'ENABLED';
+    hObject.BackgroundColor = [.49 .18 .56];
+else
+    if handles.togFine.Value == 1
+        errordlg(...
+            'Make Coarse Reference Frame must be enabled if Make Fine Reference Frame is enabled.', 'Invalid Selection');
+        hObject.Value = 1;
+        return;
     end
+    hObject.String = 'DISABLED';
+    hObject.BackgroundColor = [.69 .49 .74];
+end
 
 % --- Executes on button press in togReRef.
 function togReRef_Callback(hObject, eventdata, handles)
-    if get(hObject,'Value') == 1
-        hObject.String = 'ENABLED';
-        hObject.BackgroundColor = [.49 .18 .56];
-    else
-        hObject.String = 'DISABLED';
-        hObject.BackgroundColor = [.69 .49 .74];
+if hObject.Value == 1
+    if handles.togStrip.Value == 0
+        warndlg('Strip Analysis has been enabled since it must be if Re-Referencing is enabled.', 'Input Warning');
+        handles.togStrip.Value = 1;
+        togStrip_Callback(handles.togStrip, eventdata, handles);
     end
+    hObject.String = 'ENABLED';
+    hObject.BackgroundColor = [.49 .18 .56];
+else
+    hObject.String = 'DISABLED';
+    hObject.BackgroundColor = [.69 .49 .74];
+end
 
 % --- Executes on button press in togFilt.
 function togFilt_Callback(hObject, eventdata, handles)
-    if get(hObject,'Value') == 1
-        hObject.String = 'ENABLED';
-        hObject.BackgroundColor = [.49 .18 .56];
-    else
-        hObject.String = 'DISABLED';
-        hObject.BackgroundColor = [.69 .49 .74];
+if hObject.Value == 1
+    if handles.togStrip.Value == 0
+        warndlg('Strip Analysis has been enabled since it must be if Filtering is enabled.', 'Input Warning');
+        handles.togStrip.Value = 1;
+        togStrip_Callback(handles.togStrip, eventdata, handles);
     end
+    hObject.String = 'ENABLED';
+    hObject.BackgroundColor = [.49 .18 .56];
+else
+    hObject.String = 'DISABLED';
+    hObject.BackgroundColor = [.69 .49 .74];
+end
 
 % --- Executes on button press in togSacDrift.
 function togSacDrift_Callback(hObject, eventdata, handles)
-    if get(hObject,'Value') == 1
-        hObject.String = 'ENABLED';
-        hObject.BackgroundColor = [.49 .18 .56];
-    else
-        hObject.String = 'DISABLED';
-        hObject.BackgroundColor = [.69 .49 .74];
+if hObject.Value == 1
+    if handles.togStrip.Value == 0
+        warndlg('Strip Analysis has been enabled since it must be if Filtering is enabled.', 'Input Warning');
+        handles.togStrip.Value = 1;
+        togStrip_Callback(handles.togStrip, eventdata, handles);
     end
+    hObject.String = 'ENABLED';
+    hObject.BackgroundColor = [.49 .18 .56];
+else
+    hObject.String = 'DISABLED';
+    hObject.BackgroundColor = [.69 .49 .74];
+end
 
 % --- Executes on button press in togFine.
 function togFine_Callback(hObject, eventdata, handles)
-    if get(hObject,'Value') == 1
-        hObject.String = 'ENABLED';
-        hObject.BackgroundColor = [.49 .18 .56];
-    else
-        hObject.String = 'DISABLED';
-        hObject.BackgroundColor = [.69 .49 .74];
+if hObject.Value == 1
+    if handles.togCoarse.Value == 0
+        warndlg('Make Coarse Reference Frame has been enabled since it must be if Make Fine Reference Frame is enabled.', 'Input Warning');
+        handles.togCoarse.Value = 1;
+        togCoarse_Callback(handles.togCoarse, eventdata, handles);
     end
+    hObject.String = 'ENABLED';
+    hObject.BackgroundColor = [.49 .18 .56];
+else
+    hObject.String = 'DISABLED';
+    hObject.BackgroundColor = [.69 .49 .74];
+end
 
 % --- Executes on button press in togBandFilt.
 function togBandFilt_Callback(hObject, eventdata, handles)
-    if get(hObject,'Value') == 1
-        hObject.String = 'ENABLED';
-        hObject.BackgroundColor = [.49 .18 .56];
-    else
-        hObject.String = 'DISABLED';
-        hObject.BackgroundColor = [.69 .49 .74];
-    end
+if hObject.Value == 1
+    hObject.String = 'ENABLED';
+    hObject.BackgroundColor = [.49 .18 .56];
+else
+    hObject.String = 'DISABLED';
+    hObject.BackgroundColor = [.69 .49 .74];
+end
 
 % --- Executes on button press in configTrim.
 function configTrim_Callback(hObject, eventdata, handles)
@@ -482,13 +557,6 @@ function configStim_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 StimParameters;
-
-% --- Executes on button press in configBlink.
-function configBlink_Callback(hObject, eventdata, handles)
-% hObject    handle to configBlink (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 
 % --- Executes on button press in configGamma.
 function configGamma_Callback(hObject, eventdata, handles)
@@ -545,3 +613,113 @@ function configSacDrift_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 SacDriftParameters;
+
+
+% --- Executes on button press in radioTrim.
+function radioTrim_Callback(hObject, eventdata, handles)
+% hObject    handle to radioTrim (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radioTrim
+if strcmp(handles.togTrim.Enable, 'on')
+    handles.preDisabledTogTrimValue = handles.togTrim.Value;
+end
+handles.togTrim.Value = 0;
+handles.togTrim.Enable = 'off';
+handles.configTrim.Enable = 'off';
+togTrim_Callback(handles.togTrim, eventdata, handles);
+
+handles.togStim.Value = handles.preDisabledTogStimValue;
+handles.togStim.Enable = 'on';
+handles.configStim.Enable = 'on';
+togStim_Callback(handles.togStim, eventdata, handles);
+
+handles.togGamma.Value = handles.preDisabledTogGammaValue;
+handles.togGamma.Enable = 'on';
+handles.configGamma.Enable = 'on';
+togGamma_Callback(handles.togGamma, eventdata, handles);
+
+handles.togBandFilt.Value = handles.preDisabledTogBandFiltValue;
+handles.togBandFilt.Enable = 'on';
+handles.configBandFilt.Enable = 'on';
+togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
+
+% Update handles structure
+guidata(hObject, handles);
+
+
+% --- Executes on button press in radioNoStim.
+function radioNoStim_Callback(hObject, eventdata, handles)
+% hObject    handle to radioNoStim (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radioNoStim
+if strcmp(handles.togTrim.Enable, 'on')
+    handles.preDisabledTogTrimValue = handles.togTrim.Value;
+end
+handles.togTrim.Value = 0;
+handles.togTrim.Enable = 'off';
+handles.configTrim.Enable = 'off';
+togTrim_Callback(handles.togTrim, eventdata, handles);
+
+if strcmp(handles.togStim.Enable, 'on')
+    handles.preDisabledTogStimValue = handles.togStim.Value;
+end
+handles.togStim.Value = 0;
+handles.togStim.Enable = 'off';
+handles.configStim.Enable = 'off';
+togStim_Callback(handles.togStim, eventdata, handles);
+
+handles.togGamma.Value = handles.preDisabledTogGammaValue;
+handles.togGamma.Enable = 'on';
+handles.configGamma.Enable = 'on';
+togGamma_Callback(handles.togGamma, eventdata, handles);
+
+handles.togBandFilt.Value = handles.preDisabledTogBandFiltValue;
+handles.togBandFilt.Enable = 'on';
+handles.configBandFilt.Enable = 'on';
+togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
+
+% Update handles structure
+guidata(hObject, handles);
+
+% --- Executes on button press in radioGamma.
+function radioGamma_Callback(hObject, eventdata, handles)
+% hObject    handle to radioGamma (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radioGamma
+if strcmp(handles.togTrim.Enable, 'on')
+    handles.preDisabledTogTrimValue = handles.togTrim.Value;
+end
+handles.togTrim.Value = 0;
+handles.togTrim.Enable = 'off';
+handles.configTrim.Enable = 'off';
+togTrim_Callback(handles.togTrim, eventdata, handles);
+
+if strcmp(handles.togStim.Enable, 'on')
+    handles.preDisabledTogStimValue = handles.togStim.Value;
+end
+handles.togStim.Value = 0;
+handles.togStim.Enable = 'off';
+handles.configStim.Enable = 'off';
+togStim_Callback(handles.togStim, eventdata, handles);
+
+if strcmp(handles.togGamma.Enable, 'on')
+    handles.preDisabledTogGammaValue = handles.togGamma.Value;
+end
+handles.togGamma.Value = 0;
+handles.togGamma.Enable = 'off';
+handles.configGamma.Enable = 'off';
+togGamma_Callback(handles.togGamma, eventdata, handles);
+
+handles.togBandFilt.Value = handles.preDisabledTogBandFiltValue;
+handles.togBandFilt.Enable = 'on';
+handles.configBandFilt.Enable = 'on';
+togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
+
+% Update handles structure
+guidata(hObject, handles);
