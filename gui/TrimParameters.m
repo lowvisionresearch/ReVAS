@@ -22,7 +22,7 @@ function varargout = TrimParameters(varargin)
 
 % Edit the above text to modify the response to help TrimParameters
 
-% Last Modified by GUIDE v2.5 23-Jun-2017 15:37:15
+% Last Modified by GUIDE v2.5 26-Jun-2017 13:16:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -80,16 +80,6 @@ function varargout = TrimParameters_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
-% --- Executes on button press in browse1.
-function browse1_Callback(hObject, eventdata, handles)
-% hObject    handle to browse1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-[file, folder] = uigetfile('*.*');
-path = fullfile(folder, file);
-set(handles.path1,'String',path);
-
-
 % --- Executes on button press in save.
 function save_Callback(hObject, eventdata, handles)
 % hObject    handle to save (see GCBO)
@@ -126,7 +116,6 @@ function overwrite_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of overwrite
-
 
 
 function borderTrimAmount_Callback(hObject, eventdata, handles)
