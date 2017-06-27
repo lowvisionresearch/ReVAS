@@ -62,7 +62,64 @@ set(handles.parallelization, 'enable', 'off'); % Not implemented yet
 handles.trimBorderTrimAmount = 24;
 handles.trimOverwrite = true;
 % Stim
+handles.stimVerbosity = true;
 handles.stimOverwrite = true;
+% Gamma
+handles.gammaExponent = 0.6;
+handles.gammaOverwrite = true;
+% BandFilt
+handles.bandFiltSmoothing = 1;
+handles.bandFiltFreqCut = 3.0;
+handles.bandFiltOverwrite = true;
+% Coarse
+handles.coarseRefFrameNum = 15;
+handles.coarseScalingFactor = 0.5;
+handles.coarseOverwrite = true;
+handles.coarseVerbosity = true;
+% Fine
+handles.fineOverwrite = true;
+handles.fineVerbosity = true;
+handles.fineNumIterations = 1;
+handles.fineStripHeight = 15;
+handles.fineStripWidth = 488;
+handles.fineSamplingRate = 540;
+handles.fineMinPeakRatio = 0.8;
+handles.fineMinPeakThreshold = 0.2;
+handles.fineAdaptiveSearch = false;
+handles.fineScalingFactor = 8;
+handles.fineSearchWindowHeight = 79;
+handles.fineSubpixelInterp = true;
+handles.fineNeighborhoodSize = 7;
+handles.fineSubpixelDepth = 2;
+% Strip
+handles.fineOverwrite = true;
+handles.fineVerbosity = true;
+handles.fineStripHeight = 15;
+handles.fineStripWidth = 488;
+handles.fineSamplingRate = 540;
+handles.fineGaussFilt = true;
+handles.fineGaussSD = 10;
+handles.fineMinPeakRatio = 0.8;
+handles.fineMinPeakThreshold = 0;
+handles.fineAdaptiveSearch = false;
+handles.fineScalingFactor = 8;
+handles.fineSearchWindowHeight = 79;
+handles.fineSubpixelInterp = true;
+handles.fineNeighborhoodSize = 7;
+handles.fineSubpixelDepth = 2;
+% Sac
+handles.sacOverwrite = true;
+handles.sacVerbosity = true;
+handles.sacThresholdVal = 6;
+handles.sacSecThresholdVal = 2;
+handles.sacStitch = 15;
+handles.sacMinAmplitude = 0.1;
+handles.sacMaxDuration = 100;
+handles.sacDetectionMethod1 = false;
+handles.sacHardVelThreshold = 35;
+handles.sacDetectionMethod2 = true;
+handles.sacVelMethod1 = true;
+handles.sacVelMethod2 = false;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -438,35 +495,35 @@ function configGamma_Callback(hObject, eventdata, handles)
 % hObject    handle to configGamma (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+GammaParameters;
 
 % --- Executes on button press in configBandFilt.
 function configBandFilt_Callback(hObject, eventdata, handles)
 % hObject    handle to configBandFilt (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+BandFiltParameters;
 
 % --- Executes on button press in configFine.
 function configFine_Callback(hObject, eventdata, handles)
 % hObject    handle to configFine (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+FineParameters;
 
 % --- Executes on button press in configCoarse.
 function configCoarse_Callback(hObject, eventdata, handles)
 % hObject    handle to configCoarse (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+CoarseParameters;
 
 % --- Executes on button press in configStrip.
 function configStrip_Callback(hObject, eventdata, handles)
 % hObject    handle to configStrip (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+StripParameters;
 
 % --- Executes on button press in configFilt.
 function configFilt_Callback(hObject, eventdata, handles)
@@ -487,3 +544,4 @@ function configSacDrift_Callback(hObject, eventdata, handles)
 % hObject    handle to configSacDrift (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+SacDriftParameters;
