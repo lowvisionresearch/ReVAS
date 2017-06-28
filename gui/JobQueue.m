@@ -22,7 +22,7 @@ function varargout = JobQueue(varargin)
 
 % Edit the above text to modify the response to help JobQueue
 
-% Last Modified by GUIDE v2.5 27-Jun-2017 14:24:33
+% Last Modified by GUIDE v2.5 27-Jun-2017 21:06:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -92,21 +92,21 @@ handles.fineSubpixelInterp = true;
 handles.fineNeighborhoodSize = 7;
 handles.fineSubpixelDepth = 2;
 % Strip
-handles.fineOverwrite = true;
-handles.fineVerbosity = true;
-handles.fineStripHeight = 15;
-handles.fineStripWidth = 488;
-handles.fineSamplingRate = 540;
-handles.fineGaussFilt = true;
-handles.fineGaussSD = 10;
-handles.fineMinPeakRatio = 0.8;
-handles.fineMinPeakThreshold = 0;
-handles.fineAdaptiveSearch = false;
-handles.fineScalingFactor = 8;
-handles.fineSearchWindowHeight = 79;
-handles.fineSubpixelInterp = true;
-handles.fineNeighborhoodSize = 7;
-handles.fineSubpixelDepth = 2;
+handles.stripOverwrite = true;
+handles.stripVerbosity = true;
+handles.stripStripHeight = 15;
+handles.stripStripWidth = 488;
+handles.stripSamplingRate = 540;
+handles.stripGaussFilt = true;
+handles.stripGaussSD = 10;
+handles.stripMinPeakRatio = 0.8;
+handles.stripMinPeakThreshold = 0;
+handles.stripAdaptiveSearch = false;
+handles.stripScalingFactor = 8;
+handles.stripSearchWindowHeight = 79;
+handles.stripSubpixelInterp = true;
+handles.stripNeighborhoodSize = 7;
+handles.stripSubpixelDepth = 2;
 % Sac
 handles.sacOverwrite = true;
 handles.sacVerbosity = true;
@@ -126,6 +126,14 @@ handles.preDisabledTogTrimValue = 1;
 handles.preDisabledTogStimValue = 1;
 handles.preDisabledTogGammaValue = 1;
 handles.preDisabledTogBandFiltValue = 1;
+
+% Pre-Disabled Execute Screen GUI Items
+handles.execute1.Visible = 'off';
+handles.execute2.Visible = 'off';
+handles.abort.Visible = 'off';
+
+% Initial files
+handles.files = cell(0);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -213,36 +221,243 @@ function execute_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Saving initial button states
-parallelizationState = get(handles.parallelization, 'enable');
+% Update visible and invisible gui components
+handles.inputVideoBox.Visible = 'off';
+handles.selectFiles.Visible = 'off';
+handles.inputList.Visible = 'off';
+handles.modulesBox.Visible = 'off';
+handles.text1.Visible = 'off';
+handles.text2.Visible = 'off';
+handles.text3.Visible = 'off';
+handles.text4.Visible = 'off';
+handles.text5.Visible = 'off';
+handles.text6.Visible = 'off';
+handles.text7.Visible = 'off';
+handles.text8.Visible = 'off';
+handles.text9.Visible = 'off';
+handles.text10.Visible = 'off';
+handles.togTrim.Visible = 'off';
+handles.togStim.Visible = 'off';
+handles.togGamma.Visible = 'off';
+handles.togBandFilt.Visible = 'off';
+handles.togCoarse.Visible = 'off';
+handles.togFine.Visible = 'off';
+handles.togStrip.Visible = 'off';
+handles.togFilt.Visible = 'off';
+handles.togReRef.Visible = 'off';
+handles.togSacDrift.Visible = 'off';
+handles.configTrim.Visible = 'off';
+handles.configStim.Visible = 'off';
+handles.configGamma.Visible = 'off';
+handles.configBandFilt.Visible = 'off';
+handles.configCoarse.Visible = 'off';
+handles.configFine.Visible = 'off';
+handles.configStrip.Visible = 'off';
+handles.configFilt.Visible = 'off';
+handles.configReRef.Visible = 'off';
+handles.configSacDrift.Visible = 'off';
+handles.parallelization.Visible = 'off';
+handles.execute.Visible = 'off';
 
-% Turning all buttons off
-set(hObject, 'enable', 'off');
-set(handles.parallelization, 'enable', 'off');
-set(handles.add, 'enable', 'off');
-set(handles.delete, 'enable', 'off');
-set(handles.moveUp, 'enable', 'off');
-set(handles.moveDown, 'enable', 'off');
-set(handles.duplicate, 'enable', 'off');
-set(handles.edit, 'enable', 'off');
+handles.execute1.Visible = 'on';
+handles.execute2.Visible = 'on';
+handles.abort.Visible = 'on';
 
-for i = 1:size(handles.inputList.Data, 1)-1
-    if handles.inputList.Data{i,1} == 'Pre-01: Trim'
-        parametersStructure = struct;
-        parametersStructure.borderTrimAmount = str2double(handles.hiddenTable.Data{i,2});
-        parametersStructure.overwrite = handles.hiddenTable.Data{i,3};
-        path = handles.hiddenTable.Data{i,1};
-        TrimVideo(path, parametersStructure);
-        fprintf('Process Completed\n');
+handles.files
+% Apply modules to all selected files
+for i = 1:size(handles.files, 2)
+    handles.togTrim.Enable
+    if strcmp(handles.togTrim.Enable, 'on')
+        % Set the parameters
+        parametersStructure.borderTrimAmount = handles.trimBorderTrimAmount;
+        parametersStructure.overwrite = handles.trimOverwrite;
+        
+        % Call the function(s)
+        TrimVideo(handles.files{i}, parametersStructure);
+        
+        % Update file name to output file name
+        handles.files{i} = [handles.files{i}(1:end-4) '_dwt' handles.files{i}(end-3:end)];
+    end
+    
+    if strcmp(handles.togStim.Enable, 'on')
+        % Set the parameters
+        parametersStructure.enableVerbosity = handles.stimVerbosity;
+        parametersStructure.overwrite = handles.stimOverwrite;
+        stimulus.thickness = 1; % TODO
+        stimulus.size = 51; % TODO
+        parametersStructure.thresholdValue = 4; % TODO (used for blink detection)
+        
+        % Call the function(s)
+        FindBlinkFrames(handles.files{i}, parametersStructure);
+        FindStimulusLocations(handles.files{i}, stimulus, parametersStructure);
+        RemoveStimuli(handles.files{i}, parametersStructure);
+        
+        % Update file name to output file name
+        handles.files{i} = [handles.files{i}(1:end-4) '_nostim' handles.files{i}(end-3:end)];
+    end
+    
+    if strcmp(handles.togGamma.Enable, 'on')
+        % Set the parameters
+        parametersStructure.gammaExponent = handles.gammaExponent;
+        parametersStructure.overwrite = handles.gammaOverwrite;
+        
+        % Call the function(s)
+        GammaCorrect(handles.files{i}, parametersStructure);
+        
+        % Update file name to output file name
+        handles.files{i} = [handles.files{i}(1:end-4) '_gamscaled' handles.files{i}(end-3:end)];
+    end
+    
+    if strcmp(handles.togBandFilt.Enable, 'on')
+        % Set the parameters
+        parametersStructure.smoothing = handles.bandFiltSmoothing;
+        parametersStructure.lowSpatialFrequencyCutoff = handles.bandFiltFreqCut;
+        parametersStructure.overwrite = handles.bandFiltOverwrite;
+        
+        % Call the function(s)
+        BandpassFilter(handles.files{i}, parametersStructure);
+        
+        % Update file name to output file name
+        handles.files{i} = [handles.files{i}(1:end-4) '_bandfilt' handles.files{i}(end-3:end)];
+    end
+    
+    if strcmp(handles.togCoarse.Enable, 'on') % TODO
+        % Set the parameters
+        parametersStructure.refFrameNumber = handles.coarseRefFrameNum;
+        scalingFactor = handles.coarseScalingFactor;
+        parametersStructure.overwrite = handles.coarseOverwrite;
+        parametersStructure.enableVerbosity = handles.coarseVerbosity;
+        parametersStructure.fileName = handles.files{i};
+        parametersStructure.enableGPU = false; % TODO
+
+        % Call the function(s)
+        coarseResult = CoarseRef(parametersStructure, scalingFactor);
+        
+        % Update file name to output file name
+        %handles.files{i} = [handles.files{i}(1:end-4) '_dwt' handles.files{i}(end-3:end)];
+    end
+    
+    if strcmp(handles.togFine.Enable, 'on')
+        % Set the parameters
+        parametersStructure.enableVerbosity = handles.fineVerbosity;
+        parametersStructure.numberOfIterations = handles.fineNumIterations;
+        parametersStructure.stripHeight = handles.fineStripHeight;
+        parametersStructure.stripWidth = handles.fineStripWidth;
+        parametersStructure.samplingRate = handles.fineSamplingRate;
+        parametersStructure.minimumPeakRatio = handles.fineMinPeakRatio;
+        parametersStructure.minimumPeakThreshold = handles.fineMinPeakThreshold;
+        parametersStructure.adaptiveSearch = handles.fineAdaptiveSearch;
+        parametersStructure.adaptiveSearchScalingFactor = handles.fineScalingFactor;
+        parametersStructure.searchWindowHeight = handles.fineSearchWindowHeight;
+        parametersStructure.enableSubpixelInterpolation = handles.fineSubpixelInterp;
+        parametersStructure.subpixelInterpolationParameters.neighborhoodSize ...
+            = handles.fineNeighborhoodSize;
+        parametersStructure.subpixelInterpolationParameters.subpixelDepth ...
+            = handles.fineSubpixelDepth;
+        parametersStructure.enableGaussianFiltering = false; % TODO
+        parametersStructure.badFrames = []; % TODO
+        parametersStructure.axesHandles = []; % TODO        
+        
+        % Call the function(s)
+        fineResult = RefineReferenceFrame(coarseResult, parametersStructure);
+        
+        % Update file name to output file name
+        %handles.files{i} = [handles.files{i}(1:end-4) '_dwt' handles.files{i}(end-3:end)];
+    end
+    
+    if strcmp(handles.togStrip.Enable, 'on')
+        % Set the parameters
+        parametersStructure.overwrite = handles.stripOverwrite;
+        parametersStructure.enableVerbosity = handles.stripVerbosity;
+        parametersStructure.stripHeight = handles.stripStripHeight;
+        parametersStructure.stripWidth = handles.stripStripWidth;
+        parametersStructure.samplingRate = handles.stripSamplingRate;
+        parametersStructure.enableGaussianFiltering = handles.stripGaussFilt;
+        parametersStructure.gaussianStandardDeviation = handles.stripGaussSD;
+        parametersStructure.minimumPeakRatio = handles.stripMinPeakRatio;
+        parametersStructure.minimumPeakThreshold = handles.stripMinPeakThreshold;
+        parametersStructure.adaptiveSearch = handles.stripAdaptiveSearch;
+        parametersStructure.adaptiveSearchScalingFactor = handles.stripScalingFactor;
+        parametersStructure.searchWindowHeight = handles.stripSearchWindowHeight;
+        parametersStructure.enableSubpixelInterpolation = handles.stripSubpixelInterp;
+        parametersStructure.subpixelInterpolationParameters.neighborhoodSize ...
+            = handles.stripNeighborhoodSize;
+        parametersStructure.subpixelInterpolationParameters.subpixelDepth ...
+            = handles.stripSubpixelDepth;
+
+        % Call the function(s)
+        if strcmp(handles.togFine.Enable, 'on') 
+            [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
+                statisticsStructure] ...
+                = StripAnalysis(handles.files{i}, fineResult, parametersStructure);
+        elseif strcmp(handles.togCoarse.Enable, 'on')
+            [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
+                statisticsStructure] ...
+                = StripAnalysis(handles.files{i}, coarseResult, parametersStructure);
+        else
+            % TODO use a specific frame of the video as reference
+        end        
+    end
+    
+    if false
+    %if strcmp(handles.togFilt.Enable, 'on') % TODO
+        % Set the parameters
+        parametersStructure.borderTrimAmount = handles.trimBorderTrimAmount;
+        parametersStructure.overwrite = handles.trimOverwrite;
+        
+        % Call the function(s)
+        TrimVideo(handles.files{i}, parametersStructure);
+        
+        % Update file name to output file name
+        handles.files{i} = [handles.files{i}(1:end-4) '_dwt' handles.files{i}(end-3:end)];
+    end
+    
+    if false
+    %if strcmp(handles.togReRef.Enable, 'on') % TODO
+        % Set the parameters
+        parametersStructure.borderTrimAmount = handles.trimBorderTrimAmount;
+        parametersStructure.overwrite = handles.trimOverwrite;
+        
+        % Call the function(s)
+        TrimVideo(handles.files{i}, parametersStructure);
+        
+        % Update file name to output file name
+        handles.files{i} = [handles.files{i}(1:end-4) '_dwt' handles.files{i}(end-3:end)];
+    end
+    
+    if strcmp(handles.togSacDrift.Enable, 'on')
+        % Set the parameters
+        parametersStructure.overwrite = handles.sacOverwrite;
+        parametersStructure.enableVerbosity = handles.sacVerbosity;
+        parametersStructure.thresholdValue = handles.sacThresholdVal;
+        parametersStructure.secondaryThresholdValue = handles.sacSecThresholdVal;
+        parametersStructure.stitchCriteria = handles.sacStitch;
+        parametersStructure.minAmplitude = handles.sacMinAmplitude;
+        parametersStructure.maxDuration = handles.sacMaxDuration;
+        if handles.sacDetectionMethod1
+            parametersStructure.detectionMethod = 1;
+        else
+            parametersStructure.detectionMethod = 2;
+        end
+        parametersStructure.hardVelocityThreshold = handles.sacHardVelThreshold;
+        if handles.sacVelMethod1
+            parametersStructure.velocityMethod = 1;
+        else
+            parametersStructure.velocityMethod = 2;
+        end
+        
+        % Update file name to input file name
+        inputFileName = [handles.files{i}(1:end-4) '_' ...
+            int2str(parametersStructure.samplingRate) '_hz_final.mat'];
+
+        % Call the function(s)
+        % TODO
+        FindSaccadesAndDrifts(inputFileName, [512 512], [10 10], ...
+            parametersStructure);
     end
 end
 
-% Renable buttons
-set(hObject, 'enable', 'on');
-if isequal(parallelizationState, 'on')
-    set(handles.parallelization, 'enable', 'on');
-end
-set(handles.add, 'enable', 'on');
+fprintf('Process Completed\n');
 
 
 % --- Executes on button press in radioRaw.
@@ -252,25 +467,33 @@ function radioRaw_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of radioRaw
-handles.togTrim.Value = handles.preDisabledTogTrimValue;
-handles.togTrim.Enable = 'on';
-handles.configTrim.Enable = 'on';
-togTrim_Callback(handles.togTrim, eventdata, handles);
+if strcmp(handles.togTrim.Enable, 'off')
+    handles.togTrim.Value = handles.preDisabledTogTrimValue;
+    handles.togTrim.Enable = 'on';
+    handles.configTrim.Enable = 'on';
+    togTrim_Callback(handles.togTrim, eventdata, handles);
+end
 
-handles.togStim.Value = handles.preDisabledTogStimValue;
-handles.togStim.Enable = 'on';
-handles.configStim.Enable = 'on';
-togStim_Callback(handles.togStim, eventdata, handles);
+if strcmp(handles.togStim.Enable, 'off')
+    handles.togStim.Value = handles.preDisabledTogStimValue;
+    handles.togStim.Enable = 'on';
+    handles.configStim.Enable = 'on';
+    togStim_Callback(handles.togStim, eventdata, handles);
+end
 
-handles.togGamma.Value = handles.preDisabledTogGammaValue;
-handles.togGamma.Enable = 'on';
-handles.configGamma.Enable = 'on';
-togGamma_Callback(handles.togGamma, eventdata, handles);
+if strcmp(handles.togGamma.Enable, 'off')
+    handles.togGamma.Value = handles.preDisabledTogGammaValue;
+    handles.togGamma.Enable = 'on';
+    handles.configGamma.Enable = 'on';
+    togGamma_Callback(handles.togGamma, eventdata, handles);
+end
 
-handles.togBandFilt.Value = handles.preDisabledTogBandFiltValue;
-handles.togBandFilt.Enable = 'on';
-handles.configBandFilt.Enable = 'on';
-togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
+if strcmp(handles.togBandFilt.Enable, 'off')
+    handles.togBandFilt.Value = handles.preDisabledTogBandFiltValue;
+    handles.togBandFilt.Enable = 'on';
+    handles.configBandFilt.Enable = 'on';
+    togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
+end
 
 % Update handles structure
 guidata(hObject, handles);
@@ -300,7 +523,7 @@ handles.files = uipickfiles('FilterSpec', '*.avi');
 % Go through list of selected items and filter
 i = 1;
 while i <= size(handles.files, 2)
-    if isinteger(handles.files) && handles.files == 0
+    if ~iscell(handles.files) && handles.files == 0
         % User canceled file selection
         return;
     elseif isdir(handles.files{i})
@@ -337,6 +560,9 @@ for i = 1:size(handles.files, 2)
     displayFileList{i} = [displayFileList{i} '.avi'];
 end
 handles.inputList.String = displayFileList';
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes on button press in radioBandFilt.
 function radioBandFilt_Callback(hObject, eventdata, handles)
@@ -630,20 +856,26 @@ handles.togTrim.Enable = 'off';
 handles.configTrim.Enable = 'off';
 togTrim_Callback(handles.togTrim, eventdata, handles);
 
-handles.togStim.Value = handles.preDisabledTogStimValue;
-handles.togStim.Enable = 'on';
-handles.configStim.Enable = 'on';
-togStim_Callback(handles.togStim, eventdata, handles);
+if strcmp(handles.togStim.Enable, 'off')
+    handles.togStim.Value = handles.preDisabledTogStimValue;
+    handles.togStim.Enable = 'on';
+    handles.configStim.Enable = 'on';
+    togStim_Callback(handles.togStim, eventdata, handles);
+end
 
-handles.togGamma.Value = handles.preDisabledTogGammaValue;
-handles.togGamma.Enable = 'on';
-handles.configGamma.Enable = 'on';
-togGamma_Callback(handles.togGamma, eventdata, handles);
+if strcmp(handles.togGamma.Enable, 'off')
+    handles.togGamma.Value = handles.preDisabledTogGammaValue;
+    handles.togGamma.Enable = 'on';
+    handles.configGamma.Enable = 'on';
+    togGamma_Callback(handles.togGamma, eventdata, handles);
+end
 
-handles.togBandFilt.Value = handles.preDisabledTogBandFiltValue;
-handles.togBandFilt.Enable = 'on';
-handles.configBandFilt.Enable = 'on';
-togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
+if strcmp(handles.togBandFilt.Enable, 'off')
+    handles.togBandFilt.Value = handles.preDisabledTogBandFiltValue;
+    handles.togBandFilt.Enable = 'on';
+    handles.configBandFilt.Enable = 'on';
+    togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
+end
 
 % Update handles structure
 guidata(hObject, handles);
@@ -672,15 +904,19 @@ handles.togStim.Enable = 'off';
 handles.configStim.Enable = 'off';
 togStim_Callback(handles.togStim, eventdata, handles);
 
-handles.togGamma.Value = handles.preDisabledTogGammaValue;
-handles.togGamma.Enable = 'on';
-handles.configGamma.Enable = 'on';
-togGamma_Callback(handles.togGamma, eventdata, handles);
+if strcmp(handles.togGamma.Enable, 'off')
+    handles.togGamma.Value = handles.preDisabledTogGammaValue;
+    handles.togGamma.Enable = 'on';
+    handles.configGamma.Enable = 'on';
+    togGamma_Callback(handles.togGamma, eventdata, handles);
+end
 
-handles.togBandFilt.Value = handles.preDisabledTogBandFiltValue;
-handles.togBandFilt.Enable = 'on';
-handles.configBandFilt.Enable = 'on';
-togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
+if strcmp(handles.togBandFilt.Enable, 'off')
+    handles.togBandFilt.Value = handles.preDisabledTogBandFiltValue;
+    handles.togBandFilt.Enable = 'on';
+    handles.configBandFilt.Enable = 'on';
+    togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
+end
 
 % Update handles structure
 guidata(hObject, handles);
@@ -716,10 +952,19 @@ handles.togGamma.Enable = 'off';
 handles.configGamma.Enable = 'off';
 togGamma_Callback(handles.togGamma, eventdata, handles);
 
-handles.togBandFilt.Value = handles.preDisabledTogBandFiltValue;
-handles.togBandFilt.Enable = 'on';
-handles.configBandFilt.Enable = 'on';
-togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
+if strcmp(handles.togBandFilt.Enable, 'off')
+    handles.togBandFilt.Value = handles.preDisabledTogBandFiltValue;
+    handles.togBandFilt.Enable = 'on';
+    handles.configBandFilt.Enable = 'on';
+    togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
+end
 
 % Update handles structure
 guidata(hObject, handles);
+
+
+% --- Executes on button press in abort.
+function abort_Callback(hObject, eventdata, handles)
+% hObject    handle to abort (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
