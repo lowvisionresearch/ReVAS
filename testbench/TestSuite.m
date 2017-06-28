@@ -72,11 +72,11 @@ close all;
 addpath(genpath('..'));
 
 % Video not pre-processed yet...
-%videoPath = 'testbench/mna_os_10_12_1_45_0_stabfix_17_36_21_409_dwt_nostim_nostim_gamscaled_bandfilt_meanrem.avi';
-%referenceFramePath = 'testbench/mna_os_10_12_1_45_0_stabfix_17_36_21_409_dwt_nostim_nostim_gamscaled_bandfilt_meanrem_priorrefdata_720hz.mat';
+videoPath = 'testbench/mna_os_10_12_1_45_0_stabfix_17_36_21_409_dwt_nostim_nostim_gamscaled_bandfilt_meanrem.avi';
+referenceFramePath = 'testbench/mna_os_10_12_1_45_0_stabfix_17_36_21_409_dwt_nostim_nostim_gamscaled_bandfilt_meanrem_priorrefdata_720hz.mat';
 
-videoPath = 'testbench/mna_dwt_nostim_nostim_gamscaled_bandfilt_meanrem.avi';
-referenceFramePath = 'ref.mat';
+%videoPath = 'testbench/mna_dwt_nostim_nostim_gamscaled_bandfilt_meanrem.avi';
+%referenceFramePath = 'ref.mat';
 
 %videoPath = 'testbench/jap_os_10_12_1_45_-1_stabfix_13_09_01_87_dwt_nostim_nostim_gamscaled_bandfilt_meanrem.avi';
 %referenceFramePath = ''; % No reference frame available yet...

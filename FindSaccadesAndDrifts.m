@@ -386,58 +386,12 @@ end
 
 %% Store results as an array of saccade structs and drift structs
 
-% This flag is used to control the flow of the loop below. We first want to
-% run the loop on all saccades. Once that is finished, this flag will help
-% reset the loop and prepare the loop for execution on all the drifts.
-% Finally, once that is done, the flag will help this loop to terminate.
-loopFlag = false;
-
-% The loop below will execute two rounds, once to handle all analysis of
-% saccades, and then again for all drifts. For readability, the code below
-% contains variables/comments refering to saccades. |loopFlag| helps us track
-% whether we are processing saccades or drifts; if it is false, we are
-% processing saccades; if it is true, we are processing drifts. Once round
-% one (processing saccades) is completed, only then will we enter the if
-% statement at the top of the loop. There, we will raise the flag, reset
-% the loop, switch to drifts by inverting the logical array |saccades|
-% which tells us which times contain eye traces that were part of a saccade
-% (since anything that isn't part of a saccade is a drift), and transfer
-% out the data of and reset |arrayOfStructs|. Once this is complete, then
-% round two of the loop has begun for the analysis of drifts. The loop
-% terminates once both rounds are complete since |i| will reach the end of
-% its matrix size when drifts are complete and also |loopFlag| will have
-% been raised since saccades are complete.
-
 % Inspect each saccade
 saccadesIndices = find(saccades);
 saccadesDiffs = diff(saccadesIndices);
 i = 1;
-arrayOfStructs = [];
-while i < size(saccadesIndices,2) || ~loopFlag
-    
-    % This if statement entered if we are done with saccades.
-    % In here, we prepare the loop to run again for drifts.
-    if i >= size(saccadesIndices,2)
-        % Raise the flag to indicate that we are starting drifts.
-        loopFlag = true;
-        
-        % Reset loop variable
-        i = 1;
-        
-        % Anything that was not a saccade is a drift
-        saccades = ~saccades;
-        saccadesIndices = find(saccades);
-        saccadesDiffs = diff(saccadesIndices);
-        
-        % Transfer and clear |arrayOfStructs|
-        % It will now store drift structs rather than saccade structs
-        saccadeStructs = arrayOfStructs;
-        arrayOfStructs = [];
-        
-        % Check the loop condition again before proceeding.
-        % This prevents index out of bounds below if there are no drifts.
-        continue;
-    end
+saccadeStructs = [];
+while i < size(saccadesIndices,2)
     
     % Find the end of this saccade
     j = i;
@@ -449,125 +403,261 @@ while i < size(saccadesIndices,2) || ~loopFlag
     endOfSaccade = saccadesIndices(j);
     
     % Store information about this saccade in a new struct.
-    if isempty(arrayOfStructs)
-        arrayOfStructs = [arrayOfStructs struct()];
+    if isempty(saccadeStructs)
+        saccadeStructs = [saccadeStructs struct()];
     else
         % Must copy an existing struct since concatenated structs in an
         % array must have the same set of fields. This copied struct will
         % have its fields overwritten with correct values below.
-        arrayOfStructs = [arrayOfStructs arrayOfStructs(1)];
+        saccadeStructs = [saccadeStructs saccadeStructs(1)];
     end
     
     % Onset Time
     % time stamp of the start of event
-    arrayOfStructs(end).onsetTime = timeArray(startOfSaccade);
+    saccadeStructs(end).onsetTime = timeArray(startOfSaccade);
     
     % Offset Time
     % time stamp of end of event
-    arrayOfStructs(end).offsetTime = timeArray(endOfSaccade);
+    saccadeStructs(end).offsetTime = timeArray(endOfSaccade);
     
     % x Start
     % x position at start of event
-    arrayOfStructs(end).xStart = eyePositionTraces(startOfSaccade,1);
+    saccadeStructs(end).xStart = eyePositionTraces(startOfSaccade,1);
     
     % x End
     % x position at end of event
-    arrayOfStructs(end).xEnd = eyePositionTraces(endOfSaccade,1);
+    saccadeStructs(end).xEnd = eyePositionTraces(endOfSaccade,1);
 
     % y Start
     % y position at start of event
-    arrayOfStructs(end).yStart = eyePositionTraces(startOfSaccade,2);
+    saccadeStructs(end).yStart = eyePositionTraces(startOfSaccade,2);
 
     % y End
     % y position at end of event
-    arrayOfStructs(end).yEnd = eyePositionTraces(endOfSaccade,2);
+    saccadeStructs(end).yEnd = eyePositionTraces(endOfSaccade,2);
     
     % Duration
     % (Offset Time) - (Onset Time)
-    arrayOfStructs(end).duration = ...
-        arrayOfStructs(end).offsetTime - arrayOfStructs(end).onsetTime;
+    saccadeStructs(end).duration = ...
+        saccadeStructs(end).offsetTime - saccadeStructs(end).onsetTime;
     
     % Amplitude x
     % abs( (x Start) - (x End) )
-    arrayOfStructs(end).amplitude.x = ...
-        abs(arrayOfStructs(end).xStart - arrayOfStructs(end).xEnd);
+    saccadeStructs(end).amplitude.x = ...
+        abs(saccadeStructs(end).xStart - saccadeStructs(end).xEnd);
 
     % Amplitude y
     % abs( (y Start) - (y End) )
-    arrayOfStructs(end).amplitude.y = ...
-        abs(arrayOfStructs(end).yStart - arrayOfStructs(end).yEnd);
+    saccadeStructs(end).amplitude.y = ...
+        abs(saccadeStructs(end).yStart - saccadeStructs(end).yEnd);
     
     % Amplitude Vector
     % pythagorean theorem applied to Amplitudes x and y
-    arrayOfStructs(end).amplitude.vector = ...
-        sqrt(arrayOfStructs(end).amplitude.x^2 + arrayOfStructs(end).amplitude.y^2);
+    saccadeStructs(end).amplitude.vector = ...
+        sqrt(saccadeStructs(end).amplitude.x^2 + saccadeStructs(end).amplitude.y^2);
     
     % Amplitude Direction
     % apply |atand2d| to delta y / delta x
     % (gives range [-180, 180] degrees)
-    arrayOfStructs(end).amplitude.direction = ...
-        atan2d(arrayOfStructs(end).yEnd - arrayOfStructs(end).yStart, ...
-        arrayOfStructs(end).xEnd - arrayOfStructs(end).xStart);
+    saccadeStructs(end).amplitude.direction = ...
+        atan2d(saccadeStructs(end).yEnd - saccadeStructs(end).yStart, ...
+        saccadeStructs(end).xEnd - saccadeStructs(end).xStart);
     
     % x Positions
     % excerpt of eye traces containing x positions for this saccade
-    arrayOfStructs(end).position.x = ...
+    saccadeStructs(end).position.x = ...
         eyePositionTraces(startOfSaccade:endOfSaccade,1);
     
     % y Positions
     % excerpt of eye traces containing y positions for this saccade
-    arrayOfStructs(end).position.y = ...
+    saccadeStructs(end).position.y = ...
         eyePositionTraces(startOfSaccade:endOfSaccade,2);
     
     % time
     % excerpt of time array containing times for this saccade
-    arrayOfStructs(end).time = timeArray(startOfSaccade:endOfSaccade);
+    saccadeStructs(end).time = timeArray(startOfSaccade:endOfSaccade);
 
     % x Velocity
     % excerpt of x velocities for this saccade
-    arrayOfStructs(end).velocity.x = ...
+    saccadeStructs(end).velocity.x = ...
         verticalVelocityDiffs(startOfSaccade:endOfSaccade);
     
     % y Velocity
     % excerpt of y velocities for this saccade
-    arrayOfStructs(end).velocity.y = ...
+    saccadeStructs(end).velocity.y = ...
         horizontalVelocityDiffs(startOfSaccade:endOfSaccade);
     
     % Mean x Velocity
     % mean of x velocities for this saccade
-    arrayOfStructs(end).meanVelocity.x = ...
-        mean(arrayOfStructs(end).velocity.x);
+    saccadeStructs(end).meanVelocity.x = ...
+        mean(saccadeStructs(end).velocity.x);
     
     % Mean y Velocity
     % mean of y velocities for this saccade
-    arrayOfStructs(end).meanVelocity.y = ...
-        mean(arrayOfStructs(end).velocity.y);
+    saccadeStructs(end).meanVelocity.y = ...
+        mean(saccadeStructs(end).velocity.y);
     
     % Peak x Velocity
     % highest x velocity for this saccade
-    arrayOfStructs(end).peakVelocity.x = ...
-        max(arrayOfStructs(end).velocity.x);
+    saccadeStructs(end).peakVelocity.x = ...
+        max(saccadeStructs(end).velocity.x);
     
     % Peak y Velocity
     % highest y velocity for this saccade
-    arrayOfStructs(end).peakVelocity.y = ...
-        max(arrayOfStructs(end).velocity.y);
+    saccadeStructs(end).peakVelocity.y = ...
+        max(saccadeStructs(end).velocity.y);
     
     % x Acceleration
     % excerpt of x accelerations for this saccade
-    arrayOfStructs(end).acceleration.x = ...
+    saccadeStructs(end).acceleration.x = ...
         verticalAccelerationDiffs(startOfSaccade:endOfSaccade);
     
     % y Acceleration
     % excerpt of y accelerations for this saccade
-    arrayOfStructs(end).acceleration.y = ...
+    saccadeStructs(end).acceleration.y = ...
         horizontalAccelerationDiffs(startOfSaccade:endOfSaccade);
     
     % Continue to next saccade
     i = j + 1;
 end
 
-driftStructs = arrayOfStructs;
+% Inspect each drift
+% Anything that was not a saccade is a drift
+drifts = ~saccades;
+driftsIndices = find(drifts);
+driftsDiffs = diff(driftsIndices);
+i = 1;
+driftStructs = [];
+
+while i < size(driftsIndices,2)
+    
+    % Find the end of this drift
+    j = i;
+    while j <= size(driftsDiffs,2) && driftsDiffs(j) == 1
+        j = j + 1;
+    end
+    
+    startOfdrift = driftsIndices(i);
+    endOfdrift = driftsIndices(j);
+    
+    % Store information about this drift in a new struct.
+    if isempty(driftStructs)
+        driftStructs = [driftStructs struct()];
+    else
+        % Must copy an existing struct since concatenated structs in an
+        % array must have the same set of fields. This copied struct will
+        % have its fields overwritten with correct values below.
+        driftStructs = [driftStructs driftStructs(1)];
+    end
+    
+    % Onset Time
+    % time stamp of the start of event
+    driftStructs(end).onsetTime = timeArray(startOfdrift);
+    
+    % Offset Time
+    % time stamp of end of event
+    driftStructs(end).offsetTime = timeArray(endOfdrift);
+    
+    % x Start
+    % x position at start of event
+    driftStructs(end).xStart = eyePositionTraces(startOfdrift,1);
+    
+    % x End
+    % x position at end of event
+    driftStructs(end).xEnd = eyePositionTraces(endOfdrift,1);
+
+    % y Start
+    % y position at start of event
+    driftStructs(end).yStart = eyePositionTraces(startOfdrift,2);
+
+    % y End
+    % y position at end of event
+    driftStructs(end).yEnd = eyePositionTraces(endOfdrift,2);
+    
+    % Duration
+    % (Offset Time) - (Onset Time)
+    driftStructs(end).duration = ...
+        driftStructs(end).offsetTime - driftStructs(end).onsetTime;
+    
+    % Amplitude x
+    % abs( (x Start) - (x End) )
+    driftStructs(end).amplitude.x = ...
+        abs(driftStructs(end).xStart - driftStructs(end).xEnd);
+
+    % Amplitude y
+    % abs( (y Start) - (y End) )
+    driftStructs(end).amplitude.y = ...
+        abs(driftStructs(end).yStart - driftStructs(end).yEnd);
+    
+    % Amplitude Vector
+    % pythagorean theorem applied to Amplitudes x and y
+    driftStructs(end).amplitude.vector = ...
+        sqrt(driftStructs(end).amplitude.x^2 + driftStructs(end).amplitude.y^2);
+    
+    % Amplitude Direction
+    % apply |atand2d| to delta y / delta x
+    % (gives range [-180, 180] degrees)
+    driftStructs(end).amplitude.direction = ...
+        atan2d(driftStructs(end).yEnd - driftStructs(end).yStart, ...
+        driftStructs(end).xEnd - driftStructs(end).xStart);
+    
+    % x Positions
+    % excerpt of eye traces containing x positions for this drift
+    driftStructs(end).position.x = ...
+        eyePositionTraces(startOfdrift:endOfdrift,1);
+    
+    % y Positions
+    % excerpt of eye traces containing y positions for this drift
+    driftStructs(end).position.y = ...
+        eyePositionTraces(startOfdrift:endOfdrift,2);
+    
+    % time
+    % excerpt of time array containing times for this drift
+    driftStructs(end).time = timeArray(startOfdrift:endOfdrift);
+
+    % x Velocity
+    % excerpt of x velocities for this drift
+    driftStructs(end).velocity.x = ...
+        verticalVelocityDiffs(startOfdrift:endOfdrift);
+    
+    % y Velocity
+    % excerpt of y velocities for this drift
+    driftStructs(end).velocity.y = ...
+        horizontalVelocityDiffs(startOfdrift:endOfdrift);
+    
+    % Mean x Velocity
+    % mean of x velocities for this drift
+    driftStructs(end).meanVelocity.x = ...
+        mean(driftStructs(end).velocity.x);
+    
+    % Mean y Velocity
+    % mean of y velocities for this drift
+    driftStructs(end).meanVelocity.y = ...
+        mean(driftStructs(end).velocity.y);
+    
+    % Peak x Velocity
+    % highest x velocity for this drift
+    driftStructs(end).peakVelocity.x = ...
+        max(driftStructs(end).velocity.x);
+    
+    % Peak y Velocity
+    % highest y velocity for this drift
+    driftStructs(end).peakVelocity.y = ...
+        max(driftStructs(end).velocity.y);
+    
+    % x Acceleration
+    % excerpt of x accelerations for this drift
+    driftStructs(end).acceleration.x = ...
+        verticalAccelerationDiffs(startOfdrift:endOfdrift);
+    
+    % y Acceleration
+    % excerpt of y accelerations for this drift
+    driftStructs(end).acceleration.y = ...
+        horizontalAccelerationDiffs(startOfdrift:endOfdrift);
+    
+    % Continue to next drift
+    i = j + 1;
+end
 
 %% Save to output mat file
 save(outputFileName, 'saccadeStructs', 'driftStructs');
