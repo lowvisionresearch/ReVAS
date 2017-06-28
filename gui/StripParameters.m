@@ -48,7 +48,7 @@ end
 function StripParameters_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to StripParameters (see VARARGIN)
 
@@ -59,21 +59,21 @@ handles.output = hObject;
 figureHandle = findobj(0, 'tag', 'jobQueue');
 mainHandles = guidata(figureHandle);
 
-handles.overwrite.Value = mainHandles.fineOverwrite;
-handles.verbosity.Value = mainHandles.fineVerbosity;
-handles.stripHeight.String = mainHandles.fineStripHeight;
-handles.stripWidth.String = mainHandles.fineStripWidth;
-handles.samplingRate.String = mainHandles.fineSamplingRate;
-handles.gaussFilt.Value = mainHandles.fineGaussFilt;
-handles.gaussSD.String = mainHandles.fineGaussSD;
-handles.minPeakRatio.String = mainHandles.fineMinPeakRatio;
-handles.minPeakThreshold.String = mainHandles.fineMinPeakThreshold;
-handles.adaptiveSearch.Value = mainHandles.fineAdaptiveSearch;
-handles.scalingFactor.String = mainHandles.fineScalingFactor;
-handles.searchWindowHeight.String = mainHandles.fineSearchWindowHeight;
-handles.subpixelInterp.Value = mainHandles.fineSubpixelInterp;
-handles.neighborhoodSize.String = mainHandles.fineNeighborhoodSize;
-handles.subpixelDepth.String = mainHandles.fineSubpixelDepth;
+handles.overwrite.Value = mainHandles.stripOverwrite;
+handles.verbosity.Value = mainHandles.stripVerbosity;
+handles.stripHeight.String = mainHandles.stripStripHeight;
+handles.stripWidth.String = mainHandles.stripStripWidth;
+handles.samplingRate.String = mainHandles.stripSamplingRate;
+handles.gaussFilt.Value = mainHandles.stripGaussFilt;
+handles.gaussSD.String = mainHandles.stripGaussSD;
+handles.minPeakRatio.String = mainHandles.stripMinPeakRatio;
+handles.minPeakThreshold.String = mainHandles.stripMinPeakThreshold;
+handles.adaptiveSearch.Value = mainHandles.stripAdaptiveSearch;
+handles.scalingFactor.String = mainHandles.stripScalingFactor;
+handles.searchWindowHeight.String = mainHandles.stripSearchWindowHeight;
+handles.subpixelInterp.Value = mainHandles.stripSubpixelInterp;
+handles.neighborhoodSize.String = mainHandles.stripNeighborhoodSize;
+handles.subpixelDepth.String = mainHandles.stripSubpixelDepth;
 
 if logical(handles.gaussFilt.Value)
     handles.gaussSD.Enable = 'on';
@@ -112,7 +112,7 @@ guidata(hObject, handles);
 function varargout = StripParameters_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
@@ -122,7 +122,7 @@ varargout{1} = handles.output;
 % --- Executes on button press in save.
 function save_Callback(hObject, eventdata, handles)
 % hObject    handle to save (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 figureHandle = findobj(0, 'tag', 'jobQueue');
@@ -214,21 +214,21 @@ if isnan(subpixelDepth) || ...
 end
 
 % Save new configurations
-mainHandles.fineOverwrite = logical(handles.overwrite.Value);
-mainHandles.fineVerbosity = logical(handles.verbosity.Value);
-mainHandles.fineStripHeight = str2double(handles.stripHeight.String);
-mainHandles.fineStripWidth = str2double(handles.stripWidth.String);
-mainHandles.fineSamplingRate = str2double(handles.samplingRate.String);
-mainHandles.fineGaussFilt = logical(handles.gaussFilt.Value);
-mainHandles.fineGaussSD = str2double(handles.gaussSD.String);
-mainHandles.fineMinPeakRatio = str2double(handles.minPeakRatio.String);
-mainHandles.fineMinPeakThreshold = str2double(handles.minPeakThreshold.String);
-mainHandles.fineAdaptiveSearch = logical(handles.adaptiveSearch.Value);
-mainHandles.fineScalingFactor = str2double(handles.scalingFactor.String);
-mainHandles.fineSearchWindowHeight = str2double(handles.searchWindowHeight.String);
-mainHandles.fineSubpixelInterp = logical(handles.subpixelInterp.Value);
-mainHandles.fineNeighborhoodSize = str2double(handles.neighborhoodSize.String);
-mainHandles.fineSubpixelDepth = str2double(handles.subpixelDepth.String);
+mainHandles.stripOverwrite = logical(handles.overwrite.Value);
+mainHandles.stripVerbosity = logical(handles.verbosity.Value);
+mainHandles.stripStripHeight = str2double(handles.stripHeight.String);
+mainHandles.stripStripWidth = str2double(handles.stripWidth.String);
+mainHandles.stripSamplingRate = str2double(handles.samplingRate.String);
+mainHandles.stripGaussFilt = logical(handles.gaussFilt.Value);
+mainHandles.stripGaussSD = str2double(handles.gaussSD.String);
+mainHandles.stripMinPeakRatio = str2double(handles.minPeakRatio.String);
+mainHandles.stripMinPeakThreshold = str2double(handles.minPeakThreshold.String);
+mainHandles.stripAdaptiveSearch = logical(handles.adaptiveSearch.Value);
+mainHandles.stripScalingFactor = str2double(handles.scalingFactor.String);
+mainHandles.stripSearchWindowHeight = str2double(handles.searchWindowHeight.String);
+mainHandles.stripSubpixelInterp = logical(handles.subpixelInterp.Value);
+mainHandles.stripNeighborhoodSize = str2double(handles.neighborhoodSize.String);
+mainHandles.stripSubpixelDepth = str2double(handles.subpixelDepth.String);
 
 % Update handles structure
 guidata(figureHandle, mainHandles);
@@ -239,7 +239,7 @@ close;
 % --- Executes on button press in overwrite.
 function overwrite_Callback(hObject, eventdata, handles)
 % hObject    handle to overwrite (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of overwrite
@@ -248,7 +248,7 @@ function overwrite_Callback(hObject, eventdata, handles)
 % --- Executes on button press in cancel.
 function cancel_Callback(hObject, eventdata, handles)
 % hObject    handle to cancel (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 close;
 
@@ -256,7 +256,7 @@ close;
 % --- Executes on button press in subpixelInterp.
 function subpixelInterp_Callback(hObject, eventdata, handles)
 % hObject    handle to subpixelInterp (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of subpixelInterp
@@ -271,7 +271,7 @@ function subpixelInterp_Callback(hObject, eventdata, handles)
 % --- Executes on button press in verbosity.
 function verbosity_Callback(hObject, eventdata, handles)
 % hObject    handle to verbosity (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of verbosity
@@ -280,7 +280,7 @@ function verbosity_Callback(hObject, eventdata, handles)
 
 function numIterations_Callback(hObject, eventdata, handles)
 % hObject    handle to numIterations (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: get(hObject,'String') returns contents of numIterations as text
@@ -290,7 +290,7 @@ function numIterations_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function numIterations_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to numIterations (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
@@ -303,7 +303,7 @@ end
 
 function stripHeight_Callback(hObject, eventdata, handles)
 % hObject    handle to stripHeight (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: get(hObject,'String') returns contents of stripHeight as text
@@ -313,7 +313,7 @@ function stripHeight_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function stripHeight_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to stripHeight (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
@@ -326,7 +326,7 @@ end
 
 function stripWidth_Callback(hObject, eventdata, handles)
 % hObject    handle to stripWidth (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: get(hObject,'String') returns contents of stripWidth as text
@@ -336,7 +336,7 @@ function stripWidth_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function stripWidth_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to stripWidth (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
@@ -349,7 +349,7 @@ end
 
 function samplingRate_Callback(hObject, eventdata, handles)
 % hObject    handle to samplingRate (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: get(hObject,'String') returns contents of samplingRate as text
@@ -359,7 +359,7 @@ function samplingRate_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function samplingRate_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to samplingRate (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
@@ -372,7 +372,7 @@ end
 
 function minPeakRatio_Callback(hObject, eventdata, handles)
 % hObject    handle to minPeakRatio (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: get(hObject,'String') returns contents of minPeakRatio as text
@@ -382,7 +382,7 @@ function minPeakRatio_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function minPeakRatio_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to minPeakRatio (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
@@ -395,7 +395,7 @@ end
 
 function minPeakThreshold_Callback(hObject, eventdata, handles)
 % hObject    handle to minPeakThreshold (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: get(hObject,'String') returns contents of minPeakThreshold as text
@@ -405,7 +405,7 @@ function minPeakThreshold_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function minPeakThreshold_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to minPeakThreshold (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
@@ -418,7 +418,7 @@ end
 % --- Executes on button press in adaptiveSearch.
 function adaptiveSearch_Callback(hObject, eventdata, handles)
 % hObject    handle to adaptiveSearch (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of adaptiveSearch
@@ -433,7 +433,7 @@ function adaptiveSearch_Callback(hObject, eventdata, handles)
 
 function scalingFactor_Callback(hObject, eventdata, handles)
 % hObject    handle to scalingFactor (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: get(hObject,'String') returns contents of scalingFactor as text
@@ -443,7 +443,7 @@ function scalingFactor_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function scalingFactor_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to scalingFactor (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
@@ -456,7 +456,7 @@ end
 
 function searchWindowHeight_Callback(hObject, eventdata, handles)
 % hObject    handle to searchWindowHeight (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: get(hObject,'String') returns contents of searchWindowHeight as text
@@ -466,7 +466,7 @@ function searchWindowHeight_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function searchWindowHeight_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to searchWindowHeight (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
@@ -479,7 +479,7 @@ end
 
 function neighborhoodSize_Callback(hObject, eventdata, handles)
 % hObject    handle to neighborhoodSize (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: get(hObject,'String') returns contents of neighborhoodSize as text
@@ -489,7 +489,7 @@ function neighborhoodSize_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function neighborhoodSize_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to neighborhoodSize (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
@@ -502,7 +502,7 @@ end
 
 function subpixelDepth_Callback(hObject, eventdata, handles)
 % hObject    handle to subpixelDepth (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: get(hObject,'String') returns contents of subpixelDepth as text
@@ -512,7 +512,7 @@ function subpixelDepth_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function subpixelDepth_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to subpixelDepth (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
@@ -525,7 +525,7 @@ end
 % --- Executes on button press in gaussFilt.
 function gaussFilt_Callback(hObject, eventdata, handles)
 % hObject    handle to gaussFilt (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of gaussFilt
@@ -542,7 +542,7 @@ function gaussFilt_Callback(hObject, eventdata, handles)
 
 function gaussSD_Callback(hObject, eventdata, handles)
 % hObject    handle to gaussSD (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: get(hObject,'String') returns contents of gaussSD as text
@@ -552,7 +552,7 @@ function gaussSD_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function gaussSD_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to gaussSD (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
+% eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
