@@ -267,7 +267,7 @@ handles.files
 % Apply modules to all selected files
 for i = 1:size(handles.files, 2)
     handles.togTrim.Enable
-    if strcmp(handles.togTrim.Enable, 'on')
+    if handles.togTrim.Value == 1
         % Set the parameters
         parametersStructure.borderTrimAmount = handles.trimBorderTrimAmount;
         parametersStructure.overwrite = handles.trimOverwrite;
@@ -279,7 +279,7 @@ for i = 1:size(handles.files, 2)
         handles.files{i} = [handles.files{i}(1:end-4) '_dwt' handles.files{i}(end-3:end)];
     end
     
-    if strcmp(handles.togStim.Enable, 'on')
+    if handles.togStim.Value == 1
         % Set the parameters
         parametersStructure.enableVerbosity = handles.stimVerbosity;
         parametersStructure.overwrite = handles.stimOverwrite;
@@ -296,7 +296,7 @@ for i = 1:size(handles.files, 2)
         handles.files{i} = [handles.files{i}(1:end-4) '_nostim' handles.files{i}(end-3:end)];
     end
     
-    if strcmp(handles.togGamma.Enable, 'on')
+    if handles.togGamma.Value == 1
         % Set the parameters
         parametersStructure.gammaExponent = handles.gammaExponent;
         parametersStructure.overwrite = handles.gammaOverwrite;
@@ -308,7 +308,7 @@ for i = 1:size(handles.files, 2)
         handles.files{i} = [handles.files{i}(1:end-4) '_gamscaled' handles.files{i}(end-3:end)];
     end
     
-    if strcmp(handles.togBandFilt.Enable, 'on')
+    if handles.togBandFilt.Value == 1
         % Set the parameters
         parametersStructure.smoothing = handles.bandFiltSmoothing;
         parametersStructure.lowSpatialFrequencyCutoff = handles.bandFiltFreqCut;
@@ -321,7 +321,7 @@ for i = 1:size(handles.files, 2)
         handles.files{i} = [handles.files{i}(1:end-4) '_bandfilt' handles.files{i}(end-3:end)];
     end
     
-    if strcmp(handles.togCoarse.Enable, 'on') % TODO
+    if handles.togCoarse.Value == 1 % TODO
         % Set the parameters
         parametersStructure.refFrameNumber = handles.coarseRefFrameNum;
         scalingFactor = handles.coarseScalingFactor;
@@ -337,7 +337,7 @@ for i = 1:size(handles.files, 2)
         %handles.files{i} = [handles.files{i}(1:end-4) '_dwt' handles.files{i}(end-3:end)];
     end
     
-    if strcmp(handles.togFine.Enable, 'on')
+    if handles.togFine.Value == 1
         % Set the parameters
         parametersStructure.enableVerbosity = handles.fineVerbosity;
         parametersStructure.numberOfIterations = handles.fineNumIterations;
@@ -365,7 +365,7 @@ for i = 1:size(handles.files, 2)
         %handles.files{i} = [handles.files{i}(1:end-4) '_dwt' handles.files{i}(end-3:end)];
     end
     
-    if strcmp(handles.togStrip.Enable, 'on')
+    if handles.togStrip.Value == 1
         % Set the parameters
         parametersStructure.overwrite = handles.stripOverwrite;
         parametersStructure.enableVerbosity = handles.stripVerbosity;
@@ -400,7 +400,7 @@ for i = 1:size(handles.files, 2)
     end
     
     if false
-    %if strcmp(handles.togFilt.Enable, 'on') % TODO
+    %if handles.togFilt.Value == 1 % TODO
         % Set the parameters
         parametersStructure.borderTrimAmount = handles.trimBorderTrimAmount;
         parametersStructure.overwrite = handles.trimOverwrite;
@@ -413,7 +413,7 @@ for i = 1:size(handles.files, 2)
     end
     
     if false
-    %if strcmp(handles.togReRef.Enable, 'on') % TODO
+    %if handles.togReRef.Value == 1 % TODO
         % Set the parameters
         parametersStructure.borderTrimAmount = handles.trimBorderTrimAmount;
         parametersStructure.overwrite = handles.trimOverwrite;
@@ -425,7 +425,7 @@ for i = 1:size(handles.files, 2)
         handles.files{i} = [handles.files{i}(1:end-4) '_dwt' handles.files{i}(end-3:end)];
     end
     
-    if strcmp(handles.togSacDrift.Enable, 'on')
+    if handles.togSacDrift.Value == 1
         % Set the parameters
         parametersStructure.overwrite = handles.sacOverwrite;
         parametersStructure.enableVerbosity = handles.sacVerbosity;

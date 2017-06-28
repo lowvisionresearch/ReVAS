@@ -197,7 +197,6 @@ append whatever you like to full input name
 TODO
 
 copy and paste saccades/drifts loop instead of doing sketch loop reset
-run strip analysis on new reference frame and pre-processed video
 direction should not be under acceleration
 user will specify hard threshold which is just the naive cuttoff (not based around median, based around 0)
 user can also specify a secondary hard threshold
