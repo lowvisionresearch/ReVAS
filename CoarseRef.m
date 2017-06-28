@@ -1,8 +1,8 @@
-function coarseRefFrame = CoarseRef(params, scalingFactor)
+function coarseRefFrame = CoarseRef(filename, params)
 %CoarseRef    Generates a coarse reference frame.
-%   f = CoarseRef(params, scalingFactor) is the coarse reference frame of a
+%   f = CoarseRef(params, filenam) is the coarse reference frame of a
 %   video, generated using a scaled down version of each frame (each frame
-%   is scaled down by scalingFactor) and then cross-correlating each of 
+%   is scaled down by params.scalingFactor) and then cross-correlating each of 
 %   those scaled frames with an arbitrary frame number. If no frame number
 %   is provided, the function chooses the middle frame as the default
 %   initial reference frame. The function then multiplies the scaled down
@@ -10,28 +10,49 @@ function coarseRefFrame = CoarseRef(params, scalingFactor)
 %   shifts. It then constructs the coarse reference frame using those
 %   approximate frame shifts.
 %
-%   params must have the field params.fileName, which is the video that
-%   will be analyzed. params.refFrameNumber is an optional parameter that
-%   designates which frame to use as the initial scaled down reference
-%   frame. params.enableVerbosity is either 0, 1, or 2. Verbosity of 0 will 
+%   params must have the fields: params.scalingFactor, params.refFrameNumber, 
+%   an optional parameter that designates which frame to use as the initial 
+%   scaled down reference frame, params.overwrite (optional), 
+%   params.enableVerbosity, which is either 0, 1, or 2. Verbosity of 0 will 
 %   only save the output in a MatLab file. Verbosity of 1 will display the 
 %   final result. Verbosity of 2 will show the progress of the program. 
 %   scalingFactor is the factor by which each frame will be multiplied to 
 %   get the approximate frame shifts.
 %
 %   Example: 
-%       params.fileName = 'MyVid.avi';
+%       filename = 'MyVid.avi';
+%       params.enableGPU = false;
+%       params.overwrite = true;
 %       params.refFrameNumber = 15;
 %       params.enableVerbosity = 1;
-%       scalingFactor = 0.5;
-%       CoarseRef(params, scalingFactor);
+%       params.scalingFactor = 0.5;
+%       CoarseRef(params, filename);
+
 
 % Check to see if operations can be performed on GPU and whether the user
 % wants to do so if there is a GPU
 enableGPU = (gpuDeviceCount > 0) & params.enableGPU;
 
+% Write the output to a new MatLab file. First remove the '.avi' extension
+newFileName = filename;
+newFileName((end-3):end) = [];
+
+% Extend name because the file has been processed by coarseref
+newFileName(end + 1: end + 10) = '_coarseref';
+
+% Handle overwrite scenarios.
+if ~exist([newFileName '.mat'], 'file')
+    % left blank to continue without issuing warning in this case
+elseif ~isfield(params, 'overwrite') || ~params.overwrite
+    warning('CoarseRef() did not execute because it would overwrite existing file.');
+    coarseRefFrame = [];
+    return;
+else
+    warning('CoarseRef() is proceeding and overwriting an existing file.');
+end
+
 % get video info
-v = VideoReader(params.fileName);
+v = VideoReader(filename);
 totalFrames = v.frameRate * v.Duration;
 
 % Preallocate an array to store frames because it is expensive to change
@@ -42,7 +63,7 @@ totalFrames = v.frameRate * v.Duration;
 % the video later after reading one frame here.
 timeToRemember = v.CurrentTime;
 sampleFrame = readFrame(v);
-shrunkFrame = imresize(sampleFrame, scalingFactor);
+shrunkFrame = imresize(sampleFrame, params.scalingFactor);
 [rows, columns] = size(shrunkFrame);
 frames = zeros(rows, columns*totalFrames);
 
@@ -51,7 +72,7 @@ v.CurrentTime = timeToRemember;
 while hasFrame(v)
     
     currFrame = readFrame(v);
-    shrunkFrame = imresize(currFrame, scalingFactor);
+    shrunkFrame = imresize(currFrame, params.scalingFactor);
     
     % startIndex/endIndex indicate where to insert each frame into the
     % preallocated array. For example, the second frame (frameNumber = 2)
@@ -130,8 +151,8 @@ while frameNumber <= totalFrames
     % moves 6 units to the right of the shrunken reference frame, then 
     % the real frame moved 12 units to the right relative to the real 
     % reference frame).
-    framePositions(frameNumber, 1) = (1/scalingFactor) * rowCoordinate;
-    framePositions(frameNumber, 2) = (1/scalingFactor) * columnCoordinate;
+    framePositions(frameNumber, 1) = (1/params.scalingFactor) * rowCoordinate;
+    framePositions(frameNumber, 2) = (1/params.scalingFactor) * columnCoordinate;
     
     % Show surface plot for this correlation if verbosity enabled
     if params.enableVerbosity == 2
@@ -173,7 +194,7 @@ while frameNumber <= totalFrames
 end
 
 % UNCOMMENT THE SAVE STATEMENT IN FINAL VERSION
-%save('framePositions', 'framePositions');
+save('framePositions', 'framePositions');
 
 % Set up the counter array and the template for the coarse reference frame.
 height = size(sampleFrame, 1);
@@ -190,9 +211,17 @@ framePositions = -framePositions;
 % a positive integer to make sure all values are > 0 (i.e., if we leave the
 % zero'd value in framePositions, there will be indexing problems later,
 % since MatLab indexing starts from 1 not 0).
-mostNegative = max(-1*framePositions);
-framePositions(:, 1) = framePositions(:, 1) + mostNegative(1) + 2;
-framePositions(:, 2) = framePositions(:, 2) + mostNegative(2) + 2;
+column1 = framePositions(:, 1);
+column2 = framePositions(:, 2);
+if column1(column1<0)
+    mostNegative = max(-1*column1);
+    framePositions(:, 1) = framePositions(:, 1) + mostNegative + 2;
+end
+
+if column2(column2<0)
+    mostNegative = max(-1*column2);
+    framePositions(:, 2) = framePositions(:, 2) + mostNegative + 2;
+end
 
 % "Rewind" the video so we can add to the template for the coarse
 % reference frame
@@ -200,6 +229,9 @@ v.CurrentTime = timeToRemember;
 
 if enableGPU
     totalFrames = gpuArray(totalFrames);
+    framePositions = gpuArray(framePositions);
+    counterArray = gpuArray(counterArray);
+    coarseRefFrame = gpuArray(coarseRefFrame);
 end
 
 for frameNumber = 1:totalFrames
@@ -207,9 +239,6 @@ for frameNumber = 1:totalFrames
     % whereas we need to use signed integers
     if enableGPU
         frame = double(gpuArray(readFrame(v)))/255;
-        framePositions = gpuArray(framePositions);
-        counterArray = gpuArray(counterArray);
-        coarseRefFrame = gpuArray(coarseRefFrame);
     else
         frame = double(readFrame(v))/255;
     end
@@ -264,15 +293,8 @@ for k = 1:size(NaNindices)
     coarseRefFrame(NaNindex) = 0;
 end
 
-% Write the output to a new MatLab file. First remove the '.avi' extension
-newFileName = params.fileName;
-newFileName((end-3):end) = [];
-
-% Extend name because the file has been processed by coarseref
-newFileName(end + 1: end + 10) = '_coarseref';
-
 % UNCOMMENT THE SAVE STATEMENT IN FINAL VERSION
-% save(newFileName, 'coarseRefFrame');
+save(newFileName, 'coarseRefFrame');
 
 if params.enableVerbosity >= 1
     figure(3)
