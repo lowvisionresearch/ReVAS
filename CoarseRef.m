@@ -293,7 +293,6 @@ for k = 1:size(NaNindices)
     coarseRefFrame(NaNindex) = 0;
 end
 
-% UNCOMMENT THE SAVE STATEMENT IN FINAL VERSION
 save(newFileName, 'coarseRefFrame');
 
 if params.enableVerbosity >= 1
