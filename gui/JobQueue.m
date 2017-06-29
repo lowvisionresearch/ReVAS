@@ -97,7 +97,8 @@ handles.stripVerbosity = true;
 handles.stripStripHeight = 15;
 handles.stripStripWidth = 488;
 handles.stripSamplingRate = 540;
-handles.stripGaussFilt = true;
+handles.stripEnableGaussFilt = true;
+handles.stripDisableGaussFilt = false;
 handles.stripGaussSD = 10;
 handles.stripMinPeakRatio = 0.8;
 handles.stripMinPeakThreshold = 0;
@@ -117,6 +118,7 @@ handles.sacMinAmplitude = 0.1;
 handles.sacMaxDuration = 100;
 handles.sacDetectionMethod1 = false;
 handles.sacHardVelThreshold = 35;
+handles.sacHardSecondaryVelThreshold = 35;
 handles.sacDetectionMethod2 = true;
 handles.sacVelMethod1 = true;
 handles.sacVelMethod2 = false;
@@ -372,7 +374,7 @@ for i = 1:size(handles.files, 2)
         parametersStructure.stripHeight = handles.stripStripHeight;
         parametersStructure.stripWidth = handles.stripStripWidth;
         parametersStructure.samplingRate = handles.stripSamplingRate;
-        parametersStructure.enableGaussianFiltering = handles.stripGaussFilt;
+        parametersStructure.enableGaussianFiltering = handles.stripEnableGaussFilt;
         parametersStructure.gaussianStandardDeviation = handles.stripGaussSD;
         parametersStructure.minimumPeakRatio = handles.stripMinPeakRatio;
         parametersStructure.minimumPeakThreshold = handles.stripMinPeakThreshold;
@@ -440,6 +442,8 @@ for i = 1:size(handles.files, 2)
             parametersStructure.detectionMethod = 2;
         end
         parametersStructure.hardVelocityThreshold = handles.sacHardVelThreshold;
+        parametersStructure.hardSecondaryVelocityThreshold = ...
+            handles.sacHardSecondaryVelThreshold;
         if handles.sacVelMethod1
             parametersStructure.velocityMethod = 1;
         else

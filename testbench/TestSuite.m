@@ -130,8 +130,9 @@ parametersStructure.minAmplitude = 0.1;
 parametersStructure.maxDuration = 100;
 parametersStructure.detectionMethod = 2;
 parametersStructure.hardVelocityThreshold = 35;
+parametersStructure.hardSecondaryVelocityThreshold = 35; % TODO what's the default?
 parametersStructure.velocityMethod = 2;
-
+parametersStructure.enableVerbosity = true;
 parametersStructure.overwrite = true;
 
 eyePositionTracesPath = ...

@@ -22,7 +22,7 @@ function varargout = StripParameters(varargin)
 
 % Edit the above text to modify the response to help StripParameters
 
-% Last Modified by GUIDE v2.5 26-Jun-2017 17:03:10
+% Last Modified by GUIDE v2.5 29-Jun-2017 15:58:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -64,7 +64,8 @@ handles.verbosity.Value = mainHandles.stripVerbosity;
 handles.stripHeight.String = mainHandles.stripStripHeight;
 handles.stripWidth.String = mainHandles.stripStripWidth;
 handles.samplingRate.String = mainHandles.stripSamplingRate;
-handles.gaussFilt.Value = mainHandles.stripGaussFilt;
+handles.enableGaussFilt.Value = mainHandles.stripEnableGaussFilt;
+handles.disableGaussFilt.Value = mainHandles.stripDisableGaussFilt;
 handles.gaussSD.String = mainHandles.stripGaussSD;
 handles.minPeakRatio.String = mainHandles.stripMinPeakRatio;
 handles.minPeakThreshold.String = mainHandles.stripMinPeakThreshold;
@@ -75,7 +76,7 @@ handles.subpixelInterp.Value = mainHandles.stripSubpixelInterp;
 handles.neighborhoodSize.String = mainHandles.stripNeighborhoodSize;
 handles.subpixelDepth.String = mainHandles.stripSubpixelDepth;
 
-if logical(handles.gaussFilt.Value)
+if logical(handles.enableGaussFilt.Value)
     handles.gaussSD.Enable = 'on';
     handles.minPeakRatio.Enable = 'off';
     handles.minPeakThreshold.Enable = 'off';
@@ -219,7 +220,8 @@ mainHandles.stripVerbosity = logical(handles.verbosity.Value);
 mainHandles.stripStripHeight = str2double(handles.stripHeight.String);
 mainHandles.stripStripWidth = str2double(handles.stripWidth.String);
 mainHandles.stripSamplingRate = str2double(handles.samplingRate.String);
-mainHandles.stripGaussFilt = logical(handles.gaussFilt.Value);
+mainHandles.stripEnableGaussFilt = logical(handles.enableGaussFilt.Value);
+mainHandles.stripDisableGaussFilt = logical(handles.disableGaussFilt.Value);
 mainHandles.stripGaussSD = str2double(handles.gaussSD.String);
 mainHandles.stripMinPeakRatio = str2double(handles.minPeakRatio.String);
 mainHandles.stripMinPeakThreshold = str2double(handles.minPeakThreshold.String);
@@ -522,24 +524,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in gaussFilt.
-function gaussFilt_Callback(hObject, eventdata, handles)
-% hObject    handle to gaussFilt (see GCBO)
-% eventdata  reserved - to be destripd in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of gaussFilt
-    if get(hObject,'Value') == 1
-        handles.gaussSD.Enable = 'on';
-        handles.minPeakRatio.Enable = 'off';
-        handles.minPeakThreshold.Enable = 'off';
-    else
-        handles.gaussSD.Enable = 'off';
-        handles.minPeakRatio.Enable = 'on';
-        handles.minPeakThreshold.Enable = 'on';
-    end
-
-
 function gaussSD_Callback(hObject, eventdata, handles)
 % hObject    handle to gaussSD (see GCBO)
 % eventdata  reserved - to be destripd in a future version of MATLAB
@@ -559,4 +543,40 @@ function gaussSD_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in enableGaussFilt.
+function enableGaussFilt_Callback(hObject, eventdata, handles)
+% hObject    handle to enableGaussFilt (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of enableGaussFilt
+if get(hObject,'Value') == 1
+    handles.gaussSD.Enable = 'on';
+    handles.minPeakRatio.Enable = 'off';
+    handles.minPeakThreshold.Enable = 'off';
+else
+    handles.gaussSD.Enable = 'off';
+    handles.minPeakRatio.Enable = 'on';
+    handles.minPeakThreshold.Enable = 'on';
+end
+
+
+% --- Executes on button press in disableGaussFilt.
+function disableGaussFilt_Callback(hObject, eventdata, handles)
+% hObject    handle to disableGaussFilt (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of disableGaussFilt
+if get(hObject,'Value') == 0
+    handles.gaussSD.Enable = 'on';
+    handles.minPeakRatio.Enable = 'off';
+    handles.minPeakThreshold.Enable = 'off';
+else
+    handles.gaussSD.Enable = 'off';
+    handles.minPeakRatio.Enable = 'on';
+    handles.minPeakThreshold.Enable = 'on';
 end

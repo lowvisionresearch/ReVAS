@@ -22,7 +22,7 @@ function varargout = SacDriftParameters(varargin)
 
 % Edit the above text to modify the response to help SacDriftParameters
 
-% Last Modified by GUIDE v2.5 26-Jun-2017 17:54:01
+% Last Modified by GUIDE v2.5 29-Jun-2017 15:38:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -68,14 +68,17 @@ handles.minAmplitude.String = mainHandles.sacMinAmplitude;
 handles.maxDuration.String = mainHandles.sacMaxDuration;
 handles.detectionMethod1.Value = mainHandles.sacDetectionMethod1;
 handles.hardVelThreshold.String = mainHandles.sacHardVelThreshold;
+handles.hardSecondaryVelThreshold.String = mainHandles.sacHardSecondaryVelThreshold;
 handles.detectionMethod2.Value = mainHandles.sacDetectionMethod2;
 handles.velMethod1.Value = mainHandles.sacVelMethod1;
 handles.velMethod2.Value = mainHandles.sacVelMethod2;
 
 if logical(handles.detectionMethod1.Value)
     handles.hardVelThreshold.Enable = 'on';
+    handles.hardSecondaryVelThreshold.Enable = 'on';
 else
     handles.hardVelThreshold.Enable = 'off';
+    handles.hardSecondaryVelThreshold.Enable = 'off';
 end
 
 % Update handles structure
@@ -151,6 +154,13 @@ if isnan(hardVelThreshold)
     return;
 end
 
+% hardSecondaryVelThreshold
+hardSecondaryVelThreshold = str2double(handles.hardSecondaryVelThreshold.String);
+if isnan(hardSecondaryVelThreshold)
+    errordlg('Hard Secondary Velocity Threshold must be a real number', 'Invalid Parameter');
+    return;
+end
+
 % Save new configurations
 mainHandles.sacOverwrite = logical(handles.overwrite.Value);
 mainHandles.sacVerbosity = logical(handles.verbosity.Value);
@@ -161,6 +171,8 @@ mainHandles.sacMinAmplitude = str2double(handles.minAmplitude.String);
 mainHandles.sacMaxDuration = str2double(handles.maxDuration.String);
 mainHandles.sacDetectionMethod1 = logical(handles.detectionMethod1.Value);
 mainHandles.sacHardVelThreshold = str2double(handles.hardVelThreshold.String);
+mainHandles.sacHardSecondaryVelThreshold = ...
+    str2double(handles.hardSecondaryVelThreshold.String);
 mainHandles.sacDetectionMethod2 = logical(handles.detectionMethod2.Value);
 mainHandles.sacVelMethod1 = logical(handles.velMethod1.Value);
 mainHandles.sacVelMethod2 = logical(handles.velMethod2.Value);
@@ -218,7 +230,6 @@ function verbosity_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of verbosity
-
 
 
 function thresholdVal_Callback(hObject, eventdata, handles)
@@ -344,8 +355,10 @@ function detectionMethod1_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of detectionMethod1
     if get(hObject,'Value') == 1
         handles.hardVelThreshold.Enable = 'on';
+        handles.hardSecondaryVelThreshold.Enable = 'on';
     else
         handles.hardVelThreshold.Enable = 'off';
+        handles.hardSecondaryVelThreshold.Enable = 'off';
     end
 
 % --- Executes on button press in detectionMethod2.
@@ -357,8 +370,10 @@ function detectionMethod2_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of detectionMethod2
     if get(hObject,'Value') == 1
         handles.hardVelThreshold.Enable = 'off';
+        handles.hardSecondaryVelThreshold.Enable = 'off';
     else
         handles.hardVelThreshold.Enable = 'on';
+        handles.hardSecondaryVelThreshold.Enable = 'on';
     end
 
 % --- Executes on button press in velMethod1.
@@ -377,3 +392,26 @@ function velMethod2_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of velMethod2
+
+
+
+function hardSecondaryVelThreshold_Callback(hObject, eventdata, handles)
+% hObject    handle to hardSecondaryVelThreshold (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of hardSecondaryVelThreshold as text
+%        str2double(get(hObject,'String')) returns contents of hardSecondaryVelThreshold as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function hardSecondaryVelThreshold_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to hardSecondaryVelThreshold (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

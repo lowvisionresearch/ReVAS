@@ -72,6 +72,13 @@ else
     hardVelocityThreshold = inputParametersStructure.hardVelocityThreshold;
 end
 
+% units are in degrees/second
+if ~isfield(inputParametersStructure, 'hardSecondaryVelocityThreshold')
+    hardSecondaryVelocityThreshold = 35; % TODO what's the default?
+else
+    hardSecondaryVelocityThreshold = inputParametersStructure.hardVelocityThreshold;
+end
+
 % Method to use to calculate velocity
 % 1 = using |diff|
 % 2 = (x_(n+1) - x_(n-1)) / 2 delta t)
@@ -98,15 +105,20 @@ degreesPerPixelVertical = ...
 degreesPerPixelHorizontal = ...
     originalVideoSizeDegrees(2) / originalVideoSizePixels(2);
 
+% TODO this step wasn't necessary for tester file
 %eyePositionTraces(:,1) = eyePositionTraces(:,1) * degreesPerPixelVertical; %#ok<NODEF>
 %eyePositionTraces(:,2) = eyePositionTraces(:,2) * degreesPerPixelHorizontal;
 
-% Verbosity for debugging purposes
-close all;
-figure;
-plot(timeArray, eyePositionTraces(:,1), ...
-    timeArray, eyePositionTraces(:,2)); %#ok<NODEF>
-title('Eye Position Traces');
+% Verbosity
+if isfield(inputParametersStructure, 'enableVerbosity') && inputParametersStructure.enableVerbosity
+    close all;
+    figure(1);
+    plot(timeArray, eyePositionTraces(:,1), ...
+        timeArray, eyePositionTraces(:,2)); %#ok<NODEF>
+    title('Eye Position Traces');
+    legend('show');
+    legend('Vertical Positions', 'Horizontal Positions');
+end
 
 %% Saccade detection algorithm
 
@@ -145,10 +157,15 @@ end
 medianOfVerticalVelocityDiffs = median(verticalVelocityDiffs);
 standardDeviationOfVerticalVelocityDiffs = ...
     sqrt(median(verticalVelocityDiffs.^2) - medianOfVerticalVelocityDiffs^2);
-verticalVelocityThresholdLower = ...
-    medianOfVerticalVelocityDiffs - thresholdValue * standardDeviationOfVerticalVelocityDiffs;
-verticalVelocityThresholdUpper = ...
-    medianOfVerticalVelocityDiffs + thresholdValue * standardDeviationOfVerticalVelocityDiffs;
+if detectionMethod == 1
+    verticalVelocityThresholdLower = -hardVelocityThreshold;
+    verticalVelocityThresholdUpper = hardVelocityThreshold;
+else
+    verticalVelocityThresholdLower = ...
+        medianOfVerticalVelocityDiffs - thresholdValue * standardDeviationOfVerticalVelocityDiffs;
+    verticalVelocityThresholdUpper = ...
+        medianOfVerticalVelocityDiffs + thresholdValue * standardDeviationOfVerticalVelocityDiffs;
+end
 if velocityMethod == 1
     verticalVelocityDiffs = [0; verticalVelocityDiffs];
 elseif velocityMethod == 2
@@ -161,10 +178,15 @@ verticalSaccades = or(verticalVelocityDiffs' < verticalVelocityThresholdLower, .
 medianOfHorizontalVelocityDiffs = median(horizontalVelocityDiffs);
 standardDeviationOfHorizontalVelocityDiffs = ...
     sqrt(median(horizontalVelocityDiffs.^2) - medianOfHorizontalVelocityDiffs^2);
-horizontalVelocityThresholdLower = ...
-    medianOfHorizontalVelocityDiffs - thresholdValue * standardDeviationOfHorizontalVelocityDiffs;
-horizontalVelocityThresholdUpper = ...
-    medianOfHorizontalVelocityDiffs + thresholdValue * standardDeviationOfHorizontalVelocityDiffs;
+if detectionMethod == 1
+    horizontalVelocityThresholdLower = -hardVelocityThreshold;
+    horizontalVelocityThresholdUpper = hardVelocityThreshold;
+else
+    horizontalVelocityThresholdLower = ...
+        medianOfHorizontalVelocityDiffs - thresholdValue * standardDeviationOfHorizontalVelocityDiffs;
+    horizontalVelocityThresholdUpper = ...
+        medianOfHorizontalVelocityDiffs + thresholdValue * standardDeviationOfHorizontalVelocityDiffs;
+end
 if velocityMethod == 1
     horizontalVelocityDiffs = [0; horizontalVelocityDiffs];
 elseif velocityMethod == 2
@@ -173,27 +195,34 @@ end
 horizontalSaccades = or(horizontalVelocityDiffs' < horizontalVelocityThresholdLower, ...
     horizontalVelocityDiffs' > horizontalVelocityThresholdUpper);
 
-% Verbosity for debugging purposes
-figure;
-plot(1:size(verticalVelocityDiffs,1), verticalVelocityDiffs, ...
-    1:size(verticalVelocityDiffs,1), ones(size(verticalVelocityDiffs,1),1)*verticalVelocityThresholdLower, ...
-    1:size(verticalVelocityDiffs,1), ones(size(verticalVelocityDiffs,1),1)*verticalVelocityThresholdUpper)
-title('Vertical Velocity Diffs');
+% Verbosity
+if isfield(inputParametersStructure, 'enableVerbosity') && inputParametersStructure.enableVerbosity
+    figure(2);
+    plot(timeArray, verticalVelocityDiffs, ...
+        timeArray, ones(size(verticalVelocityDiffs,1),1)*verticalVelocityThresholdLower, ...
+        timeArray, ones(size(verticalVelocityDiffs,1),1)*verticalVelocityThresholdUpper)
+    title('Vertical Velocity Diffs');
 
-figure;
-plot(1:size(horizontalVelocityDiffs,1), horizontalVelocityDiffs, ...
-    1:size(horizontalVelocityDiffs,1), ones(size(horizontalVelocityDiffs,1),1)*horizontalVelocityThresholdLower, ...
-    1:size(horizontalVelocityDiffs,1), ones(size(horizontalVelocityDiffs,1),1)*horizontalVelocityThresholdUpper)
-title('Horizontal Velocity Diffs');
+    figure(3);
+    plot(timeArray, horizontalVelocityDiffs, ...
+        timeArray, ones(size(horizontalVelocityDiffs,1),1)*horizontalVelocityThresholdLower, ...
+        timeArray, ones(size(horizontalVelocityDiffs,1),1)*horizontalVelocityThresholdUpper)
+    title('Horizontal Velocity Diffs');
+end
 
 % Now use the secondary velocity thresholds to capture entire peak of those
 % identified with the first velocity thresholds.
 
 % Doing this for verticalVelocitySaccades.
-secondaryVerticalVelocityThresholdLower = ...
-    medianOfVerticalVelocityDiffs - secondaryThresholdValue * standardDeviationOfVerticalVelocityDiffs;
-secondaryVerticalVelocityThresholdUpper = ...
-    medianOfVerticalVelocityDiffs + secondaryThresholdValue * standardDeviationOfVerticalVelocityDiffs;
+if detectionMethod == 1
+    secondaryVerticalVelocityThresholdLower = -hardSecondaryVelocityThreshold;
+    secondaryVerticalVelocityThresholdUpper = hardSecondaryVelocityThreshold;
+else
+    secondaryVerticalVelocityThresholdLower = ...
+        medianOfVerticalVelocityDiffs - secondaryThresholdValue * standardDeviationOfVerticalVelocityDiffs;
+    secondaryVerticalVelocityThresholdUpper = ...
+        medianOfVerticalVelocityDiffs + secondaryThresholdValue * standardDeviationOfVerticalVelocityDiffs;
+end
 i = 1;
 while i <= size(verticalSaccades, 2)
     if ~verticalSaccades(i) % this time is not part of a saccade
@@ -231,10 +260,15 @@ while i <= size(verticalSaccades, 2)
     end
 end
 % Repeat same logic but for horizonalSaccades
-secondaryHorizontalThresholdLower = ...
-    medianOfHorizontalVelocityDiffs - secondaryThresholdValue * standardDeviationOfHorizontalVelocityDiffs;
-secondaryHorizontalThresholdUpper = ...
-    medianOfHorizontalVelocityDiffs + secondaryThresholdValue * standardDeviationOfHorizontalVelocityDiffs;
+if detectionMethod == 1
+    secondaryHorizontalThresholdLower = -hardSecondaryVelocityThreshold;
+    secondaryHorizontalThresholdUpper = hardSecondaryVelocityThreshold;
+else
+    secondaryHorizontalThresholdLower = ...
+        medianOfHorizontalVelocityDiffs - secondaryThresholdValue * standardDeviationOfHorizontalVelocityDiffs;
+    secondaryHorizontalThresholdUpper = ...
+        medianOfHorizontalVelocityDiffs + secondaryThresholdValue * standardDeviationOfHorizontalVelocityDiffs;
+end
 i = 1;
 while i <= size(horizontalSaccades, 2)
     if ~horizontalSaccades(i) % this time is not part of a saccade
@@ -272,7 +306,7 @@ while i <= size(horizontalSaccades, 2)
     end
 end
 
-% Verbosity for debugging purposes
+% Additional Verbosity for debugging purposes
 %figure;
 %plot(1:size(verticalDiffs,1), verticalDiffs, ...
 %    1:size(verticalDiffs,1), ones(size(verticalDiffs,1),1)*secondaryVerticalThresholdLower, ...
@@ -456,10 +490,10 @@ while i < size(saccadesIndices,2)
     saccadeStructs(end).amplitude.vector = ...
         sqrt(saccadeStructs(end).amplitude.x^2 + saccadeStructs(end).amplitude.y^2);
     
-    % Amplitude Direction
+    % Direction
     % apply |atand2d| to delta y / delta x
     % (gives range [-180, 180] degrees)
-    saccadeStructs(end).amplitude.direction = ...
+    saccadeStructs(end).direction = ...
         atan2d(saccadeStructs(end).yEnd - saccadeStructs(end).yStart, ...
         saccadeStructs(end).xEnd - saccadeStructs(end).xStart);
     
@@ -594,10 +628,10 @@ while i < size(driftsIndices,2)
     driftStructs(end).amplitude.vector = ...
         sqrt(driftStructs(end).amplitude.x^2 + driftStructs(end).amplitude.y^2);
     
-    % Amplitude Direction
+    % Direction
     % apply |atand2d| to delta y / delta x
     % (gives range [-180, 180] degrees)
-    driftStructs(end).amplitude.direction = ...
+    driftStructs(end).direction = ...
         atan2d(driftStructs(end).yEnd - driftStructs(end).yStart, ...
         driftStructs(end).xEnd - driftStructs(end).xStart);
     
@@ -661,6 +695,29 @@ end
 
 %% Save to output mat file
 save(outputFileName, 'saccadeStructs', 'driftStructs');
+
+%% Verbosity for Results
+
+
+% Verbosity
+if isfield(inputParametersStructure, 'enableVerbosity') && inputParametersStructure.enableVerbosity
+    for i = 1:size(saccadeStructs)
+        figure(2);
+        hold on;
+        plot(saccadeStructs(i).time, saccadeStructs(i).velocity.x, 'Color', 'green');
+        
+        figure(3);
+        hold on;
+        plot(saccadeStructs(i).time, saccadeStructs(i).velocity.y, 'Color', 'green');
+    end
+    figure(2);
+    legend('show');
+    legend('Vertical Drifts', 'Lower Threshold', 'Upper Threshold', 'Vertical Saccades');
+    
+    figure(3);
+    legend('show');
+    legend('Horizontal Drifts', 'Lower Threshold', 'Upper Threshold', 'Horizontal Saccades');
+end
 
 end
 
