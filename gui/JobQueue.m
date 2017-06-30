@@ -54,9 +54,6 @@ function JobQueue_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for JobQueue
 handles.output = hObject;
 
-% Disabling buttons for their initial states
-set(handles.parallelization, 'enable', 'off'); % Not implemented yet
-
 % DEFAULT PARAMETERS
 % Trim
 handles.trimBorderTrimAmount = 24;
@@ -122,6 +119,9 @@ handles.sacHardSecondaryVelThreshold = 35;
 handles.sacDetectionMethod2 = true;
 handles.sacVelMethod1 = true;
 handles.sacVelMethod2 = false;
+% Parallelization
+handles.parMultiCore = false;
+handles.parGPU = false;
 
 % Pre-Disabled Toggle Values
 handles.preDisabledTogTrimValue = 1;
@@ -160,7 +160,7 @@ function parallelization_Callback(hObject, eventdata, handles)
 % hObject    handle to parallelization (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+Parallelization;
 
 % --- Executes on button press in reset.
 function reset_Callback(hObject, eventdata, handles)
@@ -181,41 +181,6 @@ function add_Callback(hObject, eventdata, handles)
 
 % Open the Add Module GUI
 AddModule;
-
-% --- Executes on button press in delete.
-function delete_Callback(hObject, eventdata, handles)
-% hObject    handle to delete (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in moveUp.
-function moveUp_Callback(hObject, eventdata, handles)
-% hObject    handle to moveUp (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in moveDown.
-function moveDown_Callback(hObject, eventdata, handles)
-% hObject    handle to moveDown (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in duplicate.
-function duplicate_Callback(hObject, eventdata, handles)
-% hObject    handle to duplicate (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in edit.
-function edit_Callback(hObject, eventdata, handles)
-% hObject    handle to edit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 
 % --- Executes on button press in execute.
 function execute_Callback(hObject, eventdata, handles)
@@ -265,193 +230,211 @@ handles.execute1.Visible = 'on';
 handles.execute2.Visible = 'on';
 handles.abort.Visible = 'on';
 
-handles.files
+drawnow;
+
+% Setup parfor loop for multi-core processing
+if logical(handles.parMultiCore)
+    localCluster = parcluster('local');
+    numberOfWorkers = localCluster.NumWorkers;
+else
+    numberOfWorkers = 0;
+end
+
 % Apply modules to all selected files
-for i = 1:size(handles.files, 2)
-    handles.togTrim.Enable
-    if handles.togTrim.Value == 1
-        % Set the parameters
-        parametersStructure.borderTrimAmount = handles.trimBorderTrimAmount;
-        parametersStructure.overwrite = handles.trimOverwrite;
-        
-        % Call the function(s)
-        TrimVideo(handles.files{i}, parametersStructure);
-        
-        % Update file name to output file name
-        handles.files{i} = [handles.files{i}(1:end-4) '_dwt' handles.files{i}(end-3:end)];
+parfor (i = 1:size(handles.files, 2), numberOfWorkers)
+    localHandles = handles;
+    parametersStructure = struct;
+    % Set GPU option
+    if logical(localHandles.parGPU)
+        parametersStructure.enableGPU = true;
+    else
+        parametersStructure.enableGPU = false;
     end
     
-    if handles.togStim.Value == 1
+    if logical(localHandles.togTrim.Value)
         % Set the parameters
-        parametersStructure.enableVerbosity = handles.stimVerbosity;
-        parametersStructure.overwrite = handles.stimOverwrite;
+        parametersStructure.borderTrimAmount = localHandles.trimBorderTrimAmount;
+        parametersStructure.overwrite = localHandles.trimOverwrite;
+        
+        % Call the function(s)
+        TrimVideo(localHandles.files{i}, parametersStructure);
+        
+        % Update file name to output file name
+        localHandles.files{i} = [localHandles.files{i}(1:end-4) '_dwt' localHandles.files{i}(end-3:end)];
+    end
+    
+    if logical(localHandles.togStim.Value)
+        % Set the parameters
+        parametersStructure.enableVerbosity = localHandles.stimVerbosity;
+        parametersStructure.overwrite = localHandles.stimOverwrite;
+        stimulus = struct;
         stimulus.thickness = 1; % TODO
         stimulus.size = 51; % TODO
         parametersStructure.thresholdValue = 4; % TODO (used for blink detection)
         
         % Call the function(s)
-        FindBlinkFrames(handles.files{i}, parametersStructure);
-        FindStimulusLocations(handles.files{i}, stimulus, parametersStructure);
-        RemoveStimuli(handles.files{i}, parametersStructure);
+        FindBlinkFrames(localHandles.files{i}, parametersStructure);
+        FindStimulusLocations(localHandles.files{i}, stimulus, parametersStructure);
+        RemoveStimuli(localHandles.files{i}, parametersStructure);
         
         % Update file name to output file name
-        handles.files{i} = [handles.files{i}(1:end-4) '_nostim' handles.files{i}(end-3:end)];
+        localHandles.files{i} = [localHandles.files{i}(1:end-4) '_nostim' localHandles.files{i}(end-3:end)];
     end
     
-    if handles.togGamma.Value == 1
+    if logical(localHandles.togGamma.Value)
         % Set the parameters
-        parametersStructure.gammaExponent = handles.gammaExponent;
-        parametersStructure.overwrite = handles.gammaOverwrite;
+        parametersStructure.gammaExponent = localHandles.gammaExponent;
+        parametersStructure.overwrite = localHandles.gammaOverwrite;
         
         % Call the function(s)
-        GammaCorrect(handles.files{i}, parametersStructure);
+        GammaCorrect(localHandles.files{i}, parametersStructure);
         
         % Update file name to output file name
-        handles.files{i} = [handles.files{i}(1:end-4) '_gamscaled' handles.files{i}(end-3:end)];
+        localHandles.files{i} = [localHandles.files{i}(1:end-4) '_gamscaled' localHandles.files{i}(end-3:end)];
     end
     
-    if handles.togBandFilt.Value == 1
+    if logical(localHandles.togBandFilt.Value)
         % Set the parameters
-        parametersStructure.smoothing = handles.bandFiltSmoothing;
-        parametersStructure.lowSpatialFrequencyCutoff = handles.bandFiltFreqCut;
-        parametersStructure.overwrite = handles.bandFiltOverwrite;
+        parametersStructure.smoothing = localHandles.bandFiltSmoothing;
+        parametersStructure.lowSpatialFrequencyCutoff = localHandles.bandFiltFreqCut;
+        parametersStructure.overwrite = localHandles.bandFiltOverwrite;
         
         % Call the function(s)
-        BandpassFilter(handles.files{i}, parametersStructure);
+        BandpassFilter(localHandles.files{i}, parametersStructure);
         
         % Update file name to output file name
-        handles.files{i} = [handles.files{i}(1:end-4) '_bandfilt' handles.files{i}(end-3:end)];
+        localHandles.files{i} = [localHandles.files{i}(1:end-4) '_bandfilt' localHandles.files{i}(end-3:end)];
     end
     
-    if handles.togCoarse.Value == 1 % TODO
+    if logical(localHandles.togCoarse.Value) % TODO
         % Set the parameters
-        parametersStructure.refFrameNumber = handles.coarseRefFrameNum;
-        scalingFactor = handles.coarseScalingFactor;
-        parametersStructure.overwrite = handles.coarseOverwrite;
-        parametersStructure.enableVerbosity = handles.coarseVerbosity;
-        parametersStructure.fileName = handles.files{i};
+        parametersStructure.refFrameNumber = localHandles.coarseRefFrameNum;
+        scalingFactor = localHandles.coarseScalingFactor;
+        parametersStructure.overwrite = localHandles.coarseOverwrite;
+        parametersStructure.enableVerbosity = localHandles.coarseVerbosity;
+        parametersStructure.fileName = localHandles.files{i};
         parametersStructure.enableGPU = false; % TODO
 
         % Call the function(s)
         coarseResult = CoarseRef(parametersStructure, scalingFactor);
         
         % Update file name to output file name
-        %handles.files{i} = [handles.files{i}(1:end-4) '_dwt' handles.files{i}(end-3:end)];
+        %localHandles.files{i} = [localHandles.files{i}(1:end-4) '_dwt' localHandles.files{i}(end-3:end)];
     end
     
-    if handles.togFine.Value == 1
+    if logical(localHandles.togFine.Value)
         % Set the parameters
-        parametersStructure.enableVerbosity = handles.fineVerbosity;
-        parametersStructure.numberOfIterations = handles.fineNumIterations;
-        parametersStructure.stripHeight = handles.fineStripHeight;
-        parametersStructure.stripWidth = handles.fineStripWidth;
-        parametersStructure.samplingRate = handles.fineSamplingRate;
-        parametersStructure.minimumPeakRatio = handles.fineMinPeakRatio;
-        parametersStructure.minimumPeakThreshold = handles.fineMinPeakThreshold;
-        parametersStructure.adaptiveSearch = handles.fineAdaptiveSearch;
-        parametersStructure.adaptiveSearchScalingFactor = handles.fineScalingFactor;
-        parametersStructure.searchWindowHeight = handles.fineSearchWindowHeight;
-        parametersStructure.enableSubpixelInterpolation = handles.fineSubpixelInterp;
+        parametersStructure.enableVerbosity = localHandles.fineVerbosity;
+        parametersStructure.numberOfIterations = localHandles.fineNumIterations;
+        parametersStructure.stripHeight = localHandles.fineStripHeight;
+        parametersStructure.stripWidth = localHandles.fineStripWidth;
+        parametersStructure.samplingRate = localHandles.fineSamplingRate;
+        parametersStructure.minimumPeakRatio = localHandles.fineMinPeakRatio;
+        parametersStructure.minimumPeakThreshold = localHandles.fineMinPeakThreshold;
+        parametersStructure.adaptiveSearch = localHandles.fineAdaptiveSearch;
+        parametersStructure.adaptiveSearchScalingFactor = localHandles.fineScalingFactor;
+        parametersStructure.searchWindowHeight = localHandles.fineSearchWindowHeight;
+        parametersStructure.enableSubpixelInterpolation = localHandles.fineSubpixelInterp;
         parametersStructure.subpixelInterpolationParameters.neighborhoodSize ...
-            = handles.fineNeighborhoodSize;
+            = localHandles.fineNeighborhoodSize;
         parametersStructure.subpixelInterpolationParameters.subpixelDepth ...
-            = handles.fineSubpixelDepth;
+            = localHandles.fineSubpixelDepth;
         parametersStructure.enableGaussianFiltering = false; % TODO
         parametersStructure.badFrames = []; % TODO
-        parametersStructure.axesHandles = []; % TODO        
+        parametersStructure.axeslocalHandles = []; % TODO        
         
         % Call the function(s)
         fineResult = RefineReferenceFrame(coarseResult, parametersStructure);
         
         % Update file name to output file name
-        %handles.files{i} = [handles.files{i}(1:end-4) '_dwt' handles.files{i}(end-3:end)];
+        %localHandles.files{i} = [localHandles.files{i}(1:end-4) '_dwt' localHandles.files{i}(end-3:end)];
     end
     
-    if handles.togStrip.Value == 1
+    if logical(localHandles.togStrip.Value)
         % Set the parameters
-        parametersStructure.overwrite = handles.stripOverwrite;
-        parametersStructure.enableVerbosity = handles.stripVerbosity;
-        parametersStructure.stripHeight = handles.stripStripHeight;
-        parametersStructure.stripWidth = handles.stripStripWidth;
-        parametersStructure.samplingRate = handles.stripSamplingRate;
-        parametersStructure.enableGaussianFiltering = handles.stripEnableGaussFilt;
-        parametersStructure.gaussianStandardDeviation = handles.stripGaussSD;
-        parametersStructure.minimumPeakRatio = handles.stripMinPeakRatio;
-        parametersStructure.minimumPeakThreshold = handles.stripMinPeakThreshold;
-        parametersStructure.adaptiveSearch = handles.stripAdaptiveSearch;
-        parametersStructure.adaptiveSearchScalingFactor = handles.stripScalingFactor;
-        parametersStructure.searchWindowHeight = handles.stripSearchWindowHeight;
-        parametersStructure.enableSubpixelInterpolation = handles.stripSubpixelInterp;
+        parametersStructure.overwrite = localHandles.stripOverwrite;
+        parametersStructure.enableVerbosity = localHandles.stripVerbosity;
+        parametersStructure.stripHeight = localHandles.stripStripHeight;
+        parametersStructure.stripWidth = localHandles.stripStripWidth;
+        parametersStructure.samplingRate = localHandles.stripSamplingRate;
+        parametersStructure.enableGaussianFiltering = localHandles.stripEnableGaussFilt;
+        parametersStructure.gaussianStandardDeviation = localHandles.stripGaussSD;
+        parametersStructure.minimumPeakRatio = localHandles.stripMinPeakRatio;
+        parametersStructure.minimumPeakThreshold = localHandles.stripMinPeakThreshold;
+        parametersStructure.adaptiveSearch = localHandles.stripAdaptiveSearch;
+        parametersStructure.adaptiveSearchScalingFactor = localHandles.stripScalingFactor;
+        parametersStructure.searchWindowHeight = localHandles.stripSearchWindowHeight;
+        parametersStructure.enableSubpixelInterpolation = localHandles.stripSubpixelInterp;
         parametersStructure.subpixelInterpolationParameters.neighborhoodSize ...
-            = handles.stripNeighborhoodSize;
+            = localHandles.stripNeighborhoodSize;
         parametersStructure.subpixelInterpolationParameters.subpixelDepth ...
-            = handles.stripSubpixelDepth;
+            = localHandles.stripSubpixelDepth;
 
         % Call the function(s)
-        if strcmp(handles.togFine.Enable, 'on') 
+        if strcmp(localHandles.togFine.Enable, 'on') 
             [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
                 statisticsStructure] ...
-                = StripAnalysis(handles.files{i}, fineResult, parametersStructure);
-        elseif strcmp(handles.togCoarse.Enable, 'on')
+                = StripAnalysis(localHandles.files{i}, fineResult, parametersStructure);
+        elseif strcmp(localHandles.togCoarse.Enable, 'on')
             [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
                 statisticsStructure] ...
-                = StripAnalysis(handles.files{i}, coarseResult, parametersStructure);
+                = StripAnalysis(localHandles.files{i}, coarseResult, parametersStructure);
         else
             % TODO use a specific frame of the video as reference
         end        
     end
     
     if false
-    %if handles.togFilt.Value == 1 % TODO
+    %if logical(localHandles.togFilt.Value) % TODO
         % Set the parameters
-        parametersStructure.borderTrimAmount = handles.trimBorderTrimAmount;
-        parametersStructure.overwrite = handles.trimOverwrite;
+        parametersStructure.borderTrimAmount = localHandles.trimBorderTrimAmount;
+        parametersStructure.overwrite = localHandles.trimOverwrite;
         
         % Call the function(s)
-        TrimVideo(handles.files{i}, parametersStructure);
+        TrimVideo(localHandles.files{i}, parametersStructure);
         
         % Update file name to output file name
-        handles.files{i} = [handles.files{i}(1:end-4) '_dwt' handles.files{i}(end-3:end)];
+        localHandles.files{i} = [localHandles.files{i}(1:end-4) '_dwt' localHandles.files{i}(end-3:end)];
     end
     
     if false
-    %if handles.togReRef.Value == 1 % TODO
+    %if logical(localHandles.togReRef.Value) % TODO
         % Set the parameters
-        parametersStructure.borderTrimAmount = handles.trimBorderTrimAmount;
-        parametersStructure.overwrite = handles.trimOverwrite;
+        parametersStructure.borderTrimAmount = localHandles.trimBorderTrimAmount;
+        parametersStructure.overwrite = localHandles.trimOverwrite;
         
         % Call the function(s)
-        TrimVideo(handles.files{i}, parametersStructure);
+        TrimVideo(localHandles.files{i}, parametersStructure);
         
         % Update file name to output file name
-        handles.files{i} = [handles.files{i}(1:end-4) '_dwt' handles.files{i}(end-3:end)];
+        localHandles.files{i} = [localHandles.files{i}(1:end-4) '_dwt' localHandles.files{i}(end-3:end)];
     end
     
-    if handles.togSacDrift.Value == 1
+    if logical(localHandles.togSacDrift.Value)
         % Set the parameters
-        parametersStructure.overwrite = handles.sacOverwrite;
-        parametersStructure.enableVerbosity = handles.sacVerbosity;
-        parametersStructure.thresholdValue = handles.sacThresholdVal;
-        parametersStructure.secondaryThresholdValue = handles.sacSecThresholdVal;
-        parametersStructure.stitchCriteria = handles.sacStitch;
-        parametersStructure.minAmplitude = handles.sacMinAmplitude;
-        parametersStructure.maxDuration = handles.sacMaxDuration;
-        if handles.sacDetectionMethod1
+        parametersStructure.overwrite = localHandles.sacOverwrite;
+        parametersStructure.enableVerbosity = localHandles.sacVerbosity;
+        parametersStructure.thresholdValue = localHandles.sacThresholdVal;
+        parametersStructure.secondaryThresholdValue = localHandles.sacSecThresholdVal;
+        parametersStructure.stitchCriteria = localHandles.sacStitch;
+        parametersStructure.minAmplitude = localHandles.sacMinAmplitude;
+        parametersStructure.maxDuration = localHandles.sacMaxDuration;
+        if localHandles.sacDetectionMethod1
             parametersStructure.detectionMethod = 1;
         else
             parametersStructure.detectionMethod = 2;
         end
-        parametersStructure.hardVelocityThreshold = handles.sacHardVelThreshold;
+        parametersStructure.hardVelocityThreshold = localHandles.sacHardVelThreshold;
         parametersStructure.hardSecondaryVelocityThreshold = ...
-            handles.sacHardSecondaryVelThreshold;
-        if handles.sacVelMethod1
+            localHandles.sacHardSecondaryVelThreshold;
+        if localHandles.sacVelMethod1
             parametersStructure.velocityMethod = 1;
         else
             parametersStructure.velocityMethod = 2;
         end
         
         % Update file name to input file name
-        inputFileName = [handles.files{i}(1:end-4) '_' ...
+        inputFileName = [localHandles.files{i}(1:end-4) '_' ...
             int2str(parametersStructure.samplingRate) '_hz_final.mat'];
 
         % Call the function(s)
