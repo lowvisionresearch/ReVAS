@@ -361,8 +361,8 @@ parfor (i = 1:size(handles.files, 2), numberOfWorkers)
     
     if logical(localHandles.togTrim.Value)
         % Set the parameters
-        parametersStructure.borderTrimAmount = localHandles.trimBorderTrimAmount;
-        parametersStructure.overwrite = localHandles.trimOverwrite;
+        parametersStructure.borderTrimAmount = localHandles.config.trimBorderTrimAmount;
+        parametersStructure.overwrite = localHandles.config.trimOverwrite;
         
         % Call the function(s)
         TrimVideo(localHandles.files{i}, parametersStructure);
@@ -373,8 +373,8 @@ parfor (i = 1:size(handles.files, 2), numberOfWorkers)
     
     if logical(localHandles.togStim.Value)
         % Set the parameters
-        parametersStructure.enableVerbosity = localHandles.stimVerbosity;
-        parametersStructure.overwrite = localHandles.stimOverwrite;
+        parametersStructure.enableVerbosity = localHandles.config.stimVerbosity;
+        parametersStructure.overwrite = localHandles.config.stimOverwrite;
         stimulus = struct;
         stimulus.thickness = 1; % TODO
         stimulus.size = 51; % TODO
@@ -391,8 +391,8 @@ parfor (i = 1:size(handles.files, 2), numberOfWorkers)
     
     if logical(localHandles.togGamma.Value)
         % Set the parameters
-        parametersStructure.gammaExponent = localHandles.gammaExponent;
-        parametersStructure.overwrite = localHandles.gammaOverwrite;
+        parametersStructure.gammaExponent = localHandles.config.gammaExponent;
+        parametersStructure.overwrite = localHandles.config.gammaOverwrite;
         
         % Call the function(s)
         GammaCorrect(localHandles.files{i}, parametersStructure);
@@ -403,9 +403,9 @@ parfor (i = 1:size(handles.files, 2), numberOfWorkers)
     
     if logical(localHandles.togBandFilt.Value)
         % Set the parameters
-        parametersStructure.smoothing = localHandles.bandFiltSmoothing;
-        parametersStructure.lowSpatialFrequencyCutoff = localHandles.bandFiltFreqCut;
-        parametersStructure.overwrite = localHandles.bandFiltOverwrite;
+        parametersStructure.smoothing = localHandles.config.bandFiltSmoothing;
+        parametersStructure.lowSpatialFrequencyCutoff = localHandles.config.bandFiltFreqCut;
+        parametersStructure.overwrite = localHandles.config.bandFiltOverwrite;
         
         % Call the function(s)
         BandpassFilter(localHandles.files{i}, parametersStructure);
@@ -416,15 +416,15 @@ parfor (i = 1:size(handles.files, 2), numberOfWorkers)
     
     if logical(localHandles.togCoarse.Value) % TODO
         % Set the parameters
-        parametersStructure.refFrameNumber = localHandles.coarseRefFrameNum;
-        scalingFactor = localHandles.coarseScalingFactor;
-        parametersStructure.overwrite = localHandles.coarseOverwrite;
-        parametersStructure.enableVerbosity = localHandles.coarseVerbosity;
+        parametersStructure.refFrameNumber = localHandles.config.coarseRefFrameNum;
+        parametersStructure.scalingFactor = localHandles.config.coarseScalingFactor;
+        parametersStructure.overwrite = localHandles.config.coarseOverwrite;
+        parametersStructure.enableVerbosity = localHandles.config.coarseVerbosity;
         parametersStructure.fileName = localHandles.files{i};
         parametersStructure.enableGPU = false; % TODO
 
         % Call the function(s)
-        coarseResult = CoarseRef(parametersStructure, scalingFactor);
+        coarseResult = CoarseRef(localHandles.files{i}, parametersStructure);
         
         % Update file name to output file name
         %localHandles.files{i} = [localHandles.files{i}(1:end-4) '_dwt' localHandles.files{i}(end-3:end)];
@@ -432,27 +432,27 @@ parfor (i = 1:size(handles.files, 2), numberOfWorkers)
     
     if logical(localHandles.togFine.Value)
         % Set the parameters
-        parametersStructure.enableVerbosity = localHandles.fineVerbosity;
-        parametersStructure.numberOfIterations = localHandles.fineNumIterations;
-        parametersStructure.stripHeight = localHandles.fineStripHeight;
-        parametersStructure.stripWidth = localHandles.fineStripWidth;
-        parametersStructure.samplingRate = localHandles.fineSamplingRate;
-        parametersStructure.minimumPeakRatio = localHandles.fineMinPeakRatio;
-        parametersStructure.minimumPeakThreshold = localHandles.fineMinPeakThreshold;
-        parametersStructure.adaptiveSearch = localHandles.fineAdaptiveSearch;
-        parametersStructure.adaptiveSearchScalingFactor = localHandles.fineScalingFactor;
-        parametersStructure.searchWindowHeight = localHandles.fineSearchWindowHeight;
-        parametersStructure.enableSubpixelInterpolation = localHandles.fineSubpixelInterp;
+        parametersStructure.enableVerbosity = localHandles.config.fineVerbosity;
+        parametersStructure.numberOfIterations = localHandles.config.fineNumIterations;
+        parametersStructure.stripHeight = localHandles.config.fineStripHeight;
+        parametersStructure.stripWidth = localHandles.config.fineStripWidth;
+        parametersStructure.samplingRate = localHandles.config.fineSamplingRate;
+        parametersStructure.minimumPeakRatio = localHandles.config.fineMinPeakRatio;
+        parametersStructure.minimumPeakThreshold = localHandles.config.fineMinPeakThreshold;
+        parametersStructure.adaptiveSearch = localHandles.config.fineAdaptiveSearch;
+        parametersStructure.adaptiveSearchScalingFactor = localHandles.config.fineScalingFactor;
+        parametersStructure.searchWindowHeight = localHandles.config.fineSearchWindowHeight;
+        parametersStructure.enableSubpixelInterpolation = localHandles.config.fineSubpixelInterp;
         parametersStructure.subpixelInterpolationParameters.neighborhoodSize ...
-            = localHandles.fineNeighborhoodSize;
+            = localHandles.config.fineNeighborhoodSize;
         parametersStructure.subpixelInterpolationParameters.subpixelDepth ...
-            = localHandles.fineSubpixelDepth;
+            = localHandles.config.fineSubpixelDepth;
         parametersStructure.enableGaussianFiltering = false; % TODO
         parametersStructure.badFrames = []; % TODO
         parametersStructure.axeslocalHandles = []; % TODO        
         
         % Call the function(s)
-        fineResult = RefineReferenceFrame(coarseResult, parametersStructure);
+        fineResult = FineRef(coarseResult, localHandles.files{i}, parametersStructure);
         
         % Update file name to output file name
         %localHandles.files{i} = [localHandles.files{i}(1:end-4) '_dwt' localHandles.files{i}(end-3:end)];
@@ -460,23 +460,24 @@ parfor (i = 1:size(handles.files, 2), numberOfWorkers)
     
     if logical(localHandles.togStrip.Value)
         % Set the parameters
-        parametersStructure.overwrite = localHandles.stripOverwrite;
-        parametersStructure.enableVerbosity = localHandles.stripVerbosity;
-        parametersStructure.stripHeight = localHandles.stripStripHeight;
-        parametersStructure.stripWidth = localHandles.stripStripWidth;
-        parametersStructure.samplingRate = localHandles.stripSamplingRate;
-        parametersStructure.enableGaussianFiltering = localHandles.stripEnableGaussFilt;
-        parametersStructure.gaussianStandardDeviation = localHandles.stripGaussSD;
-        parametersStructure.minimumPeakRatio = localHandles.stripMinPeakRatio;
-        parametersStructure.minimumPeakThreshold = localHandles.stripMinPeakThreshold;
-        parametersStructure.adaptiveSearch = localHandles.stripAdaptiveSearch;
-        parametersStructure.adaptiveSearchScalingFactor = localHandles.stripScalingFactor;
-        parametersStructure.searchWindowHeight = localHandles.stripSearchWindowHeight;
-        parametersStructure.enableSubpixelInterpolation = localHandles.stripSubpixelInterp;
+        parametersStructure.overwrite = localHandles.config.stripOverwrite;
+        parametersStructure.enableVerbosity = localHandles.config.stripVerbosity;
+        parametersStructure.stripHeight = localHandles.config.stripStripHeight;
+        parametersStructure.stripWidth = localHandles.config.stripStripWidth;
+        parametersStructure.samplingRate = localHandles.config.stripSamplingRate;
+        parametersStructure.enableGaussianFiltering = localHandles.config.stripEnableGaussFilt;
+        parametersStructure.gaussianStandardDeviation = localHandles.config.stripGaussSD;
+        parametersStructure.minimumPeakRatio = localHandles.config.stripMinPeakRatio;
+        parametersStructure.minimumPeakThreshold = localHandles.config.stripMinPeakThreshold;
+        parametersStructure.adaptiveSearch = localHandles.config.stripAdaptiveSearch;
+        parametersStructure.adaptiveSearchScalingFactor = localHandles.config.stripScalingFactor;
+        parametersStructure.searchWindowHeight = localHandles.config.stripSearchWindowHeight;
+        parametersStructure.enableSubpixelInterpolation = ...
+            localHandles.config.stripSubpixelInterp;
         parametersStructure.subpixelInterpolationParameters.neighborhoodSize ...
-            = localHandles.stripNeighborhoodSize;
+            = localHandles.config.stripNeighborhoodSize;
         parametersStructure.subpixelInterpolationParameters.subpixelDepth ...
-            = localHandles.stripSubpixelDepth;
+            = localHandles.config.stripSubpixelDepth;
 
         % Call the function(s)
         if strcmp(localHandles.togFine.Enable, 'on') 
@@ -495,8 +496,8 @@ parfor (i = 1:size(handles.files, 2), numberOfWorkers)
     if false
     %if logical(localHandles.togFilt.Value) % TODO
         % Set the parameters
-        parametersStructure.borderTrimAmount = localHandles.trimBorderTrimAmount;
-        parametersStructure.overwrite = localHandles.trimOverwrite;
+        parametersStructure.borderTrimAmount = localHandles.config.trimBorderTrimAmount;
+        parametersStructure.overwrite = localHandles.config.trimOverwrite;
         
         % Call the function(s)
         TrimVideo(localHandles.files{i}, parametersStructure);
@@ -508,8 +509,8 @@ parfor (i = 1:size(handles.files, 2), numberOfWorkers)
     if false
     %if logical(localHandles.togReRef.Value) % TODO
         % Set the parameters
-        parametersStructure.borderTrimAmount = localHandles.trimBorderTrimAmount;
-        parametersStructure.overwrite = localHandles.trimOverwrite;
+        parametersStructure.borderTrimAmount = localHandles.config.trimBorderTrimAmount;
+        parametersStructure.overwrite = localHandles.config.trimOverwrite;
         
         % Call the function(s)
         TrimVideo(localHandles.files{i}, parametersStructure);
@@ -520,22 +521,22 @@ parfor (i = 1:size(handles.files, 2), numberOfWorkers)
     
     if logical(localHandles.togSacDrift.Value)
         % Set the parameters
-        parametersStructure.overwrite = localHandles.sacOverwrite;
-        parametersStructure.enableVerbosity = localHandles.sacVerbosity;
-        parametersStructure.thresholdValue = localHandles.sacThresholdVal;
-        parametersStructure.secondaryThresholdValue = localHandles.sacSecThresholdVal;
-        parametersStructure.stitchCriteria = localHandles.sacStitch;
-        parametersStructure.minAmplitude = localHandles.sacMinAmplitude;
-        parametersStructure.maxDuration = localHandles.sacMaxDuration;
-        if localHandles.sacDetectionMethod1
+        parametersStructure.overwrite = localHandles.config.sacOverwrite;
+        parametersStructure.enableVerbosity = localHandles.config.sacVerbosity;
+        parametersStructure.thresholdValue = localHandles.config.sacThresholdVal;
+        parametersStructure.secondaryThresholdValue = localHandles.config.sacSecThresholdVal;
+        parametersStructure.stitchCriteria = localHandles.config.sacStitch;
+        parametersStructure.minAmplitude = localHandles.config.sacMinAmplitude;
+        parametersStructure.maxDuration = localHandles.config.sacMaxDuration;
+        if localHandles.config.sacDetectionMethod1
             parametersStructure.detectionMethod = 1;
         else
             parametersStructure.detectionMethod = 2;
         end
-        parametersStructure.hardVelocityThreshold = localHandles.sacHardVelThreshold;
+        parametersStructure.hardVelocityThreshold = localHandles.config.sacHardVelThreshold;
         parametersStructure.hardSecondaryVelocityThreshold = ...
-            localHandles.sacHardSecondaryVelThreshold;
-        if localHandles.sacVelMethod1
+            localHandles.config.sacHardSecondaryVelThreshold;
+        if localHandles.config.sacVelMethod1
             parametersStructure.velocityMethod = 1;
         else
             parametersStructure.velocityMethod = 2;
