@@ -22,7 +22,7 @@ function varargout = JobQueue(varargin)
 
 % Edit the above text to modify the response to help JobQueue
 
-% Last Modified by GUIDE v2.5 27-Jun-2017 21:06:05
+% Last Modified by GUIDE v2.5 03-Jul-2017 15:06:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,80 +54,188 @@ function JobQueue_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for JobQueue
 handles.output = hObject;
 
+% COLOR PALETTE
+% http://paletton.com/palette.php?uid=c491l5-2L0kj0tK00%2B%2B6SNBlToaqM2g
+handles.colors = ... % primary, white, light, dark, black
+    {[114,102,173],[255,255,255],[206,201,226],[ 67, 53,133],[  5,  3, 12];
+     [229, 93,106],[255,255,255],[251,198,203],[186, 59, 71],[ 17,  3,  4];
+     [101,198, 80],[255,255,255],[195,237,187],[ 70,161, 51],[  5, 15,  2];
+     [237,209, 96],[255,255,255],[255,244,200],[209,180, 69],[ 18, 15,  3]};
+
+for i = 1:size(handles.colors,1)
+    for j = 1:size(handles.colors,2)
+        handles.colors{i,j} = handles.colors{i,j}/255;
+    end
+end
+ 
+% Set colors
+% Main Background
+handles.jobQueue.Color = handles.colors{1,2};
+% Box backgrounds
+handles.inputVideoBox.BackgroundColor = handles.colors{1,3};
+handles.radioRaw.BackgroundColor = handles.colors{1,3};
+handles.radioTrim.BackgroundColor = handles.colors{1,3};
+handles.radioNoStim.BackgroundColor = handles.colors{1,3};
+handles.radioGamma.BackgroundColor = handles.colors{1,3};
+handles.radioBandFilt.BackgroundColor = handles.colors{1,3};
+handles.modulesBox.BackgroundColor = handles.colors{1,3};
+handles.textTrim.BackgroundColor = handles.colors{1,3};
+handles.textStim.BackgroundColor = handles.colors{1,3};
+handles.textGamma.BackgroundColor = handles.colors{1,3};
+handles.textBandFilt.BackgroundColor = handles.colors{1,3};
+handles.textCoarse.BackgroundColor = handles.colors{1,3};
+handles.textFine.BackgroundColor = handles.colors{1,3};
+handles.textStrip.BackgroundColor = handles.colors{1,3};
+handles.textFilt.BackgroundColor = handles.colors{1,3};
+handles.textReRef.BackgroundColor = handles.colors{1,3};
+handles.textSacDrift.BackgroundColor = handles.colors{1,3};
+% Box text
+handles.inputVideoBox.ForegroundColor = handles.colors{1,5};
+handles.radioRaw.ForegroundColor = handles.colors{1,5};
+handles.radioTrim.ForegroundColor = handles.colors{1,5};
+handles.radioNoStim.ForegroundColor = handles.colors{1,5};
+handles.radioGamma.ForegroundColor = handles.colors{1,5};
+handles.radioBandFilt.ForegroundColor = handles.colors{1,5};
+handles.modulesBox.ForegroundColor = handles.colors{1,5};
+handles.textTrim.ForegroundColor = handles.colors{1,5};
+handles.textStim.ForegroundColor = handles.colors{1,5};
+handles.textGamma.ForegroundColor = handles.colors{1,5};
+handles.textBandFilt.ForegroundColor = handles.colors{1,5};
+handles.textCoarse.ForegroundColor = handles.colors{1,5};
+handles.textFine.ForegroundColor = handles.colors{1,5};
+handles.textStrip.ForegroundColor = handles.colors{1,5};
+handles.textFilt.ForegroundColor = handles.colors{1,5};
+handles.textReRef.ForegroundColor = handles.colors{1,5};
+handles.textSacDrift.ForegroundColor = handles.colors{1,5};
+% Select/Enable buttons backgrounds
+handles.selectFiles.BackgroundColor = handles.colors{1,4};
+handles.togTrim.BackgroundColor = handles.colors{1,4};
+handles.togStim.BackgroundColor = handles.colors{1,4};
+handles.togGamma.BackgroundColor = handles.colors{1,4};
+handles.togBandFilt.BackgroundColor = handles.colors{1,4};
+handles.togCoarse.BackgroundColor = handles.colors{1,4};
+handles.togFine.BackgroundColor = handles.colors{1,4};
+handles.togStrip.BackgroundColor = handles.colors{1,4};
+handles.togFilt.BackgroundColor = handles.colors{1,4};
+handles.togReRef.BackgroundColor = handles.colors{1,4};
+handles.togSacDrift.BackgroundColor = handles.colors{1,4};
+% Select/Enable button text
+handles.selectFiles.ForegroundColor = handles.colors{1,2};
+handles.togTrim.ForegroundColor = handles.colors{1,2};
+handles.togStim.ForegroundColor = handles.colors{1,2};
+handles.togGamma.ForegroundColor = handles.colors{1,2};
+handles.togBandFilt.ForegroundColor = handles.colors{1,2};
+handles.togCoarse.ForegroundColor = handles.colors{1,2};
+handles.togFine.ForegroundColor = handles.colors{1,2};
+handles.togStrip.ForegroundColor = handles.colors{1,2};
+handles.togFilt.ForegroundColor = handles.colors{1,2};
+handles.togReRef.ForegroundColor = handles.colors{1,2};
+handles.togSacDrift.ForegroundColor = handles.colors{1,2};
+% Configure buttons backgrounds
+handles.configTrim.BackgroundColor = handles.colors{4,4};
+handles.configStim.BackgroundColor = handles.colors{4,4};
+handles.configGamma.BackgroundColor = handles.colors{4,4};
+handles.configBandFilt.BackgroundColor = handles.colors{4,4};
+handles.configCoarse.BackgroundColor = handles.colors{4,4};
+handles.configFine.BackgroundColor = handles.colors{4,4};
+handles.configStrip.BackgroundColor = handles.colors{4,4};
+handles.configFilt.BackgroundColor = handles.colors{4,4};
+handles.configReRef.BackgroundColor = handles.colors{4,4};
+handles.configSacDrift.BackgroundColor = handles.colors{4,4};
+% Configure button text
+handles.configTrim.ForegroundColor = handles.colors{4,2};
+handles.configStim.ForegroundColor = handles.colors{4,2};
+handles.configGamma.ForegroundColor = handles.colors{4,2};
+handles.configBandFilt.ForegroundColor = handles.colors{4,2};
+handles.configCoarse.ForegroundColor = handles.colors{4,2};
+handles.configFine.ForegroundColor = handles.colors{4,2};
+handles.configStrip.ForegroundColor = handles.colors{4,2};
+handles.configFilt.ForegroundColor = handles.colors{4,2};
+handles.configReRef.ForegroundColor = handles.colors{4,2};
+handles.configSacDrift.ForegroundColor = handles.colors{4,2};
+% Parallelization button background
+handles.parallelization.BackgroundColor = handles.colors{4,4};
+% Parallelization button text
+handles.parallelization.ForegroundColor = handles.colors{4,2};
+% Execute button background
+handles.execute.BackgroundColor = handles.colors{3,4};
+% Execute button text
+handles.execute.ForegroundColor = handles.colors{3,2};
+
 % DEFAULT PARAMETERS
 % Trim
-handles.trimBorderTrimAmount = 24;
-handles.trimOverwrite = true;
+handles.config.trimBorderTrimAmount = 24;
+handles.config.trimOverwrite = true;
 % Stim
-handles.stimVerbosity = true;
-handles.stimOverwrite = true;
+handles.config.stimVerbosity = true;
+handles.config.stimOverwrite = true;
 % Gamma
-handles.gammaExponent = 0.6;
-handles.gammaOverwrite = true;
+handles.config.gammaExponent = 0.6;
+handles.config.gammaOverwrite = true;
 % BandFilt
-handles.bandFiltSmoothing = 1;
-handles.bandFiltFreqCut = 3.0;
-handles.bandFiltOverwrite = true;
+handles.config.bandFiltSmoothing = 1;
+handles.config.bandFiltFreqCut = 3.0;
+handles.config.bandFiltOverwrite = true;
 % Coarse
-handles.coarseRefFrameNum = 15;
-handles.coarseScalingFactor = 0.5;
-handles.coarseOverwrite = true;
-handles.coarseVerbosity = true;
+handles.config.coarseRefFrameNum = 15;
+handles.config.coarseScalingFactor = 0.5;
+handles.config.coarseOverwrite = true;
+handles.config.coarseVerbosity = true;
 % Fine
-handles.fineOverwrite = true;
-handles.fineVerbosity = true;
-handles.fineNumIterations = 1;
-handles.fineStripHeight = 15;
-handles.fineStripWidth = 488;
-handles.fineSamplingRate = 540;
-handles.fineMinPeakRatio = 0.8;
-handles.fineMinPeakThreshold = 0.2;
-handles.fineAdaptiveSearch = false;
-handles.fineScalingFactor = 8;
-handles.fineSearchWindowHeight = 79;
-handles.fineSubpixelInterp = true;
-handles.fineNeighborhoodSize = 7;
-handles.fineSubpixelDepth = 2;
+handles.config.fineOverwrite = true;
+handles.config.fineVerbosity = true;
+handles.config.fineNumIterations = 1;
+handles.config.fineStripHeight = 15;
+handles.config.fineStripWidth = 488;
+handles.config.fineSamplingRate = 540;
+handles.config.fineMinPeakRatio = 0.8;
+handles.config.fineMinPeakThreshold = 0.2;
+handles.config.fineAdaptiveSearch = false;
+handles.config.fineScalingFactor = 8;
+handles.config.fineSearchWindowHeight = 79;
+handles.config.fineSubpixelInterp = true;
+handles.config.fineNeighborhoodSize = 7;
+handles.config.fineSubpixelDepth = 2;
 % Strip
-handles.stripOverwrite = true;
-handles.stripVerbosity = true;
-handles.stripStripHeight = 15;
-handles.stripStripWidth = 488;
-handles.stripSamplingRate = 540;
-handles.stripEnableGaussFilt = true;
-handles.stripDisableGaussFilt = false;
-handles.stripGaussSD = 10;
-handles.stripMinPeakRatio = 0.8;
-handles.stripMinPeakThreshold = 0;
-handles.stripAdaptiveSearch = false;
-handles.stripScalingFactor = 8;
-handles.stripSearchWindowHeight = 79;
-handles.stripSubpixelInterp = true;
-handles.stripNeighborhoodSize = 7;
-handles.stripSubpixelDepth = 2;
+handles.config.stripOverwrite = true;
+handles.config.stripVerbosity = true;
+handles.config.stripStripHeight = 15;
+handles.config.stripStripWidth = 488;
+handles.config.stripSamplingRate = 540;
+handles.config.stripEnableGaussFilt = true;
+handles.config.stripDisableGaussFilt = false;
+handles.config.stripGaussSD = 10;
+handles.config.stripMinPeakRatio = 0.8;
+handles.config.stripMinPeakThreshold = 0;
+handles.config.stripAdaptiveSearch = false;
+handles.config.stripScalingFactor = 8;
+handles.config.stripSearchWindowHeight = 79;
+handles.config.stripSubpixelInterp = true;
+handles.config.stripNeighborhoodSize = 7;
+handles.config.stripSubpixelDepth = 2;
 % Sac
-handles.sacOverwrite = true;
-handles.sacVerbosity = true;
-handles.sacThresholdVal = 6;
-handles.sacSecThresholdVal = 2;
-handles.sacStitch = 15;
-handles.sacMinAmplitude = 0.1;
-handles.sacMaxDuration = 100;
-handles.sacDetectionMethod1 = false;
-handles.sacHardVelThreshold = 35;
-handles.sacHardSecondaryVelThreshold = 35;
-handles.sacDetectionMethod2 = true;
-handles.sacVelMethod1 = true;
-handles.sacVelMethod2 = false;
+handles.config.sacOverwrite = true;
+handles.config.sacVerbosity = true;
+handles.config.sacThresholdVal = 6;
+handles.config.sacSecThresholdVal = 2;
+handles.config.sacStitch = 15;
+handles.config.sacMinAmplitude = 0.1;
+handles.config.sacMaxDuration = 100;
+handles.config.sacDetectionMethod1 = false;
+handles.config.sacHardVelThreshold = 35;
+handles.config.sacHardSecondaryVelThreshold = 35;
+handles.config.sacDetectionMethod2 = true;
+handles.config.sacVelMethod1 = true;
+handles.config.sacVelMethod2 = false;
 % Parallelization
-handles.parMultiCore = false;
-handles.parGPU = false;
+handles.config.parMultiCore = false;
+handles.config.parGPU = false;
 
 % Pre-Disabled Toggle Values
-handles.preDisabledTogTrimValue = 1;
-handles.preDisabledTogStimValue = 1;
-handles.preDisabledTogGammaValue = 1;
-handles.preDisabledTogBandFiltValue = 1;
+handles.config.preDisabledTogTrimValue = 1;
+handles.config.preDisabledTogStimValue = 1;
+handles.config.preDisabledTogGammaValue = 1;
+handles.config.preDisabledTogBandFiltValue = 1;
 
 % Pre-Disabled Execute Screen GUI Items
 handles.execute1.Visible = 'off';
@@ -193,16 +301,16 @@ handles.inputVideoBox.Visible = 'off';
 handles.selectFiles.Visible = 'off';
 handles.inputList.Visible = 'off';
 handles.modulesBox.Visible = 'off';
-handles.text1.Visible = 'off';
-handles.text2.Visible = 'off';
-handles.text3.Visible = 'off';
-handles.text4.Visible = 'off';
-handles.text5.Visible = 'off';
-handles.text6.Visible = 'off';
-handles.text7.Visible = 'off';
-handles.text8.Visible = 'off';
-handles.text9.Visible = 'off';
-handles.text10.Visible = 'off';
+handles.textTrim.Visible = 'off';
+handles.textStim.Visible = 'off';
+handles.textGamma.Visible = 'off';
+handles.textBandFilt.Visible = 'off';
+handles.textCoarse.Visible = 'off';
+handles.textFine.Visible = 'off';
+handles.textStrip.Visible = 'off';
+handles.textFilt.Visible = 'off';
+handles.textReRef.Visible = 'off';
+handles.textSacDrift.Visible = 'off';
 handles.togTrim.Visible = 'off';
 handles.togStim.Visible = 'off';
 handles.togGamma.Visible = 'off';
@@ -233,7 +341,7 @@ handles.abort.Visible = 'on';
 drawnow;
 
 % Setup parfor loop for multi-core processing
-if logical(handles.parMultiCore)
+if logical(handles.config.parMultiCore)
     localCluster = parcluster('local');
     numberOfWorkers = localCluster.NumWorkers;
 else
@@ -245,7 +353,7 @@ parfor (i = 1:size(handles.files, 2), numberOfWorkers)
     localHandles = handles;
     parametersStructure = struct;
     % Set GPU option
-    if logical(localHandles.parGPU)
+    if logical(localHandles.config.parGPU)
         parametersStructure.enableGPU = true;
     else
         parametersStructure.enableGPU = false;
@@ -455,28 +563,28 @@ function radioRaw_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of radioRaw
 if strcmp(handles.togTrim.Enable, 'off')
-    handles.togTrim.Value = handles.preDisabledTogTrimValue;
+    handles.togTrim.Value = handles.config.preDisabledTogTrimValue;
     handles.togTrim.Enable = 'on';
     handles.configTrim.Enable = 'on';
     togTrim_Callback(handles.togTrim, eventdata, handles);
 end
 
 if strcmp(handles.togStim.Enable, 'off')
-    handles.togStim.Value = handles.preDisabledTogStimValue;
+    handles.togStim.Value = handles.config.preDisabledTogStimValue;
     handles.togStim.Enable = 'on';
     handles.configStim.Enable = 'on';
     togStim_Callback(handles.togStim, eventdata, handles);
 end
 
 if strcmp(handles.togGamma.Enable, 'off')
-    handles.togGamma.Value = handles.preDisabledTogGammaValue;
+    handles.togGamma.Value = handles.config.preDisabledTogGammaValue;
     handles.togGamma.Enable = 'on';
     handles.configGamma.Enable = 'on';
     togGamma_Callback(handles.togGamma, eventdata, handles);
 end
 
 if strcmp(handles.togBandFilt.Enable, 'off')
-    handles.togBandFilt.Value = handles.preDisabledTogBandFiltValue;
+    handles.togBandFilt.Value = handles.config.preDisabledTogBandFiltValue;
     handles.togBandFilt.Enable = 'on';
     handles.configBandFilt.Enable = 'on';
     togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
@@ -523,13 +631,23 @@ while i <= size(handles.files, 2)
         % Append files to our list of files if they match the suffix
         folderFiles = dir(folder);
         for j = i:size(folderFiles, 1)
-            if contains(folderFiles(j).name, suffix)
+            if contains(folderFiles(j).name, suffix) && ...
+                    (~strcmp('.avi', suffix) || ...
+                    isempty(findstr('_dwt', folderFiles(j).name)) && ...
+                    isempty(findstr('_nostim', folderFiles(j).name)) && ...
+                    isempty(findstr('_gamscaled', folderFiles(j).name)) && ...
+                    isempty(findstr('_bandfilt', folderFiles(j).name)))
                 handles.files = ...
                     [{fullfile(folderFiles(j).folder, folderFiles(j).name)}, ...
                     handles.files];
             end
         end
-    elseif ~contains(handles.files(i), suffix)
+    elseif ~contains(handles.files{i}, suffix) || ...
+            (strcmp('.avi', suffix) && ...
+                    (~isempty(findstr('_dwt', handles.files{i})) || ...
+                    ~isempty(findstr('_nostim', handles.files{i})) || ...
+                    ~isempty(findstr('_gamscaled', handles.files{i})) || ...
+                    ~isempty(findstr('_bandfilt', handles.files{i}))))
         % Purge list of any items not matching the selected input video
         % type
         handles.files(i) = [];
@@ -559,7 +677,7 @@ function radioBandFilt_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of radioBandFilt
 if strcmp(handles.togTrim.Enable, 'on')
-    handles.preDisabledTogTrimValue = handles.togTrim.Value;
+    handles.config.preDisabledTogTrimValue = handles.togTrim.Value;
 end
 handles.togTrim.Value = 0;
 handles.togTrim.Enable = 'off';
@@ -567,7 +685,7 @@ handles.configTrim.Enable = 'off';
 togTrim_Callback(handles.togTrim, eventdata, handles);
 
 if strcmp(handles.togStim.Enable, 'on')
-    handles.preDisabledTogStimValue = handles.togStim.Value;
+    handles.config.preDisabledTogStimValue = handles.togStim.Value;
 end
 handles.togStim.Value = 0;
 handles.togStim.Enable = 'off';
@@ -575,7 +693,7 @@ handles.configStim.Enable = 'off';
 togStim_Callback(handles.togStim, eventdata, handles);
 
 if strcmp(handles.togGamma.Enable, 'on')
-    handles.preDisabledTogGammaValue = handles.togGamma.Value;
+    handles.config.preDisabledTogGammaValue = handles.togGamma.Value;
 end
 handles.togGamma.Value = 0;
 handles.togGamma.Enable = 'off';
@@ -583,7 +701,7 @@ handles.configGamma.Enable = 'off';
 togGamma_Callback(handles.togGamma, eventdata, handles);
 
 if strcmp(handles.togBandFilt.Enable, 'on')
-    handles.preDisabledTogBandFiltValue = handles.togBandFilt.Value;
+    handles.config.preDisabledTogBandFiltValue = handles.togBandFilt.Value;
 end
 handles.togBandFilt.Value = 0;
 handles.togBandFilt.Enable = 'off';
@@ -627,17 +745,17 @@ end
 function togTrim_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
     hObject.String = 'ENABLED';
-    hObject.BackgroundColor = [.49 .18 .56];
+    hObject.BackgroundColor = handles.colors{1,4};
 else
     hObject.String = 'DISABLED';
-    hObject.BackgroundColor = [.69 .49 .74];
+    hObject.BackgroundColor = handles.colors{1,1};
 end
 
 % --- Executes on button press in togStrip.
 function togStrip_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
     hObject.String = 'ENABLED';
-    hObject.BackgroundColor = [.49 .18 .56];
+    hObject.BackgroundColor = handles.colors{1,4};
 else
     if handles.togFilt.Value == 1 || ...
             handles.togReRef.Value == 1 || ...
@@ -648,34 +766,34 @@ else
         return;
     end
     hObject.String = 'DISABLED';
-    hObject.BackgroundColor = [.69 .49 .74];
+    hObject.BackgroundColor = handles.colors{1,1};
 end
 
 % --- Executes on button press in togStim.
 function togStim_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
     hObject.String = 'ENABLED';
-    hObject.BackgroundColor = [.49 .18 .56];
+    hObject.BackgroundColor = handles.colors{1,4};
 else
     hObject.String = 'DISABLED';
-    hObject.BackgroundColor = [.69 .49 .74];
+    hObject.BackgroundColor = handles.colors{1,1};
 end
 
 % --- Executes on button press in togGamma.
 function togGamma_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
     hObject.String = 'ENABLED';
-    hObject.BackgroundColor = [.49 .18 .56];
+    hObject.BackgroundColor = handles.colors{1,4};
 else
     hObject.String = 'DISABLED';
-    hObject.BackgroundColor = [.69 .49 .74];
+    hObject.BackgroundColor = handles.colors{1,1};
 end
 
 % --- Executes on button press in togCoarse.
 function togCoarse_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
     hObject.String = 'ENABLED';
-    hObject.BackgroundColor = [.49 .18 .56];
+    hObject.BackgroundColor = handles.colors{1,4};
 else
     if handles.togFine.Value == 1
         errordlg(...
@@ -684,7 +802,7 @@ else
         return;
     end
     hObject.String = 'DISABLED';
-    hObject.BackgroundColor = [.69 .49 .74];
+    hObject.BackgroundColor = handles.colors{1,1};
 end
 
 % --- Executes on button press in togReRef.
@@ -696,10 +814,10 @@ if hObject.Value == 1
         togStrip_Callback(handles.togStrip, eventdata, handles);
     end
     hObject.String = 'ENABLED';
-    hObject.BackgroundColor = [.49 .18 .56];
+    hObject.BackgroundColor = handles.colors{1,4};
 else
     hObject.String = 'DISABLED';
-    hObject.BackgroundColor = [.69 .49 .74];
+    hObject.BackgroundColor = handles.colors{1,1};
 end
 
 % --- Executes on button press in togFilt.
@@ -711,10 +829,10 @@ if hObject.Value == 1
         togStrip_Callback(handles.togStrip, eventdata, handles);
     end
     hObject.String = 'ENABLED';
-    hObject.BackgroundColor = [.49 .18 .56];
+    hObject.BackgroundColor = handles.colors{1,4};
 else
     hObject.String = 'DISABLED';
-    hObject.BackgroundColor = [.69 .49 .74];
+    hObject.BackgroundColor = handles.colors{1,1};
 end
 
 % --- Executes on button press in togSacDrift.
@@ -726,10 +844,10 @@ if hObject.Value == 1
         togStrip_Callback(handles.togStrip, eventdata, handles);
     end
     hObject.String = 'ENABLED';
-    hObject.BackgroundColor = [.49 .18 .56];
+    hObject.BackgroundColor = handles.colors{1,4};
 else
     hObject.String = 'DISABLED';
-    hObject.BackgroundColor = [.69 .49 .74];
+    hObject.BackgroundColor = handles.colors{1,1};
 end
 
 % --- Executes on button press in togFine.
@@ -741,20 +859,20 @@ if hObject.Value == 1
         togCoarse_Callback(handles.togCoarse, eventdata, handles);
     end
     hObject.String = 'ENABLED';
-    hObject.BackgroundColor = [.49 .18 .56];
+    hObject.BackgroundColor = handles.colors{1,4};
 else
     hObject.String = 'DISABLED';
-    hObject.BackgroundColor = [.69 .49 .74];
+    hObject.BackgroundColor = handles.colors{1,1};
 end
 
 % --- Executes on button press in togBandFilt.
 function togBandFilt_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
     hObject.String = 'ENABLED';
-    hObject.BackgroundColor = [.49 .18 .56];
+    hObject.BackgroundColor = handles.colors{1,4};
 else
     hObject.String = 'DISABLED';
-    hObject.BackgroundColor = [.69 .49 .74];
+    hObject.BackgroundColor = handles.colors{1,1};
 end
 
 % --- Executes on button press in configTrim.
@@ -836,7 +954,7 @@ function radioTrim_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of radioTrim
 if strcmp(handles.togTrim.Enable, 'on')
-    handles.preDisabledTogTrimValue = handles.togTrim.Value;
+    handles.config.preDisabledTogTrimValue = handles.togTrim.Value;
 end
 handles.togTrim.Value = 0;
 handles.togTrim.Enable = 'off';
@@ -844,21 +962,21 @@ handles.configTrim.Enable = 'off';
 togTrim_Callback(handles.togTrim, eventdata, handles);
 
 if strcmp(handles.togStim.Enable, 'off')
-    handles.togStim.Value = handles.preDisabledTogStimValue;
+    handles.togStim.Value = handles.config.preDisabledTogStimValue;
     handles.togStim.Enable = 'on';
     handles.configStim.Enable = 'on';
     togStim_Callback(handles.togStim, eventdata, handles);
 end
 
 if strcmp(handles.togGamma.Enable, 'off')
-    handles.togGamma.Value = handles.preDisabledTogGammaValue;
+    handles.togGamma.Value = handles.config.preDisabledTogGammaValue;
     handles.togGamma.Enable = 'on';
     handles.configGamma.Enable = 'on';
     togGamma_Callback(handles.togGamma, eventdata, handles);
 end
 
 if strcmp(handles.togBandFilt.Enable, 'off')
-    handles.togBandFilt.Value = handles.preDisabledTogBandFiltValue;
+    handles.togBandFilt.Value = handles.config.preDisabledTogBandFiltValue;
     handles.togBandFilt.Enable = 'on';
     handles.configBandFilt.Enable = 'on';
     togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
@@ -876,7 +994,7 @@ function radioNoStim_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of radioNoStim
 if strcmp(handles.togTrim.Enable, 'on')
-    handles.preDisabledTogTrimValue = handles.togTrim.Value;
+    handles.config.preDisabledTogTrimValue = handles.togTrim.Value;
 end
 handles.togTrim.Value = 0;
 handles.togTrim.Enable = 'off';
@@ -884,7 +1002,7 @@ handles.configTrim.Enable = 'off';
 togTrim_Callback(handles.togTrim, eventdata, handles);
 
 if strcmp(handles.togStim.Enable, 'on')
-    handles.preDisabledTogStimValue = handles.togStim.Value;
+    handles.config.preDisabledTogStimValue = handles.togStim.Value;
 end
 handles.togStim.Value = 0;
 handles.togStim.Enable = 'off';
@@ -892,14 +1010,14 @@ handles.configStim.Enable = 'off';
 togStim_Callback(handles.togStim, eventdata, handles);
 
 if strcmp(handles.togGamma.Enable, 'off')
-    handles.togGamma.Value = handles.preDisabledTogGammaValue;
+    handles.togGamma.Value = handles.config.preDisabledTogGammaValue;
     handles.togGamma.Enable = 'on';
     handles.configGamma.Enable = 'on';
     togGamma_Callback(handles.togGamma, eventdata, handles);
 end
 
 if strcmp(handles.togBandFilt.Enable, 'off')
-    handles.togBandFilt.Value = handles.preDisabledTogBandFiltValue;
+    handles.togBandFilt.Value = handles.config.preDisabledTogBandFiltValue;
     handles.togBandFilt.Enable = 'on';
     handles.configBandFilt.Enable = 'on';
     togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
@@ -916,7 +1034,7 @@ function radioGamma_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of radioGamma
 if strcmp(handles.togTrim.Enable, 'on')
-    handles.preDisabledTogTrimValue = handles.togTrim.Value;
+    handles.config.preDisabledTogTrimValue = handles.togTrim.Value;
 end
 handles.togTrim.Value = 0;
 handles.togTrim.Enable = 'off';
@@ -924,7 +1042,7 @@ handles.configTrim.Enable = 'off';
 togTrim_Callback(handles.togTrim, eventdata, handles);
 
 if strcmp(handles.togStim.Enable, 'on')
-    handles.preDisabledTogStimValue = handles.togStim.Value;
+    handles.config.preDisabledTogStimValue = handles.togStim.Value;
 end
 handles.togStim.Value = 0;
 handles.togStim.Enable = 'off';
@@ -932,7 +1050,7 @@ handles.configStim.Enable = 'off';
 togStim_Callback(handles.togStim, eventdata, handles);
 
 if strcmp(handles.togGamma.Enable, 'on')
-    handles.preDisabledTogGammaValue = handles.togGamma.Value;
+    handles.config.preDisabledTogGammaValue = handles.togGamma.Value;
 end
 handles.togGamma.Value = 0;
 handles.togGamma.Enable = 'off';
@@ -940,7 +1058,7 @@ handles.configGamma.Enable = 'off';
 togGamma_Callback(handles.togGamma, eventdata, handles);
 
 if strcmp(handles.togBandFilt.Enable, 'off')
-    handles.togBandFilt.Value = handles.preDisabledTogBandFiltValue;
+    handles.togBandFilt.Value = handles.config.preDisabledTogBandFiltValue;
     handles.togBandFilt.Enable = 'on';
     handles.configBandFilt.Enable = 'on';
     togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
@@ -955,3 +1073,121 @@ function abort_Callback(hObject, eventdata, handles)
 % hObject    handle to abort (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function menuAbout_Callback(hObject, eventdata, handles)
+% hObject    handle to menuAbout (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+msgbox({'Retinal Video Analysis Suite (ReVAS)'; ...
+    'Copyright (c) August 2017.'; ...
+    'Sight Enhancement Laboratory at Berkeley.'; ...
+    'School of Optometry.'; ...
+    'University of California, Berkeley, USA.'; ...
+    ''; ...
+    'Mehmet N. Agaoglu, PhD.'; ...
+    'mna@berkeley.edu.'; ...
+    ''; ...
+    'Matthew T. Sit.'; ...
+    'msit@berkeley.edu.'; ...
+    ''; ...
+    'Derek Wan.'; ...
+    'derek.wan11@berkeley.edu.'; ...
+    ''; ...
+    'Susana T. L. Chung, OD, PhD.'; ...
+    's.chung@berkeley.edu.'}, ...
+    'About ReVAS');
+
+% --------------------------------------------------------------------
+function menuLoad_Callback(hObject, eventdata, handles)
+% hObject    handle to menuLoad (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[fileName, pathName, ~] = uigetfile('*.mat', 'Load Configurations','configurations.mat');
+if fileName == 0
+    % User canceled.
+    return;
+end
+configurationsStruct = struct;
+toggleButtonStates = [];
+
+% Suppress warning if variables not found in loaded file
+warning('off','MATLAB:load:variableNotFound');
+
+load(fullfile(pathName, fileName), 'configurationsStruct', 'toggleButtonStates');
+
+% Copying over data (values not provided will remain unchanged)
+configurationsStructFieldNames = fieldnames(configurationsStruct);
+for i = 1:length(configurationsStructFieldNames)
+    handles.config.(configurationsStructFieldNames{i}) = ...
+        configurationsStruct.(configurationsStructFieldNames{i});
+end
+if size(toggleButtonStates,1) == 1 && size(toggleButtonStates,2) == 10
+    handles.togTrim.Value = toggleButtonStates(1);
+    handles.togStim.Value = toggleButtonStates(2);
+    handles.togGamma.Value = toggleButtonStates(3);
+    handles.togBandFilt.Value = toggleButtonStates(4);
+    handles.togCoarse.Value = toggleButtonStates(5);
+    handles.togFine.Value = toggleButtonStates(6);
+    handles.togStrip.Value = toggleButtonStates(7);
+    handles.togFilt.Value = toggleButtonStates(8);
+    handles.togReRef.Value = toggleButtonStates(9);
+    handles.togSacDrift.Value = toggleButtonStates(10);
+    
+    togTrim_Callback(handles.togTrim, eventdata, handles);
+    togStim_Callback(handles.togStim, eventdata, handles);
+    togGamma_Callback(handles.togGamma, eventdata, handles);
+    togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
+    togCoarse_Callback(handles.togCoarse, eventdata, handles);
+    togFine_Callback(handles.togFine, eventdata, handles);
+    togStrip_Callback(handles.togStrip, eventdata, handles);
+    togFilt_Callback(handles.togFilt, eventdata, handles);
+    togReRef_Callback(handles.togReRef, eventdata, handles);
+    togSacDrift_Callback(handles.togSacDrift, eventdata, handles);
+end
+
+% Update handles structure
+guidata(hObject, handles);
+
+% --------------------------------------------------------------------
+function menuSave_Callback(hObject, eventdata, handles)
+% hObject    handle to menuSave (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[fileName,pathName, ~] = uiputfile('*.mat','Save Configurations','configurations.mat');
+if fileName == 0
+    % User canceled.
+    return;
+end
+configurationsStruct = handles.config; %#ok<NASGU>
+toggleButtonStates = [handles.togTrim.Value ...
+    handles.togStim.Value ...
+    handles.togGamma.Value ...
+    handles.togBandFilt.Value ...
+    handles.togCoarse.Value ...
+    handles.togFine.Value ...
+    handles.togStrip.Value ...
+    handles.togFilt.Value ...
+    handles.togReRef.Value ...
+    handles.togSacDrift.Value];
+if strcmp(handles.togTrim.Enable, 'off')
+    toggleButtonStates(1) = handles.config.preDisabledTogTrimValue;
+end
+if strcmp(handles.togStim.Enable, 'off')
+    toggleButtonStates(2) = handles.config.preDisabledTogStimValue;
+end
+if strcmp(handles.togGamma.Enable, 'off')
+    toggleButtonStates(3) = handles.config.preDisabledTogGammaValue;
+end
+if strcmp(handles.togBandFilt.Enable, 'off')
+    toggleButtonStates(4) = handles.config.preDisabledTogBandFiltValue; %#ok<NASGU>
+end
+save(fullfile(pathName, fileName), 'configurationsStruct', 'toggleButtonStates');
+
+% --------------------------------------------------------------------
+function menuExit_Callback(hObject, eventdata, handles)
+% hObject    handle to menuExit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+close;

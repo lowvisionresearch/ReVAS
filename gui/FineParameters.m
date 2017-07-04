@@ -22,7 +22,7 @@ function varargout = FineParameters(varargin)
 
 % Edit the above text to modify the response to help FineParameters
 
-% Last Modified by GUIDE v2.5 26-Jun-2017 15:50:55
+% Last Modified by GUIDE v2.5 01-Jul-2017 00:02:08
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,20 +59,20 @@ handles.output = hObject;
 figureHandle = findobj(0, 'tag', 'jobQueue');
 mainHandles = guidata(figureHandle);
 
-handles.overwrite.Value = mainHandles.fineOverwrite;
-handles.verbosity.Value = mainHandles.fineVerbosity;
-handles.numIterations.String = mainHandles.fineNumIterations;
-handles.stripHeight.String = mainHandles.fineStripHeight;
-handles.stripWidth.String = mainHandles.fineStripWidth;
-handles.samplingRate.String = mainHandles.fineSamplingRate;
-handles.minPeakRatio.String = mainHandles.fineMinPeakRatio;
-handles.minPeakThreshold.String = mainHandles.fineMinPeakThreshold;
-handles.adaptiveSearch.Value = mainHandles.fineAdaptiveSearch;
-handles.scalingFactor.String = mainHandles.fineScalingFactor;
-handles.searchWindowHeight.String = mainHandles.fineSearchWindowHeight;
-handles.subpixelInterp.Value = mainHandles.fineSubpixelInterp;
-handles.neighborhoodSize.String = mainHandles.fineNeighborhoodSize;
-handles.subpixelDepth.String = mainHandles.fineSubpixelDepth;
+handles.overwrite.Value = mainHandles.config.fineOverwrite;
+handles.verbosity.Value = mainHandles.config.fineVerbosity;
+handles.numIterations.String = mainHandles.config.fineNumIterations;
+handles.stripHeight.String = mainHandles.config.fineStripHeight;
+handles.stripWidth.String = mainHandles.config.fineStripWidth;
+handles.samplingRate.String = mainHandles.config.fineSamplingRate;
+handles.minPeakRatio.String = mainHandles.config.fineMinPeakRatio;
+handles.minPeakThreshold.String = mainHandles.config.fineMinPeakThreshold;
+handles.adaptiveSearch.Value = mainHandles.config.fineAdaptiveSearch;
+handles.scalingFactor.String = mainHandles.config.fineScalingFactor;
+handles.searchWindowHeight.String = mainHandles.config.fineSearchWindowHeight;
+handles.subpixelInterp.Value = mainHandles.config.fineSubpixelInterp;
+handles.neighborhoodSize.String = mainHandles.config.fineNeighborhoodSize;
+handles.subpixelDepth.String = mainHandles.config.fineSubpixelDepth;
 
 if logical(handles.adaptiveSearch.Value)
     handles.scalingFactor.Enable = 'on';
@@ -90,11 +90,95 @@ else
     handles.subpixelDepth.Enable = 'off';
 end
 
+% Set colors
+% Main Background
+handles.fineParameters.Color = mainHandles.colors{4,2};
+handles.numIterations.BackgroundColor = mainHandles.colors{4,2};
+handles.stripHeight.BackgroundColor = mainHandles.colors{4,2};
+handles.stripWidth.BackgroundColor = mainHandles.colors{4,2};
+handles.samplingRate.BackgroundColor = mainHandles.colors{4,2};
+handles.minPeakRatio.BackgroundColor = mainHandles.colors{4,2};
+handles.minPeakThreshold.BackgroundColor = mainHandles.colors{4,2};
+handles.scalingFactor.BackgroundColor = mainHandles.colors{4,2};
+handles.searchWindowHeight.BackgroundColor = mainHandles.colors{4,2};
+handles.neighborhoodSize.BackgroundColor = mainHandles.colors{4,2};
+handles.subpixelDepth.BackgroundColor = mainHandles.colors{4,2};
+% Box backgrounds
+handles.titleBox.BackgroundColor = mainHandles.colors{4,3};
+handles.usageBox.BackgroundColor = mainHandles.colors{4,3};
+handles.fineBox.BackgroundColor = mainHandles.colors{4,3};
+handles.stripBox.BackgroundColor = mainHandles.colors{4,3};
+handles.peakBox.BackgroundColor = mainHandles.colors{4,3};
+handles.adaptiveBox.BackgroundColor = mainHandles.colors{4,3};
+handles.interpBox.BackgroundColor = mainHandles.colors{4,3};
+handles.overwrite.BackgroundColor = mainHandles.colors{4,3};
+handles.verbosity.BackgroundColor = mainHandles.colors{4,3};
+handles.iterText.BackgroundColor = mainHandles.colors{4,3};
+handles.heightText.BackgroundColor = mainHandles.colors{4,3};
+handles.heightTextSub.BackgroundColor = mainHandles.colors{4,3};
+handles.widthText.BackgroundColor = mainHandles.colors{4,3};
+handles.widthTextSub.BackgroundColor = mainHandles.colors{4,3};
+handles.sampleText.BackgroundColor = mainHandles.colors{4,3};
+handles.sampleTextSub.BackgroundColor = mainHandles.colors{4,3};
+handles.ratioText.BackgroundColor = mainHandles.colors{4,3};
+handles.threshText.BackgroundColor = mainHandles.colors{4,3};
+handles.adaptiveSearch.BackgroundColor = mainHandles.colors{4,3};
+handles.scaleText.BackgroundColor = mainHandles.colors{4,3};
+handles.searchWindowHeightText.BackgroundColor = mainHandles.colors{4,3};
+handles.searchWindowHeightTextSub.BackgroundColor = mainHandles.colors{4,3};
+handles.subpixelInterp.BackgroundColor = mainHandles.colors{4,3};
+handles.neighborText.BackgroundColor = mainHandles.colors{4,3};
+handles.neighborTextSub.BackgroundColor = mainHandles.colors{4,3};
+handles.depthText.BackgroundColor = mainHandles.colors{4,3};
+% Box text
+handles.titleBox.ForegroundColor = mainHandles.colors{4,5};
+handles.usageBox.ForegroundColor = mainHandles.colors{4,5};
+handles.fineBox.ForegroundColor = mainHandles.colors{4,5};
+handles.stripBox.ForegroundColor = mainHandles.colors{4,5};
+handles.peakBox.ForegroundColor = mainHandles.colors{4,5};
+handles.adaptiveBox.ForegroundColor = mainHandles.colors{4,5};
+handles.interpBox.ForegroundColor = mainHandles.colors{4,5};
+handles.overwrite.ForegroundColor = mainHandles.colors{4,5};
+handles.verbosity.ForegroundColor = mainHandles.colors{4,5};
+handles.iterText.ForegroundColor = mainHandles.colors{4,5};
+handles.heightText.ForegroundColor = mainHandles.colors{4,5};
+handles.heightTextSub.ForegroundColor = mainHandles.colors{4,5};
+handles.widthText.ForegroundColor = mainHandles.colors{4,5};
+handles.widthTextSub.ForegroundColor = mainHandles.colors{4,5};
+handles.sampleText.ForegroundColor = mainHandles.colors{4,5};
+handles.sampleTextSub.ForegroundColor = mainHandles.colors{4,5};
+handles.ratioText.ForegroundColor = mainHandles.colors{4,5};
+handles.threshText.ForegroundColor = mainHandles.colors{4,5};
+handles.adaptiveSearch.ForegroundColor = mainHandles.colors{4,5};
+handles.scaleText.ForegroundColor = mainHandles.colors{4,5};
+handles.searchWindowHeightText.ForegroundColor = mainHandles.colors{4,5};
+handles.searchWindowHeightTextSub.ForegroundColor = mainHandles.colors{4,5};
+handles.subpixelInterp.ForegroundColor = mainHandles.colors{4,5};
+handles.neighborText.ForegroundColor = mainHandles.colors{4,5};
+handles.neighborTextSub.ForegroundColor = mainHandles.colors{4,5};
+handles.depthText.ForegroundColor = mainHandles.colors{4,5};
+handles.numIterations.ForegroundColor = mainHandles.colors{4,5};
+handles.stripHeight.ForegroundColor = mainHandles.colors{4,5};
+handles.stripWidth.ForegroundColor = mainHandles.colors{4,5};
+handles.samplingRate.ForegroundColor = mainHandles.colors{4,5};
+handles.minPeakRatio.ForegroundColor = mainHandles.colors{4,5};
+handles.minPeakThreshold.ForegroundColor = mainHandles.colors{4,5};
+handles.scalingFactor.ForegroundColor = mainHandles.colors{4,5};
+handles.searchWindowHeight.ForegroundColor = mainHandles.colors{4,5};
+handles.neighborhoodSize.ForegroundColor = mainHandles.colors{4,5};
+handles.subpixelDepth.ForegroundColor = mainHandles.colors{4,5};
+% Save button
+handles.save.BackgroundColor = mainHandles.colors{3,4};
+handles.save.ForegroundColor = mainHandles.colors{3,2};
+% Cancel button
+handles.cancel.BackgroundColor = mainHandles.colors{2,4};
+handles.cancel.ForegroundColor = mainHandles.colors{2,2};
+
 % Update handles structure
 guidata(hObject, handles);
 
 % UIWAIT makes FineParameters wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.fineParameters);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -204,20 +288,20 @@ if isnan(subpixelDepth) || ...
 end
 
 % Save new configurations
-mainHandles.fineOverwrite = logical(handles.overwrite.Value);
-mainHandles.fineVerbosity = logical(handles.verbosity.Value);
-mainHandles.fineNumIterations = str2double(handles.numIterations.String);
-mainHandles.fineStripHeight = str2double(handles.stripHeight.String);
-mainHandles.fineStripWidth = str2double(handles.stripWidth.String);
-mainHandles.fineSamplingRate = str2double(handles.samplingRate.String);
-mainHandles.fineMinPeakRatio = str2double(handles.minPeakRatio.String);
-mainHandles.fineMinPeakThreshold = str2double(handles.minPeakThreshold.String);
-mainHandles.fineAdaptiveSearch = logical(handles.adaptiveSearch.Value);
-mainHandles.fineScalingFactor = str2double(handles.scalingFactor.String);
-mainHandles.fineSearchWindowHeight = str2double(handles.searchWindowHeight.String);
-mainHandles.fineSubpixelInterp = logical(handles.subpixelInterp.Value);
-mainHandles.fineNeighborhoodSize = str2double(handles.neighborhoodSize.String);
-mainHandles.fineSubpixelDepth = str2double(handles.subpixelDepth.String);
+mainHandles.config.fineOverwrite = logical(handles.overwrite.Value);
+mainHandles.config.fineVerbosity = logical(handles.verbosity.Value);
+mainHandles.config.fineNumIterations = str2double(handles.numIterations.String);
+mainHandles.config.fineStripHeight = str2double(handles.stripHeight.String);
+mainHandles.config.fineStripWidth = str2double(handles.stripWidth.String);
+mainHandles.config.fineSamplingRate = str2double(handles.samplingRate.String);
+mainHandles.config.fineMinPeakRatio = str2double(handles.minPeakRatio.String);
+mainHandles.config.fineMinPeakThreshold = str2double(handles.minPeakThreshold.String);
+mainHandles.config.fineAdaptiveSearch = logical(handles.adaptiveSearch.Value);
+mainHandles.config.fineScalingFactor = str2double(handles.scalingFactor.String);
+mainHandles.config.fineSearchWindowHeight = str2double(handles.searchWindowHeight.String);
+mainHandles.config.fineSubpixelInterp = logical(handles.subpixelInterp.Value);
+mainHandles.config.fineNeighborhoodSize = str2double(handles.neighborhoodSize.String);
+mainHandles.config.fineSubpixelDepth = str2double(handles.subpixelDepth.String);
 
 % Update handles structure
 guidata(figureHandle, mainHandles);

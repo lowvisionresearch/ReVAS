@@ -22,7 +22,7 @@ function varargout = GammaParameters(varargin)
 
 % Edit the above text to modify the response to help GammaParameters
 
-% Last Modified by GUIDE v2.5 26-Jun-2017 13:25:38
+% Last Modified by GUIDE v2.5 30-Jun-2017 23:02:14
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,14 +59,38 @@ handles.output = hObject;
 figureHandle = findobj(0, 'tag', 'jobQueue');
 mainHandles = guidata(figureHandle);
 
-handles.exponent.String = mainHandles.gammaExponent;
-handles.overwrite.Value = mainHandles.gammaOverwrite;
+handles.exponent.String = mainHandles.config.gammaExponent;
+handles.overwrite.Value = mainHandles.config.gammaOverwrite;
+
+% Set colors
+% Main Background
+handles.gammaParameters.Color = mainHandles.colors{4,2};
+handles.exponent.BackgroundColor = mainHandles.colors{4,2};
+% Box backgrounds
+handles.titleBox.BackgroundColor = mainHandles.colors{4,3};
+handles.usageBox.BackgroundColor = mainHandles.colors{4,3};
+handles.gammaBox.BackgroundColor = mainHandles.colors{4,3};
+handles.overwrite.BackgroundColor = mainHandles.colors{4,3};
+handles.exponentText.BackgroundColor = mainHandles.colors{4,3};
+% Box text
+handles.titleBox.ForegroundColor = mainHandles.colors{4,5};
+handles.usageBox.ForegroundColor = mainHandles.colors{4,5};
+handles.trimBox.ForegroundColor = mainHandles.colors{4,5};
+handles.overwrite.ForegroundColor = mainHandles.colors{4,5};
+handles.exponentText.ForegroundColor = mainHandles.colors{4,5};
+handles.exponent.ForegroundColor = mainHandles.colors{4,5};
+% Save button
+handles.save.BackgroundColor = mainHandles.colors{3,4};
+handles.save.ForegroundColor = mainHandles.colors{3,2};
+% Cancel button
+handles.cancel.BackgroundColor = mainHandles.colors{2,4};
+handles.cancel.ForegroundColor = mainHandles.colors{2,2};
 
 % Update handles structure
 guidata(hObject, handles);
 
 % UIWAIT makes GammaParameters wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.gammaParameters);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -98,8 +122,8 @@ if isnan(exponent)
 end
 
 % Save new configurations
-mainHandles.gammaExponent = str2double(handles.exponent.String);
-mainHandles.gammaOverwrite = logical(handles.overwrite.Value);
+mainHandles.config.gammaExponent = str2double(handles.exponent.String);
+mainHandles.config.gammaOverwrite = logical(handles.overwrite.Value);
 
 % Update handles structure
 guidata(figureHandle, mainHandles);

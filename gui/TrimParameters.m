@@ -22,7 +22,7 @@ function varargout = TrimParameters(varargin)
 
 % Edit the above text to modify the response to help TrimParameters
 
-% Last Modified by GUIDE v2.5 26-Jun-2017 13:16:09
+% Last Modified by GUIDE v2.5 30-Jun-2017 19:23:14
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,14 +59,38 @@ handles.output = hObject;
 figureHandle = findobj(0, 'tag', 'jobQueue');
 mainHandles = guidata(figureHandle);
 
-handles.borderTrimAmount.String = mainHandles.trimBorderTrimAmount;
-handles.overwrite.Value = mainHandles.trimOverwrite;
+handles.borderTrimAmount.String = mainHandles.config.trimBorderTrimAmount;
+handles.overwrite.Value = mainHandles.config.trimOverwrite;
+
+% Set colors
+% Main Background
+handles.trimParameters.Color = mainHandles.colors{4,2};
+handles.borderTrimAmount.BackgroundColor = mainHandles.colors{4,2};
+% Box backgrounds
+handles.titleBox.BackgroundColor = mainHandles.colors{4,3};
+handles.usageBox.BackgroundColor = mainHandles.colors{4,3};
+handles.trimBox.BackgroundColor = mainHandles.colors{4,3};
+handles.overwrite.BackgroundColor = mainHandles.colors{4,3};
+handles.trimText.BackgroundColor = mainHandles.colors{4,3};
+% Box text
+handles.titleBox.ForegroundColor = mainHandles.colors{4,5};
+handles.usageBox.ForegroundColor = mainHandles.colors{4,5};
+handles.trimBox.ForegroundColor = mainHandles.colors{4,5};
+handles.overwrite.ForegroundColor = mainHandles.colors{4,5};
+handles.trimText.ForegroundColor = mainHandles.colors{4,5};
+handles.borderTrimAmount.ForegroundColor = mainHandles.colors{4,5};
+% Save button
+handles.save.BackgroundColor = mainHandles.colors{3,4};
+handles.save.ForegroundColor = mainHandles.colors{3,2};
+% Cancel button
+handles.cancel.BackgroundColor = mainHandles.colors{2,4};
+handles.cancel.ForegroundColor = mainHandles.colors{2,2};
 
 % Update handles structure
 guidata(hObject, handles);
 
 % UIWAIT makes TrimParameters wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.trimParameters);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -100,8 +124,8 @@ if isnan(borderTrimAmount) || ...
 end
 
 % Save new configurations
-mainHandles.trimBorderTrimAmount = str2double(handles.borderTrimAmount.String);
-mainHandles.trimOverwrite = logical(handles.overwrite.Value);
+mainHandles.config.trimBorderTrimAmount = str2double(handles.borderTrimAmount.String);
+mainHandles.config.trimOverwrite = logical(handles.overwrite.Value);
 
 % Update handles structure
 guidata(figureHandle, mainHandles);
