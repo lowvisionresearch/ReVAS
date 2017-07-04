@@ -22,7 +22,7 @@ function varargout = BandFiltParameters(varargin)
 
 % Edit the above text to modify the response to help BandFiltParameters
 
-% Last Modified by GUIDE v2.5 26-Jun-2017 14:00:39
+% Last Modified by GUIDE v2.5 30-Jun-2017 23:44:53
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,15 +59,45 @@ handles.output = hObject;
 figureHandle = findobj(0, 'tag', 'jobQueue');
 mainHandles = guidata(figureHandle);
 
-handles.smoothing.String = mainHandles.bandFiltSmoothing;
-handles.freqCut.String = mainHandles.bandFiltFreqCut;
-handles.overwrite.Value = mainHandles.bandFiltOverwrite;
+handles.smoothing.String = mainHandles.config.bandFiltSmoothing;
+handles.freqCut.String = mainHandles.config.bandFiltFreqCut;
+handles.overwrite.Value = mainHandles.config.bandFiltOverwrite;
+
+% Set colors
+% Main Background
+handles.bandFiltParameters.Color = mainHandles.colors{4,2};
+handles.smoothing.BackgroundColor = mainHandles.colors{4,2};
+handles.freqCut.BackgroundColor = mainHandles.colors{4,2};
+% Box backgrounds
+handles.titleBox.BackgroundColor = mainHandles.colors{4,3};
+handles.usageBox.BackgroundColor = mainHandles.colors{4,3};
+handles.bandFiltBox.BackgroundColor = mainHandles.colors{4,3};
+handles.overwrite.BackgroundColor = mainHandles.colors{4,3};
+handles.smoothingText.BackgroundColor = mainHandles.colors{4,3};
+handles.smoothingTextSub.BackgroundColor = mainHandles.colors{4,3};
+handles.freqCutText.BackgroundColor = mainHandles.colors{4,3};
+handles.freqCutTextSub.BackgroundColor = mainHandles.colors{4,3};
+% Box text
+handles.titleBox.ForegroundColor = mainHandles.colors{4,5};
+handles.usageBox.ForegroundColor = mainHandles.colors{4,5};
+handles.bandFiltBox.ForegroundColor = mainHandles.colors{4,5};
+handles.overwrite.ForegroundColor = mainHandles.colors{4,5};
+handles.smoothingText.ForegroundColor = mainHandles.colors{4,5};
+handles.smoothingTextSub.ForegroundColor = mainHandles.colors{4,5};
+handles.freqCutText.ForegroundColor = mainHandles.colors{4,5};
+handles.freqCutTextSub.ForegroundColor = mainHandles.colors{4,5};
+% Save button
+handles.save.BackgroundColor = mainHandles.colors{3,4};
+handles.save.ForegroundColor = mainHandles.colors{3,2};
+% Cancel button
+handles.cancel.BackgroundColor = mainHandles.colors{2,4};
+handles.cancel.ForegroundColor = mainHandles.colors{2,2};
 
 % Update handles structure
 guidata(hObject, handles);
 
 % UIWAIT makes BandFiltParameters wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.bandFiltParameters);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -109,9 +139,9 @@ if isnan(freqCut) || ...
 end
 
 % Save new configurations
-mainHandles.bandFiltSmoothing = str2double(handles.smoothing.String);
-mainHandles.bandFiltFreqCut = str2double(handles.freqCut.String);
-mainHandles.bandFiltOverwrite = logical(handles.overwrite.Value);
+mainHandles.config.bandFiltSmoothing = str2double(handles.smoothing.String);
+mainHandles.config.bandFiltFreqCut = str2double(handles.freqCut.String);
+mainHandles.config.bandFiltOverwrite = logical(handles.overwrite.Value);
 
 % Update handles structure
 guidata(figureHandle, mainHandles);

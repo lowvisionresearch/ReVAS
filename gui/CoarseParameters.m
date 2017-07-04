@@ -22,7 +22,7 @@ function varargout = CoarseParameters(varargin)
 
 % Edit the above text to modify the response to help CoarseParameters
 
-% Last Modified by GUIDE v2.5 26-Jun-2017 14:15:28
+% Last Modified by GUIDE v2.5 30-Jun-2017 23:50:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,16 +59,44 @@ handles.output = hObject;
 figureHandle = findobj(0, 'tag', 'jobQueue');
 mainHandles = guidata(figureHandle);
 
-handles.refFrameNum.String = mainHandles.coarseRefFrameNum;
-handles.scalingFactor.String = mainHandles.coarseScalingFactor;
-handles.overwrite.Value = mainHandles.coarseOverwrite;
-handles.verbosity.Value = mainHandles.coarseVerbosity;
+handles.refFrameNum.String = mainHandles.config.coarseRefFrameNum;
+handles.scalingFactor.String = mainHandles.config.coarseScalingFactor;
+handles.overwrite.Value = mainHandles.config.coarseOverwrite;
+handles.verbosity.Value = mainHandles.config.coarseVerbosity;
+
+% Set colors
+% Main Background
+handles.coarseParameters.Color = mainHandles.colors{4,2};
+handles.refFrameNum.BackgroundColor = mainHandles.colors{4,2};
+handles.scalingFactor.BackgroundColor = mainHandles.colors{4,2};
+% Box backgrounds
+handles.titleBox.BackgroundColor = mainHandles.colors{4,3};
+handles.usageBox.BackgroundColor = mainHandles.colors{4,3};
+handles.coarseBox.BackgroundColor = mainHandles.colors{4,3};
+handles.overwrite.BackgroundColor = mainHandles.colors{4,3};
+handles.verbosity.BackgroundColor = mainHandles.colors{4,3};
+handles.refFrameNumText.BackgroundColor = mainHandles.colors{4,3};
+handles.scalingFactorText.BackgroundColor = mainHandles.colors{4,3};
+% Box text
+handles.titleBox.ForegroundColor = mainHandles.colors{4,5};
+handles.usageBox.ForegroundColor = mainHandles.colors{4,5};
+handles.coarseBox.ForegroundColor = mainHandles.colors{4,5};
+handles.overwrite.ForegroundColor = mainHandles.colors{4,5};
+handles.verbosity.ForegroundColor = mainHandles.colors{4,5};
+handles.refFrameNumText.ForegroundColor = mainHandles.colors{4,5};
+handles.scalingFactorText.ForegroundColor = mainHandles.colors{4,5};
+% Save button
+handles.save.BackgroundColor = mainHandles.colors{3,4};
+handles.save.ForegroundColor = mainHandles.colors{3,2};
+% Cancel button
+handles.cancel.BackgroundColor = mainHandles.colors{2,4};
+handles.cancel.ForegroundColor = mainHandles.colors{2,2};
 
 % Update handles structure
 guidata(hObject, handles);
 
 % UIWAIT makes CoarseParameters wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.coarseParameters);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -110,10 +138,10 @@ if isnan(scalingFactor) || ...
 end
 
 % Save new configurations
-mainHandles.coarseRefFrameNum = str2double(handles.refFrameNum.String);
-mainHandles.coarseScalingFactor = str2double(handles.scalingFactor.String);
-mainHandles.coarseOverwrite = logical(handles.overwrite.Value);
-mainHandles.coarseVerbosity = logical(handles.verbosity.Value);
+mainHandles.config.coarseRefFrameNum = str2double(handles.refFrameNum.String);
+mainHandles.config.coarseScalingFactor = str2double(handles.scalingFactor.String);
+mainHandles.config.coarseOverwrite = logical(handles.overwrite.Value);
+mainHandles.config.coarseVerbosity = logical(handles.verbosity.Value);
 
 % Update handles structure
 guidata(figureHandle, mainHandles);

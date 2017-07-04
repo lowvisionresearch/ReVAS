@@ -698,7 +698,6 @@ save(outputFileName, 'saccadeStructs', 'driftStructs');
 
 %% Verbosity for Results
 
-
 % Verbosity
 if isfield(inputParametersStructure, 'enableVerbosity') && inputParametersStructure.enableVerbosity
     for i = 1:size(saccadeStructs)

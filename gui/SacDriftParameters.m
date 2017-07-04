@@ -22,7 +22,7 @@ function varargout = SacDriftParameters(varargin)
 
 % Edit the above text to modify the response to help SacDriftParameters
 
-% Last Modified by GUIDE v2.5 29-Jun-2017 15:38:38
+% Last Modified by GUIDE v2.5 01-Jul-2017 00:29:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,19 +59,19 @@ handles.output = hObject;
 figureHandle = findobj(0, 'tag', 'jobQueue');
 mainHandles = guidata(figureHandle);
 
-handles.overwrite.Value = mainHandles.sacOverwrite;
-handles.verbosity.Value = mainHandles.sacVerbosity;
-handles.thresholdVal.String = mainHandles.sacThresholdVal;
-handles.secThresholdVal.String = mainHandles.sacSecThresholdVal;
-handles.stitch.String = mainHandles.sacStitch;
-handles.minAmplitude.String = mainHandles.sacMinAmplitude;
-handles.maxDuration.String = mainHandles.sacMaxDuration;
-handles.detectionMethod1.Value = mainHandles.sacDetectionMethod1;
-handles.hardVelThreshold.String = mainHandles.sacHardVelThreshold;
-handles.hardSecondaryVelThreshold.String = mainHandles.sacHardSecondaryVelThreshold;
-handles.detectionMethod2.Value = mainHandles.sacDetectionMethod2;
-handles.velMethod1.Value = mainHandles.sacVelMethod1;
-handles.velMethod2.Value = mainHandles.sacVelMethod2;
+handles.overwrite.Value = mainHandles.config.sacOverwrite;
+handles.verbosity.Value = mainHandles.config.sacVerbosity;
+handles.thresholdVal.String = mainHandles.config.sacThresholdVal;
+handles.secThresholdVal.String = mainHandles.config.sacSecThresholdVal;
+handles.stitch.String = mainHandles.config.sacStitch;
+handles.minAmplitude.String = mainHandles.config.sacMinAmplitude;
+handles.maxDuration.String = mainHandles.config.sacMaxDuration;
+handles.detectionMethod1.Value = mainHandles.config.sacDetectionMethod1;
+handles.hardVelThreshold.String = mainHandles.config.sacHardVelThreshold;
+handles.hardSecondaryVelThreshold.String = mainHandles.config.sacHardSecondaryVelThreshold;
+handles.detectionMethod2.Value = mainHandles.config.sacDetectionMethod2;
+handles.velMethod1.Value = mainHandles.config.sacVelMethod1;
+handles.velMethod2.Value = mainHandles.config.sacVelMethod2;
 
 if logical(handles.detectionMethod1.Value)
     handles.hardVelThreshold.Enable = 'on';
@@ -81,11 +81,79 @@ else
     handles.hardSecondaryVelThreshold.Enable = 'off';
 end
 
+% Set colors
+% Main Background
+handles.sacParameters.Color = mainHandles.colors{4,2};
+handles.thresholdVal.BackgroundColor = mainHandles.colors{4,2};
+handles.secThresholdVal.BackgroundColor = mainHandles.colors{4,2};
+handles.stitch.BackgroundColor = mainHandles.colors{4,2};
+handles.minAmplitude.BackgroundColor = mainHandles.colors{4,2};
+handles.maxDuration.BackgroundColor = mainHandles.colors{4,2};
+handles.hardVelThreshold.BackgroundColor = mainHandles.colors{4,2};
+handles.hardSecondaryVelThreshold.BackgroundColor = mainHandles.colors{4,2};
+% Box backgrounds
+handles.titleBox.BackgroundColor = mainHandles.colors{4,3};
+handles.usageBox.BackgroundColor = mainHandles.colors{4,3};
+handles.sacBox.BackgroundColor = mainHandles.colors{4,3};
+handles.detectionBox.BackgroundColor = mainHandles.colors{4,3};
+handles.velBox.BackgroundColor = mainHandles.colors{4,3};
+handles.overwrite.BackgroundColor = mainHandles.colors{4,3};
+handles.verbosity.BackgroundColor = mainHandles.colors{4,3};
+handles.threshValText.BackgroundColor = mainHandles.colors{4,3};
+handles.secThreshValText.BackgroundColor = mainHandles.colors{4,3};
+handles.stitchText.BackgroundColor = mainHandles.colors{4,3};
+handles.ampText.BackgroundColor = mainHandles.colors{4,3};
+handles.durText.BackgroundColor = mainHandles.colors{4,3};
+handles.detectionMethod1.BackgroundColor = mainHandles.colors{4,3};
+handles.hardThreshText.BackgroundColor = mainHandles.colors{4,3};
+handles.hardThreshTextSub.BackgroundColor = mainHandles.colors{4,3};
+handles.hardSecThreshText.BackgroundColor = mainHandles.colors{4,3};
+handles.hardSecThreshTextSub.BackgroundColor = mainHandles.colors{4,3};
+handles.detectionMethod2.BackgroundColor = mainHandles.colors{4,3};
+handles.detectionGroup.BackgroundColor = mainHandles.colors{4,3};
+handles.velMethod1.BackgroundColor = mainHandles.colors{4,3};
+handles.velMethod2.BackgroundColor = mainHandles.colors{4,3};
+handles.velGroup.BackgroundColor = mainHandles.colors{4,3};
+% Box text
+handles.titleBox.ForegroundColor = mainHandles.colors{4,5};
+handles.usageBox.ForegroundColor = mainHandles.colors{4,5};
+handles.sacBox.ForegroundColor = mainHandles.colors{4,5};
+handles.detectionBox.ForegroundColor = mainHandles.colors{4,5};
+handles.velBox.ForegroundColor = mainHandles.colors{4,5};
+handles.overwrite.ForegroundColor = mainHandles.colors{4,5};
+handles.verbosity.ForegroundColor = mainHandles.colors{4,5};
+handles.threshValText.ForegroundColor = mainHandles.colors{4,5};
+handles.secThreshValText.ForegroundColor = mainHandles.colors{4,5};
+handles.stitchText.ForegroundColor = mainHandles.colors{4,5};
+handles.ampText.ForegroundColor = mainHandles.colors{4,5};
+handles.durText.ForegroundColor = mainHandles.colors{4,5};
+handles.detectionMethod1.ForegroundColor = mainHandles.colors{4,5};
+handles.hardThreshText.ForegroundColor = mainHandles.colors{4,5};
+handles.hardThreshTextSub.ForegroundColor = mainHandles.colors{4,5};
+handles.hardSecThreshText.ForegroundColor = mainHandles.colors{4,5};
+handles.hardSecThreshTextSub.ForegroundColor = mainHandles.colors{4,5};
+handles.detectionMethod2.ForegroundColor = mainHandles.colors{4,5};
+handles.velMethod1.ForegroundColor = mainHandles.colors{4,5};
+handles.velMethod2.ForegroundColor = mainHandles.colors{4,5};
+handles.thresholdVal.ForegroundColor = mainHandles.colors{4,5};
+handles.secThresholdVal.ForegroundColor = mainHandles.colors{4,5};
+handles.stitch.ForegroundColor = mainHandles.colors{4,5};
+handles.minAmplitude.ForegroundColor = mainHandles.colors{4,5};
+handles.maxDuration.ForegroundColor = mainHandles.colors{4,5};
+handles.hardVelThreshold.ForegroundColor = mainHandles.colors{4,5};
+handles.hardSecondaryVelThreshold.ForegroundColor = mainHandles.colors{4,5};
+% Save button
+handles.save.BackgroundColor = mainHandles.colors{3,4};
+handles.save.ForegroundColor = mainHandles.colors{3,2};
+% Cancel button
+handles.cancel.BackgroundColor = mainHandles.colors{2,4};
+handles.cancel.ForegroundColor = mainHandles.colors{2,2};
+
 % Update handles structure
 guidata(hObject, handles);
 
 % UIWAIT makes SacDriftParameters wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.sacParameters);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -162,20 +230,20 @@ if isnan(hardSecondaryVelThreshold)
 end
 
 % Save new configurations
-mainHandles.sacOverwrite = logical(handles.overwrite.Value);
-mainHandles.sacVerbosity = logical(handles.verbosity.Value);
-mainHandles.sacThresholdVal = str2double(handles.thresholdVal.String);
-mainHandles.sacSecThresholdVal = str2double(handles.secThresholdVal.String);
-mainHandles.sacStitch = str2double(handles.stitch.String);
-mainHandles.sacMinAmplitude = str2double(handles.minAmplitude.String);
-mainHandles.sacMaxDuration = str2double(handles.maxDuration.String);
-mainHandles.sacDetectionMethod1 = logical(handles.detectionMethod1.Value);
-mainHandles.sacHardVelThreshold = str2double(handles.hardVelThreshold.String);
-mainHandles.sacHardSecondaryVelThreshold = ...
+mainHandles.config.sacOverwrite = logical(handles.overwrite.Value);
+mainHandles.config.sacVerbosity = logical(handles.verbosity.Value);
+mainHandles.config.sacThresholdVal = str2double(handles.thresholdVal.String);
+mainHandles.config.sacSecThresholdVal = str2double(handles.secThresholdVal.String);
+mainHandles.config.sacStitch = str2double(handles.stitch.String);
+mainHandles.config.sacMinAmplitude = str2double(handles.minAmplitude.String);
+mainHandles.config.sacMaxDuration = str2double(handles.maxDuration.String);
+mainHandles.config.sacDetectionMethod1 = logical(handles.detectionMethod1.Value);
+mainHandles.config.sacHardVelThreshold = str2double(handles.hardVelThreshold.String);
+mainHandles.config.sacHardSecondaryVelThreshold = ...
     str2double(handles.hardSecondaryVelThreshold.String);
-mainHandles.sacDetectionMethod2 = logical(handles.detectionMethod2.Value);
-mainHandles.sacVelMethod1 = logical(handles.velMethod1.Value);
-mainHandles.sacVelMethod2 = logical(handles.velMethod2.Value);
+mainHandles.config.sacDetectionMethod2 = logical(handles.detectionMethod2.Value);
+mainHandles.config.sacVelMethod1 = logical(handles.velMethod1.Value);
+mainHandles.config.sacVelMethod2 = logical(handles.velMethod2.Value);
 
 % Update handles structure
 guidata(figureHandle, mainHandles);

@@ -22,7 +22,7 @@ function varargout = Parallelization(varargin)
 
 % Edit the above text to modify the response to help Parallelization
 
-% Last Modified by GUIDE v2.5 29-Jun-2017 17:13:44
+% Last Modified by GUIDE v2.5 30-Jun-2017 17:02:39
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,14 +59,34 @@ handles.output = hObject;
 figureHandle = findobj(0, 'tag', 'jobQueue');
 mainHandles = guidata(figureHandle);
 
-handles.enableMultiCore.Value = mainHandles.parMultiCore;
-handles.enableGPU.Value = mainHandles.parGPU;
+handles.enableMultiCore.Value = mainHandles.config.parMultiCore;
+handles.enableGPU.Value = mainHandles.config.parGPU;
+
+% Set colors
+% Main Background
+handles.parallelization.Color = mainHandles.colors{4,2};
+% Box backgrounds
+handles.titleBox.BackgroundColor = mainHandles.colors{4,3};
+handles.parallelizationBox.BackgroundColor = mainHandles.colors{4,3};
+handles.enableMultiCore.BackgroundColor = mainHandles.colors{4,3};
+handles.enableGPU.BackgroundColor = mainHandles.colors{4,3};
+% Box text
+handles.titleBox.ForegroundColor = mainHandles.colors{4,5};
+handles.parallelizationBox.ForegroundColor = mainHandles.colors{4,5};
+handles.enableMultiCore.ForegroundColor = mainHandles.colors{4,5};
+handles.enableGPU.ForegroundColor = mainHandles.colors{4,5};
+% Save button
+handles.save.BackgroundColor = mainHandles.colors{3,4};
+handles.save.ForegroundColor = mainHandles.colors{3,2};
+% Cancel button
+handles.cancel.BackgroundColor = mainHandles.colors{2,4};
+handles.cancel.ForegroundColor = mainHandles.colors{2,2};
 
 % Update handles structure
 guidata(hObject, handles);
 
 % UIWAIT makes Parallelization wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.parallelization);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -107,8 +127,8 @@ figureHandle = findobj(0, 'tag', 'jobQueue');
 mainHandles = guidata(figureHandle);
 
 % Save new configurations
-mainHandles.parMultiCore = logical(handles.enableMultiCore.Value);
-mainHandles.parGPU = logical(handles.enableGPU.Value);
+mainHandles.config.parMultiCore = logical(handles.enableMultiCore.Value);
+mainHandles.config.parGPU = logical(handles.enableGPU.Value);
 
 % Update handles structure
 guidata(figureHandle, mainHandles);

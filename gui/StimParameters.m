@@ -22,7 +22,7 @@ function varargout = StimParameters(varargin)
 
 % Edit the above text to modify the response to help StimParameters
 
-% Last Modified by GUIDE v2.5 26-Jun-2017 13:04:02
+% Last Modified by GUIDE v2.5 30-Jun-2017 21:50:36
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,14 +59,34 @@ handles.output = hObject;
 figureHandle = findobj(0, 'tag', 'jobQueue');
 mainHandles = guidata(figureHandle);
 
-handles.verbosity.Value = mainHandles.stimVerbosity;
-handles.overwrite.Value = mainHandles.stimOverwrite;
+handles.verbosity.Value = mainHandles.config.stimVerbosity;
+handles.overwrite.Value = mainHandles.config.stimOverwrite;
+
+% Set colors
+% Main Background
+handles.stimParameters.Color = mainHandles.colors{4,2};
+% Box backgrounds
+handles.titleBox.BackgroundColor = mainHandles.colors{4,3};
+handles.usageBox.BackgroundColor = mainHandles.colors{4,3};
+handles.overwrite.BackgroundColor = mainHandles.colors{4,3};
+handles.verbosity.BackgroundColor = mainHandles.colors{4,3};
+% Box text
+handles.titleBox.ForegroundColor = mainHandles.colors{4,5};
+handles.usageBox.ForegroundColor = mainHandles.colors{4,5};
+handles.overwrite.ForegroundColor = mainHandles.colors{4,5};
+handles.verbosity.ForegroundColor = mainHandles.colors{4,5};
+% Save button
+handles.save.BackgroundColor = mainHandles.colors{3,4};
+handles.save.ForegroundColor = mainHandles.colors{3,2};
+% Cancel button
+handles.cancel.BackgroundColor = mainHandles.colors{2,4};
+handles.cancel.ForegroundColor = mainHandles.colors{2,2};
 
 % Update handles structure
 guidata(hObject, handles);
 
 % UIWAIT makes StimParameters wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.stimParameters);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -106,8 +126,8 @@ figureHandle = findobj(0, 'tag', 'jobQueue');
 mainHandles = guidata(figureHandle);
 
 % Save new configurations
-mainHandles.stimVerbosity = logical(handles.verbosity.Value);
-mainHandles.stimOverwrite = logical(handles.overwrite.Value);
+mainHandles.config.stimVerbosity = logical(handles.verbosity.Value);
+mainHandles.config.stimOverwrite = logical(handles.overwrite.Value);
 
 % Update handles structure
 guidata(figureHandle, mainHandles);

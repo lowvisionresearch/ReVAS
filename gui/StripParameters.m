@@ -22,7 +22,7 @@ function varargout = StripParameters(varargin)
 
 % Edit the above text to modify the response to help StripParameters
 
-% Last Modified by GUIDE v2.5 29-Jun-2017 15:58:38
+% Last Modified by GUIDE v2.5 01-Jul-2017 00:15:54
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,22 +59,22 @@ handles.output = hObject;
 figureHandle = findobj(0, 'tag', 'jobQueue');
 mainHandles = guidata(figureHandle);
 
-handles.overwrite.Value = mainHandles.stripOverwrite;
-handles.verbosity.Value = mainHandles.stripVerbosity;
-handles.stripHeight.String = mainHandles.stripStripHeight;
-handles.stripWidth.String = mainHandles.stripStripWidth;
-handles.samplingRate.String = mainHandles.stripSamplingRate;
-handles.enableGaussFilt.Value = mainHandles.stripEnableGaussFilt;
-handles.disableGaussFilt.Value = mainHandles.stripDisableGaussFilt;
-handles.gaussSD.String = mainHandles.stripGaussSD;
-handles.minPeakRatio.String = mainHandles.stripMinPeakRatio;
-handles.minPeakThreshold.String = mainHandles.stripMinPeakThreshold;
-handles.adaptiveSearch.Value = mainHandles.stripAdaptiveSearch;
-handles.scalingFactor.String = mainHandles.stripScalingFactor;
-handles.searchWindowHeight.String = mainHandles.stripSearchWindowHeight;
-handles.subpixelInterp.Value = mainHandles.stripSubpixelInterp;
-handles.neighborhoodSize.String = mainHandles.stripNeighborhoodSize;
-handles.subpixelDepth.String = mainHandles.stripSubpixelDepth;
+handles.overwrite.Value = mainHandles.config.stripOverwrite;
+handles.verbosity.Value = mainHandles.config.stripVerbosity;
+handles.stripHeight.String = mainHandles.config.stripStripHeight;
+handles.stripWidth.String = mainHandles.config.stripStripWidth;
+handles.samplingRate.String = mainHandles.config.stripSamplingRate;
+handles.enableGaussFilt.Value = mainHandles.config.stripEnableGaussFilt;
+handles.disableGaussFilt.Value = mainHandles.config.stripDisableGaussFilt;
+handles.gaussSD.String = mainHandles.config.stripGaussSD;
+handles.minPeakRatio.String = mainHandles.config.stripMinPeakRatio;
+handles.minPeakThreshold.String = mainHandles.config.stripMinPeakThreshold;
+handles.adaptiveSearch.Value = mainHandles.config.stripAdaptiveSearch;
+handles.scalingFactor.String = mainHandles.config.stripScalingFactor;
+handles.searchWindowHeight.String = mainHandles.config.stripSearchWindowHeight;
+handles.subpixelInterp.Value = mainHandles.config.stripSubpixelInterp;
+handles.neighborhoodSize.String = mainHandles.config.stripNeighborhoodSize;
+handles.subpixelDepth.String = mainHandles.config.stripSubpixelDepth;
 
 if logical(handles.enableGaussFilt.Value)
     handles.gaussSD.Enable = 'on';
@@ -105,8 +105,95 @@ end
 % Update handles structure
 guidata(hObject, handles);
 
+% Set colors
+% Main Background
+handles.stripParameters.Color = mainHandles.colors{4,2};
+handles.stripHeight.BackgroundColor = mainHandles.colors{4,2};
+handles.stripWidth.BackgroundColor = mainHandles.colors{4,2};
+handles.samplingRate.BackgroundColor = mainHandles.colors{4,2};
+handles.gaussSD.BackgroundColor = mainHandles.colors{4,2};
+handles.minPeakRatio.BackgroundColor = mainHandles.colors{4,2};
+handles.minPeakThreshold.BackgroundColor = mainHandles.colors{4,2};
+handles.scalingFactor.BackgroundColor = mainHandles.colors{4,2};
+handles.searchWindowHeight.BackgroundColor = mainHandles.colors{4,2};
+handles.neighborhoodSize.BackgroundColor = mainHandles.colors{4,2};
+handles.subpixelDepth.BackgroundColor = mainHandles.colors{4,2};
+% Box backgrounds
+handles.titleBox.BackgroundColor = mainHandles.colors{4,3};
+handles.usageBox.BackgroundColor = mainHandles.colors{4,3};
+handles.stripBox.BackgroundColor = mainHandles.colors{4,3};
+handles.peakBox.BackgroundColor = mainHandles.colors{4,3};
+handles.peakGroup.BackgroundColor = mainHandles.colors{4,3};
+handles.adaptiveBox.BackgroundColor = mainHandles.colors{4,3};
+handles.interpBox.BackgroundColor = mainHandles.colors{4,3};
+handles.overwrite.BackgroundColor = mainHandles.colors{4,3};
+handles.verbosity.BackgroundColor = mainHandles.colors{4,3};
+handles.heightText.BackgroundColor = mainHandles.colors{4,3};
+handles.heightTextSub.BackgroundColor = mainHandles.colors{4,3};
+handles.widthText.BackgroundColor = mainHandles.colors{4,3};
+handles.widthTextSub.BackgroundColor = mainHandles.colors{4,3};
+handles.sampleText.BackgroundColor = mainHandles.colors{4,3};
+handles.sampleTextSub.BackgroundColor = mainHandles.colors{4,3};
+handles.enableGaussFilt.BackgroundColor = mainHandles.colors{4,3};
+handles.sdText.BackgroundColor = mainHandles.colors{4,3};
+handles.disableGaussFilt.BackgroundColor = mainHandles.colors{4,3};
+handles.ratioText.BackgroundColor = mainHandles.colors{4,3};
+handles.threshText.BackgroundColor = mainHandles.colors{4,3};
+handles.adaptiveSearch.BackgroundColor = mainHandles.colors{4,3};
+handles.scaleText.BackgroundColor = mainHandles.colors{4,3};
+handles.searchWindowHeightText.BackgroundColor = mainHandles.colors{4,3};
+handles.searchWindowHeightTextSub.BackgroundColor = mainHandles.colors{4,3};
+handles.subpixelInterp.BackgroundColor = mainHandles.colors{4,3};
+handles.neighborText.BackgroundColor = mainHandles.colors{4,3};
+handles.neighborTextSub.BackgroundColor = mainHandles.colors{4,3};
+handles.depthText.BackgroundColor = mainHandles.colors{4,3};
+% Box text
+handles.titleBox.ForegroundColor = mainHandles.colors{4,5};
+handles.usageBox.ForegroundColor = mainHandles.colors{4,5};
+handles.stripBox.ForegroundColor = mainHandles.colors{4,5};
+handles.peakBox.ForegroundColor = mainHandles.colors{4,5};
+handles.adaptiveBox.ForegroundColor = mainHandles.colors{4,5};
+handles.interpBox.ForegroundColor = mainHandles.colors{4,5};
+handles.overwrite.ForegroundColor = mainHandles.colors{4,5};
+handles.verbosity.ForegroundColor = mainHandles.colors{4,5};
+handles.heightText.ForegroundColor = mainHandles.colors{4,5};
+handles.heightTextSub.ForegroundColor = mainHandles.colors{4,5};
+handles.widthText.ForegroundColor = mainHandles.colors{4,5};
+handles.widthTextSub.ForegroundColor = mainHandles.colors{4,5};
+handles.sampleText.ForegroundColor = mainHandles.colors{4,5};
+handles.sampleTextSub.ForegroundColor = mainHandles.colors{4,5};
+handles.enableGaussFilt.ForegroundColor = mainHandles.colors{4,5};
+handles.sdText.ForegroundColor = mainHandles.colors{4,5};
+handles.disableGaussFilt.ForegroundColor = mainHandles.colors{4,5};
+handles.ratioText.ForegroundColor = mainHandles.colors{4,5};
+handles.threshText.ForegroundColor = mainHandles.colors{4,5};
+handles.adaptiveSearch.ForegroundColor = mainHandles.colors{4,5};
+handles.scaleText.ForegroundColor = mainHandles.colors{4,5};
+handles.searchWindowHeightText.ForegroundColor = mainHandles.colors{4,5};
+handles.searchWindowHeightTextSub.ForegroundColor = mainHandles.colors{4,5};
+handles.subpixelInterp.ForegroundColor = mainHandles.colors{4,5};
+handles.neighborText.ForegroundColor = mainHandles.colors{4,5};
+handles.neighborTextSub.ForegroundColor = mainHandles.colors{4,5};
+handles.depthText.ForegroundColor = mainHandles.colors{4,5};
+handles.stripHeight.ForegroundColor = mainHandles.colors{4,5};
+handles.stripWidth.ForegroundColor = mainHandles.colors{4,5};
+handles.samplingRate.ForegroundColor = mainHandles.colors{4,5};
+handles.gaussSD.ForegroundColor = mainHandles.colors{4,5};
+handles.minPeakRatio.ForegroundColor = mainHandles.colors{4,5};
+handles.minPeakThreshold.ForegroundColor = mainHandles.colors{4,5};
+handles.scalingFactor.ForegroundColor = mainHandles.colors{4,5};
+handles.searchWindowHeight.ForegroundColor = mainHandles.colors{4,5};
+handles.neighborhoodSize.ForegroundColor = mainHandles.colors{4,5};
+handles.subpixelDepth.ForegroundColor = mainHandles.colors{4,5};
+% Save button
+handles.save.BackgroundColor = mainHandles.colors{3,4};
+handles.save.ForegroundColor = mainHandles.colors{3,2};
+% Cancel button
+handles.cancel.BackgroundColor = mainHandles.colors{2,4};
+handles.cancel.ForegroundColor = mainHandles.colors{2,2};
+
 % UIWAIT makes StripParameters wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.stripParameters);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -215,22 +302,22 @@ if isnan(subpixelDepth) || ...
 end
 
 % Save new configurations
-mainHandles.stripOverwrite = logical(handles.overwrite.Value);
-mainHandles.stripVerbosity = logical(handles.verbosity.Value);
-mainHandles.stripStripHeight = str2double(handles.stripHeight.String);
-mainHandles.stripStripWidth = str2double(handles.stripWidth.String);
-mainHandles.stripSamplingRate = str2double(handles.samplingRate.String);
-mainHandles.stripEnableGaussFilt = logical(handles.enableGaussFilt.Value);
-mainHandles.stripDisableGaussFilt = logical(handles.disableGaussFilt.Value);
-mainHandles.stripGaussSD = str2double(handles.gaussSD.String);
-mainHandles.stripMinPeakRatio = str2double(handles.minPeakRatio.String);
-mainHandles.stripMinPeakThreshold = str2double(handles.minPeakThreshold.String);
-mainHandles.stripAdaptiveSearch = logical(handles.adaptiveSearch.Value);
-mainHandles.stripScalingFactor = str2double(handles.scalingFactor.String);
-mainHandles.stripSearchWindowHeight = str2double(handles.searchWindowHeight.String);
-mainHandles.stripSubpixelInterp = logical(handles.subpixelInterp.Value);
-mainHandles.stripNeighborhoodSize = str2double(handles.neighborhoodSize.String);
-mainHandles.stripSubpixelDepth = str2double(handles.subpixelDepth.String);
+mainHandles.config.stripOverwrite = logical(handles.overwrite.Value);
+mainHandles.config.stripVerbosity = logical(handles.verbosity.Value);
+mainHandles.config.stripStripHeight = str2double(handles.stripHeight.String);
+mainHandles.config.stripStripWidth = str2double(handles.stripWidth.String);
+mainHandles.config.stripSamplingRate = str2double(handles.samplingRate.String);
+mainHandles.config.stripEnableGaussFilt = logical(handles.enableGaussFilt.Value);
+mainHandles.config.stripDisableGaussFilt = logical(handles.disableGaussFilt.Value);
+mainHandles.config.stripGaussSD = str2double(handles.gaussSD.String);
+mainHandles.config.stripMinPeakRatio = str2double(handles.minPeakRatio.String);
+mainHandles.config.stripMinPeakThreshold = str2double(handles.minPeakThreshold.String);
+mainHandles.config.stripAdaptiveSearch = logical(handles.adaptiveSearch.Value);
+mainHandles.config.stripScalingFactor = str2double(handles.scalingFactor.String);
+mainHandles.config.stripSearchWindowHeight = str2double(handles.searchWindowHeight.String);
+mainHandles.config.stripSubpixelInterp = logical(handles.subpixelInterp.Value);
+mainHandles.config.stripNeighborhoodSize = str2double(handles.neighborhoodSize.String);
+mainHandles.config.stripSubpixelDepth = str2double(handles.subpixelDepth.String);
 
 % Update handles structure
 guidata(figureHandle, mainHandles);
