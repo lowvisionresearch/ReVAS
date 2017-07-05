@@ -169,6 +169,12 @@ handles.config.trimOverwrite = true;
 % Stim
 handles.config.stimVerbosity = true;
 handles.config.stimOverwrite = true;
+handles.config.stimOption1 = false;
+handles.config.stimOption2 = true;
+handles.config.stimPath = '';
+handles.config.stimFullPath = '';
+handles.config.stimSize = 11;
+handles.config.stimThick = 1;
 % Gamma
 handles.config.gammaExponent = 0.6;
 handles.config.gammaOverwrite = true;
@@ -340,216 +346,18 @@ handles.abort.Visible = 'on';
 
 drawnow;
 
-% Setup parfor loop for multi-core processing
-if logical(handles.config.parMultiCore)
-    localCluster = parcluster('local');
-    numberOfWorkers = localCluster.NumWorkers;
-else
-    numberOfWorkers = 0;
-end
-
 % Apply modules to all selected files
-parfor (i = 1:size(handles.files, 2), numberOfWorkers)
-    localHandles = handles;
-    parametersStructure = struct;
-    % Set GPU option
-    if logical(localHandles.config.parGPU)
-        parametersStructure.enableGPU = true;
-    else
-        parametersStructure.enableGPU = false;
+if logical(handles.config.parMultiCore)
+    % Use parallelization if requested
+    % TODO deal with GPU (see |ExecuteModules.m|).
+    parfor i = 1:size(handles.files, 2)
+        % TODO perhaps use loop unrolling to suppress warning below
+        ExecuteModules(handles.files{i}, handles);
     end
-    
-    if logical(localHandles.togTrim.Value)
-        % Set the parameters
-        parametersStructure.borderTrimAmount = localHandles.config.trimBorderTrimAmount;
-        parametersStructure.overwrite = localHandles.config.trimOverwrite;
-        
-        % Call the function(s)
-        TrimVideo(localHandles.files{i}, parametersStructure);
-        
-        % Update file name to output file name
-        localHandles.files{i} = [localHandles.files{i}(1:end-4) '_dwt' localHandles.files{i}(end-3:end)];
-    end
-    
-    if logical(localHandles.togStim.Value)
-        % Set the parameters
-        parametersStructure.enableVerbosity = localHandles.config.stimVerbosity;
-        parametersStructure.overwrite = localHandles.config.stimOverwrite;
-        stimulus = struct;
-        stimulus.thickness = 1; % TODO
-        stimulus.size = 51; % TODO
-        parametersStructure.thresholdValue = 4; % TODO (used for blink detection)
-        
-        % Call the function(s)
-        FindBlinkFrames(localHandles.files{i}, parametersStructure);
-        FindStimulusLocations(localHandles.files{i}, stimulus, parametersStructure);
-        RemoveStimuli(localHandles.files{i}, parametersStructure);
-        
-        % Update file name to output file name
-        localHandles.files{i} = [localHandles.files{i}(1:end-4) '_nostim' localHandles.files{i}(end-3:end)];
-    end
-    
-    if logical(localHandles.togGamma.Value)
-        % Set the parameters
-        parametersStructure.gammaExponent = localHandles.config.gammaExponent;
-        parametersStructure.overwrite = localHandles.config.gammaOverwrite;
-        
-        % Call the function(s)
-        GammaCorrect(localHandles.files{i}, parametersStructure);
-        
-        % Update file name to output file name
-        localHandles.files{i} = [localHandles.files{i}(1:end-4) '_gamscaled' localHandles.files{i}(end-3:end)];
-    end
-    
-    if logical(localHandles.togBandFilt.Value)
-        % Set the parameters
-        parametersStructure.smoothing = localHandles.config.bandFiltSmoothing;
-        parametersStructure.lowSpatialFrequencyCutoff = localHandles.config.bandFiltFreqCut;
-        parametersStructure.overwrite = localHandles.config.bandFiltOverwrite;
-        
-        % Call the function(s)
-        BandpassFilter(localHandles.files{i}, parametersStructure);
-        
-        % Update file name to output file name
-        localHandles.files{i} = [localHandles.files{i}(1:end-4) '_bandfilt' localHandles.files{i}(end-3:end)];
-    end
-    
-    if logical(localHandles.togCoarse.Value) % TODO
-        % Set the parameters
-        parametersStructure.refFrameNumber = localHandles.config.coarseRefFrameNum;
-        parametersStructure.scalingFactor = localHandles.config.coarseScalingFactor;
-        parametersStructure.overwrite = localHandles.config.coarseOverwrite;
-        parametersStructure.enableVerbosity = localHandles.config.coarseVerbosity;
-        parametersStructure.fileName = localHandles.files{i};
-        parametersStructure.enableGPU = false; % TODO
-
-        % Call the function(s)
-        coarseResult = CoarseRef(localHandles.files{i}, parametersStructure);
-        
-        % Update file name to output file name
-        %localHandles.files{i} = [localHandles.files{i}(1:end-4) '_dwt' localHandles.files{i}(end-3:end)];
-    end
-    
-    if logical(localHandles.togFine.Value)
-        % Set the parameters
-        parametersStructure.enableVerbosity = localHandles.config.fineVerbosity;
-        parametersStructure.numberOfIterations = localHandles.config.fineNumIterations;
-        parametersStructure.stripHeight = localHandles.config.fineStripHeight;
-        parametersStructure.stripWidth = localHandles.config.fineStripWidth;
-        parametersStructure.samplingRate = localHandles.config.fineSamplingRate;
-        parametersStructure.minimumPeakRatio = localHandles.config.fineMinPeakRatio;
-        parametersStructure.minimumPeakThreshold = localHandles.config.fineMinPeakThreshold;
-        parametersStructure.adaptiveSearch = localHandles.config.fineAdaptiveSearch;
-        parametersStructure.adaptiveSearchScalingFactor = localHandles.config.fineScalingFactor;
-        parametersStructure.searchWindowHeight = localHandles.config.fineSearchWindowHeight;
-        parametersStructure.enableSubpixelInterpolation = localHandles.config.fineSubpixelInterp;
-        parametersStructure.subpixelInterpolationParameters.neighborhoodSize ...
-            = localHandles.config.fineNeighborhoodSize;
-        parametersStructure.subpixelInterpolationParameters.subpixelDepth ...
-            = localHandles.config.fineSubpixelDepth;
-        parametersStructure.enableGaussianFiltering = false; % TODO
-        parametersStructure.badFrames = []; % TODO
-        parametersStructure.axeslocalHandles = []; % TODO        
-        
-        % Call the function(s)
-        fineResult = FineRef(coarseResult, localHandles.files{i}, parametersStructure);
-        
-        % Update file name to output file name
-        %localHandles.files{i} = [localHandles.files{i}(1:end-4) '_dwt' localHandles.files{i}(end-3:end)];
-    end
-    
-    if logical(localHandles.togStrip.Value)
-        % Set the parameters
-        parametersStructure.overwrite = localHandles.config.stripOverwrite;
-        parametersStructure.enableVerbosity = localHandles.config.stripVerbosity;
-        parametersStructure.stripHeight = localHandles.config.stripStripHeight;
-        parametersStructure.stripWidth = localHandles.config.stripStripWidth;
-        parametersStructure.samplingRate = localHandles.config.stripSamplingRate;
-        parametersStructure.enableGaussianFiltering = localHandles.config.stripEnableGaussFilt;
-        parametersStructure.gaussianStandardDeviation = localHandles.config.stripGaussSD;
-        parametersStructure.minimumPeakRatio = localHandles.config.stripMinPeakRatio;
-        parametersStructure.minimumPeakThreshold = localHandles.config.stripMinPeakThreshold;
-        parametersStructure.adaptiveSearch = localHandles.config.stripAdaptiveSearch;
-        parametersStructure.adaptiveSearchScalingFactor = localHandles.config.stripScalingFactor;
-        parametersStructure.searchWindowHeight = localHandles.config.stripSearchWindowHeight;
-        parametersStructure.enableSubpixelInterpolation = ...
-            localHandles.config.stripSubpixelInterp;
-        parametersStructure.subpixelInterpolationParameters.neighborhoodSize ...
-            = localHandles.config.stripNeighborhoodSize;
-        parametersStructure.subpixelInterpolationParameters.subpixelDepth ...
-            = localHandles.config.stripSubpixelDepth;
-
-        % Call the function(s)
-        if strcmp(localHandles.togFine.Enable, 'on') 
-            [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
-                statisticsStructure] ...
-                = StripAnalysis(localHandles.files{i}, fineResult, parametersStructure);
-        elseif strcmp(localHandles.togCoarse.Enable, 'on')
-            [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
-                statisticsStructure] ...
-                = StripAnalysis(localHandles.files{i}, coarseResult, parametersStructure);
-        else
-            % TODO use a specific frame of the video as reference
-        end        
-    end
-    
-    if false
-    %if logical(localHandles.togFilt.Value) % TODO
-        % Set the parameters
-        parametersStructure.borderTrimAmount = localHandles.config.trimBorderTrimAmount;
-        parametersStructure.overwrite = localHandles.config.trimOverwrite;
-        
-        % Call the function(s)
-        TrimVideo(localHandles.files{i}, parametersStructure);
-        
-        % Update file name to output file name
-        localHandles.files{i} = [localHandles.files{i}(1:end-4) '_dwt' localHandles.files{i}(end-3:end)];
-    end
-    
-    if false
-    %if logical(localHandles.togReRef.Value) % TODO
-        % Set the parameters
-        parametersStructure.borderTrimAmount = localHandles.config.trimBorderTrimAmount;
-        parametersStructure.overwrite = localHandles.config.trimOverwrite;
-        
-        % Call the function(s)
-        TrimVideo(localHandles.files{i}, parametersStructure);
-        
-        % Update file name to output file name
-        localHandles.files{i} = [localHandles.files{i}(1:end-4) '_dwt' localHandles.files{i}(end-3:end)];
-    end
-    
-    if logical(localHandles.togSacDrift.Value)
-        % Set the parameters
-        parametersStructure.overwrite = localHandles.config.sacOverwrite;
-        parametersStructure.enableVerbosity = localHandles.config.sacVerbosity;
-        parametersStructure.thresholdValue = localHandles.config.sacThresholdVal;
-        parametersStructure.secondaryThresholdValue = localHandles.config.sacSecThresholdVal;
-        parametersStructure.stitchCriteria = localHandles.config.sacStitch;
-        parametersStructure.minAmplitude = localHandles.config.sacMinAmplitude;
-        parametersStructure.maxDuration = localHandles.config.sacMaxDuration;
-        if localHandles.config.sacDetectionMethod1
-            parametersStructure.detectionMethod = 1;
-        else
-            parametersStructure.detectionMethod = 2;
-        end
-        parametersStructure.hardVelocityThreshold = localHandles.config.sacHardVelThreshold;
-        parametersStructure.hardSecondaryVelocityThreshold = ...
-            localHandles.config.sacHardSecondaryVelThreshold;
-        if localHandles.config.sacVelMethod1
-            parametersStructure.velocityMethod = 1;
-        else
-            parametersStructure.velocityMethod = 2;
-        end
-        
-        % Update file name to input file name
-        inputFileName = [localHandles.files{i}(1:end-4) '_' ...
-            int2str(parametersStructure.samplingRate) '_hz_final.mat'];
-
-        % Call the function(s)
-        % TODO
-        FindSaccadesAndDrifts(inputFileName, [512 512], [10 10], ...
-            parametersStructure);
+else
+    % Otherwise use a regular for loop
+    for i = 1:size(handles.files, 2)
+        ExecuteModules(handles.files{i}, handles);
     end
 end
 
