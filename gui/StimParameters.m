@@ -22,7 +22,7 @@ function varargout = StimParameters(varargin)
 
 % Edit the above text to modify the response to help StimParameters
 
-% Last Modified by GUIDE v2.5 30-Jun-2017 21:50:36
+% Last Modified by GUIDE v2.5 05-Jul-2017 12:31:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,20 +61,56 @@ mainHandles = guidata(figureHandle);
 
 handles.verbosity.Value = mainHandles.config.stimVerbosity;
 handles.overwrite.Value = mainHandles.config.stimOverwrite;
+handles.upload.Value = mainHandles.config.stimOption1;
+handles.cross.Value = mainHandles.config.stimOption2;
+handles.stimPath.String = mainHandles.config.stimPath;
+handles.size.String = mainHandles.config.stimSize;
+handles.thick.String = mainHandles.config.stimThick;
+handles.stimFullPath = mainHandles.config.stimFullPath;
+
+if logical(handles.upload.Value)
+    handles.stimPath.Enable = 'on';
+    handles.stimPath.Style = 'text';
+    handles.select.Enable = 'on';
+    handles.size.Enable = 'off';
+    handles.thick.Enable = 'off';
+else
+    handles.stimPath.Enable = 'off';
+    handles.stimPath.Style = 'edit';
+    handles.select.Enable = 'off';
+    handles.size.Enable = 'on';
+    handles.thick.Enable = 'on';
+end
 
 % Set colors
 % Main Background
 handles.stimParameters.Color = mainHandles.colors{4,2};
+handles.stimPath.BackgroundColor = mainHandles.colors{4,2};
 % Box backgrounds
 handles.titleBox.BackgroundColor = mainHandles.colors{4,3};
 handles.usageBox.BackgroundColor = mainHandles.colors{4,3};
+handles.stimBox.BackgroundColor = mainHandles.colors{4,3};
+handles.stimGroup.BackgroundColor = mainHandles.colors{4,3};
 handles.overwrite.BackgroundColor = mainHandles.colors{4,3};
 handles.verbosity.BackgroundColor = mainHandles.colors{4,3};
+handles.upload.BackgroundColor = mainHandles.colors{4,3};
+handles.cross.BackgroundColor = mainHandles.colors{4,3};
+handles.sizeText.BackgroundColor = mainHandles.colors{4,3};
+handles.thickText.BackgroundColor = mainHandles.colors{4,3};
 % Box text
 handles.titleBox.ForegroundColor = mainHandles.colors{4,5};
 handles.usageBox.ForegroundColor = mainHandles.colors{4,5};
+handles.stimBox.ForegroundColor = mainHandles.colors{4,5};
 handles.overwrite.ForegroundColor = mainHandles.colors{4,5};
 handles.verbosity.ForegroundColor = mainHandles.colors{4,5};
+handles.upload.ForegroundColor = mainHandles.colors{4,5};
+handles.cross.ForegroundColor = mainHandles.colors{4,5};
+handles.sizeText.ForegroundColor = mainHandles.colors{4,5};
+handles.thickText.ForegroundColor = mainHandles.colors{4,5};
+handles.stimPath.ForegroundColor = mainHandles.colors{4,5};
+% Select button
+handles.select.BackgroundColor = mainHandles.colors{4,4};
+handles.select.ForegroundColor = mainHandles.colors{4,2};
 % Save button
 handles.save.BackgroundColor = mainHandles.colors{3,4};
 handles.save.ForegroundColor = mainHandles.colors{3,2};
@@ -125,9 +161,46 @@ function save_Callback(hObject, eventdata, handles)
 figureHandle = findobj(0, 'tag', 'jobQueue');
 mainHandles = guidata(figureHandle);
 
+% Validate new configurations
+% size
+size = str2double(handles.size.String);
+if isnan(size) || ...
+        size < 0 || ...
+        rem(size,1) ~= 0 || ...
+        mod(size, 2) == 0
+    errordlg('Stimulus Size must be an odd, natural number', 'Invalid Parameter');
+    return;
+end
+
+% thick
+thick = str2double(handles.thick.String);
+if isnan(thick) || ...
+        thick < 0 || ...
+        rem(thick,1) ~= 0 || ...
+        mod(thick, 2) == 0
+    errordlg('Cross Thickness must be an odd, natural number', 'Invalid Parameter');
+    return;
+end
+
+% full path
+if logical(handles.upload.Value)
+    try
+        imfinfo(handles.stimFullPath);
+    catch
+        errordlg('Uploaded Stimulus Image must be an image file', 'Invalid Parameter');
+        return;
+    end
+end
+
 % Save new configurations
 mainHandles.config.stimVerbosity = logical(handles.verbosity.Value);
 mainHandles.config.stimOverwrite = logical(handles.overwrite.Value);
+mainHandles.config.stimOption1 = logical(handles.upload.Value);
+mainHandles.config.stimOption2 = logical(handles.cross.Value);
+mainHandles.config.stimPath = handles.stimPath.String;
+mainHandles.config.stimFullPath = handles.stimFullPath;
+mainHandles.config.stimSize = size;
+mainHandles.config.stimThick = thick;
 
 % Update handles structure
 guidata(figureHandle, mainHandles);
@@ -140,3 +213,126 @@ function cancel_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 close;
+
+
+function size_Callback(hObject, eventdata, handles)
+% hObject    handle to size (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of size as text
+%        str2double(get(hObject,'String')) returns contents of size as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function size_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to size (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function thick_Callback(hObject, eventdata, handles)
+% hObject    handle to thick (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of thick as text
+%        str2double(get(hObject,'String')) returns contents of thick as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function thick_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to thick (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in select.
+function select_Callback(hObject, eventdata, handles)
+% hObject    handle to select (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[fileName, pathName, ~] = uigetfile('*.*', 'Upload Stimulus Image', '');
+if fileName == 0
+    % User canceled.
+    return;
+end
+handles.stimFullPath = fullfile(pathName, fileName);
+handles.stimPath.String = [' ' fileName];
+
+% Update handles structure
+guidata(hObject, handles);
+
+
+function stimPath_Callback(hObject, eventdata, handles)
+% hObject    handle to stimPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of stimPath as text
+%        str2double(get(hObject,'String')) returns contents of stimPath as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function stimPath_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to stimPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in upload.
+function upload_Callback(hObject, eventdata, handles)
+% hObject    handle to upload (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of upload
+if logical(hObject.Value)
+    handles.stimPath.Enable = 'on';
+    handles.select.Enable = 'on';
+    handles.size.Enable = 'off';
+    handles.thick.Enable = 'off';
+else
+    handles.stimPath.Enable = 'off';
+    handles.select.Enable = 'off';
+    handles.size.Enable = 'on';
+    handles.thick.Enable = 'on';
+end
+
+
+% --- Executes on button press in cross.
+function cross_Callback(hObject, eventdata, handles)
+% hObject    handle to cross (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of cross
+if ~logical(hObject.Value)
+    handles.stimPath.Enable = 'on';
+    handles.select.Enable = 'on';
+    handles.size.Enable = 'off';
+    handles.thick.Enable = 'off';
+else
+    handles.stimPath.Enable = 'off';
+    handles.select.Enable = 'off';
+    handles.size.Enable = 'on';
+    handles.thick.Enable = 'on';
+end
