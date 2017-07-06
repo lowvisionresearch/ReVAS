@@ -223,6 +223,14 @@ if column2(column2<0)
     framePositions(:, 2) = framePositions(:, 2) + mostNegative + 2;
 end
 
+if column1(column1==0)
+    framePositions(:, 1) = framePositions(:, 1) + 2;
+end
+
+if column2(column2==0)
+    framePositions(:, 2) = framePositions(:, 2) + 2;
+end
+
 % "Rewind" the video so we can add to the template for the coarse
 % reference frame
 v.CurrentTime = timeToRemember;

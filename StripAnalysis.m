@@ -209,7 +209,9 @@ for stripNumber = (1:numberOfStrips)
         
         searchWindowsArray(stripNumber,:) = [upperBound lowerBound];
     end
-      
+    
+    parametersStructure.stripNumber = stripNumber;  
+    parametersStructure.stripsPerFrame = stripsPerFrame;
     [xPeak, yPeak, peakValue, secondPeakValue] = ...
         FindPeak(correlation, parametersStructure);
         

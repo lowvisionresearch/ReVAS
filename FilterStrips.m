@@ -1,4 +1,4 @@
-function [filteredStripIndices] = FilterStrips(stripIndices)
+function [filteredStripIndices, lengthCutOut] = FilterStrips(stripIndices)
 % FilterStrips     Replace all NaNs in a column vector with interpolation
 %   FilterStrips(stripIndices) takes a column vector and interpolates
 %   between the values "bordering" each strip of consecutive NaNs. Then it
@@ -72,7 +72,8 @@ while ~isempty(NaNIndicesCopy)
         % checked yet.
         NaNIndices = NaNIndices(k+1:end);
         k = 1;
-        NaNIndicesCopy = NaNIndicesCopy(2:end);
+        NaNIndicesCopy(1) = [];
+        %NaNIndicesCopy = NaNIndicesCopy(2:end);
     end
 
 end
@@ -91,7 +92,8 @@ while ~isempty(startAndEndPairs)
     % assume the last number before the NaNs remains constant, so set
     % the rest of the NaN values in the matrix equal to that last number.
     if dimensions(2) == 2
-        stripIndices(NaNIndices(1):end) = startAndEndPairs(1);
+        lengthCutOut = size(stripIndices(NaNIndices(1):end));
+        stripIndices(NaNIndices(1):end) = [];
         startAndEndPairs = [];
         
     % Remember that startAndEndPairs generally has chunks of 3 values: last
@@ -101,19 +103,32 @@ while ~isempty(startAndEndPairs)
     % (last number before NaNs - first number after NaNs) / k. Then
     % replace all the NaNs in the original stripIndices with dy
     else
-        start = round(startAndEndPairs(1));
-        ending = round(startAndEndPairs(2)) - 1;
-        numPoints = startAndEndPairs(3);
-        dy = (ending-start)/numPoints;
-        for point = (start+dy) : dy : ending
-            stripIndices(NaNIndices(1)) = round(point);
-            NaNIndices = NaNIndices(2:end);
+        start = startAndEndPairs(1);
+        ending = startAndEndPairs(2);
+        numPoints = startAndEndPairs(3) + 1;
+        if start == ending
+            for point = 1:(numPoints-1)
+                stripIndices(NaNIndices(1)) = start;
+                NaNIndices(1) = []; 
+            end
+        else
+            dy = (ending-start)/numPoints;
+            for point = start+dy : dy : ending-dy
+                stripIndices(NaNIndices(1)) = point;
+                NaNIndices(1) = []; 
+            end
         end
+%         disp([start ending])
+%         interpolatedPositions = interp1([start ending], [start ending], start:dy:ending, 'pchip');
+%         for point = 2:size(interpolatedPositions,2)-1
+%             stripIndices(NaNIndices(1)) = interpolatedPositions(point);
+%             NaNIndices = NaNIndices(2:end);
+%         end
     end
     startAndEndPairs = startAndEndPairs(4:end);
 end
 
 
-[filteredStripIndices] = round(stripIndices);
+[filteredStripIndices] = stripIndices;
 
 end
