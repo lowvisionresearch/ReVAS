@@ -1,5 +1,5 @@
 function refinedFrame = FineRef(coarseRefFrame, filename, params)
-%REFINE REFERENCE FRAME  Generate a better reference frame.
+%FINE REF  Generate a better reference frame.
 %   The function alternates between StripAnalysis and MakeMontage,
 %   alternating between generating positions and generating the reference
 %   frames that result from those positions

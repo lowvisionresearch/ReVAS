@@ -24,7 +24,7 @@ function coarseRefFrame = CoarseRef(filename, params)
 %       params.enableGPU = false;
 %       params.overwrite = true;
 %       params.refFrameNumber = 15;
-%       params.enableVerbosity = 1;
+%       params.enableVerbosity = 2;
 %       params.scalingFactor = 0.5;
 %       CoarseRef(params, filename);
 
