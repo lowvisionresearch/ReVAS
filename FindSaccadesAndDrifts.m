@@ -15,10 +15,10 @@ outputFileName = [inputEyePositionsFilePath(1:end-4) '_sacsdrifts'];
 if ~exist([outputFileName '.mat'], 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(inputParametersStructure, 'overwrite') || ~inputParametersStructure.overwrite
-    warning('FindSaccadesAndDrifts() did not execute because it would overwrite existing file.');
+    RevasWarning('FindSaccadesAndDrifts() did not execute because it would overwrite existing file.');
     return;
 else
-    warning('FindSaccadesAndDrifts() is proceeding and overwriting an existing file.');
+    RevasWarning('FindSaccadesAndDrifts() is proceeding and overwriting an existing file.');
 end
 
 %% Set input variables to defaults if not provided

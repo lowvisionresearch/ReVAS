@@ -1,4 +1,4 @@
-function coarseRefFrame = CoarseRef(filename, params)
+function coarseRefFrame = CoarseRef(filename, parametersStructure)
 %CoarseRef    Generates a coarse reference frame.
 %   f = CoarseRef(params, filenam) is the coarse reference frame of a
 %   video, generated using a scaled down version of each frame (each frame
@@ -31,7 +31,7 @@ function coarseRefFrame = CoarseRef(filename, params)
 
 % Check to see if operations can be performed on GPU and whether the user
 % wants to do so if there is a GPU
-enableGPU = (gpuDeviceCount > 0) & params.enableGPU;
+enableGPU = (gpuDeviceCount > 0) & parametersStructure.enableGPU;
 
 % Write the output to a new MatLab file. First remove the '.avi' extension
 newFileName = filename;
@@ -43,12 +43,12 @@ newFileName(end + 1: end + 10) = '_coarseref';
 % Handle overwrite scenarios.
 if ~exist([newFileName '.mat'], 'file')
     % left blank to continue without issuing warning in this case
-elseif ~isfield(params, 'overwrite') || ~params.overwrite
-    warning('CoarseRef() did not execute because it would overwrite existing file.');
+elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
+    RevasWarning('CoarseRef() did not execute because it would overwrite existing file.', parametersStructure);
     coarseRefFrame = [];
     return;
 else
-    warning('CoarseRef() is proceeding and overwriting an existing file.');
+    RevasWarning('CoarseRef() is proceeding and overwriting an existing file.', parametersStructure);  
 end
 
 % get video info
@@ -63,7 +63,7 @@ totalFrames = v.frameRate * v.Duration;
 % the video later after reading one frame here.
 timeToRemember = v.CurrentTime;
 sampleFrame = readFrame(v);
-shrunkFrame = imresize(sampleFrame, params.scalingFactor);
+shrunkFrame = imresize(sampleFrame, parametersStructure.scalingFactor);
 [rows, columns] = size(shrunkFrame);
 frames = zeros(rows, columns*totalFrames);
 
@@ -72,7 +72,7 @@ v.CurrentTime = timeToRemember;
 while hasFrame(v)
     
     currFrame = readFrame(v);
-    shrunkFrame = imresize(currFrame, params.scalingFactor);
+    shrunkFrame = imresize(currFrame, parametersStructure.scalingFactor);
     
     % startIndex/endIndex indicate where to insert each frame into the
     % preallocated array. For example, the second frame (frameNumber = 2)
@@ -89,15 +89,15 @@ end
 % the default frame should be the "middle" frame of the total frames (i.e.,
 % if frameRate = 30 Hz and duration is 2 seconds, there are 60 total frames
 % and the default frame should therefore be the 30th frame).
-if ~isfield(params, 'refFrameNumber')
-    params.refFrameNumber = totalFrames/2;
+if ~isfield(parametersStructure, 'refFrameNumber')
+    parametersStructure.refFrameNumber = totalFrames/2;
 end
 
 % Same logic for choosing values for startIndex/endIndex as before. This
 % time we need to extract the correct frame from the frames array to get
 % temporaryRefFrame.
-startIndex = ((params.refFrameNumber-1) * columns) + 1;
-endIndex = params.refFrameNumber*columns;
+startIndex = ((parametersStructure.refFrameNumber-1) * columns) + 1;
+endIndex = parametersStructure.refFrameNumber*columns;
 temporaryRefFrame = frames(:, startIndex:endIndex);
 
 % Preallocating an array for frame positions. framePositions will contain
@@ -151,12 +151,12 @@ while frameNumber <= totalFrames
     % moves 6 units to the right of the shrunken reference frame, then 
     % the real frame moved 12 units to the right relative to the real 
     % reference frame).
-    framePositions(frameNumber, 1) = (1/params.scalingFactor) * rowCoordinate;
-    framePositions(frameNumber, 2) = (1/params.scalingFactor) * columnCoordinate;
+    framePositions(frameNumber, 1) = (1/parametersStructure.scalingFactor) * rowCoordinate;
+    framePositions(frameNumber, 2) = (1/parametersStructure.scalingFactor) * columnCoordinate;
     
     % Show surface plot for this correlation if verbosity enabled
-    if params.enableVerbosity == 2
-        figure(1);
+    if parametersStructure.enableVerbosity == 2
+        axes(parametersStructure.axesHandles(1));
         [surfX,surfY] = meshgrid(1:size(c,2), 1:size(c,1));
         surf(surfX, surfY, c,'linestyle','none');
         title([num2str(frameNumber) ' out of ' num2str(totalFrames)]);
@@ -173,7 +173,7 @@ while frameNumber <= totalFrames
         
         % Also plot the positions of the frames as time progresses
         timeAxis = (1/v.frameRate):(1/v.frameRate):(frameNumber/v.frameRate);
-        figure(2)
+        axes(parametersStructure.axesHandles(2));
         plot(timeAxis, framePositions(1:frameNumber, :));
         title('Coarse Frame Shifts (scaled up)');
         xlabel('Time (sec)');
@@ -303,8 +303,8 @@ end
 
 save(newFileName, 'coarseRefFrame');
 
-if params.enableVerbosity >= 1
-    figure(3)
+if parametersStructure.enableVerbosity >= 1
+    axes(parametersStructure.axesHandles(3));
     imshow(coarseRefFrame)
 end
 

@@ -56,14 +56,14 @@ outputFileName = [inputVideoPath(1:end-4) '_' ...
 if ~exist([outputFileName '.mat'], 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-    warning('StripAnalysis() did not execute because it would overwrite existing file.');
+    RevasWarning('StripAnalysis() did not execute because it would overwrite existing file.', parametersStructure);
     rawEyePositionTraces = [];
     usefulEyePositionTraces = [];
     timeArray = [];
     statisticsStructure = struct();
     return;
 else
-    warning('StripAnalysis() is proceeding and overwriting an existing file.');
+    RevasWarning('StripAnalysis() is proceeding and overwriting an existing file.', parametersStructure);  
 end
 
 %% Preallocation and variable setup
@@ -157,6 +157,15 @@ if parametersStructure.adaptiveSearch
 
 end
 
+%% Allow for aborting if not parallel processing
+global abortTriggered;
+
+% parfor does not support global variables.
+% cannot abort when run in parallel.
+if isempty(abortTriggered)
+    abortTriggered = false;
+end
+
 %% Call normxcorr2() on each strip
 % Note that calculation for each array value does not end with this loop,
 % the logic below the loop in this section perform remaining operations on
@@ -165,138 +174,142 @@ end
 % these operations must be computed immediately so that the correct eye
 % trace values can be plotted as early as possible).
 for stripNumber = (1:numberOfStrips)
-    gpuTask = getCurrentTask;
     
-    % Note that only one core should use the GPU at a time.
-    % i.e. when processing multiple videos in parallel, only one should
-    % use GPU.
-    if enableGPU
-        localParametersStructure = gpuArray(parametersStructure);
-        stripData = gpuArray(stripIndices(stripNumber,:));
-    else
-        localParametersStructure = parametersStructure;
-        stripData = stripIndices(stripNumber,:);
-    end
+    if ~abortTriggered
+        
+        gpuTask = getCurrentTask;
 
-    frame = stripData(1,3);
-
-    if ismember(frame, localParametersStructure.badFrames)
-        continue
-    end
-    
-    rowStart = stripData(1,1);
-    columnStart = stripData(1,2);
-    rowEnd = rowStart + localParametersStructure.stripHeight - 1;
-    columnEnd = columnStart + localParametersStructure.stripWidth - 1;
-    strip = videoInput(rowStart:rowEnd, columnStart:columnEnd, frame);
-    
-    correlation = normxcorr2(strip, referenceFrame);
-    
-    upperBound = 1;
-    
-    if parametersStructure.adaptiveSearch ...
-            && ~isnan(estimatedStripYLocations(stripNumber))
-        % cut out a smaller search window from correlation.
-        upperBound = floor(min(max(1, ...
-            estimatedStripYLocations(stripNumber) ...
-            - ((parametersStructure.searchWindowHeight - parametersStructure.stripHeight)/2)), ...
-            size(videoInput, 1)));
-        lowerBound = floor(min(size(videoInput, 1), ...
-            estimatedStripYLocations(stripNumber) ...
-            + ((parametersStructure.searchWindowHeight - parametersStructure.stripHeight)/2) ...
-            + parametersStructure.stripHeight));
-        correlation = correlation(upperBound:lowerBound,1:end);
-        
-        searchWindowsArray(stripNumber,:) = [upperBound lowerBound];
-    end
-    
-    parametersStructure.stripNumber = stripNumber;  
-    parametersStructure.stripsPerFrame = stripsPerFrame;
-    [xPeak, yPeak, peakValue, secondPeakValue] = ...
-        FindPeak(correlation, parametersStructure);
-        
-    % 2D Interpolation if enabled
-    if localParametersStructure.enableSubpixelInterpolation
-        [interpolatedPeakCoordinates, statisticsStructure.errorStructure] = ...
-            Interpolation2D(correlation, [yPeak, xPeak], ...
-            localParametersStructure.subpixelInterpolationParameters);
-        
-        xPeak = interpolatedPeakCoordinates(2);
-        yPeak = interpolatedPeakCoordinates(1);      
-    end
-    
-    % If GPU was used, transfer peak values and peak locations
-    if enableGPU
-        xPeak = gather(xPeak, gpuTask.ID);
-        yPeak = gather(yPeak, gpuTask.ID);
-        peakValue = gather(peakValue, gpuTask.ID);
-        secondPeakValue = gather(secondPeakValue, gpuTask.ID);
-    end
-    
-    % Show surface plot for this correlation if verbosity enabled
-    if localParametersStructure.enableVerbosity
+        % Note that only one core should use the GPU at a time.
+        % i.e. when processing multiple videos in parallel, only one should
+        % use GPU.
         if enableGPU
-            correlation = gather(correlation, gpuTask.ID);
+            localParametersStructure = gpuArray(parametersStructure);
+            stripData = gpuArray(stripIndices(stripNumber,:));
+        else
+            localParametersStructure = parametersStructure;
+            stripData = stripIndices(stripNumber,:);
         end
-        figure(1);
-        [surfX,surfY] = meshgrid(1:size(correlation,2), 1:size(correlation,1));
-        surf(surfX, surfY, correlation,'linestyle','none');
-        title([num2str(stripNumber) ' out of ' num2str(numberOfStrips)]);
-        xlim([1 size(correlation,2)]);
-        ylim([1 size(correlation,1)]);
-        zlim([-1 1]);
-        
-        % Mark the identified peak on the plot with an arrow.
-        text(xPeak, yPeak, peakValue, '\downarrow', 'Color', 'red', ...
-            'FontSize', 20, 'HorizontalAlignment', 'center', ...
-            'VerticalAlignment', 'bottom', 'FontWeight', 'bold');
-        
-        drawnow;  
-    end
-    
-    % If these peaks are in terms of a smaller correlation map, restore it
-    % back to in terms of the full map.
-    yPeak = yPeak + upperBound - 1;
-    
-    rawEyePositionTraces(stripNumber,:) = [xPeak yPeak];
-    peakValueArray(stripNumber) = peakValue;
-    secondPeakValueArray(stripNumber) = secondPeakValue;
-    
-    % If verbosity is enabled, also show eye trace plot with points
-    % being plotted as they become available.
-    if localParametersStructure.enableVerbosity
-        
-        % Adjust for padding offsets added by normxcorr2()
-        % If we enable verbosity and demand that we plot the points as we
-        % go, then adjustments must be made here in order for the plot to
-        % be interpretable.
-        % Therefore, we will only perform these same operations after the
-        % loop to take advantage of vectorization only if they are not
-        % performed here, namely, if verbosity is not enabled and this
-        % if statement does not execute.
-        rawEyePositionTraces(stripNumber,2) = ...
-            rawEyePositionTraces(stripNumber,2) - (parametersStructure.stripHeight - 1);
-        rawEyePositionTraces(stripNumber,1) = ...
-            rawEyePositionTraces(stripNumber,1) - (parametersStructure.stripWidth - 1);
 
-        % Adjust in vertical direction.
-        % We must subtract back out the starting strip vertical coordinate in order
-        % to obtain the net vertical movement.
-        rawEyePositionTraces(stripNumber,1) = ...
-            rawEyePositionTraces(stripNumber,1) - stripIndices(stripNumber,2);
-        rawEyePositionTraces(stripNumber,2) = ...
-            rawEyePositionTraces(stripNumber,2) - stripIndices(stripNumber,1);
+        frame = stripData(1,3);
 
-        % Negate eye position traces to flip directions.
-        rawEyePositionTraces(stripNumber,:) = -rawEyePositionTraces(stripNumber,:);
+        if ismember(frame, localParametersStructure.badFrames)
+            continue
+        end
 
-        figure(2);
-        plot(timeArray, rawEyePositionTraces);
-        title('Raw Eye Position Traces');
-        xlabel('Time (sec)');
-        ylabel('Eye Position Traces (pixels)');
-        legend('show');
-        legend('Horizontal Traces', 'Vertical Traces');
+        rowStart = stripData(1,1);
+        columnStart = stripData(1,2);
+        rowEnd = rowStart + localParametersStructure.stripHeight - 1;
+        columnEnd = columnStart + localParametersStructure.stripWidth - 1;
+        strip = videoInput(rowStart:rowEnd, columnStart:columnEnd, frame);
+
+        correlation = normxcorr2(strip, referenceFrame);
+
+        upperBound = 1;
+
+        if parametersStructure.adaptiveSearch ...
+                && ~isnan(estimatedStripYLocations(stripNumber))
+            % cut out a smaller search window from correlation.
+            upperBound = floor(min(max(1, ...
+                estimatedStripYLocations(stripNumber) ...
+                - ((parametersStructure.searchWindowHeight - parametersStructure.stripHeight)/2)), ...
+                size(videoInput, 1)));
+            lowerBound = floor(min(size(videoInput, 1), ...
+                estimatedStripYLocations(stripNumber) ...
+                + ((parametersStructure.searchWindowHeight - parametersStructure.stripHeight)/2) ...
+                + parametersStructure.stripHeight));
+            correlation = correlation(upperBound:lowerBound,1:end);
+
+            searchWindowsArray(stripNumber,:) = [upperBound lowerBound];
+        end
+
+        parametersStructure.stripNumber = stripNumber;  
+        parametersStructure.stripsPerFrame = stripsPerFrame;
+        [xPeak, yPeak, peakValue, secondPeakValue] = ...
+            FindPeak(correlation, parametersStructure);
+
+        % 2D Interpolation if enabled
+        if localParametersStructure.enableSubpixelInterpolation
+            [interpolatedPeakCoordinates, statisticsStructure.errorStructure] = ...
+                Interpolation2D(correlation, [yPeak, xPeak], ...
+                localParametersStructure.subpixelInterpolationParameters);
+
+            xPeak = interpolatedPeakCoordinates(2);
+            yPeak = interpolatedPeakCoordinates(1);      
+        end
+
+        % If GPU was used, transfer peak values and peak locations
+        if enableGPU
+            xPeak = gather(xPeak, gpuTask.ID);
+            yPeak = gather(yPeak, gpuTask.ID);
+            peakValue = gather(peakValue, gpuTask.ID);
+            secondPeakValue = gather(secondPeakValue, gpuTask.ID);
+        end
+
+        % Show surface plot for this correlation if verbosity enabled
+        if localParametersStructure.enableVerbosity
+            if enableGPU
+                correlation = gather(correlation, gpuTask.ID);
+            end
+            axes(parametersStructure.axesHandles(1));
+            [surfX,surfY] = meshgrid(1:size(correlation,2), 1:size(correlation,1));
+            surf(surfX, surfY, correlation,'linestyle','none');
+            title([num2str(stripNumber) ' out of ' num2str(numberOfStrips)]);
+            xlim([1 size(correlation,2)]);
+            ylim([1 size(correlation,1)]);
+            zlim([-1 1]);
+
+            % Mark the identified peak on the plot with an arrow.
+            text(xPeak, yPeak, peakValue, '\downarrow', 'Color', 'red', ...
+                'FontSize', 20, 'HorizontalAlignment', 'center', ...
+                'VerticalAlignment', 'bottom', 'FontWeight', 'bold');
+
+            drawnow;  
+        end
+
+        % If these peaks are in terms of a smaller correlation map, restore it
+        % back to in terms of the full map.
+        yPeak = yPeak + upperBound - 1;
+
+        rawEyePositionTraces(stripNumber,:) = [xPeak yPeak];
+        peakValueArray(stripNumber) = peakValue;
+        secondPeakValueArray(stripNumber) = secondPeakValue;
+
+        % If verbosity is enabled, also show eye trace plot with points
+        % being plotted as they become available.
+        if localParametersStructure.enableVerbosity
+
+            % Adjust for padding offsets added by normxcorr2()
+            % If we enable verbosity and demand that we plot the points as we
+            % go, then adjustments must be made here in order for the plot to
+            % be interpretable.
+            % Therefore, we will only perform these same operations after the
+            % loop to take advantage of vectorization only if they are not
+            % performed here, namely, if verbosity is not enabled and this
+            % if statement does not execute.
+            rawEyePositionTraces(stripNumber,2) = ...
+                rawEyePositionTraces(stripNumber,2) - (parametersStructure.stripHeight - 1);
+            rawEyePositionTraces(stripNumber,1) = ...
+                rawEyePositionTraces(stripNumber,1) - (parametersStructure.stripWidth - 1);
+
+            % Adjust in vertical direction.
+            % We must subtract back out the starting strip vertical coordinate in order
+            % to obtain the net vertical movement.
+            rawEyePositionTraces(stripNumber,1) = ...
+                rawEyePositionTraces(stripNumber,1) - stripIndices(stripNumber,2);
+            rawEyePositionTraces(stripNumber,2) = ...
+                rawEyePositionTraces(stripNumber,2) - stripIndices(stripNumber,1);
+
+            % Negate eye position traces to flip directions.
+            rawEyePositionTraces(stripNumber,:) = -rawEyePositionTraces(stripNumber,:);
+
+            axes(parametersStructure.axesHandles(2));
+            plot(timeArray, rawEyePositionTraces);
+            title('Raw Eye Position Traces');
+            xlabel('Time (sec)');
+            ylabel('Eye Position Traces (pixels)');
+            legend('show');
+            legend('Horizontal Traces', 'Vertical Traces');
+        end
     end
 end
 
@@ -346,19 +359,22 @@ eyeTracesToRemove = repmat(eyeTracesToRemove,1,2); % duplicate vector first
 usefulEyePositionTraces = rawEyePositionTraces .* eyeTracesToRemove;
 
 %% Plot Useful Eye Traces
-figure(3);
-plot(timeArray, usefulEyePositionTraces);
-title('Useful Eye Position Traces');
-xlabel('Time (sec)');
-ylabel('Eye Position Traces (pixels)');
-legend('show');
-legend('Horizontal Traces', 'Vertical Traces');
+if ~abortTriggered
+    axes(parametersStructure.axesHandles(3));
+    plot(timeArray, usefulEyePositionTraces);
+    title('Useful Eye Position Traces');
+    xlabel('Time (sec)');
+    ylabel('Eye Position Traces (pixels)');
+    legend('show');
+    legend('Horizontal Traces', 'Vertical Traces');
+end
 
 %% Save to output mat file
 
-eyePositionTraces = usefulEyePositionTraces;
+if ~abortTriggered
+    eyePositionTraces = usefulEyePositionTraces;
 
-save(outputFileName, 'eyePositionTraces', 'timeArray', ...
-    'parametersStructure', 'referenceFramePath');
-
+    save(outputFileName, 'eyePositionTraces', 'timeArray', ...
+        'parametersStructure', 'referenceFramePath');
+end
 end

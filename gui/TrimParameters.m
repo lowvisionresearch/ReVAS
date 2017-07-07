@@ -119,7 +119,7 @@ borderTrimAmount = str2double(handles.borderTrimAmount.String);
 if isnan(borderTrimAmount) || ...
         borderTrimAmount < 0 || ...
         rem(borderTrimAmount,1) ~= 0
-    errordlg('Border Trim Amount must be a natural number', 'Invalid Parameter');
+    errordlg('Border Trim Amount must be a natural number.', 'Invalid Parameter');
     return;
 end
 

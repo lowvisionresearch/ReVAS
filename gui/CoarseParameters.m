@@ -125,7 +125,7 @@ refFrameNum = str2double(handles.refFrameNum.String);
 if isnan(refFrameNum) || ...
         refFrameNum < 0 || ...
         rem(refFrameNum,1) ~= 0
-    errordlg('Reference Frame Number must be a natural number', 'Invalid Parameter');
+    errordlg('Reference Frame Number must be a natural number.', 'Invalid Parameter');
     return;
 end
 
@@ -133,7 +133,7 @@ end
 scalingFactor = str2double(handles.scalingFactor.String);
 if isnan(scalingFactor) || ...
         scalingFactor < 0
-    errordlg('Scaling Factor must be a positive real number', 'Invalid Parameter');
+    errordlg('Scaling Factor must be a positive real number.', 'Invalid Parameter');
     return;
 end
 

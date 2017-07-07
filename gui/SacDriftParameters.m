@@ -180,14 +180,14 @@ mainHandles = guidata(figureHandle);
 % thresholdVal
 thresholdVal = str2double(handles.thresholdVal.String);
 if isnan(thresholdVal)
-    errordlg('Threshold Value must be a real number', 'Invalid Parameter');
+    errordlg('Threshold Value must be a real number.', 'Invalid Parameter');
     return;
 end
 
 % secThresholdVal
 secThresholdVal = str2double(handles.secThresholdVal.String);
 if isnan(secThresholdVal)
-    errordlg('Secondary Threshold Value must be a real number', 'Invalid Parameter');
+    errordlg('Secondary Threshold Value must be a real number.', 'Invalid Parameter');
     return;
 end
 
@@ -196,14 +196,14 @@ stitch = str2double(handles.stitch.String);
 if isnan(stitch) || ...
     stitch < 0 || ...
     rem(stitch,1) ~= 0
-    errordlg('Stitch Criteria must be a natural number', 'Invalid Parameter');
+    errordlg('Stitch Criteria must be a natural number.', 'Invalid Parameter');
     return;
 end
 
 % minAmplitude
 minAmplitude = str2double(handles.minAmplitude.String);
 if isnan(minAmplitude)
-    errordlg('Minimum Amplitude must be a real number', 'Invalid Parameter');
+    errordlg('Minimum Amplitude must be a real number.', 'Invalid Parameter');
     return;
 end
 
@@ -211,21 +211,21 @@ end
 maxDuration = str2double(handles.maxDuration.String);
 if isnan(maxDuration) || ...
         maxDuration < 0
-    errordlg('Maximum Duration must be a positive real number', 'Invalid Parameter');
+    errordlg('Maximum Duration must be a positive real number.', 'Invalid Parameter');
     return;
 end
 
 % hardVelThreshold
 hardVelThreshold = str2double(handles.hardVelThreshold.String);
 if isnan(hardVelThreshold)
-    errordlg('Hard Velocity Threshold must be a real number', 'Invalid Parameter');
+    errordlg('Hard Velocity Threshold must be a real number.', 'Invalid Parameter');
     return;
 end
 
 % hardSecondaryVelThreshold
 hardSecondaryVelThreshold = str2double(handles.hardSecondaryVelThreshold.String);
 if isnan(hardSecondaryVelThreshold)
-    errordlg('Hard Secondary Velocity Threshold must be a real number', 'Invalid Parameter');
+    errordlg('Hard Secondary Velocity Threshold must be a real number.', 'Invalid Parameter');
     return;
 end
 

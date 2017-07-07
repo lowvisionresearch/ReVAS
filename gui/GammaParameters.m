@@ -117,7 +117,7 @@ mainHandles = guidata(figureHandle);
 % exponent
 exponent = str2double(handles.exponent.String);
 if isnan(exponent)
-    errordlg('Gamma Exponent must be a real number', 'Invalid Parameter');
+    errordlg('Gamma Exponent must be a real number.', 'Invalid Parameter');
     return;
 end
 
