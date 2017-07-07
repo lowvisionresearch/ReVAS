@@ -4,14 +4,13 @@ function [refFrame] = MakeMontage(params, fileName)
 %   all the pixel values across all frames in a video.
 %   
 %   Note: The params variable should have the attributes params.stripHeight,
-%   params.positions, params.time and params.samplingRate. 
+%   params.positions, and params.time.
 %   params.newStripHeight is an optional parameter.
 %
 %   Example: 
 %       params.stripHeight = 15;
 %       params.time = 1/540:1/540:1;
 %       params.positions = randn(540, 2);
-%       params.samplingRate = 540;
 %       MakeMontage(params,'fileName');
 
 if isfield(params, 'newStripHeight')
@@ -33,7 +32,7 @@ t1 = params.time;
 % grabbing info about the video and strips
 videoInfo = VideoReader(fileName);
 frameHeight = videoInfo.Height;
-w = videoInfo.Width;
+width = videoInfo.Width;
 frameRate = videoInfo.Framerate;
 totalFrames = frameRate * videoInfo.Duration;
 stripsPerFrame = round(frameHeight/params.newStripHeight);
@@ -45,8 +44,7 @@ refFrame = zeros(frameHeight*2);
 % Negate all positions 
 stripIndices = -stripIndices;
 
-% scaling the time array to accomodate new strip height CHANGE TOTALFRAMES
-% TO FRAMERATE MAYBE
+% scaling the time array to accomodate new strip height
 scalingFactor = ((params.stripHeight)/2)/(totalFrames*frameHeight);
 t1 = t1 + scalingFactor;
 dt = params.newStripHeight / (totalFrames * frameHeight);
@@ -65,16 +63,10 @@ end
 filteredStripIndices = [filteredStripIndices1 filteredStripIndices2];
 t1(end-max(lengthCutOut1, lengthCutOut2)+1:end) = [];
 
-figure('Name', 'Filtered Strip Indices')
-plot(t1, filteredStripIndices)
-
 % interpolating positions between strips
 interpolatedPositions = interp1(t1, filteredStripIndices, t2, 'linear');
 interpolatedPositions = movmean(interpolatedPositions, 45);
 
-figure('Name', 'InterpolatedPositions')
-plot(t2, interpolatedPositions)
-legend('Horizontal', 'Vertical')
 % Add a third column to interpolatedPositions to hold the strip numbers
 % because when I filter for NaNs, the strip number method I originally used
 % gets thrown off.
@@ -94,9 +86,6 @@ while k<=size(interpolatedPositions, 1)
     k = k + 1;
 end
 
-figure('Name', 'Interpolated Positions without NaN')
-plot(t2, interpolatedPositions(:, 1:2))
-
 % Scale the strip coordinates so that all values are positive. Take the
 % negative value with the highest magnitude in each column of
 % framePositions and add that value to all the values in the column. This
@@ -106,46 +95,42 @@ plot(t2, interpolatedPositions(:, 1:2))
 % since MatLab indexing starts from 1 not 0).
 column1 = interpolatedPositions(:, 1);
 column2 = interpolatedPositions(:, 2); 
-if column1(column1<0)
-    mostNegative = max(-1*column1);
+if column1(column1<=0)
+    if column1(column1<0)
+        mostNegative = max(-1*column1);
+    else
+        mostNegative = 0;
+    end
     interpolatedPositions(:, 1) = interpolatedPositions(:, 1) + mostNegative + 2;
 end
 
-if column2(column2<0)
-    mostNegative = max(-1*column2);
+if column2(column2<=0)
+    if column2(column2<0)
+        mostNegative = max(-1*column2);
+    else
+        mostNegative = 0;
+    end
     interpolatedPositions(:, 2) = interpolatedPositions(:, 2) + mostNegative + 2;
 end
 
-if column1(column1==0)
+if column1(column1<0.5)
     interpolatedPositions(:, 1) = interpolatedPositions(:,1) + 2;
 end
 
-if column2(column2==0)
+if column2(column2<0.5)
     interpolatedPositions(:, 2) = interpolatedPositions(:, 2) + 2;
 end
 
-% Add one more just to be safe
-interpolatedPositions = interpolatedPositions + 1;
-
-% Resize all relevant arrays to prep for subpixel interpolation
-interpolatedPositions = interpolatedPositions.*1;
+% Round the final scaled positions to get valid matrix indices
 interpolatedPositions = round(interpolatedPositions);
-params.newStripHeight = params.newStripHeight * 1;
-w = w*1;
-counterArray = imresize(counterArray, 1);
-refFrame = imresize(refFrame, 1);
 
 for frameNumber = 1:totalFrames 
     % Read frame and convert pixel values to signed integers
     videoFrame = double(readFrame(videoInfo))/255;
-    
-    % Increase the frame sizes to get subpixel values
-    videoFrame = imresize(videoFrame, 1);
 
     % get the appropriate strips from stripIndices for each frame
-    n = frameNumber;
-    startFrameStrips = round(1 + ((n-1)*(stripsPerFrame)));
-    endFrameStrips = round(n * stripsPerFrame);
+    startFrameStrips = round(1 + ((frameNumber-1)*(stripsPerFrame)));
+    endFrameStrips = round(frameNumber * stripsPerFrame);
     frameStripsWithoutNaN = zeros(size(startFrameStrips:endFrameStrips, 2), 3);
     
     % Extract the strip positions that will be used from this frame. Some
@@ -189,7 +174,7 @@ for frameNumber = 1:totalFrames
 
         % get max row/column of the strip
         maxRow = rowIndex + params.newStripHeight - 1;
-        maxColumn = columnIndex + w - 1;
+        maxColumn = columnIndex + width - 1;
         
         % transfer values of the strip pixels to the reference frame, and
         % increment the corresponding location on the counter array
@@ -213,21 +198,17 @@ for frameNumber = 1:totalFrames
         templateSelectColumn = round(templateSelectColumn);
         vidStart = round(vidStart);
         vidEnd = round(vidEnd);
-        
+       
         refFrame(templateSelectRow, templateSelectColumn) = refFrame(...
             templateSelectRow, templateSelectColumn) + videoFrame(...
             vidStart:vidEnd, :);
         counterArray(templateSelectRow, templateSelectColumn) = counterArray...
             (templateSelectRow, templateSelectColumn) + 1;
     end
-    disp(strcat('Just finished frame number ', num2str(frameNumber)))
 end
 
 % divide each pixel in refFrame by the number of strips that contain that pixel
 refFrame = refFrame./counterArray;
-save('refFrame', 'refFrame');
-
-disp('Just finished the dividing part')
 
 % Crop out the leftover 0 padding from the original template.
 column1 = interpolatedPositions(:, 1);
@@ -237,7 +218,7 @@ minRow = min(column2);
 maxColumn = max(column1);
 refFrame(1:floor((minRow-1)), :) = [];
 refFrame(:, 1:floor((minColumn-1))) = [];
-refFrame(:, ceil(maxColumn+w):end) = [];
+refFrame(:, ceil(maxColumn+width):end) = [];
 
 % Convert any NaN values in the reference frame to a 0. Otherwise, running
 % strip analysis on this new frame will not work
@@ -255,8 +236,7 @@ while k<=size(refFrame, 1)
     if count == 300
         refFrame(k:end, :) = [];
         break
-    end
-    if refFrame(k, :) == 0
+    elseif refFrame(k, :) == 0
         refFrame(k, :) = [];
         count = count + 1;
         k = k - 1;
@@ -264,11 +244,7 @@ while k<=size(refFrame, 1)
     k = k + 1;
 end
 
-% Scale the reference frame back down to its original size
-%refFrame = imresize(refFrame, 1/2);
-
-% UNCOMMENT THE SAVE STATEMENT IN THE FINAL VERSION
-% save('Reference Frame', 'refFrame');
+save('Reference Frame', 'refFrame');
 figure('Name', 'Reference Frame')
 imshow(refFrame);
 
