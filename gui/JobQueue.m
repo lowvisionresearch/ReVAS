@@ -22,7 +22,7 @@ function varargout = JobQueue(varargin)
 
 % Edit the above text to modify the response to help JobQueue
 
-% Last Modified by GUIDE v2.5 03-Jul-2017 15:06:26
+% Last Modified by GUIDE v2.5 07-Jul-2017 13:45:31
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -71,6 +71,15 @@ end
 % Set colors
 % Main Background
 handles.jobQueue.Color = handles.colors{1,2};
+handles.inputList.BackgroundColor = handles.colors{1,2};
+handles.axes1.XColor = handles.colors{1,2};
+handles.axes1.YColor = handles.colors{1,2};
+handles.axes2.XColor = handles.colors{1,2};
+handles.axes2.YColor = handles.colors{1,2};
+handles.axes3.XColor = handles.colors{1,2};
+handles.axes3.YColor = handles.colors{1,2};
+handles.commandWindow.BackgroundColor = handles.colors{1,2};
+
 % Box backgrounds
 handles.inputVideoBox.BackgroundColor = handles.colors{1,3};
 handles.radioRaw.BackgroundColor = handles.colors{1,3};
@@ -90,6 +99,7 @@ handles.textFilt.BackgroundColor = handles.colors{1,3};
 handles.textReRef.BackgroundColor = handles.colors{1,3};
 handles.textSacDrift.BackgroundColor = handles.colors{1,3};
 % Box text
+handles.inputList.ForegroundColor = handles.colors{1,5};
 handles.inputVideoBox.ForegroundColor = handles.colors{1,5};
 handles.radioRaw.ForegroundColor = handles.colors{1,5};
 handles.radioTrim.ForegroundColor = handles.colors{1,5};
@@ -107,6 +117,7 @@ handles.textStrip.ForegroundColor = handles.colors{1,5};
 handles.textFilt.ForegroundColor = handles.colors{1,5};
 handles.textReRef.ForegroundColor = handles.colors{1,5};
 handles.textSacDrift.ForegroundColor = handles.colors{1,5};
+handles.commandWindow.ForegroundColor = handles.colors{1,5};
 % Select/Enable buttons backgrounds
 handles.selectFiles.BackgroundColor = handles.colors{1,4};
 handles.togTrim.BackgroundColor = handles.colors{1,4};
@@ -161,6 +172,10 @@ handles.parallelization.ForegroundColor = handles.colors{4,2};
 handles.execute.BackgroundColor = handles.colors{3,4};
 % Execute button text
 handles.execute.ForegroundColor = handles.colors{3,2};
+% Re-Config button background
+handles.reconfig.BackgroundColor = handles.colors{4,4};
+% Re-Config button text
+handles.reconfig.ForegroundColor = handles.colors{4,2};
 
 % DEFAULT PARAMETERS
 % Trim
@@ -245,11 +260,26 @@ handles.config.preDisabledTogBandFiltValue = 1;
 
 % Pre-Disabled Execute Screen GUI Items
 handles.execute1.Visible = 'off';
-handles.execute2.Visible = 'off';
+handles.axes1.Visible = 'off';
+handles.axes2.Visible = 'off';
+handles.axes3.Visible = 'off';
 handles.abort.Visible = 'off';
+handles.reconfig.Visible = 'off';
+handles.commandWindow.Visible = 'off';
+
+% Variable initialization
+global abortTriggered;
+abortTriggered = false;
+global lastWarningDisplayed;
+lastWarningDisplayed = 'Execution in Progress...';
 
 % Initial files
+handles.inputList.String = cell(0);
 handles.files = cell(0);
+handles.lastRadio = 0;
+
+% Initial command window
+handles.commandWindow.String = cell(0);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -302,6 +332,9 @@ function execute_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+global abortTriggered;
+abortTriggered = false;
+
 % Update visible and invisible gui components
 handles.inputVideoBox.Visible = 'off';
 handles.selectFiles.Visible = 'off';
@@ -339,10 +372,26 @@ handles.configReRef.Visible = 'off';
 handles.configSacDrift.Visible = 'off';
 handles.parallelization.Visible = 'off';
 handles.execute.Visible = 'off';
+handles.reconfig.Visible = 'on';
+handles.reconfig.Enable = 'off';
 
 handles.execute1.Visible = 'on';
-handles.execute2.Visible = 'on';
-handles.abort.Visible = 'on';
+if handles.config.parMultiCore || handles.config.parGPU
+    handles.execute1.Visible = 'on';
+    handles.axes1.Visible = 'off';
+    handles.axes2.Visible = 'off';
+    handles.axes3.Visible = 'off';
+    handles.abort.Visible = 'off';
+    handles.commandWindow.Visible = 'off';
+else
+    handles.execute1.Visible = 'off';
+    handles.axes1.Visible = 'on';
+    handles.axes2.Visible = 'on';
+    handles.axes3.Visible = 'on';
+    handles.abort.Visible = 'on';
+    handles.abort.Enable = 'on';
+    handles.commandWindow.Visible = 'on';
+end
 
 drawnow;
 
@@ -357,11 +406,19 @@ if logical(handles.config.parMultiCore)
 else
     % Otherwise use a regular for loop
     for i = 1:size(handles.files, 2)
-        ExecuteModules(handles.files{i}, handles);
+        if ~logical(abortTriggered)
+            ExecuteModules(handles.files{i}, handles);
+        end
     end
 end
 
-fprintf('Process Completed\n');
+if logical(abortTriggered)
+    warndlg('Process Aborted by user.', 'Process Aborted');
+else    
+    msgbox('Process Completed.', 'Process Completed');
+    handles.abort.Enable = 'off';
+    handles.reconfig.Enable = 'on';
+end
 
 
 % --- Executes on button press in radioRaw.
@@ -397,6 +454,12 @@ if strcmp(handles.togBandFilt.Enable, 'off')
     handles.togBandFilt.Enable = 'on';
     handles.configBandFilt.Enable = 'on';
     togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
+end
+
+if handles.lastRadio ~= 1
+    handles.lastRadio = 1;
+    handles.inputList.String = cell(0);
+    handles.files = cell(0);
 end
 
 % Update handles structure
@@ -516,6 +579,12 @@ handles.togBandFilt.Value = 0;
 handles.togBandFilt.Enable = 'off';
 handles.configBandFilt.Enable = 'off';
 togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
+
+if handles.lastRadio ~= 5
+    handles.lastRadio = 5;
+    handles.inputList.String = cell(0);
+    handles.files = cell(0);
+end
 
 % Update handles structure
 guidata(hObject, handles);
@@ -791,6 +860,12 @@ if strcmp(handles.togBandFilt.Enable, 'off')
     togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
 end
 
+if handles.lastRadio ~= 2
+    handles.lastRadio = 2;
+    handles.inputList.String = cell(0);
+    handles.files = cell(0);
+end
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -830,6 +905,12 @@ if strcmp(handles.togBandFilt.Enable, 'off')
     handles.togBandFilt.Enable = 'on';
     handles.configBandFilt.Enable = 'on';
     togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
+end
+
+if handles.lastRadio ~= 3
+    handles.lastRadio = 3;
+    handles.inputList.String = cell(0);
+    handles.files = cell(0);
 end
 
 % Update handles structure
@@ -873,6 +954,12 @@ if strcmp(handles.togBandFilt.Enable, 'off')
     togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
 end
 
+if handles.lastRadio ~= 4
+    handles.lastRadio = 4;
+    handles.inputList.String = cell(0);
+    handles.files = cell(0);
+end
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -882,6 +969,12 @@ function abort_Callback(hObject, eventdata, handles)
 % hObject    handle to abort (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+global abortTriggered;
+abortTriggered = true;
+
+handles.reconfig.Enable = 'on';
+hObject.Enable = 'off';
 
 
 % --------------------------------------------------------------------
@@ -1000,3 +1093,108 @@ function menuExit_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 close;
+
+
+
+function commandWindow_Callback(hObject, eventdata, handles)
+% hObject    handle to commandWindow (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of commandWindow as text
+%        str2double(get(hObject,'String')) returns contents of commandWindow as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function commandWindow_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to commandWindow (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in reconfig.
+function reconfig_Callback(hObject, eventdata, handles)
+% hObject    handle to reconfig (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Abort first
+global abortTriggered;
+if ~logical(abortTriggered)
+    abort_Callback(handles.abort, eventdata, handles);
+end
+
+% Clear figures, changing from surf to scalar before clearing.
+axes(handles.axes1);
+cla reset;
+drawnow;
+axes(handles.axes2);
+cla reset;
+drawnow;
+axes(handles.axes3);
+cla reset;
+drawnow;
+
+handles.axes1.XColor = handles.colors{1,2};
+handles.axes1.YColor = handles.colors{1,2};
+handles.axes2.XColor = handles.colors{1,2};
+handles.axes2.YColor = handles.colors{1,2};
+handles.axes3.XColor = handles.colors{1,2};
+handles.axes3.YColor = handles.colors{1,2};
+
+drawnow;
+
+% Update visible and invisible gui components
+handles.inputVideoBox.Visible = 'on';
+handles.selectFiles.Visible = 'on';
+handles.inputList.Visible = 'on';
+handles.modulesBox.Visible = 'on';
+handles.textTrim.Visible = 'on';
+handles.textStim.Visible = 'on';
+handles.textGamma.Visible = 'on';
+handles.textBandFilt.Visible = 'on';
+handles.textCoarse.Visible = 'on';
+handles.textFine.Visible = 'on';
+handles.textStrip.Visible = 'on';
+handles.textFilt.Visible = 'on';
+handles.textReRef.Visible = 'on';
+handles.textSacDrift.Visible = 'on';
+handles.togTrim.Visible = 'on';
+handles.togStim.Visible = 'on';
+handles.togGamma.Visible = 'on';
+handles.togBandFilt.Visible = 'on';
+handles.togCoarse.Visible = 'on';
+handles.togFine.Visible = 'on';
+handles.togStrip.Visible = 'on';
+handles.togFilt.Visible = 'on';
+handles.togReRef.Visible = 'on';
+handles.togSacDrift.Visible = 'on';
+handles.configTrim.Visible = 'on';
+handles.configStim.Visible = 'on';
+handles.configGamma.Visible = 'on';
+handles.configBandFilt.Visible = 'on';
+handles.configCoarse.Visible = 'on';
+handles.configFine.Visible = 'on';
+handles.configStrip.Visible = 'on';
+handles.configFilt.Visible = 'on';
+handles.configReRef.Visible = 'on';
+handles.configSacDrift.Visible = 'on';
+handles.parallelization.Visible = 'on';
+handles.execute.Visible = 'on';
+
+handles.execute1.Visible = 'off';
+handles.execute1.Visible = 'off';
+handles.axes1.Visible = 'off';
+handles.axes2.Visible = 'off';
+handles.axes3.Visible = 'off';
+handles.abort.Visible = 'off';
+handles.reconfig.Visible = 'off';
+handles.commandWindow.Visible = 'off';
+
+drawnow;

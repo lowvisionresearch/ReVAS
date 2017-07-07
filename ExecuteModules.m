@@ -4,15 +4,25 @@ function ExecuteModules(inputVideoPath, handles)
 %   modules for one video. Call this function in a loop to execute on all
 %   videos.
 
+global abortTriggered;
+
+% parfor does not support global variables.
+% cannot abort when run in parallel.
+if isempty(abortTriggered)
+    abortTriggered = false;
+end
+
 parametersStructure = struct;
+parametersStructure.commandWindowHandle = handles.commandWindow;
+
 % Set GPU option
-if logical(handles.config.parGPU)
+if logical(handles.config.parGPU) && ~logical(abortTriggered)
     parametersStructure.enableGPU = true;
 else
     parametersStructure.enableGPU = false;
 end
 
-if logical(handles.togTrim.Value)
+if logical(handles.togTrim.Value) && ~logical(abortTriggered)
     % Set the parameters
     parametersStructure.borderTrimAmount = handles.config.trimBorderTrimAmount;
     parametersStructure.overwrite = handles.config.trimOverwrite;
@@ -24,7 +34,7 @@ if logical(handles.togTrim.Value)
     inputVideoPath = [inputVideoPath(1:end-4) '_dwt' inputVideoPath(end-3:end)];
 end
 
-if logical(handles.togStim.Value)
+if logical(handles.togStim.Value) && ~logical(abortTriggered)
     % Set the parameters
     parametersStructure.enableVerbosity = handles.config.stimVerbosity;
     parametersStructure.overwrite = handles.config.stimOverwrite;
@@ -46,7 +56,7 @@ if logical(handles.togStim.Value)
     inputVideoPath = [inputVideoPath(1:end-4) '_nostim' inputVideoPath(end-3:end)];
 end
 
-if logical(handles.togGamma.Value)
+if logical(handles.togGamma.Value) && ~logical(abortTriggered)
     % Set the parameters
     parametersStructure.gammaExponent = handles.config.gammaExponent;
     parametersStructure.overwrite = handles.config.gammaOverwrite;
@@ -58,7 +68,7 @@ if logical(handles.togGamma.Value)
     inputVideoPath = [inputVideoPath(1:end-4) '_gamscaled' inputVideoPath(end-3:end)];
 end
 
-if logical(handles.togBandFilt.Value)
+if logical(handles.togBandFilt.Value) && ~logical(abortTriggered)
     % Set the parameters
     parametersStructure.smoothing = handles.config.bandFiltSmoothing;
     parametersStructure.lowSpatialFrequencyCutoff = handles.config.bandFiltFreqCut;
@@ -71,7 +81,7 @@ if logical(handles.togBandFilt.Value)
     inputVideoPath = [inputVideoPath(1:end-4) '_bandfilt' inputVideoPath(end-3:end)];
 end
 
-if logical(handles.togCoarse.Value) % TODO
+if logical(handles.togCoarse.Value) && ~logical(abortTriggered) % TODO
     % Set the parameters
     parametersStructure.refFrameNumber = handles.config.coarseRefFrameNum;
     parametersStructure.scalingFactor = handles.config.coarseScalingFactor;
@@ -79,6 +89,7 @@ if logical(handles.togCoarse.Value) % TODO
     parametersStructure.enableVerbosity = handles.config.coarseVerbosity;
     parametersStructure.fileName = inputVideoPath;
     parametersStructure.enableGPU = false; % TODO
+    parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
 
     % Call the function(s)
     coarseResult = CoarseRef(inputVideoPath, parametersStructure);
@@ -87,7 +98,7 @@ if logical(handles.togCoarse.Value) % TODO
     %localinputVideoPath = [localinputVideoPath(1:end-4) '_dwt' localinputVideoPath(end-3:end)];
 end
 
-if logical(handles.togFine.Value)
+if logical(handles.togFine.Value) && ~logical(abortTriggered)
     % Set the parameters
     parametersStructure.enableVerbosity = handles.config.fineVerbosity;
     parametersStructure.numberOfIterations = handles.config.fineNumIterations;
@@ -106,7 +117,7 @@ if logical(handles.togFine.Value)
         = handles.config.fineSubpixelDepth;
     parametersStructure.enableGaussianFiltering = false; % TODO
     parametersStructure.badFrames = []; % TODO
-    parametersStructure.axeslocalHandles = []; % TODO        
+    parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
 
     % Call the function(s)
     fineResult = FineRef(coarseResult, inputVideoPath, parametersStructure);
@@ -115,10 +126,12 @@ if logical(handles.togFine.Value)
     %localinputVideoPath = [localinputVideoPath(1:end-4) '_dwt' localinputVideoPath(end-3:end)];
 end
 
-if logical(handles.togStrip.Value)
+if logical(handles.togStrip.Value) && ~logical(abortTriggered)
     % Set the parameters
     parametersStructure.overwrite = handles.config.stripOverwrite;
     parametersStructure.enableVerbosity = handles.config.stripVerbosity;
+    parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
+    parametersStructure.commandWindowHandle = handles.commandWindow;    
     parametersStructure.stripHeight = handles.config.stripStripHeight;
     parametersStructure.stripWidth = handles.config.stripStripWidth;
     parametersStructure.samplingRate = handles.config.stripSamplingRate;
@@ -151,7 +164,7 @@ if logical(handles.togStrip.Value)
 end
 
 if false
-%if logical(localHandles.togFilt.Value) % TODO
+%if logical(localHandles.togFilt.Value) && ~logical(abortTriggered) % TODO
     % Set the parameters
     parametersStructure.borderTrimAmount = localHandles.config.trimBorderTrimAmount;
     parametersStructure.overwrite = localHandles.config.trimOverwrite;
@@ -164,7 +177,7 @@ if false
 end
 
 if false
-%if logical(localHandles.togReRef.Value) % TODO
+%if logical(localHandles.togReRef.Value) && ~logical(abortTriggered) % TODO
     % Set the parameters
     parametersStructure.borderTrimAmount = localHandles.config.trimBorderTrimAmount;
     parametersStructure.overwrite = localHandles.config.trimOverwrite;
@@ -176,7 +189,7 @@ if false
     localinputVideoPath = [localinputVideoPath(1:end-4) '_dwt' localinputVideoPath(end-3:end)];
 end
 
-if logical(handles.togSacDrift.Value)
+if logical(handles.togSacDrift.Value) && ~logical(abortTriggered)
     % Set the parameters
     parametersStructure.overwrite = handles.config.sacOverwrite;
     parametersStructure.enableVerbosity = handles.config.sacVerbosity;

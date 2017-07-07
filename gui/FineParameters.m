@@ -207,7 +207,7 @@ numIterations = str2double(handles.numIterations.String);
 if isnan(numIterations) || ...
         numIterations < 0 || ...
         rem(numIterations,1) ~= 0
-    errordlg('Number of Iterations must be a natural number', 'Invalid Parameter');
+    errordlg('Number of Iterations must be a natural number.', 'Invalid Parameter');
     return;
 end
 
@@ -216,7 +216,7 @@ stripHeight = str2double(handles.stripHeight.String);
 if isnan(stripHeight) || ...
         stripHeight < 0 || ...
         rem(stripHeight,1) ~= 0
-    errordlg('Strip Height must be a natural number', 'Invalid Parameter');
+    errordlg('Strip Height must be a natural number.', 'Invalid Parameter');
     return;
 end
 
@@ -225,7 +225,7 @@ stripWidth = str2double(handles.stripWidth.String);
 if isnan(stripWidth) || ...
         stripWidth < 0 || ...
         rem(stripWidth,1) ~= 0
-    errordlg('Strip Width must be a natural number', 'Invalid Parameter');
+    errordlg('Strip Width must be a natural number.', 'Invalid Parameter');
     return;
 end
 
@@ -233,7 +233,7 @@ end
 samplingRate = str2double(handles.samplingRate.String);
 if isnan(samplingRate) || ...
         samplingRate < 0
-    errordlg('Sampling Rate must be a positive real number', 'Invalid Parameter');
+    errordlg('Sampling Rate must be a positive real number.', 'Invalid Parameter');
     return;
 end
 
@@ -241,7 +241,7 @@ end
 minPeakRatio = str2double(handles.minPeakRatio.String);
 if isnan(minPeakRatio) || ...
         minPeakRatio < 0
-    errordlg('Minimum Peak Ratio must be a postive real number', 'Invalid Parameter');
+    errordlg('Minimum Peak Ratio must be a postive real number.', 'Invalid Parameter');
     return;
 end
 
@@ -249,7 +249,7 @@ end
 minPeakThreshold = str2double(handles.minPeakThreshold.String);
 if isnan(minPeakThreshold) || ...
         minPeakThreshold < 0
-    errordlg('Minimum Peak Threshold must be a postive real number', 'Invalid Parameter');
+    errordlg('Minimum Peak Threshold must be a postive real number.', 'Invalid Parameter');
     return;
 end
 
@@ -257,7 +257,7 @@ end
 scalingFactor = str2double(handles.scalingFactor.String);
 if isnan(scalingFactor) || ...
         scalingFactor < 0
-    errordlg('Scaling Factor must be a postive real number', 'Invalid Parameter');
+    errordlg('Scaling Factor must be a postive real number.', 'Invalid Parameter');
     return;
 end
 
@@ -266,7 +266,7 @@ searchWindowHeight = str2double(handles.searchWindowHeight.String);
 if isnan(searchWindowHeight) || ...
         searchWindowHeight < 0 || ...
         rem(searchWindowHeight,1) ~= 0
-    errordlg('Search Window Height must be a natural number', 'Invalid Parameter');
+    errordlg('Search Window Height must be a natural number.', 'Invalid Parameter');
     return;
 end
 
@@ -275,7 +275,7 @@ neighborhoodSize = str2double(handles.neighborhoodSize.String);
 if isnan(neighborhoodSize) || ...
         neighborhoodSize < 0 || ...
         rem(neighborhoodSize,1) ~= 0
-    errordlg('Neighborhood Size must be a natural number', 'Invalid Parameter');
+    errordlg('Neighborhood Size must be a natural number.', 'Invalid Parameter');
     return;
 end
 
@@ -283,7 +283,7 @@ end
 subpixelDepth = str2double(handles.subpixelDepth.String);
 if isnan(subpixelDepth) || ...
         subpixelDepth < 0
-    errordlg('Subpixel Depth must be a positive real number', 'Invalid Parameter');
+    errordlg('Subpixel Depth must be a positive real number.', 'Invalid Parameter');
     return;
 end
 

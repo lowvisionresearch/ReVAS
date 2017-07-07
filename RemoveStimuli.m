@@ -14,10 +14,10 @@ matFileName = [inputVideoPath(1:end-4) '_stimlocs'];
 if ~exist(outputVideoPath, 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-    warning('RemoveStimuli() did not execute because it would overwrite existing file.');
+    RevasWarning('RemoveStimuli() did not execute because it would overwrite existing file.');
     return;
 else
-    warning('RemoveStimuli() is proceeding and overwriting an existing file.');
+    RevasWarning('RemoveStimuli() is proceeding and overwriting an existing file.');
 end
 
 %% Load mat file with output from |FindStimulusLocations|

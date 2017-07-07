@@ -126,7 +126,7 @@ smoothing = str2double(handles.smoothing.String);
 if isnan(smoothing) || ...
         smoothing < 0 || ...
         rem(smoothing,1) ~= 0
-    errordlg('Smoothing must be a natural number', 'Invalid Parameter');
+    errordlg('Smoothing must be a natural number.', 'Invalid Parameter');
     return;
 end
 
@@ -134,7 +134,7 @@ end
 freqCut = str2double(handles.freqCut.String);
 if isnan(freqCut) || ...
         freqCut < 0
-    errordlg('Low Spatial Frequency Cutoff must be a positive real number', 'Invalid Parameter');
+    errordlg('Low Spatial Frequency Cutoff must be a positive real number.', 'Invalid Parameter');
     return;
 end
 

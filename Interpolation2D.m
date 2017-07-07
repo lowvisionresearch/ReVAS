@@ -22,7 +22,7 @@ elseif ~isscalar(parametersStructure.subpixelDepth)
 end
 
 if size(correlationMap2D, 1) == 1 || size(correlationMap2D, 2) == 1
-    warning('Interpolation not applied this iteration since correlationMap2D dimensions were %d, %d', size(correlationMap2D));
+    RevasWarning('Interpolation not applied this iteration since correlationMap2D dimensions were %d, %d', size(correlationMap2D));
     interpolatedPixelCoordinates = peakCoordinates;
     errorStructure = struct();
     return;

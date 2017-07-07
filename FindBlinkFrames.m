@@ -15,10 +15,10 @@ badFramesMatFileName = [inputVideoPath(1:end-4) '_blinkframes'];
 if ~exist([badFramesMatFileName '.mat'], 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-    warning('FindBadFrames() did not execute because it would overwrite existing file.');
+    RevasWarning('FindBadFrames() did not execute because it would overwrite existing file.');
     return;
 else
-    warning('FindBadFrames() is proceeding and overwriting an existing file.');
+    RevasWarning('FindBadFrames() is proceeding and overwriting an existing file.');
 end
 
 %% Set thresholdValue
