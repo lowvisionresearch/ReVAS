@@ -250,7 +250,7 @@ for stripNumber = (1:numberOfStrips)
             if enableGPU
                 correlation = gather(correlation, gpuTask.ID);
             end
-            if ~isfield(parametersStructure, 'axesHandles')
+            if isfield(parametersStructure, 'axesHandles')
                 axes(parametersStructure.axesHandles(1));
             else
                 figure(1);
@@ -306,7 +306,7 @@ for stripNumber = (1:numberOfStrips)
             % Negate eye position traces to flip directions.
             rawEyePositionTraces(stripNumber,:) = -rawEyePositionTraces(stripNumber,:);
 
-            if ~isfield(parametersStructure, 'axesHandles')
+            if isfield(parametersStructure, 'axesHandles')
                 axes(parametersStructure.axesHandles(2));
             else
                 figure(2);
@@ -368,7 +368,7 @@ usefulEyePositionTraces = rawEyePositionTraces .* eyeTracesToRemove;
 
 %% Plot Useful Eye Traces
 if ~abortTriggered
-    if ~isfield(parametersStructure, 'axesHandles')
+    if isfield(parametersStructure, 'axesHandles')
         axes(parametersStructure.axesHandles(3));
     else
         figure(3);
