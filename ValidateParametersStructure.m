@@ -49,9 +49,3 @@ end
 if ~isfield(parametersStructure, 'enableVerbosity')
     error('Invalid Input for validateParametersStructure (parametersStructure does not have a enableVerbosity field)');
 end
-
-% axesHandles
-if ~isfield(parametersStructure, 'axesHandles')
-    error('Invalid Input for validateParametersStructure (parametersStructure does not have a axesHandles field)');
-end
-

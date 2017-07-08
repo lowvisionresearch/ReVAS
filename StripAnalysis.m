@@ -250,7 +250,11 @@ for stripNumber = (1:numberOfStrips)
             if enableGPU
                 correlation = gather(correlation, gpuTask.ID);
             end
-            axes(parametersStructure.axesHandles(1));
+            if ~isfield(parametersStructure, 'axesHandles')
+                axes(parametersStructure.axesHandles(1));
+            else
+                figure(1);
+            end
             [surfX,surfY] = meshgrid(1:size(correlation,2), 1:size(correlation,1));
             surf(surfX, surfY, correlation,'linestyle','none');
             title([num2str(stripNumber) ' out of ' num2str(numberOfStrips)]);
@@ -302,7 +306,11 @@ for stripNumber = (1:numberOfStrips)
             % Negate eye position traces to flip directions.
             rawEyePositionTraces(stripNumber,:) = -rawEyePositionTraces(stripNumber,:);
 
-            axes(parametersStructure.axesHandles(2));
+            if ~isfield(parametersStructure, 'axesHandles')
+                axes(parametersStructure.axesHandles(2));
+            else
+                figure(2);
+            end
             plot(timeArray, rawEyePositionTraces);
             title('Raw Eye Position Traces');
             xlabel('Time (sec)');
@@ -360,7 +368,11 @@ usefulEyePositionTraces = rawEyePositionTraces .* eyeTracesToRemove;
 
 %% Plot Useful Eye Traces
 if ~abortTriggered
-    axes(parametersStructure.axesHandles(3));
+    if ~isfield(parametersStructure, 'axesHandles')
+        axes(parametersStructure.axesHandles(3));
+    else
+        figure(3);
+    end
     plot(timeArray, usefulEyePositionTraces);
     title('Useful Eye Position Traces');
     xlabel('Time (sec)');
