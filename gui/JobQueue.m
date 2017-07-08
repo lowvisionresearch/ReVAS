@@ -22,7 +22,7 @@ function varargout = JobQueue(varargin)
 
 % Edit the above text to modify the response to help JobQueue
 
-% Last Modified by GUIDE v2.5 07-Jul-2017 13:45:31
+% Last Modified by GUIDE v2.5 07-Jul-2017 17:07:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -259,7 +259,6 @@ handles.config.preDisabledTogGammaValue = 1;
 handles.config.preDisabledTogBandFiltValue = 1;
 
 % Pre-Disabled Execute Screen GUI Items
-handles.execute1.Visible = 'off';
 handles.axes1.Visible = 'off';
 handles.axes2.Visible = 'off';
 handles.axes3.Visible = 'off';
@@ -279,7 +278,7 @@ handles.files = cell(0);
 handles.lastRadio = 0;
 
 % Initial command window
-handles.commandWindow.String = cell(0);
+handles.commandWindow.String = cellstr('Execution in Progress...');
 
 % Update handles structure
 guidata(hObject, handles);
@@ -375,16 +374,13 @@ handles.execute.Visible = 'off';
 handles.reconfig.Visible = 'on';
 handles.reconfig.Enable = 'off';
 
-handles.execute1.Visible = 'on';
 if handles.config.parMultiCore || handles.config.parGPU
-    handles.execute1.Visible = 'on';
     handles.axes1.Visible = 'off';
     handles.axes2.Visible = 'off';
     handles.axes3.Visible = 'off';
     handles.abort.Visible = 'off';
-    handles.commandWindow.Visible = 'off';
+    handles.commandWindow.Visible = 'on';
 else
-    handles.execute1.Visible = 'off';
     handles.axes1.Visible = 'on';
     handles.axes2.Visible = 'on';
     handles.axes3.Visible = 'on';
@@ -392,6 +388,8 @@ else
     handles.abort.Enable = 'on';
     handles.commandWindow.Visible = 'on';
 end
+
+handles.commandWindow.String = cellstr('Execution in Progress...');
 
 drawnow;
 
@@ -413,9 +411,9 @@ else
 end
 
 if logical(abortTriggered)
-    warndlg('Process Aborted by user.', 'Process Aborted');
+    warndlg('Process aborted by user.', 'Process Aborted');
 else    
-    msgbox('Process Completed.', 'Process Completed');
+    msgbox('Process completed.', 'Process Completed');
     handles.abort.Enable = 'off';
     handles.reconfig.Enable = 'on';
 end
@@ -1188,8 +1186,6 @@ handles.configSacDrift.Visible = 'on';
 handles.parallelization.Visible = 'on';
 handles.execute.Visible = 'on';
 
-handles.execute1.Visible = 'off';
-handles.execute1.Visible = 'off';
 handles.axes1.Visible = 'off';
 handles.axes2.Visible = 'off';
 handles.axes3.Visible = 'off';
