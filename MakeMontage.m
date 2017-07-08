@@ -13,6 +13,9 @@ function [refFrame] = MakeMontage(params, fileName)
 %       params.positions = randn(540, 2);
 %       MakeMontage(params,'fileName');
 
+%% Prepare a new field for newStripHeight
+% newStripHeight will give the requisite information for interpolation
+% between the spaced-out strips later.
 if isfield(params, 'newStripHeight')
     % if params.newStripHeight is a field but no value is specified, then set
     % params.newStripHeight equal to params.stripHeight
@@ -25,7 +28,8 @@ if isfield(params, 'newStripHeight')
 else
     params.newStripHeight = params.stripHeight;
 end
-    
+
+%% Set up all variables
 stripIndices = params.positions;
 t1 = params.time;
 
@@ -41,9 +45,13 @@ stripsPerFrame = round(frameHeight/params.newStripHeight);
 counterArray = zeros(frameHeight*2);
 refFrame = zeros(frameHeight*2);
 
-% Negate all positions 
+% Negate all positions. stripIndices tells how far a strip has moved from
+% the reference--therefore, to compensate for that movement, the
+% stripIndices have to be negated when placing the strip on the template
+% frame.
 stripIndices = -stripIndices;
 
+%% Set up the interpolation
 % scaling the time array to accomodate new strip height
 scalingFactor = ((params.stripHeight)/2)/(totalFrames*frameHeight);
 t1 = t1 + scalingFactor;
@@ -55,17 +63,37 @@ if size(t2, 1) ~= size(t1, 1) && size(t2, 2) ~= size(t1, 2)
     t2 = t2';
 end
 
-% replace NaNs with a linear interpolation, done manually in a helper
-% function FILTERSTRIPS DOES NOT HANDLE THE CASE IN WHICH NANS ARE AT THE
-% BEGINNING OF THE GRAPH
+%% Remove NaNs in stripIndices
+% First handle the case in which NaNs are at the beginning of stripIndices
+NaNIndices = find(isnan(stripIndices));
+if NaNIndices(1) == 1
+    numberOfNaNs = 1;
+    index = 1;
+    while index <= size(NaNIndices, 1)
+        if NaNIndices(index + 1) == NaNIndices(index) + 1
+            numberOfNaNs = numberOfNaNs + 1;
+        end
+        index = index + 1;
+    end
+    stripIndices(1:numberOfNaNs) = [];
+    t1(1:numberOfNaNs) = [];
+end
+
+% Then replace the rest of the NaNs with linear interpolation, done
+% manually in a helper function. NaNs at the end of stripIndices will be
+% deleted, along with their corresponding time points.
 [filteredStripIndices1, lengthCutOut1] = FilterStrips(stripIndices(:, 1));
 [filteredStripIndices2, lengthCutOut2] = FilterStrips(stripIndices(:, 2));
 filteredStripIndices = [filteredStripIndices1 filteredStripIndices2];
 t1(end-max(lengthCutOut1, lengthCutOut2)+1:end) = [];
 
+%% Perform interpolation with finer time interval
+
 % interpolating positions between strips
 interpolatedPositions = interp1(t1, filteredStripIndices, t2, 'linear');
 interpolatedPositions = movmean(interpolatedPositions, 45);
+
+%% Prepare interpolatedPositions for generating the reference frame.
 
 % Add a third column to interpolatedPositions to hold the strip numbers
 % because when I filter for NaNs, the strip number method I originally used
@@ -74,7 +102,7 @@ for k = 1:size(interpolatedPositions, 1)
     interpolatedPositions(k, 3) = k;
 end
 
-% Remove NaNs. Need to use while statement because the size of
+% Remove leftover NaNs. Need to use while statement because the size of
 % interpolatedPositions changes each time I remove an NaN
 k = 1;
 while k<=size(interpolatedPositions, 1)
@@ -123,6 +151,8 @@ end
 
 % Round the final scaled positions to get valid matrix indices
 interpolatedPositions = round(interpolatedPositions);
+
+%% Use interpolatedPositions to generate the reference frame.
 
 for frameNumber = 1:totalFrames 
     % Read frame and convert pixel values to signed integers
@@ -210,6 +240,8 @@ end
 % divide each pixel in refFrame by the number of strips that contain that pixel
 refFrame = refFrame./counterArray;
 
+%% Take care of miscellaneous issues from preallocation and division by 0.
+
 % Crop out the leftover 0 padding from the original template.
 column1 = interpolatedPositions(:, 1);
 column2 = interpolatedPositions(:, 2);
@@ -229,21 +261,19 @@ for k = 1:size(NaNindices)
 end
 
 % Need to take care of rows separately for cropping out 0 padding because 
-% strip locations do not give info about where the template frame ends
+% strip locations do not give info about where the template frame ends,
+% only where that strip is located relative to the corresponding strip on
+% the original reference frame.
 k = 1;
-count = 0;
 while k<=size(refFrame, 1)
-    if count == 300
-        refFrame(k:end, :) = [];
-        break
-    elseif refFrame(k, :) == 0
+    if refFrame(k, :) == 0
         refFrame(k, :) = [];
-        count = count + 1;
-        k = k - 1;
+        continue
     end
     k = k + 1;
 end
 
+%% Save and display the reference frame.
 save('Reference Frame', 'refFrame');
 figure('Name', 'Reference Frame')
 imshow(refFrame);

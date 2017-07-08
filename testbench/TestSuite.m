@@ -165,7 +165,7 @@ params.minimumPeakRatio = 0.8;
 params.minimumPeakThreshold = 0;
 params.axesHandles = [];
 params.overwrite = true;
-params.numberOfIterations = 0;
+params.numberOfIterations = 1;
 params.scalingFactor = 0.4;
 coarseRef = CoarseRef(videoPath, params);
 load('framePositions.mat')
