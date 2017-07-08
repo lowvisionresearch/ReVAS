@@ -156,7 +156,7 @@ while frameNumber <= totalFrames
     
     % Show surface plot for this correlation if verbosity enabled
     if parametersStructure.enableVerbosity == 2
-        if ~isfield(parametersStructure, 'axesHandles')
+        if isfield(parametersStructure, 'axesHandles')
             axes(parametersStructure.axesHandles(1));
         else
             figure(1);
@@ -177,7 +177,7 @@ while frameNumber <= totalFrames
         
         % Also plot the positions of the frames as time progresses
         timeAxis = (1/v.frameRate):(1/v.frameRate):(frameNumber/v.frameRate);
-        if ~isfield(parametersStructure, 'axesHandles')
+        if isfield(parametersStructure, 'axesHandles')
             axes(parametersStructure.axesHandles(2));
         else
             figure(2);
@@ -312,7 +312,7 @@ end
 save(newFileName, 'coarseRefFrame');
 
 if parametersStructure.enableVerbosity >= 1
-    if ~isfield(parametersStructure, 'axesHandles')
+    if isfield(parametersStructure, 'axesHandles')
         axes(parametersStructure.axesHandles(3));
     else
         figure(3);
