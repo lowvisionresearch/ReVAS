@@ -162,34 +162,35 @@ figureHandle = findobj(0, 'tag', 'jobQueue');
 mainHandles = guidata(figureHandle);
 
 % Validate new configurations
-% size
 size = str2double(handles.size.String);
-if isnan(size) || ...
-        size < 0 || ...
-        rem(size,1) ~= 0 || ...
-        mod(size, 2) == 0
-    errordlg('Stimulus Size must be an odd, natural number.', 'Invalid Parameter');
-    return;
-end
-
-% thick
 thick = str2double(handles.thick.String);
-if isnan(thick) || ...
-        thick < 0 || ...
-        rem(thick,1) ~= 0 || ...
-        mod(thick, 2) == 0
-    errordlg('Cross Thickness must be an odd, natural number.', 'Invalid Parameter');
-    return;
-end
 
-% full path
 if logical(handles.upload.Value)
+    % full path
     try
         imfinfo(handles.stimFullPath);
     catch
         errordlg('Uploaded Stimulus Image must be an image file', 'Invalid Parameter');
         return;
     end
+else
+    % size
+    if isnan(size) || ...
+            size < 0 || ...
+            rem(size,1) ~= 0 || ...
+            mod(size, 2) == 0
+        errordlg('Stimulus Size must be an odd, natural number.', 'Invalid Parameter');
+        return;
+    end
+
+    % thick
+    if isnan(thick) || ...
+            thick < 0 || ...
+            rem(thick,1) ~= 0 || ...
+            mod(thick, 2) == 0
+        errordlg('Cross Thickness must be an odd, natural number.', 'Invalid Parameter');
+        return;
+    end    
 end
 
 % Save new configurations
