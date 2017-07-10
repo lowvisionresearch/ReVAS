@@ -22,7 +22,7 @@ function varargout = JobQueue(varargin)
 
 % Edit the above text to modify the response to help JobQueue
 
-% Last Modified by GUIDE v2.5 07-Jul-2017 17:07:35
+% Last Modified by GUIDE v2.5 10-Jul-2017 14:46:21
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -172,6 +172,10 @@ handles.parallelization.ForegroundColor = handles.colors{4,2};
 handles.execute.BackgroundColor = handles.colors{3,4};
 % Execute button text
 handles.execute.ForegroundColor = handles.colors{3,2};
+% Save Log button background
+handles.saveLog.BackgroundColor = handles.colors{4,4};
+% Save Log button text
+handles.saveLog.ForegroundColor = handles.colors{4,2};
 % Re-Config button background
 handles.reconfig.BackgroundColor = handles.colors{4,4};
 % Re-Config button text
@@ -263,14 +267,13 @@ handles.axes1.Visible = 'off';
 handles.axes2.Visible = 'off';
 handles.axes3.Visible = 'off';
 handles.abort.Visible = 'off';
+handles.saveLog.Visible = 'off';
 handles.reconfig.Visible = 'off';
 handles.commandWindow.Visible = 'off';
 
 % Variable initialization
 global abortTriggered;
 abortTriggered = false;
-global lastWarningDisplayed;
-lastWarningDisplayed = 'Execution in Progress...';
 
 % Initial files
 handles.inputList.String = cell(0);
@@ -278,7 +281,9 @@ handles.files = cell(0);
 handles.lastRadio = 0;
 
 % Initial command window
-handles.commandWindow.String = cellstr('Execution in Progress...');
+dateAndTime = datestr(datetime('now'));
+time = dateAndTime(13:20);
+handles.commandWindow.String = cellstr(['(' time ') Execution in Progress...']);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -379,6 +384,9 @@ if handles.config.parMultiCore || handles.config.parGPU
     handles.axes2.Visible = 'off';
     handles.axes3.Visible = 'off';
     handles.abort.Visible = 'off';
+    handles.abort.Enable = 'off';
+    handles.saveLog.Visible = 'off';
+    handles.saveLog.Enable = 'off';
     handles.commandWindow.Visible = 'on';
 else
     handles.axes1.Visible = 'on';
@@ -386,36 +394,83 @@ else
     handles.axes3.Visible = 'on';
     handles.abort.Visible = 'on';
     handles.abort.Enable = 'on';
+    handles.saveLog.Visible = 'on';
+    handles.saveLog.Enable = 'off';
     handles.commandWindow.Visible = 'on';
 end
 
-handles.commandWindow.String = cellstr('Execution in Progress...');
+handles.menuLoad.Enable = 'off';
+handles.menuSave.Enable = 'off';
 
+dateAndTime = datestr(datetime('now'));
+time = dateAndTime(13:20);
+handles.commandWindow.String = cellstr(['(' time ') Execution in Progress...']);
+clc;
 drawnow;
 
 % Apply modules to all selected files
 if logical(handles.config.parMultiCore)
+    handles.commandWindow.String = ['Verbosity is not available while parallelizing.'; ...
+        handles.commandWindow.String];
+    handles.commandWindow.String = ['Full output is being written to log.txt.'; ...
+        handles.commandWindow.String];
+    drawnow;
+    if exist('log.txt', 'file') == 2
+        delete 'log.txt';
+    end
+    diary on;
+    diary('log.txt');
     % Use parallelization if requested
     % TODO deal with GPU (see |ExecuteModules.m|).
     parfor i = 1:size(handles.files, 2)
-        % TODO perhaps use loop unrolling to suppress warning below
-        ExecuteModules(handles.files{i}, handles);
+        try
+            % TODO perhaps use loop unrolling to suppress warning below
+            ExecuteModules(handles.files{i}, handles);
+        catch ME
+            message = [ME.message ' '];
+            for j = 1:size(ME.stack, 1)
+                message = [message ME.stack(j).name '(' int2str(ME.stack(j).line) ') < '];
+            end
+            message = [message(1:end-3) '.'];
+            warning(['(Error while processing ' handles.files{i} '. Proceeding to next video.) ' ...
+                message]);
+        end
     end
+    diary off;
 else
     % Otherwise use a regular for loop
     for i = 1:size(handles.files, 2)
         if ~logical(abortTriggered)
-            ExecuteModules(handles.files{i}, handles);
+            try
+                ExecuteModules(handles.files{i}, handles);
+            catch ME
+                % Catch any errors that arise and display to output.
+                parametersStructure.commandWindowHandle = handles.commandWindow;
+                message = [ME.message ' '];
+                for j = 1:size(ME.stack, 1)
+                    message = [message ME.stack(j).name '(' int2str(ME.stack(j).line) ') < '];
+                end
+                message = [message(1:end-3) '.'];
+                RevasError(handles.files{i}, message, parametersStructure);
+            end
         end
     end
 end
 
+dateAndTime = datestr(datetime('now'));
+time = dateAndTime(13:20);
+    
 if logical(abortTriggered)
+    handles.commandWindow.String = ['(' time ') Process aborted by user.'; ...
+        handles.commandWindow.String];
     warndlg('Process aborted by user.', 'Process Aborted');
-else    
+else   
+    handles.commandWindow.String = ['(' time ') Process completed.'; ...
+        handles.commandWindow.String];
     msgbox('Process completed.', 'Process Completed');
     handles.abort.Enable = 'off';
     handles.reconfig.Enable = 'on';
+    handles.saveLog.Enable = 'on';
 end
 
 
@@ -971,6 +1026,7 @@ function abort_Callback(hObject, eventdata, handles)
 global abortTriggered;
 abortTriggered = true;
 
+handles.saveLog.Enable = 'on';
 handles.reconfig.Enable = 'on';
 hObject.Enable = 'off';
 
@@ -1093,7 +1149,6 @@ function menuExit_Callback(hObject, eventdata, handles)
 close;
 
 
-
 function commandWindow_Callback(hObject, eventdata, handles)
 % hObject    handle to commandWindow (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -1190,7 +1245,32 @@ handles.axes1.Visible = 'off';
 handles.axes2.Visible = 'off';
 handles.axes3.Visible = 'off';
 handles.abort.Visible = 'off';
+handles.saveLog.Visible = 'off';
 handles.reconfig.Visible = 'off';
 handles.commandWindow.Visible = 'off';
 
+handles.menuLoad.Enable = 'on';
+handles.menuSave.Enable = 'on';
+
 drawnow;
+
+% --- Executes on button press in saveLog.
+function saveLog_Callback(hObject, eventdata, handles)
+% hObject    handle to saveLog (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+[fileName,pathName, ~] = uiputfile('*.txt','Save Log','log.txt');
+if fileName == 0
+    % User canceled.
+    return;
+end
+
+fileId = fopen(fullfile(pathName, fileName), 'wt');
+for i = 1:size(handles.commandWindow.String)
+    fprintf(fileId, '%s\n', handles.commandWindow.String{i});
+end
+fclose(fileId);
+
+msgbox('Log saved.', 'Log Saved');
+
