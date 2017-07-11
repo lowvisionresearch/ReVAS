@@ -22,7 +22,7 @@ function varargout = JobQueue(varargin)
 
 % Edit the above text to modify the response to help JobQueue
 
-% Last Modified by GUIDE v2.5 10-Jul-2017 14:46:21
+% Last Modified by GUIDE v2.5 11-Jul-2017 13:53:04
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -53,6 +53,9 @@ function JobQueue_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for JobQueue
 handles.output = hObject;
+
+% Add util to path
+addpath(fullfile(pwd, 'util'));
 
 % COLOR PALETTE
 % http://paletton.com/palette.php?uid=c491l5-2L0kj0tK00%2B%2B6SNBlToaqM2g
@@ -281,10 +284,7 @@ handles.files = cell(0);
 handles.lastRadio = 0;
 
 % Initial command window
-dateAndTime = datestr(datetime('now'));
-time = dateAndTime(13:20);
-handles.commandWindow.String = cellstr(['(' time ') Execution in Progress...']);
-fprintf(['(' time ') Execution in Progress...\n']);
+handles.commandWindow.String = cellstr('');
 
 % Update handles structure
 guidata(hObject, handles);
@@ -1277,4 +1277,3 @@ end
 fclose(fileID);
 
 msgbox('Log saved.', 'Log Saved');
-

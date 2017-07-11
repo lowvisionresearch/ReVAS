@@ -149,7 +149,7 @@ function borderTrimAmount_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of borderTrimAmount as text
 %        str2double(get(hObject,'String')) returns contents of borderTrimAmount as a double
-
+fprintf('modified');
 
 % --- Executes during object creation, after setting all properties.
 function borderTrimAmount_CreateFcn(hObject, eventdata, handles)
