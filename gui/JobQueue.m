@@ -418,8 +418,7 @@ if logical(handles.config.parMultiCore)
     if exist('log.txt', 'file') == 2
         delete 'log.txt';
     end
-    diary on;
-    diary('log.txt');
+    diary log.txt;
     % Use parallelization if requested
     % TODO deal with GPU (see |ExecuteModules.m|).
     parfor i = 1:size(handles.files, 2)
