@@ -116,7 +116,7 @@ mainHandles = guidata(figureHandle);
 % Validate new configurations
 % exponent
 exponent = str2double(handles.exponent.String);
-if isnan(exponent)
+if ~IsRealNumber(exponent)
     errordlg('Gamma Exponent must be a real number.', 'Invalid Parameter');
     return;
 end
@@ -155,3 +155,16 @@ function exponent_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of exponent as text
 %        str2double(get(hObject,'String')) returns contents of exponent as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
+
+if ~IsRealNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a real number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end

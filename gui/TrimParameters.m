@@ -116,9 +116,7 @@ mainHandles = guidata(figureHandle);
 % Validate new configurations
 % borderTrimAmount
 borderTrimAmount = str2double(handles.borderTrimAmount.String);
-if isnan(borderTrimAmount) || ...
-        borderTrimAmount < 0 || ...
-        rem(borderTrimAmount,1) ~= 0
+if ~IsNaturalNumber(borderTrimAmount)
     errordlg('Border Trim Amount must be a natural number.', 'Invalid Parameter');
     return;
 end
@@ -149,7 +147,22 @@ function borderTrimAmount_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of borderTrimAmount as text
 %        str2double(get(hObject,'String')) returns contents of borderTrimAmount as a double
-fprintf('modified');
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
+
+if ~IsNaturalNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a natural number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function borderTrimAmount_CreateFcn(hObject, eventdata, handles)

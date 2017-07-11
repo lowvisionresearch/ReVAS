@@ -122,18 +122,15 @@ mainHandles = guidata(figureHandle);
 % Validate new configurations
 % refFrameNum
 refFrameNum = str2double(handles.refFrameNum.String);
-if isnan(refFrameNum) || ...
-        refFrameNum < 0 || ...
-        rem(refFrameNum,1) ~= 0
+if ~IsNaturalNumber(refFrameNum)
     errordlg('Reference Frame Number must be a natural number.', 'Invalid Parameter');
     return;
 end
 
 % scalingFactor
 scalingFactor = str2double(handles.scalingFactor.String);
-if isnan(scalingFactor) || ...
-        scalingFactor < 0
-    errordlg('Scaling Factor must be a positive real number.', 'Invalid Parameter');
+if ~IsPositiveRealNumber(scalingFactor)
+    errordlg('Scaling Factor must be a positive, real number.', 'Invalid Parameter');
     return;
 end
 
@@ -183,7 +180,22 @@ function refFrameNum_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of refFrameNum as text
 %        str2double(get(hObject,'String')) returns contents of refFrameNum as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsNaturalNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a natural number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function refFrameNum_CreateFcn(hObject, eventdata, handles)
@@ -206,7 +218,22 @@ function scalingFactor_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of scalingFactor as text
 %        str2double(get(hObject,'String')) returns contents of scalingFactor as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsPositiveRealNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a positive, real number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function scalingFactor_CreateFcn(hObject, eventdata, handles)

@@ -102,9 +102,6 @@ else
     handles.subpixelDepth.Enable = 'off';
 end
 
-% Update handles structure
-guidata(hObject, handles);
-
 % Set colors
 % Main Background
 handles.stripParameters.Color = mainHandles.colors{4,2};
@@ -192,6 +189,18 @@ handles.save.ForegroundColor = mainHandles.colors{3,2};
 handles.cancel.BackgroundColor = mainHandles.colors{2,4};
 handles.cancel.ForegroundColor = mainHandles.colors{2,2};
 
+% Update handles structure
+guidata(hObject, handles);
+
+% Check parameter validity and change colors if needed
+gaussSD_Callback(handles.gaussSD, eventdata, handles);
+minPeakRatio_Callback(handles.minPeakRatio, eventdata, handles);
+minPeakThreshold_Callback(handles.minPeakThreshold, eventdata, handles);
+scalingFactor_Callback(handles.scalingFactor, eventdata, handles);
+searchWindowHeight_Callback(handles.searchWindowHeight, eventdata, handles);
+neighborhoodSize_Callback(handles.neighborhoodSize, eventdata, handles);
+subpixelDepth_Callback(handles.subpixelDepth, eventdata, handles);
+
 % UIWAIT makes StripParameters wait for user response (see UIRESUME)
 % uiwait(handles.stripParameters);
 
@@ -219,86 +228,78 @@ mainHandles = guidata(figureHandle);
 % Validate new configurations
 % stripHeight
 stripHeight = str2double(handles.stripHeight.String);
-if isnan(stripHeight) || ...
-        stripHeight < 0 || ...
-        rem(stripHeight,1) ~= 0
+if ~IsNaturalNumber(stripHeight)
     errordlg('Strip Height must be a natural number.', 'Invalid Parameter');
     return;
 end
 
 % stripWidth
 stripWidth = str2double(handles.stripWidth.String);
-if isnan(stripWidth) || ...
-        stripWidth < 0 || ...
-        rem(stripWidth,1) ~= 0
+if ~IsNaturalNumber(stripWidth)
     errordlg('Strip Width must be a natural number.', 'Invalid Parameter');
     return;
 end
 
 % samplingRate
 samplingRate = str2double(handles.samplingRate.String);
-if isnan(samplingRate) || ...
-        samplingRate < 0
-    errordlg('Sampling Rate must be a positive real number.', 'Invalid Parameter');
+if ~IsPositiveRealNumber(samplingRate)
+    errordlg('Sampling Rate must be a positive, real number.', 'Invalid Parameter');
     return;
 end
 
-% gaussSD
-gaussSD = str2double(handles.gaussSD.String);
-if isnan(gaussSD) || ...
-        gaussSD < 0
-    errordlg('Gaussian Standard Deviation must be a postive real number.', 'Invalid Parameter');
-    return;
+if logical(handles.enableGaussFilt.Value)
+    % gaussSD
+    gaussSD = str2double(handles.gaussSD.String);
+    if ~IsPositiveRealNumber(gaussSD)
+        errordlg('Gaussian Standard Deviation must be a positive, real number.', 'Invalid Parameter');
+        return;
+    end
+else
+    % minPeakRatio
+    minPeakRatio = str2double(handles.minPeakRatio.String);
+    if ~IsPositiveRealNumber(minPeakRatio)
+        errordlg('Minimum Peak Ratio must be a positive, real number.', 'Invalid Parameter');
+        return;
+    end
+
+    % minPeakThreshold
+    minPeakThreshold = str2double(handles.minPeakThreshold.String);
+    if ~IsNonNegativeRealNumber(minPeakThreshold)
+        errordlg('Minimum Peak Threshold must be a non-negative, real number.', 'Invalid Parameter');
+        return;
+    end
 end
 
-% minPeakRatio
-minPeakRatio = str2double(handles.minPeakRatio.String);
-if isnan(minPeakRatio) || ...
-        minPeakRatio < 0
-    errordlg('Minimum Peak Ratio must be a postive real number.', 'Invalid Parameter');
-    return;
+if logical(handles.adaptiveSearch.Value)
+    % scalingFactor
+    scalingFactor = str2double(handles.scalingFactor.String);
+    if ~IsPositiveRealNumber(scalingFactor)
+        errordlg('Scaling Factor must be a positive, real number.', 'Invalid Parameter');
+        return;
+    end
+
+    % searchWindowHeight
+    searchWindowHeight = str2double(handles.searchWindowHeight.String);
+    if ~IsNaturalNumber(searchWindowHeight)
+        errordlg('Search Window Height must be a natural number.', 'Invalid Parameter');
+        return;
+    end
 end
 
-% minPeakThreshold
-minPeakThreshold = str2double(handles.minPeakThreshold.String);
-if isnan(minPeakThreshold) || ...
-        minPeakThreshold < 0
-    errordlg('Minimum Peak Threshold must be a postive real number.', 'Invalid Parameter');
-    return;
-end
+if logical(handles.subpixelInterp.Value)
+    % neighborhoodSize
+    neighborhoodSize = str2double(handles.neighborhoodSize.String);
+    if ~IsNaturalNumber(neighborhoodSize)
+        errordlg('Neighborhood Size must be a natural number.', 'Invalid Parameter');
+        return;
+    end
 
-% scalingFactor
-scalingFactor = str2double(handles.scalingFactor.String);
-if isnan(scalingFactor) || ...
-        scalingFactor < 0
-    errordlg('Scaling Factor must be a postive real number.', 'Invalid Parameter');
-    return;
-end
-
-% searchWindowHeight
-searchWindowHeight = str2double(handles.searchWindowHeight.String);
-if isnan(searchWindowHeight) || ...
-        searchWindowHeight < 0 || ...
-        rem(searchWindowHeight,1) ~= 0
-    errordlg('Search Window Height must be a natural number.', 'Invalid Parameter');
-    return;
-end
-
-% neighborhoodSize
-neighborhoodSize = str2double(handles.neighborhoodSize.String);
-if isnan(neighborhoodSize) || ...
-        neighborhoodSize < 0 || ...
-        rem(neighborhoodSize,1) ~= 0
-    errordlg('Neighborhood Size must be a natural number.', 'Invalid Parameter');
-    return;
-end
-
-% subpixelDepth
-subpixelDepth = str2double(handles.subpixelDepth.String);
-if isnan(subpixelDepth) || ...
-        subpixelDepth < 0
-    errordlg('Subpixel Depth must be a positive real number.', 'Invalid Parameter');
-    return;
+    % subpixelDepth
+    subpixelDepth = str2double(handles.subpixelDepth.String);
+    if ~IsPositiveRealNumber(subpixelDepth)
+        errordlg('Subpixel Depth must be a positive, real number.', 'Invalid Parameter');
+        return;
+    end
 end
 
 % Save new configurations
@@ -397,7 +398,22 @@ function stripHeight_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of stripHeight as text
 %        str2double(get(hObject,'String')) returns contents of stripHeight as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsNaturalNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a natural number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function stripHeight_CreateFcn(hObject, eventdata, handles)
@@ -420,7 +436,22 @@ function stripWidth_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of stripWidth as text
 %        str2double(get(hObject,'String')) returns contents of stripWidth as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsNaturalNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a natural number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function stripWidth_CreateFcn(hObject, eventdata, handles)
@@ -443,7 +474,22 @@ function samplingRate_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of samplingRate as text
 %        str2double(get(hObject,'String')) returns contents of samplingRate as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsPositiveRealNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a positive, real number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function samplingRate_CreateFcn(hObject, eventdata, handles)
@@ -466,7 +512,22 @@ function minPeakRatio_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of minPeakRatio as text
 %        str2double(get(hObject,'String')) returns contents of minPeakRatio as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsPositiveRealNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a positive, real number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function minPeakRatio_CreateFcn(hObject, eventdata, handles)
@@ -489,7 +550,22 @@ function minPeakThreshold_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of minPeakThreshold as text
 %        str2double(get(hObject,'String')) returns contents of minPeakThreshold as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsNonNegativeRealNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a non-negative, real number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function minPeakThreshold_CreateFcn(hObject, eventdata, handles)
@@ -527,7 +603,22 @@ function scalingFactor_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of scalingFactor as text
 %        str2double(get(hObject,'String')) returns contents of scalingFactor as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsPositiveRealNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a positive, real number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function scalingFactor_CreateFcn(hObject, eventdata, handles)
@@ -550,7 +641,22 @@ function searchWindowHeight_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of searchWindowHeight as text
 %        str2double(get(hObject,'String')) returns contents of searchWindowHeight as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsNaturalNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a natural number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function searchWindowHeight_CreateFcn(hObject, eventdata, handles)
@@ -573,7 +679,22 @@ function neighborhoodSize_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of neighborhoodSize as text
 %        str2double(get(hObject,'String')) returns contents of neighborhoodSize as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsNaturalNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a natural number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function neighborhoodSize_CreateFcn(hObject, eventdata, handles)
@@ -596,7 +717,22 @@ function subpixelDepth_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of subpixelDepth as text
 %        str2double(get(hObject,'String')) returns contents of subpixelDepth as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsPositiveRealNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a positive, real number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function subpixelDepth_CreateFcn(hObject, eventdata, handles)
@@ -618,7 +754,22 @@ function gaussSD_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of gaussSD as text
 %        str2double(get(hObject,'String')) returns contents of gaussSD as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsPositiveRealNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a positive, real number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function gaussSD_CreateFcn(hObject, eventdata, handles)
