@@ -123,17 +123,14 @@ mainHandles = guidata(figureHandle);
 % Validate new configurations
 % smoothing
 smoothing = str2double(handles.smoothing.String);
-if isnan(smoothing) || ...
-        smoothing < 0 || ...
-        rem(smoothing,1) ~= 0
+if ~IsNaturalNumber(smoothing)
     errordlg('Smoothing must be a natural number.', 'Invalid Parameter');
     return;
 end
 
 % lowSpatialFrequencyCutoff
 freqCut = str2double(handles.freqCut.String);
-if isnan(freqCut) || ...
-        freqCut < 0
+if ~IsPositiveRealNumber(freqCut)
     errordlg('Low Spatial Frequency Cutoff must be a positive real number.', 'Invalid Parameter');
     return;
 end
@@ -174,7 +171,22 @@ function smoothing_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of smoothing as text
 %        str2double(get(hObject,'String')) returns contents of smoothing as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsNaturalNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a natural number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 
 function freqCut_Callback(hObject, eventdata, handles)
@@ -184,7 +196,22 @@ function freqCut_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of freqCut as text
 %        str2double(get(hObject,'String')) returns contents of freqCut as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsPositiveRealNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a positive, real number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function smoothing_CreateFcn(hObject, eventdata, handles)

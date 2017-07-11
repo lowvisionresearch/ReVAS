@@ -121,6 +121,11 @@ handles.cancel.ForegroundColor = mainHandles.colors{2,2};
 % Update handles structure
 guidata(hObject, handles);
 
+% Check parameter validity and change colors if needed
+stimPath_Callback(handles.stimPath, eventdata, handles);
+size_Callback(handles.size, eventdata, handles);
+thick_Callback(handles.thick, eventdata, handles);
+
 % UIWAIT makes StimParameters wait for user response (see UIRESUME)
 % uiwait(handles.stimParameters);
 
@@ -167,27 +172,19 @@ thick = str2double(handles.thick.String);
 
 if logical(handles.upload.Value)
     % full path
-    try
-        imfinfo(handles.stimFullPath);
-    catch
+    if ~IsImageFile(handles.stimFullPath)
         errordlg('Uploaded Stimulus Image must be an image file', 'Invalid Parameter');
         return;
     end
 else
     % size
-    if isnan(size) || ...
-            size < 0 || ...
-            rem(size,1) ~= 0 || ...
-            mod(size, 2) == 0
+    if ~IsOddNaturalNumber(size)
         errordlg('Stimulus Size must be an odd, natural number.', 'Invalid Parameter');
         return;
     end
 
     % thick
-    if isnan(thick) || ...
-            thick < 0 || ...
-            rem(thick,1) ~= 0 || ...
-            mod(thick, 2) == 0
+    if ~IsOddNaturalNumber(thick)
         errordlg('Cross Thickness must be an odd, natural number.', 'Invalid Parameter');
         return;
     end    
@@ -223,7 +220,22 @@ function size_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of size as text
 %        str2double(get(hObject,'String')) returns contents of size as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsOddNaturalNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be an odd, natural number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function size_CreateFcn(hObject, eventdata, handles)
@@ -245,7 +257,22 @@ function thick_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of thick as text
 %        str2double(get(hObject,'String')) returns contents of thick as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsOddNaturalNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be an odd, natural number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function thick_CreateFcn(hObject, eventdata, handles)
@@ -273,6 +300,20 @@ end
 handles.stimFullPath = fullfile(pathName, fileName);
 handles.stimPath.String = [' ' fileName];
 
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+borderTrimAmount = str2double(hObject.String);
+
+if ~IsImageFile(fullfile(pathName, fileName))
+    handles.stimPath.BackgroundColor = mainHandles.colors{2,4};
+    handles.stimPath.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be an image file.';
+else
+    handles.stimPath.BackgroundColor = mainHandles.colors{4,2};
+    handles.stimPath.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -284,7 +325,20 @@ function stimPath_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of stimPath as text
 %        str2double(get(hObject,'String')) returns contents of stimPath as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = hObject.String;
 
+if ~isempty(value) && ~IsImageFile(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function stimPath_CreateFcn(hObject, eventdata, handles)
@@ -307,7 +361,7 @@ function upload_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of upload
 if logical(hObject.Value)
-    handles.stimPath.Enable = 'on';
+    handles.stimPath.Enable = 'inactive';
     handles.select.Enable = 'on';
     handles.size.Enable = 'off';
     handles.thick.Enable = 'off';
@@ -327,7 +381,7 @@ function cross_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of cross
 if ~logical(hObject.Value)
-    handles.stimPath.Enable = 'on';
+    handles.stimPath.Enable = 'inactive';
     handles.select.Enable = 'on';
     handles.size.Enable = 'off';
     handles.thick.Enable = 'off';

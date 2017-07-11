@@ -152,6 +152,10 @@ handles.cancel.ForegroundColor = mainHandles.colors{2,2};
 % Update handles structure
 guidata(hObject, handles);
 
+% Check parameter validity and change colors if needed
+hardVelThreshold_Callback(handles.hardVelThreshold, eventdata, handles);
+hardSecondaryVelThreshold_Callback(handles.hardSecondaryVelThreshold, eventdata, handles);
+
 % UIWAIT makes SacDriftParameters wait for user response (see UIRESUME)
 % uiwait(handles.sacParameters);
 
@@ -179,54 +183,53 @@ mainHandles = guidata(figureHandle);
 % Validate new configurations
 % thresholdVal
 thresholdVal = str2double(handles.thresholdVal.String);
-if isnan(thresholdVal)
-    errordlg('Threshold Value must be a real number.', 'Invalid Parameter');
+if ~IsNonNegativeRealNumber(thresholdVal)
+    errordlg('Threshold Value must be a non-negative, real number.', 'Invalid Parameter');
     return;
 end
 
 % secThresholdVal
 secThresholdVal = str2double(handles.secThresholdVal.String);
-if isnan(secThresholdVal)
-    errordlg('Secondary Threshold Value must be a real number.', 'Invalid Parameter');
+if ~IsNonNegativeRealNumber(secThresholdVal)
+    errordlg('Secondary Threshold Value must be a non-negative, real number.', 'Invalid Parameter');
     return;
 end
 
 % stitch
 stitch = str2double(handles.stitch.String);
-if isnan(stitch) || ...
-    stitch < 0 || ...
-    rem(stitch,1) ~= 0
+if ~IsNaturalNumber(stitch)
     errordlg('Stitch Criteria must be a natural number.', 'Invalid Parameter');
     return;
 end
 
 % minAmplitude
 minAmplitude = str2double(handles.minAmplitude.String);
-if isnan(minAmplitude)
+if ~IsRealNumber(minAmplitude)
     errordlg('Minimum Amplitude must be a real number.', 'Invalid Parameter');
     return;
 end
 
 % maxDuration
 maxDuration = str2double(handles.maxDuration.String);
-if isnan(maxDuration) || ...
-        maxDuration < 0
+if ~IsPositiveRealNumber(maxDuration)
     errordlg('Maximum Duration must be a positive real number.', 'Invalid Parameter');
     return;
 end
 
-% hardVelThreshold
-hardVelThreshold = str2double(handles.hardVelThreshold.String);
-if isnan(hardVelThreshold)
-    errordlg('Hard Velocity Threshold must be a real number.', 'Invalid Parameter');
-    return;
-end
+if logical(handles.detectionMethod1.Value)
+    % hardVelThreshold
+    hardVelThreshold = str2double(handles.hardVelThreshold.String);
+    if ~IsNonNegativeRealNumber(hardVelThreshold)
+        errordlg('Hard Velocity Threshold must be a non-negative, real number.', 'Invalid Parameter');
+        return;
+    end
 
-% hardSecondaryVelThreshold
-hardSecondaryVelThreshold = str2double(handles.hardSecondaryVelThreshold.String);
-if isnan(hardSecondaryVelThreshold)
-    errordlg('Hard Secondary Velocity Threshold must be a real number.', 'Invalid Parameter');
-    return;
+    % hardSecondaryVelThreshold
+    hardSecondaryVelThreshold = str2double(handles.hardSecondaryVelThreshold.String);
+    if ~IsNonNegativeRealNumber(hardSecondaryVelThreshold)
+        errordlg('Hard Secondary Velocity Threshold must be a non-negative, real number.', 'Invalid Parameter');
+        return;
+    end
 end
 
 % Save new configurations
@@ -276,7 +279,22 @@ function hardVelThreshold_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of hardVelThreshold as text
 %        str2double(get(hObject,'String')) returns contents of hardVelThreshold as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsNonNegativeRealNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a non-negative, real number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function hardVelThreshold_CreateFcn(hObject, eventdata, handles)
@@ -307,7 +325,22 @@ function thresholdVal_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of thresholdVal as text
 %        str2double(get(hObject,'String')) returns contents of thresholdVal as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsNonNegativeRealNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a non-negative, real number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function thresholdVal_CreateFcn(hObject, eventdata, handles)
@@ -330,7 +363,22 @@ function secThresholdVal_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of secThresholdVal as text
 %        str2double(get(hObject,'String')) returns contents of secThresholdVal as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsNonNegativeRealNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a non-negative, real number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function secThresholdVal_CreateFcn(hObject, eventdata, handles)
@@ -353,7 +401,22 @@ function stitch_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of stitch as text
 %        str2double(get(hObject,'String')) returns contents of stitch as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsNaturalNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a natural number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function stitch_CreateFcn(hObject, eventdata, handles)
@@ -376,7 +439,22 @@ function minAmplitude_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of minAmplitude as text
 %        str2double(get(hObject,'String')) returns contents of minAmplitude as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsRealNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a real number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function minAmplitude_CreateFcn(hObject, eventdata, handles)
@@ -399,7 +477,22 @@ function maxDuration_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of maxDuration as text
 %        str2double(get(hObject,'String')) returns contents of maxDuration as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsPositiveRealNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a positive, real number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function maxDuration_CreateFcn(hObject, eventdata, handles)
@@ -470,7 +563,22 @@ function hardSecondaryVelThreshold_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of hardSecondaryVelThreshold as text
 %        str2double(get(hObject,'String')) returns contents of hardSecondaryVelThreshold as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
+if ~IsNonNegativeRealNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a non-negative, real number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function hardSecondaryVelThreshold_CreateFcn(hObject, eventdata, handles)
