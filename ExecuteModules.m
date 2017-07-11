@@ -13,7 +13,10 @@ if isempty(abortTriggered)
 end
 
 parametersStructure = struct;
-parametersStructure.commandWindowHandle = handles.commandWindow;
+if ~logical(handles.config.parMultiCore) && ~logical(handles.config.parGPU)
+    % Only print to GUI's "command window" if not parallelizing.
+    parametersStructure.commandWindowHandle = handles.commandWindow;
+end
 
 % Set GPU option
 if logical(handles.config.parGPU) && ~logical(abortTriggered)

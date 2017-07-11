@@ -16,10 +16,10 @@ outputVideoPath = [inputVideoPath(1:end-4) '_dwt' inputVideoPath(end-3:end)];
 if ~exist(outputVideoPath, 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-    RevasWarning('TrimVideo() did not execute because it would overwrite existing file.', parametersStructure);    
+    RevasWarning(['TrimVideo() did not execute because it would overwrite existing file. (' outputVideoPath ')'], parametersStructure);    
     return;
 else
-    RevasWarning('TrimVideo() is proceeding and overwriting an existing file.', parametersStructure);  
+    RevasWarning(['TrimVideo() is proceeding and overwriting an existing file. (' outputVideoPath ')'], parametersStructure);  
 end
 
 %% Trim the video frame by frame

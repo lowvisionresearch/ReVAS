@@ -284,6 +284,7 @@ handles.lastRadio = 0;
 dateAndTime = datestr(datetime('now'));
 time = dateAndTime(13:20);
 handles.commandWindow.String = cellstr(['(' time ') Execution in Progress...']);
+fprintf(['(' time ') Execution in Progress...\n']);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -418,7 +419,9 @@ if logical(handles.config.parMultiCore)
     if exist('log.txt', 'file') == 2
         delete 'log.txt';
     end
+    fileID = fopen('log.txt', 'wt');
     diary log.txt;
+    fprintf(['(' time ') Execution in Progress...\n']);
     % Use parallelization if requested
     % TODO deal with GPU (see |ExecuteModules.m|).
     parfor i = 1:size(handles.files, 2)
@@ -435,7 +438,9 @@ if logical(handles.config.parMultiCore)
                 message]);
         end
     end
+    fprintf(['(' time ') Process completed.\n']);
     diary off;
+    fclose(fileID);
 else
     % Otherwise use a regular for loop
     for i = 1:size(handles.files, 2)
@@ -1265,11 +1270,11 @@ if fileName == 0
     return;
 end
 
-fileId = fopen(fullfile(pathName, fileName), 'wt');
-for i = 1:size(handles.commandWindow.String)
-    fprintf(fileId, '%s\n', handles.commandWindow.String{i});
+fileID = fopen(fullfile(pathName, fileName), 'wt');
+for i = size(handles.commandWindow.String):-1:1
+    fprintf(fileID, '%s\n', handles.commandWindow.String{i});
 end
-fclose(fileId);
+fclose(fileID);
 
 msgbox('Log saved.', 'Log Saved');
 

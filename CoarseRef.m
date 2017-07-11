@@ -34,21 +34,21 @@ function coarseRefFrame = CoarseRef(filename, parametersStructure)
 enableGPU = (gpuDeviceCount > 0) & parametersStructure.enableGPU;
 
 % Write the output to a new MatLab file. First remove the '.avi' extension
-newFileName = filename;
-newFileName((end-3):end) = [];
+outputFileName = filename;
+outputFileName((end-3):end) = [];
 
 % Extend name because the file has been processed by coarseref
-newFileName(end + 1: end + 10) = '_coarseref';
+outputFileName(end + 1: end + 10) = '_coarseref';
 
 % Handle overwrite scenarios.
-if ~exist([newFileName '.mat'], 'file')
+if ~exist([outputFileName '.mat'], 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-    RevasWarning('CoarseRef() did not execute because it would overwrite existing file.', parametersStructure);
+    RevasWarning(['CoarseRef() did not execute because it would overwrite existing file. (' outputFileName ')'], parametersStructure);
     coarseRefFrame = [];
     return;
 else
-    RevasWarning('CoarseRef() is proceeding and overwriting an existing file.', parametersStructure);  
+    RevasWarning(['CoarseRef() is proceeding and overwriting an existing file. (' outputFileName ')'], parametersStructure);  
 end
 
 % get video info
@@ -309,7 +309,7 @@ for k = 1:size(NaNindices)
     coarseRefFrame(NaNindex) = 0;
 end
 
-save(newFileName, 'coarseRefFrame');
+save(outputFileName, 'coarseRefFrame');
 
 if parametersStructure.enableVerbosity >= 1
     if isfield(parametersStructure, 'axesHandles')

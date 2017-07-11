@@ -56,14 +56,14 @@ outputFileName = [inputVideoPath(1:end-4) '_' ...
 if ~exist([outputFileName '.mat'], 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-    RevasWarning('StripAnalysis() did not execute because it would overwrite existing file.', parametersStructure);
+    RevasWarning(['StripAnalysis() did not execute because it would overwrite existing file. (' outputFileName ')'], parametersStructure);
     rawEyePositionTraces = [];
     usefulEyePositionTraces = [];
     timeArray = [];
     statisticsStructure = struct();
     return;
 else
-    RevasWarning('StripAnalysis() is proceeding and overwriting an existing file.', parametersStructure);  
+    RevasWarning(['StripAnalysis() is proceeding and overwriting an existing file. (' outputFileName ')'], parametersStructure);  
 end
 
 %% Preallocation and variable setup

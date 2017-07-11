@@ -26,10 +26,10 @@ outputVideoPath = [inputVideoPath(1:end-4) '_bandfilt' inputVideoPath(end-3:end)
 if ~exist(outputVideoPath, 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-    RevasWarning('BandpassFilter() did not execute because it would overwrite existing file.', parametersStructure);
+    RevasWarning(['BandpassFilter() did not execute because it would overwrite existing file. (' outputVideoPath ')'], parametersStructure);
     return;
 else
-    RevasWarning('BandpassFilter() is proceeding and overwriting an existing file.', parametersStructure);  
+    RevasWarning(['BandpassFilter() is proceeding and overwriting an existing file. (' outputVideoPath ')'], parametersStructure);  
 end
 
 %% Set smoothing and lowSpatialFrequencyCutoff
