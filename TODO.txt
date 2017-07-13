@@ -192,8 +192,3 @@ parametersStructure.hardVelocityThreshold (default 35 deg/sec) (for hard-coded t
 parametersStructure.velocityMethod (1 is most basic, 2 is the one we will use) (default 2)
 Output:
 append whatever you like to full input name
-
-----
-
-write permisison issues with diary.
-(issue arises when you try to run a parallel trim two times for example.)

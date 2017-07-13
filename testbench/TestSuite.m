@@ -57,14 +57,14 @@ parfor i = 1:7
     %fprintf('Process Completed for RemoveStimuli()\n');
     
     % Step 3: Skip remove stimulus
-    SkipRemoveStimuli(videoPath, parametersStructure);
+    %SkipRemoveStimuli(videoPath, parametersStructure);
 
     % Step 4: Detect blinks and bad frames
     parametersStructure.thresholdValue = 4;
     FindBlinkFrames(videoPath, parametersStructure);
     fprintf('Process Completed for FindBadFrames()\n');
     % FindBlinkFrames still needs file name from before stim removal.
-    videoPath = [videoPath(1:end-4) '_nostim' videoPath(end-3:end)];
+    %videoPath = [videoPath(1:end-4) '_nostim' videoPath(end-3:end)];
 
     % Step 5: Apply gamma correction
     parametersStructure.gammaExponent = 0.6;
