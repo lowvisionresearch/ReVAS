@@ -31,8 +31,9 @@ if params.numberOfIterations > 0
         refinedFrame = [];
         return;
     end
-        
-    params = rmfield(params, 'roughEyePositionTraces');
+    if isfield(params, 'roughEyePositionTraces')
+        params = rmfield(params, 'roughEyePositionTraces');
+    end
 else
     newRefFrame = coarseRefFrame;
 end

@@ -51,8 +51,8 @@ if logical(handles.togStim.Value) && ~logical(abortTriggered)
     parametersStructure.thresholdValue = 4; % TODO (used for blink detection)
 
     % Call the function(s)
-    FindBlinkFrames(inputVideoPath, parametersStructure);
     FindStimulusLocations(inputVideoPath, stimulus, parametersStructure);
+    FindBlinkFrames(inputVideoPath, parametersStructure);
     RemoveStimuli(inputVideoPath, parametersStructure);
 
     % Update file name to output file name
