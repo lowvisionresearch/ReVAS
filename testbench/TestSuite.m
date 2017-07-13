@@ -163,9 +163,10 @@ fprintf('Process Completed\n');
 %% Fine Reference Frame Test
 
 % First video
-videoPath = 'cmo_os_10_4_1_135_1_stabfix_09_33_36_910_dwt_nostim_gamscaled_bandfilt.avi';
+videoPath = 'mna_os_10_12_1_45_1_stabfix_17_36_21_990_dwt_nostim_gamscaled_bandfilt.avi';
 videoFrames = VideoPathToArray(videoPath);
 videoWidth = size(videoFrames, 2);
+params = struct;
 params.videoPath = videoPath;
 params.enableSubpixelInterpolation = true;
 params.stripHeight = 15;
@@ -181,14 +182,14 @@ params.enableGaussianFiltering = false;
 params.gaussianStandardDeviation = 10;
 params.minimumPeakRatio = 0.8;
 params.minimumPeakThreshold = 0;
-params.axesHandles = [];
+% params.axesHandles = [];
+params.newStripHeight = 7;
 params.overwrite = true;
 params.numberOfIterations = 1;
 params.scalingFactor = 0.4;
 coarseRef = CoarseRef(videoPath, params);
 load('framePositions.mat')
 params.roughEyePositionTraces = framePositions;
-params.windowSize = [26, 26];
 FineRef(coarseRef, videoPath, params);
 
 % Second Video

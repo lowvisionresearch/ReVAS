@@ -128,7 +128,9 @@ while ~isempty(startAndEndPairs)
     startAndEndPairs = startAndEndPairs(4:end);
 end
 
-
+if isempty(lengthCutOut)
+    lengthCutOut = 0;
+end
 [filteredStripIndices] = stripIndices;
 
 end

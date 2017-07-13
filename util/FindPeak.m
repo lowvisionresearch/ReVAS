@@ -11,38 +11,6 @@ function [xPeak, yPeak, peakValue, secondPeakValue] = ...
 %   shifts. It will then search for a peak in those windows.
 
 % Use the appropriate method to identify the peak
-
-%     if isfield(parametersStructure, 'roughEyePositionTraces')
-%         % First just grab all variables from parametersStructure and rename
-%         % them with shorter names for readaibility
-%         yWindow = round(parametersStructure.windowSize(1)/2);
-%         xWindow = round(parametersStructure.windowSize(2)/2);
-%         stripHeight = parametersStructure.stripHeight;
-%         stripsPerFrame = parametersStructure.stripsPerFrame;
-%         stripNumber = parametersStructure.stripNumber;
-%         positions = parametersStructure.roughEyePositionTraces;
-%         stripWidth = parametersStructure.stripWidth;
-%         
-%         currStrip = mod(stripNumber, stripsPerFrame);
-%         currFrame = ceil(stripNumber/stripsPerFrame);
-        
-        % roughEyePositionTraces is from CoarseRef which gives the
-        % approximate shift of the entire frame. This next few lines
-        % assume that the frame shift applies to all strips in that frame
-        % (for example, if the frame shift was [-10, -10], we assume that
-        % all strips for that frame were shifted [-10, -10]).
-%         rowShift = positions(currFrame, 1);
-%         columnShift = positions(currFrame, 2);
-%         rowCoordinate = ((currStrip-1)*stripHeight) + rowShift + stripHeight;
-%         columnCoordinate = stripWidth + columnShift;
-%         disp(rowCoordinate)
-%         disp(columnCoordinate)
-%         window = [rowCoordinate-yWindow:rowCoordinate+yWindow, columnCoordinate-xWindow:...
-%             columnCoordinate+xWindow];
-%         [yPeak, xPeak] = find(correlationMap==max(correlationMap(window)));
-%         peakValue = correlationMap(yPeak, xPeak);
-%         secondPeakValue = -inf;
-%         
     if parametersStructure.enableGaussianFiltering
         % Apply Gaussian Filter and get difference between correlations
         gaussianFilteredCorrelation = ...
