@@ -10,15 +10,27 @@ close all;
 
 addpath(genpath('..'));
 
-video1 = 'testbench/mna_os_10_12_1_45_1_stabfix_17_36_21_990.avi';
-video2 = 'testbench/cmo_os_10_4_1_135_1_stabfix_09_33_36_910.avi';
-video3 = 'testbench/djw_os_10_12_1_45_1_stabfix_16_39_42_176.avi';
-video4 = 'testbench/jap_os_10_12_1_45_1_stabfix_11_37_35_135.avi';
+%video1 = 'testbench/mna_os_10_12_1_45_1_stabfix_17_36_21_990.avi';
+%video2 = 'testbench/cmo_os_10_4_1_135_1_stabfix_09_33_36_910.avi';
+%video3 = 'testbench/djw_os_10_12_1_45_1_stabfix_16_39_42_176.avi';
+%video4 = 'testbench/jap_os_10_12_1_45_1_stabfix_11_37_35_135.avi';
 
-%for videoPath = {video1}
-for videoPath = {video1, video2, video3, video4}
+benchmarkingVideos = cell(1, 7);
+benchmarkingVideos{1} = 'testbench\benchmark\7_13_2017_11_53_8\horizontal_1.avi';
+benchmarkingVideos{2} = 'testbench\benchmark\7_13_2017_11_53_8\horizontal_2.avi';
+benchmarkingVideos{3} = 'testbench\benchmark\7_13_2017_11_53_8\jerky.avi';
+benchmarkingVideos{4} = 'testbench\benchmark\7_13_2017_11_53_8\static.avi';
+benchmarkingVideos{5} = 'testbench\benchmark\7_13_2017_11_53_8\vertical_1.avi';
+benchmarkingVideos{6} = 'testbench\benchmark\7_13_2017_11_53_8\vertical_2.avi';
+benchmarkingVideos{7} = 'testbench\benchmark\7_13_2017_11_53_8\wobble.avi';
+
+%for videoPath = {video1, video2, video3, video4}
+parfor i = 1:7
     % Grab path out of cell.
-    videoPath = videoPath{1};
+    videoPath = benchmarkingVideos{i};
+    
+    parametersStructure = struct;
+    stimulus = struct;
     
     % Overwrite parameter:
     % if true, recompute and replace existing output file if already present.
@@ -29,28 +41,32 @@ for videoPath = {video1, video2, video3, video4}
     parametersStructure.borderTrimAmount = 24;
     TrimVideo(videoPath, parametersStructure);
     fprintf('Process Completed for TrimVideo()\n');
+    videoPath = [videoPath(1:end-4) '_dwt' videoPath(end-3:end)]; %#ok<*FXSET>
 
     % Step 2: Find stimulus location
-    videoPath = [videoPath(1:end-4) '_dwt' videoPath(end-3:end)]; %#ok<*FXSET>
-    parametersStructure.enableVerbosity = true;
+    parametersStructure.enableVerbosity = false;
     %FindStimulusLocations(videoPath, 'testbench/stimulus_cross.gif', parametersStructure);
     stimulus.thickness = 1;
-    stimulus.size = 51;
+    stimulus.size = 11;
     FindStimulusLocations(videoPath, stimulus, parametersStructure);
     fprintf('Process Completed for FindStimulusLocations()\n');
 
     % Step 3: Remove the stimulus
-    parametersStructure.overwrite = true;
-    RemoveStimuli(videoPath, parametersStructure);
-    fprintf('Process Completed for RemoveStimuli()\n');
+    %parametersStructure.overwrite = true;
+    %RemoveStimuli(videoPath, parametersStructure);
+    %fprintf('Process Completed for RemoveStimuli()\n');
+    
+    % Step 3: Skip remove stimulus
+    SkipRemoveStimuli(videoPath, parametersStructure);
 
     % Step 4: Detect blinks and bad frames
     parametersStructure.thresholdValue = 4;
     FindBlinkFrames(videoPath, parametersStructure);
     fprintf('Process Completed for FindBadFrames()\n');
+    % FindBlinkFrames still needs file name from before stim removal.
+    videoPath = [videoPath(1:end-4) '_nostim' videoPath(end-3:end)];
 
     % Step 5: Apply gamma correction
-    videoPath = [videoPath(1:end-4) '_nostim' videoPath(end-3:end)];
     parametersStructure.gammaExponent = 0.6;
     GammaCorrect(videoPath, parametersStructure);
     fprintf('Process Completed for GammaCorrect()\n');
@@ -85,6 +101,8 @@ referenceFramePath = 'testbench/mna_os_10_12_1_45_0_stabfix_17_36_21_409_dwt_nos
 %videoPath = [videoPath(1:end-4) '_nostim' videoPath(end-3:end)];
 videoFrames = VideoPathToArray(videoPath);
 videoWidth = size(videoFrames, 2);
+
+parametersStructure = struct;
 
 parametersStructure.stripHeight = 15;
 parametersStructure.stripWidth = videoWidth;

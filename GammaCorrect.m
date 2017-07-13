@@ -12,10 +12,10 @@ outputVideoPath = [inputVideoPath(1:end-4) '_gamscaled' inputVideoPath(end-3:end
 if ~exist(outputVideoPath, 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-    RevasWarning(['GammaCorrect() did not execute because it would overwrite existing file. (' outputVideoPath ')']);
+    RevasWarning(['GammaCorrect() did not execute because it would overwrite existing file. (' outputVideoPath ')'], parametersStructure);
     return;
 else
-    RevasWarning(['GammaCorrect() is proceeding and overwriting an existing file. (' outputVideoPath ')']);
+    RevasWarning(['GammaCorrect() is proceeding and overwriting an existing file. (' outputVideoPath ')'], parametersStructure);
 end
 
 %% Set gammaExponent
