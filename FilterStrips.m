@@ -17,6 +17,7 @@ function [filteredStripIndices, lengthCutOut] = FilterStrips(stripIndices)
 NaNIndices = find(isnan(stripIndices));
 NaNIndicesCopy = NaNIndices;
 NaNIndicesStorage = NaNIndices;
+lengthCut = 0;
 
 % Every 3 items in startAndEndPairs will be, in this order: last number
 % before a strip of consecutive NaNs, first number after a strip of NaNs,
@@ -92,6 +93,7 @@ while ~isempty(startAndEndPairs)
     % assume the last number before the NaNs remains constant, so set
     % the rest of the NaN values in the matrix equal to that last number.
     if dimensions(2) == 2
+        lengthCut = 1;
         lengthCutOut = size(stripIndices(NaNIndices(1):end));
         stripIndices(NaNIndices(1):end) = [];
         startAndEndPairs = [];
@@ -128,9 +130,10 @@ while ~isempty(startAndEndPairs)
     startAndEndPairs = startAndEndPairs(4:end);
 end
 
-if isempty(lengthCutOut)
-    lengthCutOut = 0;
+if lengthCut == 0
+    lengthCutOut = -1;
 end
+
 [filteredStripIndices] = stripIndices;
 
 end
