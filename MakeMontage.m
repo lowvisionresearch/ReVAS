@@ -66,17 +66,19 @@ end
 %% Remove NaNs in stripIndices
 % First handle the case in which NaNs are at the beginning of stripIndices
 NaNIndices = find(isnan(stripIndices));
-if NaNIndices(1) == 1
-    numberOfNaNs = 1;
-    index = 1;
-    while index <= size(NaNIndices, 1)
-        if NaNIndices(index + 1) == NaNIndices(index) + 1
-            numberOfNaNs = numberOfNaNs + 1;
+if ~isempty(NaNIndices)
+    if NaNIndices(1) == 1
+        numberOfNaNs = 1;
+        index = 1;
+        while index <= size(NaNIndices, 1)
+            if NaNIndices(index + 1) == NaNIndices(index) + 1
+                numberOfNaNs = numberOfNaNs + 1;
+            end
+            index = index + 1;
         end
-        index = index + 1;
+        stripIndices(1:numberOfNaNs) = [];
+        t1(1:numberOfNaNs) = [];
     end
-    stripIndices(1:numberOfNaNs) = [];
-    t1(1:numberOfNaNs) = [];
 end
 
 % Then replace the rest of the NaNs with linear interpolation, done
