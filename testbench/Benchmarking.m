@@ -61,7 +61,7 @@ parfor i = 1:7
         
     for stripHeight = 5:2:51
 
-        currentVideoPath = [originalVideoPath(1:end-4) '_STRIPHEIGHT=' stripHeight originalVideoPath(end-3:end)];
+        currentVideoPath = [originalVideoPath(1:end-4) '_STRIPHEIGHT-' int2str(stripHeight) originalVideoPath(end-3:end)];
         copyfile(originalVideoPath, currentVideoPath);
         
         tic;
@@ -82,12 +82,13 @@ parfor i = 1:7
         stripParameters.subpixelInterpolationParameters.neighborhoodSize = 7;
         stripParameters.subpixelInterpolationParameters.subpixelDepth = 2;
         stripParameters.enableGPU = false;
+        stripParameters.badFrames = []; % TODO
 
-        StripAnalysis(inputVideoPath, fineResult, stripParameters);
+        StripAnalysis(currentVideoPath, fineResult, stripParameters);
         
         elapsedTime = toc;
         
-        movefile(currentVideoPath, [currentVideoPath(1:end-4) '_TIMEELAPSED=' elapsedTime currentVideoPath(end-3:end)]);
+        movefile(currentVideoPath, [currentVideoPath(1:end-4) '_TIMEELAPSED-' int2str(elapsedTime) currentVideoPath(end-3:end)]);
         fprintf('Process Completed for StripAnalysis()\n');
         
     end
