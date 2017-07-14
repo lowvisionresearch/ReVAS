@@ -15,7 +15,8 @@ stripsPerFrame = round(parametersStructure.samplingRate / videoFrameRate);
 
 stripIndices = zeros(stripsPerFrame*numberOfFrames, ndims(videoInputArray));
 
-distanceBetweenStrips = frameHeight / stripsPerFrame;
+distanceBetweenStrips = floor((frameHeight - parametersStructure.stripHeight)...
+    / (stripsPerFrame - 1));
 
 % compute the rows of stripIndices
 for stripNumber = (1:stripsPerFrame*numberOfFrames)
