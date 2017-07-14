@@ -10,10 +10,11 @@ close all;
 
 addpath(genpath('..'));
 
-%video1 = 'testbench/mna_os_10_12_1_45_1_stabfix_17_36_21_990.avi';
-%video2 = 'testbench/cmo_os_10_4_1_135_1_stabfix_09_33_36_910.avi';
-%video3 = 'testbench/djw_os_10_12_1_45_1_stabfix_16_39_42_176.avi';
-%video4 = 'testbench/jap_os_10_12_1_45_1_stabfix_11_37_35_135.avi';
+testVideos = cell(1, 4);
+testVideos{1} = 'testbench\mna_os_10_12_1_45_1_stabfix_17_36_21_990.avi';
+testVideos{2} = 'testbench\cmo_os_10_4_1_135_1_stabfix_09_33_36_910.avi';
+testVideos{3} = 'testbench\djw_os_10_12_1_45_1_stabfix_16_39_42_176.avi';
+testVideos{4} = 'testbench\jap_os_10_12_1_45_1_stabfix_11_37_35_135.avi';
 
 benchmarkingVideos = cell(1, 7);
 benchmarkingVideos{1} = 'testbench\benchmark\7_13_2017_11_53_8\horizontal_1.avi';
@@ -24,11 +25,9 @@ benchmarkingVideos{5} = 'testbench\benchmark\7_13_2017_11_53_8\vertical_1.avi';
 benchmarkingVideos{6} = 'testbench\benchmark\7_13_2017_11_53_8\vertical_2.avi';
 benchmarkingVideos{7} = 'testbench\benchmark\7_13_2017_11_53_8\wobble.avi';
 
-%for videoPath = {video1, video2, video3, video4}
-parfor i = 1:7
+for i = 1:4
     % Grab path out of cell.
-    videoPath = benchmarkingVideos{i};
-    
+    videoPath = testVideos{i};
     parametersStructure = struct;
     stimulus = struct;
     
@@ -52,9 +51,9 @@ parfor i = 1:7
     fprintf('Process Completed for FindStimulusLocations()\n');
 
     % Step 3: Remove the stimulus
-    %parametersStructure.overwrite = true;
-    %RemoveStimuli(videoPath, parametersStructure);
-    %fprintf('Process Completed for RemoveStimuli()\n');
+    parametersStructure.overwrite = true;
+    RemoveStimuli(videoPath, parametersStructure);
+    fprintf('Process Completed for RemoveStimuli()\n');
     
     % Step 3: Skip remove stimulus
     %SkipRemoveStimuli(videoPath, parametersStructure);

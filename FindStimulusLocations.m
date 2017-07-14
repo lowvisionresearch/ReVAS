@@ -114,27 +114,7 @@ for frameNumber = (1:numberOfFrames)
     % being plotted as they become available.
     if parametersStructure.enableVerbosity
         
-        % Adjust for padding offsets added by normxcorr2()
-        % If we enable verbosity and demand that we plot the points as we
-        % go, then adjustments must be made here in order for the plot to
-        % be interpretable.
-        % Therefore, we will only perform these same operations after the
-        % loop to take advantage of vectorization only if they are not
-        % performed here, namely, if verbosity is not enabled and this
-        % if statement does not execute.
-        stimulusLocationInEachFrame(frameNumber,2) = ...
-            stimulusLocationInEachFrame(frameNumber,2) - (frameHeight - 1);
-        stimulusLocationInEachFrame(frameNumber,1) = ...
-            stimulusLocationInEachFrame(frameNumber,1) - (frameWidth - 1);
-        stimulusLocationInEachFrame(frameNumber,2) = ...
-            stimulusLocationInEachFrame(frameNumber,2) - 1;
-        stimulusLocationInEachFrame(frameNumber,1) = ...
-            stimulusLocationInEachFrame(frameNumber,1) - 1;
-
-        % Negate to flip directions.
-        stimulusLocationInEachFrame(frameNumber,:) = ...
-            stimulusLocationInEachFrame(frameNumber,:) + [frameWidth frameHeight];
-
+        % Plotting bottom right corner of box surrounding stimulus.
         figure(2);
         plot(timeArray, stimulusLocationInEachFrame);
         title('Stimulus Locations');
@@ -143,24 +123,6 @@ for frameNumber = (1:numberOfFrames)
         legend('show');
         legend('Horizontal Location', 'Vertical Location');
     end
-end
-
-% Adjust for padding offsets added by normxcorr2()
-% Do this after the loop to take advantage of vectorization
-% Only run this section if verbosity was not enabled. If verbosity was
-% enabled, then these operations were already performed for each point
-% before it was plotted to the eye traces graph. If verbosity was not
-% enabled, then we do it now in order to take advantage of vectorization.
-if ~parametersStructure.enableVerbosity
-    stimulusLocationInEachFrame(:,2) = ...
-        stimulusLocationInEachFrame(:,2) - (frameHeight - 1);
-    stimulusLocationInEachFrame(:,1) = ...
-        stimulusLocationInEachFrame(:,1) - (frameWidth - 1);
-    stimulusLocationInEachFrame(:,1) = stimulusLocationInEachFrame(:,1) - 1;
-    stimulusLocationInEachFrame(:,2) = stimulusLocationInEachFrame(:,2) - 1;
-
-    % Negate eye position traces to flip directions.
-    stimulusLocationInEachFrame = -stimulusLocationInEachFrame;
 end
 
 %% Find mean and standard deviation of each frame
