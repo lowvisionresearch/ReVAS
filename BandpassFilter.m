@@ -54,7 +54,7 @@ if lowSpatialFrequencyCutoff < 0
     error('lowSpatialFrequencyCutoff should not be non-negative');
 end
 
-%% Gamma correct frame by frame
+%% Bandpass filter frame by frame
 
 % create a video writer object and open it.
 writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
