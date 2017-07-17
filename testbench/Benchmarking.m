@@ -21,7 +21,7 @@ benchmarkingVideos{5} = 'testbench\benchmark\7_13_2017_11_53_8\vertical_1_dwt_no
 benchmarkingVideos{6} = 'testbench\benchmark\7_13_2017_11_53_8\vertical_2_dwt_nostim_gamscaled_bandfilt.avi';
 benchmarkingVideos{7} = 'testbench\benchmark\7_13_2017_11_53_8\wobble_dwt_nostim_gamscaled_bandfilt.avi';
 
-parfor i = 1:7
+for i = 7:7
     % Grab path out of cell.
     originalVideoPath = benchmarkingVideos{i};
     
@@ -39,7 +39,7 @@ parfor i = 1:7
 
     % MAKE FINE REFERENCE FRAME
     fineParameters = struct;
-    fineParameters.enableVerbosity = false;
+    fineParameters.enableVerbosity = true;
     fineParameters.overwrite = true;
     fineParameters.numberOfIterations = 1;
     fineParameters.stripHeight = 15;
@@ -59,7 +59,7 @@ parfor i = 1:7
     fprintf('Process Completed for FineRef()\n');
 
         
-    for stripHeight = 5:2:51
+    for stripHeight = 21:2:21
 
         currentVideoPath = [originalVideoPath(1:end-4) '_STRIPHEIGHT-' int2str(stripHeight) originalVideoPath(end-3:end)];
         copyfile(originalVideoPath, currentVideoPath);
@@ -69,7 +69,7 @@ parfor i = 1:7
         % STRIP ANALYSIS
         stripParameters = struct;
         stripParameters.overwrite = true;
-        stripParameters.enableVerbosity = false;
+        stripParameters.enableVerbosity = true;
         stripParameters.stripHeight = stripHeight;
         stripParameters.stripWidth = 488;
         stripParameters.samplingRate = 540;
