@@ -7,7 +7,7 @@ function BandpassFilter(inputVideoPath, parametersStructure)
 %   -----------------------------------
 %   overwrite                   Determines whether an existing output file
 %                               should be overwritten and replaced if it
-%                               already exists.(default 0)
+%                               already exists.(default false)
 %   smoothing                   Used to remove high-frequency noise in the
 %                               frames. Represents the standard deviation
 %                               of a Gaussian kernel, in pixels.(default 1)
@@ -98,8 +98,6 @@ for frameNumber = 1:numberOfFrames
     % update the video array 
     videoInputArray(:,:,frameNumber) = newFrame;
     
-    %Solution should look like: mna_os_10_12_1_45_0_stabfix_17_36_21_409_dwt_nostim_nostim_gamscaled_bandfilt_meanrem
-
 end
 
 writeVideo(writer, videoInputArray);
