@@ -25,9 +25,9 @@ benchmarkingVideos{5} = 'testbench\benchmark\7_13_2017_11_53_8\vertical_1.avi';
 benchmarkingVideos{6} = 'testbench\benchmark\7_13_2017_11_53_8\vertical_2.avi';
 benchmarkingVideos{7} = 'testbench\benchmark\7_13_2017_11_53_8\wobble.avi';
 
-for i = 1:4
+for i = 7:7
     % Grab path out of cell.
-    videoPath = testVideos{i};
+    videoPath = benchmarkingVideos{i};
     parametersStructure = struct;
     stimulus = struct;
     
@@ -52,11 +52,10 @@ for i = 1:4
 
     % Step 3: Remove the stimulus
     parametersStructure.overwrite = true;
-    RemoveStimuli(videoPath, parametersStructure);
+    %RemoveStimuli(videoPath, parametersStructure);
+    copyfile(videoPath, ...
+        [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]); %#ok<*FXSET>
     fprintf('Process Completed for RemoveStimuli()\n');
-    
-    % Step 3: Skip remove stimulus
-    %SkipRemoveStimuli(videoPath, parametersStructure);
 
     % Step 4: Detect blinks and bad frames
     parametersStructure.thresholdValue = 4;
@@ -66,6 +65,7 @@ for i = 1:4
     %videoPath = [videoPath(1:end-4) '_nostim' videoPath(end-3:end)];
 
     % Step 5: Apply gamma correction
+    videoPath = [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]; %#ok<*FXSET>
     parametersStructure.gammaExponent = 0.6;
     GammaCorrect(videoPath, parametersStructure);
     fprintf('Process Completed for GammaCorrect()\n');
