@@ -1,6 +1,9 @@
 function RemoveStimuli(inputVideoPath, parametersStructure)
-%REMOVE STIMULI Records in a mat file the location of the stimulus
-%in each frame of the video.
+%REMOVE STIMULI Removes stimulus from each frame.
+%   Removes stimulus from each frame, according to the stimuli positions
+%   given by |FindStimulusLocations|. Fills the space with noise of similar
+%   mean and standard deviation as the rest of the frame.
+%
 %   The result is stored with '_nostim' appended to the input video file
 %   name.
 %
