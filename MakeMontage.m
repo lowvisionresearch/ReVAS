@@ -1,4 +1,10 @@
 function [refFrame] = MakeMontage(params, fileName)
+% NEED TO HANDLE FOR NEWSTRIPHEIGHT OF 19
+
+
+
+
+
 % MakeMontage    Reference frame.
 %   MakeMontage(params, fileName) generates a reference frame by averaging
 %   all the pixel values across all frames in a video.
@@ -53,9 +59,9 @@ stripIndices = -stripIndices;
 
 %% Set up the interpolation
 % scaling the time array to accomodate new strip height
-scalingFactor = ((params.stripHeight)/2)/(totalFrames*frameHeight);
+scalingFactor = ((params.stripHeight)/2)/(frameRate*frameHeight);
 t1 = t1 + scalingFactor;
-dt = params.newStripHeight / (totalFrames * frameHeight);
+dt = params.newStripHeight / (frameRate * frameHeight);
 t2 = dt:dt:videoInfo.Duration + scalingFactor;
 
 % Make sure that both time arrays have the same dimensions
@@ -65,6 +71,7 @@ end
 
 %% Remove NaNs in stripIndices
 % First handle the case in which NaNs are at the beginning of stripIndices
+numberOfNaNs = 0;
 NaNIndices = find(isnan(stripIndices));
 if ~isempty(NaNIndices)
     if NaNIndices(1) == 1
@@ -73,10 +80,12 @@ if ~isempty(NaNIndices)
         while index <= size(NaNIndices, 1)
             if NaNIndices(index + 1) == NaNIndices(index) + 1
                 numberOfNaNs = numberOfNaNs + 1;
+            else
+                break
             end
             index = index + 1;
         end
-        stripIndices(1:numberOfNaNs) = [];
+        stripIndices(1:numberOfNaNs, :) = [];
         t1(1:numberOfNaNs) = [];
     end
 end
@@ -99,9 +108,10 @@ interpolatedPositions = movmean(interpolatedPositions, 45);
 
 % Add a third column to interpolatedPositions to hold the strip numbers
 % because when I filter for NaNs, the strip number method I originally used
-% gets thrown off.
-for k = 1:size(interpolatedPositions, 1)
-    interpolatedPositions(k, 3) = k;
+% gets thrown off. Add numberOfNaNs because the number you remove from the
+% beginning will skew the rest of the data
+for k = numberOfNaNs + 1:size(interpolatedPositions, 1) + numberOfNaNs
+    interpolatedPositions(k-numberOfNaNs, 3) = k;
 end
 
 % Remove leftover NaNs. Need to use while statement because the size of
@@ -109,6 +119,10 @@ end
 k = 1;
 while k<=size(interpolatedPositions, 1)
     if isnan(interpolatedPositions(k, 2))
+        interpolatedPositions(k, :) = [];
+        t2(k) = [];
+        continue
+    elseif isnan(interpolatedPositions(k, 1))
         interpolatedPositions(k, :) = [];
         t2(k) = [];
         continue
@@ -154,17 +168,43 @@ end
 % Round the final scaled positions to get valid matrix indices
 interpolatedPositions = round(interpolatedPositions);
 
-%% Use interpolatedPositions to generate the reference frame.
+% Leftover and skips will be used to correct for rounding errors; see the 
+% for-loop below for details 
+leftover = (frameHeight/params.newStripHeight) - floor(frameHeight/params.newStripHeight);
+leftoverCopy = leftover;
+skips = 0;
 
-for frameNumber = 1:totalFrames 
+%% Use interpolatedPositions to generate the reference frame.
+for frameNumber = 1:totalFrames
+    
+    % By default, the current frame is not one that needs the correction
+    % factor for rounding
+    correctionFrame = false;
+    
     % Read frame and convert pixel values to signed integers
     videoFrame = double(readFrame(videoInfo))/255;
 
     % get the appropriate strips from stripIndices for each frame
-    startFrameStrips = round(1 + ((frameNumber-1)*(stripsPerFrame)));
-    endFrameStrips = round(frameNumber * stripsPerFrame);
+    startFrameStrips = round(1 + ((frameNumber-1)*(stripsPerFrame))) + skips;
+    endFrameStrips = round(frameNumber * stripsPerFrame) + skips;
     frameStripsWithoutNaN = zeros(size(startFrameStrips:endFrameStrips, 2), 3);
     
+    % However, keep in mind that there will be errors that accumulate
+    % through rounding the start/end frame strip indices. For example, if
+    % there are 4 frames of height 10 and a strip height of 3, then there
+    % are (supposedly) 3.33333 strips per frame. The first strip of the
+    % fourth frame should be the 11th index in interpolatedPositions.
+    % Instead, due to rounding, the first strip of the fourth frame will be
+    % the 10th index. Here, we handle this rounding error.
+    
+    leftover = leftover + leftoverCopy;
+    if leftover >= 1
+        correctionFrame = true;
+        endFrameStrips = endFrameStrips + 1;
+        leftover = leftover - 1;
+        skips = skips + 1;
+    end
+
     % Extract the strip positions that will be used from this frame. Some
     % strips may be missing because NaNs were removed earlier
     for k = 1:size(interpolatedPositions, 1)
@@ -184,18 +224,60 @@ for frameNumber = 1:totalFrames
         end
         k = k + 1;
     end
+    
+    % Remove the used interpolatedPositions to speed up run time in later
+    % iterations
+    numberToRemove = size(frameStripsWithoutNaN, 1);
+    if numberToRemove < size(interpolatedPositions, 1)  
+        interpolatedPositions(1:numberToRemove, :) = [];
+    end
 
+    % Add a fourth column to hold the stripNumbers
+    if size(frameStripsWithoutNaN, 1) >= 2
+        if correctionFrame == true
+            frameStripsWithoutNaN(1, 4) = mod(frameStripsWithoutNaN(1, 3)-skips, ...
+            stripsPerFrame) + 1;
+        else
+            frameStripsWithoutNaN(1, 4) = mod(frameStripsWithoutNaN(1, 3)-skips, ...
+            stripsPerFrame);
+        end
+        for k = 2:size(frameStripsWithoutNaN, 1)
+            % Using the first stripNumber as a reference, add the difference
+            % between the two indices. For example, if index 5 has stripNumber
+            % of 1 and the next valid index is 8, then the stripNumber for
+            % index 8 is (8-5)+1 = 4 (indices 6 and 7, which were
+            % presumably NaNs, would have been stripNumbers 2 and 3).
+            frameStripsWithoutNaN(k, 4) = (frameStripsWithoutNaN(k, 3)...
+            - frameStripsWithoutNaN(k-1,3)) + frameStripsWithoutNaN(k-1, 4);
+        end
+    elseif size(frameStripsWithoutNaN, 1) == 1
+        % Handle the obscure case in which frameStripsWithoutNaN is only
+        % one row, and that one row may be in the frame in which we need to
+        % correct for rounding errors.
+        if correctionFrame == true
+            x = frameStripsWithoutNaN(1, 3);
+            y = (stripsPerFrame+1)*skips + (stripsPerFrame*(frameNumber-...
+                 skips-1));
+            frameStripsWithoutNaN(1, 4) = x - y + 1;
+        else
+            frameStripsWithoutNaN(1, 4) = mod(frameStripsWithoutNaN(1, 3)-skips, ...
+            stripsPerFrame);   
+        end
+    end
+    
+    if size(frameStripsWithoutNaN, 1) >= 1
+        % In case the first stripNumber was 0, add one to the rest of the
+        % column (should be only in the case when there is only one row)
+        if frameStripsWithoutNaN(1, 4) == 0
+            frameStripsWithoutNaN(:, 4) = frameStripsWithoutNaN(:, 4) + 1;
+        end
+    end
+    
     for strip = 1 : size(frameStripsWithoutNaN, 1)
         
         % Keep track of the stripNumber so we can shift it accordingly
-        stripNumber = mod(frameStripsWithoutNaN(strip, 3), stripsPerFrame);
-        if stripNumber == 0
-            % For example, if there are 30 strips per frame and this is the
-            % 30th strip, the mod function will say this is the 0th strip
-            % when really it is the 30th strip
-            stripNumber = stripsPerFrame;
-        end
-        
+        stripNumber = frameStripsWithoutNaN(strip, 4);
+
         % row and column "coordinates" of the top left pixel of each strip
         topLeft = [frameStripsWithoutNaN(strip, 1), frameStripsWithoutNaN(strip, 2)];
         rowIndex = topLeft(2);
@@ -225,19 +307,21 @@ for frameNumber = 1:totalFrames
              vidEnd = size(videoFrame, 1);
              templateSelectRow = rowIndex:(maxRow-difference);
          end
-        
+
         templateSelectRow = round(templateSelectRow);
         templateSelectColumn = round(templateSelectColumn);
         vidStart = round(vidStart);
         vidEnd = round(vidEnd);
-       
+        
         refFrame(templateSelectRow, templateSelectColumn) = refFrame(...
             templateSelectRow, templateSelectColumn) + videoFrame(...
             vidStart:vidEnd, :);
         counterArray(templateSelectRow, templateSelectColumn) = counterArray...
             (templateSelectRow, templateSelectColumn) + 1;
     end
+    disp(frameNumber)
 end
+
 
 % divide each pixel in refFrame by the number of strips that contain that pixel
 refFrame = refFrame./counterArray;
