@@ -76,9 +76,9 @@ radiusMatrix = sqrt((repmat(xVector,height,1) .^ 2) + ...
 % only the low spatial frequency components in the image such as luminance
 % gradient, darker foveal pit, etc.)
 highPassFilter = double(radiusMatrix > lowSpatialFrequencyCutoff);
-highPassFilter(floor(height / 2)+1,floor(width / 2)+1) = 1;
+highPassFilter(floor(height/2) + 1, floor(width/2) + 1) = 1;
 
-% now it's time to apply filters to each and every frame
+% apply filters to each frame
 for frameNumber = 1:numberOfFrames
     
     % get a single frame
@@ -88,7 +88,7 @@ for frameNumber = 1:numberOfFrames
     I1 = imgaussfilt(I, smoothing);
     
     % remove low spatial frequencies
-    I2 = abs(ifft2( (fft2(I1)) .* ifftshift(highPassFilter) ));
+    I2 = abs(ifft2((fft2(I1)) .* ifftshift(highPassFilter)));
     
     % normalize to maximize contrast
     maxMin = [max(I2(:))  min(I2(:))];
