@@ -162,7 +162,7 @@ fprintf('Process Completed\n');
 %% Fine Reference Frame Test
 
 % First video
-videoPath = 'mna_os_10_12_1_45_1_stabfix_17_36_21_990_dwt_nostim_gamscaled_bandfilt.avi';
+videoPath = 'horizontal_1.avi';
 videoFrames = VideoPathToArray(videoPath);
 videoWidth = size(videoFrames, 2);
 params = struct;
@@ -184,7 +184,7 @@ params.minimumPeakThreshold = 0;
 % params.axesHandles = [];
 params.newStripHeight = 7;
 params.overwrite = true;
-params.numberOfIterations = 1;
+params.numberOfIterations = 0;
 params.scalingFactor = 0.4;
 coarseRef = CoarseRef(videoPath, params);
 load('framePositions.mat')
