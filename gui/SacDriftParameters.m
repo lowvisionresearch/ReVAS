@@ -22,7 +22,7 @@ function varargout = SacDriftParameters(varargin)
 
 % Edit the above text to modify the response to help SacDriftParameters
 
-% Last Modified by GUIDE v2.5 01-Jul-2017 00:29:24
+% Last Modified by GUIDE v2.5 17-Jul-2017 17:53:34
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -76,9 +76,13 @@ handles.velMethod2.Value = mainHandles.config.sacVelMethod2;
 if logical(handles.detectionMethod1.Value)
     handles.hardVelThreshold.Enable = 'on';
     handles.hardSecondaryVelThreshold.Enable = 'on';
+    handles.thresholdVal.Enable = 'off';
+    handles.secThresholdVal.Enable = 'off';
 else
     handles.hardVelThreshold.Enable = 'off';
     handles.hardSecondaryVelThreshold.Enable = 'off';
+    handles.thresholdVal.Enable = 'on';
+    handles.secThresholdVal.Enable = 'on';
 end
 
 % Set colors
@@ -99,8 +103,6 @@ handles.detectionBox.BackgroundColor = mainHandles.colors{4,3};
 handles.velBox.BackgroundColor = mainHandles.colors{4,3};
 handles.overwrite.BackgroundColor = mainHandles.colors{4,3};
 handles.verbosity.BackgroundColor = mainHandles.colors{4,3};
-handles.threshValText.BackgroundColor = mainHandles.colors{4,3};
-handles.secThreshValText.BackgroundColor = mainHandles.colors{4,3};
 handles.stitchText.BackgroundColor = mainHandles.colors{4,3};
 handles.ampText.BackgroundColor = mainHandles.colors{4,3};
 handles.durText.BackgroundColor = mainHandles.colors{4,3};
@@ -109,6 +111,10 @@ handles.hardThreshText.BackgroundColor = mainHandles.colors{4,3};
 handles.hardThreshTextSub.BackgroundColor = mainHandles.colors{4,3};
 handles.hardSecThreshText.BackgroundColor = mainHandles.colors{4,3};
 handles.hardSecThreshTextSub.BackgroundColor = mainHandles.colors{4,3};
+handles.threshValText.BackgroundColor = mainHandles.colors{4,3};
+handles.threshValTextSub.BackgroundColor = mainHandles.colors{4,3};
+handles.secThreshValText.BackgroundColor = mainHandles.colors{4,3};
+handles.secThreshValTextSub.BackgroundColor = mainHandles.colors{4,3};
 handles.detectionMethod2.BackgroundColor = mainHandles.colors{4,3};
 handles.detectionGroup.BackgroundColor = mainHandles.colors{4,3};
 handles.velMethod1.BackgroundColor = mainHandles.colors{4,3};
@@ -122,8 +128,6 @@ handles.detectionBox.ForegroundColor = mainHandles.colors{4,5};
 handles.velBox.ForegroundColor = mainHandles.colors{4,5};
 handles.overwrite.ForegroundColor = mainHandles.colors{4,5};
 handles.verbosity.ForegroundColor = mainHandles.colors{4,5};
-handles.threshValText.ForegroundColor = mainHandles.colors{4,5};
-handles.secThreshValText.ForegroundColor = mainHandles.colors{4,5};
 handles.stitchText.ForegroundColor = mainHandles.colors{4,5};
 handles.ampText.ForegroundColor = mainHandles.colors{4,5};
 handles.durText.ForegroundColor = mainHandles.colors{4,5};
@@ -132,6 +136,10 @@ handles.hardThreshText.ForegroundColor = mainHandles.colors{4,5};
 handles.hardThreshTextSub.ForegroundColor = mainHandles.colors{4,5};
 handles.hardSecThreshText.ForegroundColor = mainHandles.colors{4,5};
 handles.hardSecThreshTextSub.ForegroundColor = mainHandles.colors{4,5};
+handles.threshValText.ForegroundColor = mainHandles.colors{4,5};
+handles.threshValTextSub.ForegroundColor = mainHandles.colors{4,5};
+handles.secThreshValText.ForegroundColor = mainHandles.colors{4,5};
+handles.secThreshValTextSub.ForegroundColor = mainHandles.colors{4,5};
 handles.detectionMethod2.ForegroundColor = mainHandles.colors{4,5};
 handles.velMethod1.ForegroundColor = mainHandles.colors{4,5};
 handles.velMethod2.ForegroundColor = mainHandles.colors{4,5};
@@ -155,6 +163,8 @@ guidata(hObject, handles);
 % Check parameter validity and change colors if needed
 hardVelThreshold_Callback(handles.hardVelThreshold, eventdata, handles);
 hardSecondaryVelThreshold_Callback(handles.hardSecondaryVelThreshold, eventdata, handles);
+thresholdVal_Callback(handles.thresholdVal, eventdata, handles);
+secThresholdVal_Callback(handles.secThresholdVal, eventdata, handles);
 
 % UIWAIT makes SacDriftParameters wait for user response (see UIRESUME)
 % uiwait(handles.sacParameters);
@@ -181,20 +191,6 @@ figureHandle = findobj(0, 'tag', 'jobQueue');
 mainHandles = guidata(figureHandle);
 
 % Validate new configurations
-% thresholdVal
-thresholdVal = str2double(handles.thresholdVal.String);
-if ~IsNonNegativeRealNumber(thresholdVal)
-    errordlg('Threshold Value must be a non-negative, real number.', 'Invalid Parameter');
-    return;
-end
-
-% secThresholdVal
-secThresholdVal = str2double(handles.secThresholdVal.String);
-if ~IsNonNegativeRealNumber(secThresholdVal)
-    errordlg('Secondary Threshold Value must be a non-negative, real number.', 'Invalid Parameter');
-    return;
-end
-
 % stitch
 stitch = str2double(handles.stitch.String);
 if ~IsNaturalNumber(stitch)
@@ -230,23 +226,37 @@ if logical(handles.detectionMethod1.Value)
         errordlg('Hard Secondary Velocity Threshold must be a non-negative, real number.', 'Invalid Parameter');
         return;
     end
+else
+    % thresholdVal
+    thresholdVal = str2double(handles.thresholdVal.String);
+    if ~IsNonNegativeRealNumber(thresholdVal)
+        errordlg('Threshold Value must be a non-negative, real number.', 'Invalid Parameter');
+        return;
+    end
+
+    % secThresholdVal
+    secThresholdVal = str2double(handles.secThresholdVal.String);
+    if ~IsNonNegativeRealNumber(secThresholdVal)
+        errordlg('Secondary Threshold Value must be a non-negative, real number.', 'Invalid Parameter');
+        return;
+    end
 end
 
 % Save new configurations
 mainHandles.config.sacOverwrite = logical(handles.overwrite.Value);
 mainHandles.config.sacVerbosity = logical(handles.verbosity.Value);
-mainHandles.config.sacThresholdVal = str2double(handles.thresholdVal.String);
-mainHandles.config.sacSecThresholdVal = str2double(handles.secThresholdVal.String);
 mainHandles.config.sacStitch = str2double(handles.stitch.String);
 mainHandles.config.sacMinAmplitude = str2double(handles.minAmplitude.String);
 mainHandles.config.sacMaxDuration = str2double(handles.maxDuration.String);
+mainHandles.config.sacVelMethod1 = logical(handles.velMethod1.Value);
+mainHandles.config.sacVelMethod2 = logical(handles.velMethod2.Value);
 mainHandles.config.sacDetectionMethod1 = logical(handles.detectionMethod1.Value);
 mainHandles.config.sacHardVelThreshold = str2double(handles.hardVelThreshold.String);
 mainHandles.config.sacHardSecondaryVelThreshold = ...
     str2double(handles.hardSecondaryVelThreshold.String);
 mainHandles.config.sacDetectionMethod2 = logical(handles.detectionMethod2.Value);
-mainHandles.config.sacVelMethod1 = logical(handles.velMethod1.Value);
-mainHandles.config.sacVelMethod2 = logical(handles.velMethod2.Value);
+mainHandles.config.sacThresholdVal = str2double(handles.thresholdVal.String);
+mainHandles.config.sacSecThresholdVal = str2double(handles.secThresholdVal.String);
 
 % Update handles structure
 guidata(figureHandle, mainHandles);
@@ -269,7 +279,6 @@ function cancel_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 close;
-
 
 
 function hardVelThreshold_Callback(hObject, eventdata, handles)
@@ -517,9 +526,13 @@ function detectionMethod1_Callback(hObject, eventdata, handles)
     if get(hObject,'Value') == 1
         handles.hardVelThreshold.Enable = 'on';
         handles.hardSecondaryVelThreshold.Enable = 'on';
+        handles.thresholdVal.Enable = 'off';
+        handles.secThresholdVal.Enable = 'off';
     else
         handles.hardVelThreshold.Enable = 'off';
         handles.hardSecondaryVelThreshold.Enable = 'off';
+        handles.thresholdVal.Enable = 'on';
+        handles.secThresholdVal.Enable = 'on';
     end
 
 % --- Executes on button press in detectionMethod2.
@@ -532,9 +545,13 @@ function detectionMethod2_Callback(hObject, eventdata, handles)
     if get(hObject,'Value') == 1
         handles.hardVelThreshold.Enable = 'off';
         handles.hardSecondaryVelThreshold.Enable = 'off';
+        handles.thresholdVal.Enable = 'on';
+        handles.secThresholdVal.Enable = 'on';
     else
         handles.hardVelThreshold.Enable = 'on';
         handles.hardSecondaryVelThreshold.Enable = 'on';
+        handles.thresholdVal.Enable = 'off';
+        handles.secThresholdVal.Enable = 'off';
     end
 
 % --- Executes on button press in velMethod1.
@@ -583,6 +600,52 @@ guidata(hObject, handles);
 % --- Executes during object creation, after setting all properties.
 function hardSecondaryVelThreshold_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to hardSecondaryVelThreshold (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit29_Callback(hObject, eventdata, handles)
+% hObject    handle to thresholdVal (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of thresholdVal as text
+%        str2double(get(hObject,'String')) returns contents of thresholdVal as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit29_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to thresholdVal (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit30_Callback(hObject, eventdata, handles)
+% hObject    handle to secThresholdVal (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of secThresholdVal as text
+%        str2double(get(hObject,'String')) returns contents of secThresholdVal as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit30_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to secThresholdVal (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

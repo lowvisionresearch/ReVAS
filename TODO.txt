@@ -1,10 +1,3 @@
-For every function:
-In the parameters, have an overwrite parameter.
-
-if overwrite = 1, go ahead and replace any existing output file
-if overwrite = 0, don't overwrite existing file.
-
----------
 
 Find Stimulus Location
 2 types of Inputs:
@@ -32,31 +25,9 @@ output: myvideo_dwt_stimlocs.mat (save input parameters, image path, delete ever
 
 add-on: also save the mean and sd of each frame into that mat file.
 
--------
-
-Remove the stimulus
-Use output of previous step.
-
-take the location from mat file
-replace in the frames of the dwt version with noise
-noise need the mean and sd of the noise
-randn(xsize, ysize) ==> mean = 0, sd = 1.
-for mean = 60, sd = 30, you multiply by 30, add 60.
-
-(we have this from the save mat file, the mean and sd)
-so for each frame, we need the mean and sd of each frame (when cross still in)
-then use that to make random noise.
-put that noise rectangle, centered on top of the old cross.
-
-by default, use the parameters from mat file.
-but also allow for overriding: height and width of noise rectangle.
-
-output: myvideo_dwt_nostim.avi
-
 -----------
 
 Detect blinks and bad frames
-When this happens, entire frame is all black or close to that.
 
 the mean luminence will be generally steady, but at the blink, there will be a dip over the course of about 6 frames (a blink is 200 milliseconds)
 
@@ -74,23 +45,16 @@ essentially we want to get "derivatives" and just mark the super negative ones a
   - logically OR the two resulting logical arrays from mean and sd frames together
   - use find() to convert this logical array to the indices of badFrames.
 
-
-output: ..._blinkframes.mat  mat file of bad frames (where the blink ocurred)
-
 --------------
 
 Gamma Correction
 
 gamma_exponent = 0.6
-imadjust(2darray, 'gamma', gamma_exponent)  (or something like that)
-
-output: myvideo_dwt_nostim_gamscaled.avi
 
 ----------
 
 Bandpass filtering
 
-output: myvideo_dwt_nostim_gamscaled_bandfilt.avi
 
 frequency domain vs. amplitude (power)
 
@@ -128,8 +92,6 @@ imgausfilt is your low pass filter (no fourier necessary)
 .3 .5 .3
 .5 1  .5
 .3 .5 .3
-
-output: ...bandfilt.avi
 
 ----------
 
@@ -190,11 +152,3 @@ parametersStructure.maxDuration (default 100 ms) (in a fourth pass, discard if t
 parametersStructure.detectionMethod (default 2) (median-based detection is 2, which we will use by default) (another method, method 1, is just a hard-coded threshold)
 parametersStructure.hardVelocityThreshold (default 35 deg/sec) (for hard-coded threshold purposes)
 parametersStructure.velocityMethod (1 is most basic, 2 is the one we will use) (default 2)
-Output:
-append whatever you like to full input name
-
--------
-
-in Saccade Detection gui,
-move threshold value and secondary threshold value under
-the median-based detection method option.
