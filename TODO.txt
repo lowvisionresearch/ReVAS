@@ -192,3 +192,9 @@ parametersStructure.hardVelocityThreshold (default 35 deg/sec) (for hard-coded t
 parametersStructure.velocityMethod (1 is most basic, 2 is the one we will use) (default 2)
 Output:
 append whatever you like to full input name
+
+-------
+
+in Saccade Detection gui,
+move threshold value and secondary threshold value under
+the median-based detection method option.

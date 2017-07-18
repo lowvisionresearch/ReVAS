@@ -16,10 +16,10 @@
 % # A parameters structure specifying all necessary parameters for
 % video trimming. Fields:
 %   |borderTrimAmount|, the number of rows/columns
-% to be removed from the upper/right edges in pixels (assumed to be 24
-% pixels if not provided);
+%   to be removed from the upper/right edges in pixels (assumed to be 24
+%   pixels if not provided);
 %   |overwrite|, determines whether an existing
-% output file should be overwritten and replaced if it already exists.
+%   output file should be overwritten and replaced if it already exists.
 %
 % *Output arguments*
 %
@@ -53,7 +53,7 @@
 %   |thickness|, in units of pixels, describing the number of pixels in the
 %   width of the bars of the cross (must be an odd natural number).
 % # A parameters structure specifying all necessary parameters for strip
-% analysis. Must-have fields:
+% analysis. Fields:
 %   |overwrite|, determines whether an existing output file should be
 %   overwritten and replaced if it already exists;
 %   a |enableVerbosity| flag
@@ -61,7 +61,7 @@
 %
 % *Output arguments*
 %
-% # None.
+% None.
 %
 % *Notes*
 %
@@ -80,89 +80,137 @@
 %
 % *Purpose*
 %
-% TODO
+% Remove stimulus from each frame of the video.
 %
 % *Method* 
 %
-% TODO
+% Removes stimulus from each frame, according to the stimuli positions
+%   given by |FindStimulusLocations|. Fills the space with noise of similar
+%   mean and standard deviation as the rest of the frame.
 % 
 % *Input arguments*
 %
-% # TODO
+% # Full path to the video.
+% # A parameters structure specifying all necessary parameters for strip
+% analysis. Fields:
+%   |overwrite|, determines whether an existing output file should be
+%   overwritten and replaced if it already exists.
 %
 % *Output arguments*
 %
-% # TODO
+% None.
 %
 % *Notes*
 %
-% # TODO
+% # Produces a version of this video with the stimulus removed that is stored in the same
+% location as the original video but with '_nostim' appended to the
+% original file name.
 
 %% Detect Blink Frames Module
 %
 % *Purpose*
 %
-% TODO
+% Records in a mat file a list of video frame numbers for which a blink
+% occurred.
 %
 % *Method* 
 %
-% TODO
+% Detection of frames with exceptional differences in mean and/or standard
+% deviation.
 % 
 % *Input arguments*
 %
-% # TODO
+% # Full path to the video.
+% # A parameters structure specifying all necessary parameters for strip
+% analysis. Fields:
+%   |overwrite|, determines whether an existing output file should be
+%   overwritten and replaced if it already exists;
+%   |thresholdValue|, tolerance threshold that dictates cutoff for what
+%   movements are considered blinks, according to $threshold = median \pm
+%   thresholdValue * standardDeviation$.
 %
 % *Output arguments*
 %
-% # TODO
+% None.
 %
 % *Notes*
 %
-% # TODO
+% # Produces a mat file that is stored in the same
+% location as the original video but with '_blinkframes' appended to the
+% original file name. Variables saved include:
+%   |badFrames|, a 1D array of the frame numbers for which a blink
+%   occurred.
 
 %% Gamma Correction Module
 %
 % *Purpose*
 %
-% TODO
+% Apply gamma correction to each frame of the video.
 %
 % *Method* 
 %
-% TODO
+% Uses Matlab's built-in |imadjust| to map the intensities of the input
+% video to the output video.
 % 
 % *Input arguments*
 %
-% # TODO
+% # Full path to the video.
+% # A parameters structure specifying all necessary parameters for strip
+% analysis. Fields:
+%   |overwrite|, determines whether an existing output file should be
+%   overwritten and replaced if it already exists;
+%   |gammaExponent|, the curve representing the intensity mapping from the
+%   original video to the output video, values less than 1 result in
+%   brighter outputs, values greater than 1 result in darker outputs.
 %
 % *Output arguments*
 %
-% # TODO
+% None.
 %
 % *Notes*
 %
-% # TODO
+% # Produces a gamma-corrected version of this video that is stored in the same
+% location as the original video but with '_gamscaled' appended to the
+% original file name.
 
 %% Bandpass Filtering Module
 %
 % *Purpose*
 %
-% TODO
+% Apply bandpass filtering to each frame of the video.
 %
 % *Method* 
 %
-% TODO
-% 
+% Smoothing, high-pass filtering, and normalization.
+%
 % *Input arguments*
 %
-% # TODO
+% # Full path to the video.
+% # A parameters structure specifying all necessary parameters for strip
+% analysis. Fields:
+%   |overwrite|, determines whether an existing output file should be
+%   overwritten and replaced if it already exists;
+%   |smoothing|, used to remove high-frequency noise in the
+%                               frames, represents the standard deviation
+%                               of a Gaussian kernel, in pixels (default 1);
+%   |lowSpatialFrequencyCutoff|, used to remove low-frequency fluctuations
+%                               in the frames which messes up strip
+%                               analysis, for instance, brightness
+%                               gradients due to the way observer's head is
+%                               positioned in the TSLO, or just the darker
+%                               nature of the foveal pit compared to the
+%                               peripheral retina creates these low-freq.
+%                               fluctuations (default 3 cycles/image).
 %
 % *Output arguments*
 %
-% # TODO
+% None.
 %
 % *Notes*
 %
-% # TODO
+% # Produces a bandpass-filtered version of this video that is stored in the same
+% location as the original video but with '_bandfilt' appended to the
+% original file name.
 
 %% Make Coarse Montage Module
 % 
@@ -175,6 +223,18 @@
 % TODO
 % (Tiling a retinal montage by using the output of the Frame Analysis
 % Module.)
+%
+% *Input arguments*
+%
+% # TODO.
+%
+% *Output arguments*
+%
+% # TODO.
+%
+% % *Notes*
+%
+% # TODO.
 
 %% Make Fine Montage Module
 %
@@ -187,6 +247,18 @@
 % TODO
 % (Tiling a retinal montage by using the output of the Strip Analysis
 % Module.)
+%
+% *Input arguments*
+%
+% # TODO.
+%
+% *Output arguments*
+%
+% # TODO.
+%
+% % *Notes*
+%
+% # TODO.
 
 %% Strip Analysis Module
 %
@@ -207,25 +279,37 @@
 % # Full path to the reference frame image OR the reference frame itself
 % as a 2D.
 % # A parameters structure specifying all necessary parameters for strip
-% analysis. Must-have fields:
-%   |strip height| and |strip width| in units of
-%   pixels;
-%   output |sampling rate| (which will be used to compute number of
-%   strips per frame);
-%   a |subpixel| flag to enable/disable interpolation, a
-%   sub-structure where subpixel interpolation parameters (neighborhood size
-%   and subpixel depth) will be stored;
-%   an |adaptive search| flag to enable/disable confined/adaptive search
+% analysis. Fields:
+%   |overwrite|, determines whether an existing output file should be
+%   overwritten and replaced if it already exists;
+%   a |enableVerbosity| flag to display progress in real-time;
+%   |stripHeight| in units of pixels;
+%   |stripWidth| in units of pixels;
+%   output |samplingRate|, used to compute number of strips per frame;
+%   |enableGaussianFiltering|, boolean flag, set to true to use Gaussian
+%   Filtering as method to determine useful peaks;
+%   |gaussianStandardDeviation|, standard deviation used if Gaussian
+%   Filtering enabled;
+%   |minimumPeakRatio|, minimum ratio between maximum peak and second
+%   maximum peak required in order for a peak to be considered useful if
+%   Gaussian Filtering disabled, a measure of confidence for the estimated location of each strip;
+%   |minimumPeakThreshold|, minimum peak value required in order for a peak
+%   to be considered useful if Gaussian Filtering disabled;
+%   |adaptiveSearch|, boolean flag to enable/disable confined/adaptive search
 %   for cross-correlation peak;
+%   |adaptiveSearchScalingFactor|, number of times to temporarily
+%   scale-down video frames to perform preliminary position estimates if
+%   adaptive search enabled;
+%   |searchWindowHeight|, size of search window if adapative search
+%   enabled;
+%   |enableSubpixelInterpolation|, boolean flag to enable/disable interpolation, a
+%   sub-structure where subpixel interpolation parameters
+%   (|neighborhoodSize|
+%   and |subpixelDepth|) will be stored;
 %   an array indicating |bad frames| (i.e., frames where image
 %   quality is so bad to perform strip analysis, or frames where subject
 %   blinked. These frames will be included in the strip analysis to save
 %   computation time);
-%   minimum |peak ratio| (a measure of confidence for the
-%   estimated location of each strip, see below for more);
-%   |overwrite|, determines whether an existing output file should be
-%   overwritten and replaced if it already exists;
-%   a |enableVerbosity| flag to display progress in real-time;
 %   |axesHandles| axes handles to be used to display progress if verbosity
 %   is enabled. use an empty array to have verbosity displayed in separate
 %   figure windows.
@@ -334,20 +418,78 @@
 %
 % *Purpose*
 %
-% TODO
+% Records in a mat file an array of structures
+% representing saccades and an array of structures representing drifts.
 %
 % *Method* 
 %
-% TODO
+% Detection of frames with exceptional differences in velocity.
 % 
 % *Input arguments*
 %
-% # TODO
+% # Full path to the video.
+% # Original video size in pixels.
+% # Original video size in degrees.
+% # A parameters structure specifying all necessary parameters for strip
+% analysis. Fields:
+%   |overwrite|, determines whether an existing output file should be
+%   overwritten and replaced if it already exists;
+%   a |enableVerbosity| flag to display progress in real-time;
+%   |stitchCriteria|, used to lump together microsaccades that are less
+%   than this value apart in milliseconds;
+%   |minAmplitude|, cutoff to determine which saccades are great enough in
+%   amplitude to count;
+%   |maxDuration|, cutoff to determine which saccades are too long in
+%   duration to count (in milliseconds);
+%   |detectionMethod|, set to 1 to use hard velocity thresholds or set to 2
+%   to use median-based thresholds;
+%   |hardVelocityThreshold|, fixed velocity threshold to use if using hard
+%   velocity threshold detection method;
+%   |hardSecondaryVelocityThreshold|, fixed secondary velocity threshold
+%   used to capture entire peak for those identified by hard velocity
+%   threshold if using hard velocity threshold detection method;
+%   |thresholdValue|, tolerance threshold that dictates cutoff for what
+%   velocitiy differences are considered saccades if using median-based detection method
+%   according to $threshold = median \pm thresholdValue * standardDeviation$;
+%   |secondaryThresholdValue|, used to capture entire peak for those
+%   identified by the thresholdValue if using median-based detection method;
+%   |velocityMethod|, formula used to calculate differences in velocity,
+%   set to 1 to use $v_x(t) = \frac{x(t + \Delta t) - x(t)}{\Delta t}$, set to
+%   2 to use $v_x(t) = \frac{x(t + \Delta t) - x(t - \Delta t)}{2 \Delta
+%   t}$.
 %
 % *Output arguments*
 %
-% # TODO
+% None.
 %
 % *Notes*
 %
-% # TODO
+% # Produces a mat file that is stored in the same
+% location as the original video but with '_blinkframes' appended to the
+% original file name. Variables saved include:
+%   |saccadeStructs| and |driftStructs|, each as 1D arrays of structs.
+%   Each struct has fields:
+%   |onsetTime|, time stamp of the start of event;  
+%   |offsetTime|, time stamp of end of event;
+%   |xStart|, x position at start of event;
+%   |xEnd|, x position at end of event;
+%   |yStart|, y position at start of event;
+%   |yEnd|, y position at end of event;
+%   |duration|, time between onset and offset time;
+%   |amplitude.x|, absolute difference between x start and x end;
+%   |amplitude.y|, absolute difference between y start and y end;
+%   |amplitude.vector|, the pythagorean theorem applied to x amplitude and
+%   y amplitude;
+%   |direction|, the application of Matlab's |atand2d| to $\frac{\Delta
+%   y}{\Delta x}$, (gives range [-180, 180] degrees);
+%   |position.x|, excerpt of eye traces containing x positions;
+%   |position.y|, excerpt of eye traces containing y positions;
+%   |time|, excerpt of time array containing times;
+%   |velocity.x|, excerpt of x velocities;
+%   |velocity.y|, excerpt of y velocities;
+%   |meanVelocity.x|, mean of x velocities;
+%   |meanVelocity.y|, mean of y velocities;
+%   |peakVelocity.x|, highest of the x velocities;
+%   |peakVelocity.y|, highest of the y velocities;
+%   |acceleration.x|, excerpt of x accelerations;
+%   |acceleration.y|, excerpt of y accelerations.
