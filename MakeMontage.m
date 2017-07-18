@@ -45,7 +45,7 @@ frameHeight = videoInfo.Height;
 width = videoInfo.Width;
 frameRate = videoInfo.Framerate;
 totalFrames = frameRate * videoInfo.Duration;
-stripsPerFrame = round(frameHeight/params.newStripHeight);
+stripsPerFrame = floor(frameHeight/params.newStripHeight);
 
 % setting up templates for reference frame and counter array
 counterArray = zeros(frameHeight*2);
@@ -272,7 +272,7 @@ for frameNumber = 1:totalFrames
             frameStripsWithoutNaN(:, 4) = frameStripsWithoutNaN(:, 4) + 1;
         end
     end
-    
+
     for strip = 1 : size(frameStripsWithoutNaN, 1)
         
         % Keep track of the stripNumber so we can shift it accordingly
