@@ -351,7 +351,15 @@ while k<=size(refFrame, 1)
     end
     k = k + 1;
 end
-
+% Sweep for 0 columns one more time--sometimes rounding will miss a few
+k = 1;
+while k<=size(refFrame, 2)
+    if refFrame(:, k) == 0
+        refFrame(:, k) = [];
+        continue
+    end
+    k = k + 1;
+end
 %% Save and display the reference frame.
 save('Reference Frame', 'refFrame');
 figure('Name', 'Reference Frame')
