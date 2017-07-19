@@ -1,10 +1,4 @@
 function [refFrame] = MakeMontage(params, fileName)
-% NEED TO HANDLE FOR NEWSTRIPHEIGHT OF 19
-
-
-
-
-
 % MakeMontage    Reference frame.
 %   MakeMontage(params, fileName) generates a reference frame by averaging
 %   all the pixel values across all frames in a video.
@@ -319,7 +313,6 @@ for frameNumber = 1:totalFrames
         counterArray(templateSelectRow, templateSelectColumn) = counterArray...
             (templateSelectRow, templateSelectColumn) + 1;
     end
-    disp(frameNumber)
 end
 
 
