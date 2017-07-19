@@ -152,3 +152,7 @@ parametersStructure.maxDuration (default 100 ms) (in a fourth pass, discard if t
 parametersStructure.detectionMethod (default 2) (median-based detection is 2, which we will use by default) (another method, method 1, is just a hard-coded threshold)
 parametersStructure.hardVelocityThreshold (default 35 deg/sec) (for hard-coded threshold purposes)
 parametersStructure.velocityMethod (1 is most basic, 2 is the one we will use) (default 2)
+
+-----------
+
+Fine ref add new strip height (default same as regular strip height) to gui

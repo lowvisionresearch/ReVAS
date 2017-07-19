@@ -104,8 +104,8 @@ interpolatedPositions = movmean(interpolatedPositions, 45);
 % because when I filter for NaNs, the strip number method I originally used
 % gets thrown off. Add numberOfNaNs because the number you remove from the
 % beginning will skew the rest of the data
-for k = numberOfNaNs + 1:size(interpolatedPositions, 1) + numberOfNaNs
-    interpolatedPositions(k-numberOfNaNs, 3) = k;
+for stripNumber = numberOfNaNs + 1:size(interpolatedPositions, 1) + numberOfNaNs
+    interpolatedPositions(stripNumber-numberOfNaNs, 3) = stripNumber;
 end
 
 % Remove leftover NaNs. Need to use while statement because the size of
@@ -313,6 +313,7 @@ for frameNumber = 1:totalFrames
         counterArray(templateSelectRow, templateSelectColumn) = counterArray...
             (templateSelectRow, templateSelectColumn) + 1;
     end
+    disp(frameNumber)
 end
 
 
@@ -320,16 +321,6 @@ end
 refFrame = refFrame./counterArray;
 
 %% Take care of miscellaneous issues from preallocation and division by 0.
-
-% Crop out the leftover 0 padding from the original template.
-column1 = interpolatedPositions(:, 1);
-column2 = interpolatedPositions(:, 2);
-minColumn = min(column1);
-minRow = min(column2);
-maxColumn = max(column1);
-refFrame(1:floor((minRow-1)), :) = [];
-refFrame(:, 1:floor((minColumn-1))) = [];
-refFrame(:, ceil(maxColumn+width):end) = [];
 
 % Convert any NaN values in the reference frame to a 0. Otherwise, running
 % strip analysis on this new frame will not work
@@ -339,10 +330,8 @@ for k = 1:size(NaNindices)
     refFrame(NaNindex) = 0;
 end
 
-% Need to take care of rows separately for cropping out 0 padding because 
-% strip locations do not give info about where the template frame ends,
-% only where that strip is located relative to the corresponding strip on
-% the original reference frame.
+% Crop out the leftover 0 padding from the original template. First check
+% for 0 rows
 k = 1;
 while k<=size(refFrame, 1)
     if refFrame(k, :) == 0
@@ -351,7 +340,8 @@ while k<=size(refFrame, 1)
     end
     k = k + 1;
 end
-% Sweep for 0 columns one more time--sometimes rounding will miss a few
+
+% Then sweep for 0 columns
 k = 1;
 while k<=size(refFrame, 2)
     if refFrame(:, k) == 0
@@ -361,7 +351,9 @@ while k<=size(refFrame, 2)
     k = k + 1;
 end
 %% Save and display the reference frame.
-save('Reference Frame', 'refFrame');
+fileName(end-4:end) = [];
+fileName(end+1:end+9) = '_refframe';
+save(fileName, 'refFrame');
 figure('Name', 'Reference Frame')
 imshow(refFrame);
 
