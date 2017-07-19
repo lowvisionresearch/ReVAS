@@ -63,7 +63,7 @@ for i = 7:7
 
         currentVideoPath = [originalVideoPath(1:end-4) '_STRIPHEIGHT-' int2str(stripHeight) originalVideoPath(end-3:end)];
         copyfile(originalVideoPath, currentVideoPath);
-        
+    %%    
         tic;
         
         % STRIP ANALYSIS
@@ -88,7 +88,7 @@ for i = 7:7
         
         elapsedTime = toc;
         
-        movefile(currentVideoPath, [currentVideoPath(1:end-4) '_TIMEELAPSED-' int2str(elapsedTime) currentVideoPath(end-3:end)]);
+        fclose(fopen([currentVideoPath(1:end-4) '_TIMEELAPSED-' int2str(elapsedTime) '.txt'],'wt+'));
         fprintf('Process Completed for StripAnalysis()\n');
         
     end
