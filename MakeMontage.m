@@ -313,7 +313,6 @@ for frameNumber = 1:totalFrames
         counterArray(templateSelectRow, templateSelectColumn) = counterArray...
             (templateSelectRow, templateSelectColumn) + 1;
     end
-    disp(frameNumber)
 end
 
 
