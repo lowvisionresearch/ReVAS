@@ -2,7 +2,7 @@ clearvars;
 close all
 clc;
 
-%% select final mat files or txt computation time files
+%% select final mat files
 filenames = uipickfiles;
 if ~iscell(filenames)
     if filenames == 0
@@ -27,7 +27,6 @@ end
 data = data(sortI);
 
 %% plot eye positions
-
 cols = jet(length(data));
 figure('units','normalized','outerposition',[.5 .5 .5 .3]);
 for i=1:length(data)
@@ -68,13 +67,3 @@ ylabel('Power Spectra');
 xlabel('Temporal Frequency');
 legend(legendStr);
 title('Vertical');
-
-%% plot computation times
-figure('units','normalized','outerposition',[.5 .5 .5 .3]);
-for i=1:length(data)
-
-end
-
-ylabel('Computation Time (sec)');
-xlabel('Strip Height');
-title('Computation Times');
