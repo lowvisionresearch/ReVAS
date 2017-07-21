@@ -17,15 +17,15 @@ testVideos{3} = 'testbench\djw_os_10_12_1_45_1_stabfix_16_39_42_176.avi';
 testVideos{4} = 'testbench\jap_os_10_12_1_45_1_stabfix_11_37_35_135.avi';
 
 benchmarkingVideos = cell(1, 7);
-benchmarkingVideos{1} = 'testbench\benchmark\7_13_2017_11_53_8\horizontal_1.avi';
-benchmarkingVideos{2} = 'testbench\benchmark\7_13_2017_11_53_8\horizontal_2.avi';
-benchmarkingVideos{3} = 'testbench\benchmark\7_13_2017_11_53_8\jerky.avi';
-benchmarkingVideos{4} = 'testbench\benchmark\7_13_2017_11_53_8\static.avi';
-benchmarkingVideos{5} = 'testbench\benchmark\7_13_2017_11_53_8\vertical_1.avi';
-benchmarkingVideos{6} = 'testbench\benchmark\7_13_2017_11_53_8\vertical_2.avi';
-benchmarkingVideos{7} = 'testbench\benchmark\7_13_2017_11_53_8\wobble.avi';
+benchmarkingVideos{1} = 'testbench\benchmark\benchmark_samplingrate\horizontal_1.avi';
+benchmarkingVideos{2} = 'testbench\benchmark\benchmark_samplingrate\horizontal_2.avi';
+benchmarkingVideos{3} = 'testbench\benchmark\benchmark_samplingrate\jerky.avi';
+benchmarkingVideos{4} = 'testbench\benchmark\benchmark_samplingrate\static.avi';
+benchmarkingVideos{5} = 'testbench\benchmark\benchmark_samplingrate\vertical_1.avi';
+benchmarkingVideos{6} = 'testbench\benchmark\benchmark_samplingrate\vertical_2.avi';
+benchmarkingVideos{7} = 'testbench\benchmark\benchmark_samplingrate\wobble.avi';
 
-for i = 7:7
+parfor i = 1:7
     % Grab path out of cell.
     videoPath = benchmarkingVideos{i};
     parametersStructure = struct;
