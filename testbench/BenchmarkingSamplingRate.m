@@ -1,10 +1,11 @@
-function [] = Benchmarking()
+function [] = BenchmarkingSamplingRate()
 %BENCHMARKING Script used to benchmark ReVAS.
 %   Script used to benchmark ReVAS.
 
-%% Strip Analysis - Strip Height
-% Only varying strip height of strip analysis. (5px : 2px : 51px)
-% Fixing sampling rate at 540 Hz.
+%% Strip Analysis - Sampling Rate
+% Varying sampling rate and using the largest strips possible but such that
+% there are no overlapping strips.
+% Range of strip heights are (5px : 2px : 51px)
 % Fixing Fine Ref's strip height at 15px.
 
 clc;
@@ -13,13 +14,13 @@ close all;
 addpath(genpath('..'));
 
 benchmarkingVideos = cell(1, 7);
-benchmarkingVideos{1} = 'testbench\benchmark\7_13_2017_11_53_8\horizontal_1_dwt_nostim_gamscaled_bandfilt.avi';
-benchmarkingVideos{2} = 'testbench\benchmark\7_13_2017_11_53_8\horizontal_2_dwt_nostim_gamscaled_bandfilt.avi';
-benchmarkingVideos{3} = 'testbench\benchmark\7_13_2017_11_53_8\jerky_dwt_nostim_gamscaled_bandfilt.avi';
-benchmarkingVideos{4} = 'testbench\benchmark\7_13_2017_11_53_8\static_dwt_nostim_gamscaled_bandfilt.avi';
-benchmarkingVideos{5} = 'testbench\benchmark\7_13_2017_11_53_8\vertical_1_dwt_nostim_gamscaled_bandfilt.avi';
-benchmarkingVideos{6} = 'testbench\benchmark\7_13_2017_11_53_8\vertical_2_dwt_nostim_gamscaled_bandfilt.avi';
-benchmarkingVideos{7} = 'testbench\benchmark\7_13_2017_11_53_8\wobble_dwt_nostim_gamscaled_bandfilt.avi';
+benchmarkingVideos{1} = 'testbench\benchmark\benchmark_samplingrate\horizontal_1_dwt_nostim_gamscaled_bandfilt.avi';
+benchmarkingVideos{2} = 'testbench\benchmark\benchmark_samplingrate\horizontal_2_dwt_nostim_gamscaled_bandfilt.avi';
+benchmarkingVideos{3} = 'testbench\benchmark\benchmark_samplingrate\jerky_dwt_nostim_gamscaled_bandfilt.avi';
+benchmarkingVideos{4} = 'testbench\benchmark\benchmark_samplingrate\static_dwt_nostim_gamscaled_bandfilt.avi';
+benchmarkingVideos{5} = 'testbench\benchmark\benchmark_samplingrate\vertical_1_dwt_nostim_gamscaled_bandfilt.avi';
+benchmarkingVideos{6} = 'testbench\benchmark\benchmark_samplingrate\vertical_2_dwt_nostim_gamscaled_bandfilt.avi';
+benchmarkingVideos{7} = 'testbench\benchmark\benchmark_samplingrate\wobble_dwt_nostim_gamscaled_bandfilt.avi';
 
 parfor i = 1:7
     % Grab path out of cell.
@@ -58,10 +59,16 @@ parfor i = 1:7
     fineResult = FineRef(coarseResult, originalVideoPath, fineParameters);
     fprintf('Process Completed for FineRef()\n');
 
-        
     for stripHeight = 5:2:51
+        
+        frameHeight = 488;
+        stripsPerFrame = floor(frameHeight/stripHeight);
+        framesPerSecond = 30;
+        samplingRate = stripsPerFrame * framesPerSecond;
 
-        currentVideoPath = [originalVideoPath(1:end-4) '_STRIPHEIGHT-' int2str(stripHeight) originalVideoPath(end-3:end)];
+        currentVideoPath = [originalVideoPath(1:end-4) '_STRIPHEIGHT-' int2str(stripHeight) ...
+            '_SAMPLINGRATE-' int2str(samplingRate) ...
+            originalVideoPath(end-3:end)];
         copyfile(originalVideoPath, currentVideoPath);
         
         tic;
@@ -72,7 +79,7 @@ parfor i = 1:7
         stripParameters.enableVerbosity = false;
         stripParameters.stripHeight = stripHeight;
         stripParameters.stripWidth = 488;
-        stripParameters.samplingRate = 540;
+        stripParameters.samplingRate = samplingRate;
         stripParameters.enableGaussianFiltering = true;
         stripParameters.gaussianStandardDeviation = 10;
         stripParameters.minimumPeakRatio = 0.8;
@@ -89,8 +96,8 @@ parfor i = 1:7
         elapsedTime = toc;
         
         fclose(fopen([currentVideoPath(1:end-4) '_TIMEELAPSED-' int2str(elapsedTime) '.txt'],'wt+'));
+        delete(currentVideoPath);
         fprintf('Process Completed for StripAnalysis()\n');
-        
     end
 end
 
