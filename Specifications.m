@@ -220,21 +220,43 @@
 %
 % *Method*
 %
-% TODO
-% (Tiling a retinal montage by using the output of the Frame Analysis
-% Module.)
+% First read and shrink all frames by |scalingFactor| to increase speed. 
+% Choose an arbitrary frame as a temporary reference frame (if no frame 
+% number is specified, the function chooses the frame at the middle of the 
+% video). Perform built-in |normxcorr2| on all frames with respect to the 
+% temporary reference frame. Multiply those positions by the reciprocal of
+% |scalingFactor| to get rough estimates of the up-to-scale frame
+% movements. Then layer the frames on top of each other with corrections
+% for those frame movements, and take the average for a coarse reference
+% frame.
 %
 % *Input arguments*
 %
-% # TODO.
+% # The file name of the video
+% # A parameters structure specifying all necessary parameters for
+% generating the coarse reference frame. Fields:
+%   |scalingFactor|, used to scale down each frame when performing
+%       cross-correlations
+%   |refFrameNumber|, determines which frame number of the video will be
+%       used as a temporary reference frame. Optional parameter
+%   |enableGPU|, option to use GPU in performing computations if the 
+%       computer has a GPU. enableGPU is a boolean.
+%   |overwrite|, option to overwrite file names that already exist. 
+%        Also a boolean.
+%   |verbosity|, has values 0, 1, or 2. Value of 0 will only save the
+%   output to a .mat file. Value of 1 will save the result and display the
+%   result. Value of 2 will save the result, display the result, and show
+%   the progress of the cross-correlations.
 %
 % *Output arguments*
 %
-% # TODO.
+% # |coarseRefFrame|, a 2D array.
 %
 % % *Notes*
 %
-% # TODO.
+% # The function saves coarseRefFrame to a file with the extension 
+%       '_coarseref.mat'
+% # The function saves the scaled-up frame shifts to 'framePositions.mat'
 
 %% Make Fine Montage Module
 %
@@ -244,21 +266,41 @@
 %
 % *Method*
 %
-% TODO
-% (Tiling a retinal montage by using the output of the Strip Analysis
-% Module.)
+% First perform strip analysis on the coarse reference frame to get a 
+% better estimate of eye movements. Use those improved estimates to 
+% generate a refined reference frame in MakeMontage. For a specified number 
+% of iterations, repeat this process.
 %
 % *Input arguments*
 %
-% # TODO.
+% # The coarse reference frame, as a 2D array.
+% # The file name of the video.
+% # A parameters structure that contains the following fields:
+%   |All fields required for stripAnalysis|
+%   |stripHeight|, which will provide information for the interpolation in
+%       MakeMontage
+%   |newStripHeight|, an optional parameter that is set to stripHeight if
+%       no value is specified. Since stripAnalysis takes strips that are 
+%       evenly spaced, there are significant gaps between them. MakeMontage
+%       interpolates positions between those spaced strips so that there
+%       are strips of height newStripHeight immediately adjacent to each
+%       other from the top to the bottom of the frame. 
+%   |time|, the time array from stripAnalysis. Also provides information 
+%       for the interpolation in MakeMontage
+%   |positions|, the eyePositionTraces from stripAnalysis. Used to correct
+%   for the movement of the eye in generating the reference frame.
 %
 % *Output arguments*
 %
-% # TODO.
+% # |refinedFrame|, a 2D array.
 %
 % % *Notes*
 %
-% # TODO.
+% # MakeMontage, a helper function for FineRef, will save the final
+%       reference frame with the file name of the video with the extension 
+%       '_refframe.mat'
+% # stripAnalysis will also save the final eyePositionTraces and time array
+%       in a file with the extension '_hz_final.mat'
 
 %% Strip Analysis Module
 %
@@ -396,23 +438,40 @@
 %
 % *Purpose*
 %
-% TODO
+% Scale the eyePositionTraces of a video relative to the entire retina
 %
 % *Method* 
 %
-% TODO
+% ReReference finds the location of a local reference frame (the final
+% reference frame of a video) on a larger reference frame, which more
+% accurately reflects the entire retina. The position of the local
+% reference frame relative to the global reference frame is then added to
+% all the eyePositionTraces for that local reference frame. Doing so yields
+% eyePositionTraces that reflect the movement of the eye as a whole.
 % 
 % *Input arguments*
 %
-% # TODO
+% # |globalRef|, an image of the entire retina
+% # |filename|, the output of stripAnalysis (has the '_hz_final.mat'
+%       extension)
+% # A parameters structure specifying all necessary parameters for 
+%   re-referencing. Fields:
+%       |referenceFrame|, for now. The local reference frame
 %
 % *Output arguments*
 %
-% # TODO
+% # |eyePositionTraces_reRef|, the updated eyePositionTraces
+% # |params|, the parameters that were passed into the function
+% # |referenceFrame|, the local reference frame that was passed into the
+%       function
+% # |timeArray|, the timeArray that was passed into the function
+% # |globalRef|, the global reference frame that was passed into the
+%       function
 %
 % *Notes*
 %
-% # TODO
+% # The function saves all the output arguments to a file with the
+%       extension '_reref.mat'
 
 %% Saccade Detection Module
 %
