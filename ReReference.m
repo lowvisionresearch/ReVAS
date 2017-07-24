@@ -102,7 +102,7 @@ eyePositionTraces_reRef = eyePositionTraces;
 referenceFrame = localReferenceFrame;
 outputFileName = filename;
 outputFileName((end-3):end) = [];
-outputFileName(end+1:end+6) = '_ReRef';
+outputFileName(end+1:end+6) = '_reref';
 save(outputFileName, 'eyePositionTraces_reRef', 'timeArray', ...
         'params', 'referenceFramePath', 'globalRef');
 %% Display the results

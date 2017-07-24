@@ -1,14 +1,14 @@
 function coarseRefFrame = CoarseRef(filename, parametersStructure)
 %CoarseRef    Generates a coarse reference frame.
-%   f = CoarseRef(params, filenam) is the coarse reference frame of a
-%   video, generated using a scaled down version of each frame (each frame
-%   is scaled down by params.scalingFactor) and then cross-correlating each of 
-%   those scaled frames with an arbitrary frame number. If no frame number
-%   is provided, the function chooses the middle frame as the default
-%   initial reference frame. The function then multiplies the scaled down
-%   frame shifts by the reciprocal of scalingFactor to get the actual frame
-%   shifts. It then constructs the coarse reference frame using those
-%   approximate frame shifts.
+%   f = CoarseRef(filename, parametersStructure) is the coarse reference 
+%   frame of a video, generated using a scaled down version of each frame 
+%   (each frame is scaled down by params.scalingFactor) and then 
+%   cross-correlating each of those scaled frames with an arbitrary frame 
+%   number. If no frame number is provided, the function chooses the middle 
+%   frame as the default initial reference frame. The function then 
+%   multiplies the scaled down frame shifts by the reciprocal of 
+%   scalingFactor to get the actual frame shifts. It then constructs the 
+%   coarse reference frame using those approximate frame shifts.
 %
 %   params must have the fields: params.scalingFactor, params.refFrameNumber, 
 %   an optional parameter that designates which frame to use as the initial 
@@ -201,7 +201,6 @@ while frameNumber <= totalFrames
     
 end
 
-% UNCOMMENT THE SAVE STATEMENT IN FINAL VERSION
 save('framePositions', 'framePositions');
 
 % Set up the counter array and the template for the coarse reference frame.

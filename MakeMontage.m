@@ -28,7 +28,6 @@ if isfield(params, 'newStripHeight')
 else
     params.newStripHeight = params.stripHeight;
 end
-
 %% Set up all variables
 stripIndices = params.positions;
 t1 = params.time;
