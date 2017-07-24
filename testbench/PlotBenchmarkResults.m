@@ -15,12 +15,22 @@ for i=1:length(filenames)
     currentFile = filenames{i};
     
     heightStart = strfind(currentFile,'STRIPHEIGHT-');
-    heightEnd = strfind(currentFile(heightStart:end),'_');
+    allUnderScores = strfind(currentFile(heightStart:end),'_');
+    heightEnd = allUnderScores(1);
     stripHeight(i) = str2double(currentFile(heightStart+length('STRIPHEIGHT-'):heightStart+heightEnd-2));
     
+    samplingRateStart = strfind(currentFile,'SAMPLINGRATE-');
+    if isempty(samplingRateStart)
+        samplingRate(i) = 540;
+    else
+        allUnderScores = strfind(currentFile(samplingRateStart:end),'_');
+        samplingRateEnd = allUnderScores(1);
+        samplingRate(i) = str2double(currentFile(samplingRateStart+length('SAMPLINGRATE-'):samplingRateStart+samplingRateEnd-2));
+    end
+    
     data(i) = load(currentFile,'timeArray','eyePositionTraces');
-    [PS_hor(i,:),~] = ComputePowerSpectra(540,data(i).eyePositionTraces(:,1), 1080, .75,0);
-    [PS_ver(i,:),f] = ComputePowerSpectra(540,data(i).eyePositionTraces(:,2), 1080, .75,0);
+    [PS_hor{i},~] = ComputePowerSpectra(samplingRate(i),data(i).eyePositionTraces(:,1), samplingRate(i)*2, .75,0);
+    [PS_ver{i},f{i}] = ComputePowerSpectra(samplingRate(i),data(i).eyePositionTraces(:,2), samplingRate(i)*2, .75,0);
 end
 
 [sortedStripHeight,sortI] = sort(stripHeight,'ascend');
@@ -47,14 +57,14 @@ ylabel('Vertical position');
 legend(legendStr);
 
 %% plot power spectra
-cols = jet(length(data));
+cols = parula(length(data));
 figure('units','normalized','outerposition',[.5 .5 .5 .3]);
 for i=1:length(data)
     subplot(1,2,1)
-    semilogx(f,PS_hor(i,:),'-','Color',cols(i,:));
+    semilogx(f{sortI(i)},PS_hor{sortI(i)},'-','Color',cols(i,:));
     hold on;
     subplot(1,2,2)
-    semilogx(f,PS_ver(i,:),'-','Color',cols(i,:));
+    semilogx(f{sortI(i)},PS_ver{sortI(i)},'-','Color',cols(i,:));
     hold on;
 end
 
