@@ -25,9 +25,17 @@ benchmarkingVideos{5} = 'testbench\benchmark\benchmark_samplingrate\vertical_1.a
 benchmarkingVideos{6} = 'testbench\benchmark\benchmark_samplingrate\vertical_2.avi';
 benchmarkingVideos{7} = 'testbench\benchmark\benchmark_samplingrate\wobble.avi';
 
-parfor i = 1:7
+filenames = uipickfiles;
+if ~iscell(filenames)
+    if filenames == 0
+        fprintf('User cancelled file selection. Silently exiting...\n');
+        return;
+    end
+end
+
+parfor i = 1:length(filenames)
     % Grab path out of cell.
-    videoPath = benchmarkingVideos{i};
+    videoPath = filenames{i};
     parametersStructure = struct;
     stimulus = struct;
     
