@@ -2,6 +2,8 @@ clearvars;
 close all
 clc;
 
+addpath(genpath('..'));
+
 %% select txt computation time files
 filenames = uipickfiles;
 if ~iscell(filenames)
