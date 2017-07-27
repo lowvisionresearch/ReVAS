@@ -15,7 +15,8 @@ function [eyePositionTraces_reRef, params, referenceFrame, timeArray, ...
 % If globalRef was passed in as a filepath, read the file.
 if ischar(globalRef)
     % Leave this for now because the tiff file is not of the same type of
-    % the localReferenceFrame
+    % the localReferenceFrame ONLY DO THIS IF THE FILE IS NOT THE TYPE OF
+    % INTEGER WE WANT
     globalRef = double(imread(globalRef))/255;
 end
 
@@ -84,6 +85,7 @@ end
 localReferenceFrame = localReferenceFrame(:, startColumn:endColumn);
 
 %% Perform a cross-correlation on the global reference frame
+% REMEMBER TO COME BACK AND ADD OPTIONS FOR TILT/STRETCH/DISTORTION
 c = normxcorr2(localReferenceFrame, globalRef);
 params.enableGaussianFiltering = 0;
 params.stripHeight = size(localReferenceFrame,1);
