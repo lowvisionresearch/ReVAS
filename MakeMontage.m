@@ -352,7 +352,7 @@ end
 fileName(end-4:end) = [];
 fileName(end+1:end+9) = '_refframe';
 save(fileName, 'refFrame');
-figure('Name', 'Reference Frame')
-imshow(refFrame);
+% figure('Name', 'Reference Frame')
+% imshow(refFrame);
 
 end

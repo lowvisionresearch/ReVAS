@@ -16,14 +16,8 @@ testVideos{2} = 'testbench\cmo_os_10_4_1_135_1_stabfix_09_33_36_910.avi';
 testVideos{3} = 'testbench\djw_os_10_12_1_45_1_stabfix_16_39_42_176.avi';
 testVideos{4} = 'testbench\jap_os_10_12_1_45_1_stabfix_11_37_35_135.avi';
 
-benchmarkingVideos = cell(1, 7);
-benchmarkingVideos{1} = 'testbench\benchmark\benchmark_samplingrate\horizontal_1.avi';
-benchmarkingVideos{2} = 'testbench\benchmark\benchmark_samplingrate\horizontal_2.avi';
-benchmarkingVideos{3} = 'testbench\benchmark\benchmark_samplingrate\jerky.avi';
-benchmarkingVideos{4} = 'testbench\benchmark\benchmark_samplingrate\static.avi';
-benchmarkingVideos{5} = 'testbench\benchmark\benchmark_samplingrate\vertical_1.avi';
-benchmarkingVideos{6} = 'testbench\benchmark\benchmark_samplingrate\vertical_2.avi';
-benchmarkingVideos{7} = 'testbench\benchmark\benchmark_samplingrate\wobble.avi';
+benchmarkingVideos = cell(1, 1);
+benchmarkingVideos{1} = 'testbench\benchmark\benchmark_realvideos\.avi';
 
 filenames = uipickfiles;
 if ~iscell(filenames)
@@ -60,9 +54,9 @@ parfor i = 1:length(filenames)
 
     % Step 3: Remove the stimulus
     parametersStructure.overwrite = true;
-    %RemoveStimuli(videoPath, parametersStructure);
-    copyfile(videoPath, ...
-        [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]); %#ok<*FXSET>
+    RemoveStimuli(videoPath, parametersStructure);
+    %copyfile(videoPath, ...
+    %    [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]); %#ok<*FXSET>
     fprintf('Process Completed for RemoveStimuli()\n');
 
     % Step 4: Detect blinks and bad frames
@@ -70,7 +64,6 @@ parfor i = 1:length(filenames)
     FindBlinkFrames(videoPath, parametersStructure);
     fprintf('Process Completed for FindBadFrames()\n');
     % FindBlinkFrames still needs file name from before stim removal.
-    %videoPath = [videoPath(1:end-4) '_nostim' videoPath(end-3:end)];
 
     % Step 5: Apply gamma correction
     videoPath = [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]; %#ok<*FXSET>
