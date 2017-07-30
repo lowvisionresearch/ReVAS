@@ -13,18 +13,17 @@ clear;
 close all;
 addpath(genpath('..'));
 
-benchmarkingVideos = cell(1, 7);
-benchmarkingVideos{1} = 'testbench\benchmark\benchmark_samplingrate\horizontal_1_dwt_nostim_gamscaled_bandfilt.avi';
-benchmarkingVideos{2} = 'testbench\benchmark\benchmark_samplingrate\horizontal_2_dwt_nostim_gamscaled_bandfilt.avi';
-benchmarkingVideos{3} = 'testbench\benchmark\benchmark_samplingrate\jerky_dwt_nostim_gamscaled_bandfilt.avi';
-benchmarkingVideos{4} = 'testbench\benchmark\benchmark_samplingrate\static_dwt_nostim_gamscaled_bandfilt.avi';
-benchmarkingVideos{5} = 'testbench\benchmark\benchmark_samplingrate\vertical_1_dwt_nostim_gamscaled_bandfilt.avi';
-benchmarkingVideos{6} = 'testbench\benchmark\benchmark_samplingrate\vertical_2_dwt_nostim_gamscaled_bandfilt.avi';
-benchmarkingVideos{7} = 'testbench\benchmark\benchmark_samplingrate\wobble_dwt_nostim_gamscaled_bandfilt.avi';
+filenames = uipickfiles;
+if ~iscell(filenames)
+    if filenames == 0
+        fprintf('User cancelled file selection. Silently exiting...\n');
+        return;
+    end
+end
 
-parfor i = 1:7
+parfor i = 1:length(filenames)
     % Grab path out of cell.
-    originalVideoPath = benchmarkingVideos{i};
+    originalVideoPath = filenames{i};
     
     % MAKE COARSE REFERENCE FRAME
     coarseParameters = struct;
@@ -59,7 +58,7 @@ parfor i = 1:7
     fineResult = FineRef(coarseResult, originalVideoPath, fineParameters);
     fprintf('Process Completed for FineRef()\n');
 
-    for stripHeight = 5:2:51
+    for stripHeight = 5:6:51
         
         frameHeight = 488;
         stripsPerFrame = floor(frameHeight/stripHeight);
@@ -100,6 +99,7 @@ parfor i = 1:7
         fprintf('Process Completed for StripAnalysis()\n');
     end
 end
+fprintf('Process Completed.\n');
 
 end
 
