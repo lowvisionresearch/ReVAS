@@ -169,7 +169,7 @@ skips = 0;
 
 %% Use interpolatedPositions to generate the reference frame.
 for frameNumber = 1:totalFrames
-    
+
     % By default, the current frame is not one that needs the correction
     % factor for rounding
     correctionFrame = false;
@@ -189,15 +189,17 @@ for frameNumber = 1:totalFrames
     % fourth frame should be the 11th index in interpolatedPositions.
     % Instead, due to rounding, the first strip of the fourth frame will be
     % the 10th index. Here, we handle this rounding error.
-    
-    leftover = leftover + leftoverCopy;
-    if leftover >= 1
+    if leftover >= 0.999
+        % I chose the threshold to be 0.999 instead of 1 because sometimes 
+        % MatLab doesn't store enough digits in leftover to get proper 
+        % numbers (i.e., if frame height is 488 and strip height is 9).
         correctionFrame = true;
         endFrameStrips = endFrameStrips + 1;
         leftover = leftover - 1;
         skips = skips + 1;
     end
-
+    leftover = leftover + leftoverCopy;
+    
     % Extract the strip positions that will be used from this frame. Some
     % strips may be missing because NaNs were removed earlier
     for k = 1:size(interpolatedPositions, 1)
@@ -254,7 +256,10 @@ for frameNumber = 1:totalFrames
             frameStripsWithoutNaN(1, 4) = x - y + 1;
         else
             frameStripsWithoutNaN(1, 4) = mod(frameStripsWithoutNaN(1, 3)-skips, ...
-            stripsPerFrame);   
+            stripsPerFrame);
+            if frameStripsWithoutNaN(1, 4) == 0
+                frameStripsWithoutNaN(1, 4) = stripsPerFrame;
+            end
         end
     end
     
@@ -265,7 +270,7 @@ for frameNumber = 1:totalFrames
             frameStripsWithoutNaN(:, 4) = frameStripsWithoutNaN(:, 4) + 1;
         end
     end
-
+    
     for strip = 1 : size(frameStripsWithoutNaN, 1)
         
         % Keep track of the stripNumber so we can shift it accordingly
@@ -352,7 +357,7 @@ end
 fileName(end-4:end) = [];
 fileName(end+1:end+9) = '_refframe';
 save(fileName, 'refFrame');
-% figure('Name', 'Reference Frame')
-% imshow(refFrame);
+figure('Name', 'Reference Frame')
+imshow(refFrame);
 
 end
