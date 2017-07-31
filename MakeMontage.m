@@ -132,26 +132,18 @@ end
 % since MatLab indexing starts from 1 not 0).
 column1 = interpolatedPositions(:, 1);
 column2 = interpolatedPositions(:, 2); 
-if column1(column1<=0)
-    if column1(column1<0)
-        mostNegative = max(-1*column1);
-    else
-        mostNegative = 0;
-    end
-    interpolatedPositions(:, 1) = interpolatedPositions(:, 1) + mostNegative + 2;
+if column1(column1<0)
+   mostNegative = max(-1*column1);
+   interpolatedPositions(:, 1) = interpolatedPositions(:, 1) + mostNegative + 2;
 end
 
-if column2(column2<=0)
-    if column2(column2<0)
-        mostNegative = max(-1*column2);
-    else
-        mostNegative = 0;
-    end
+if column2(column2<0)
+    mostNegative = max(-1*column2);
     interpolatedPositions(:, 2) = interpolatedPositions(:, 2) + mostNegative + 2;
 end
 
 if column1(column1<0.5)
-    interpolatedPositions(:, 1) = interpolatedPositions(:,1) + 2;
+    interpolatedPositions(:, 1) = interpolatedPositions(:, 1) + 2;
 end
 
 if column2(column2<0.5)
