@@ -100,13 +100,18 @@ end
 
 params = parametersStructure;
 params.stripHeight = size(currFrame, 1);
-params.stripWidth = size(currFrame, 2);
 params.samplingRate = frameRate;
+params.stripWidth = size(currFrame, 2);
 [~, usefulEyePositionTraces, ~, ~] = StripAnalysis(tinyVideoName, ...
     temporaryRefFrame, params);
 
-framePositions = usefulEyePositionTraces;
-% Perform cross-correlation using the temporary reference frame
+% Scale the coordinates back up
+framePositions = zeros(totalFrames, 2);
+for row = 1:size(usefulEyePositionTraces, 1)
+    framePositions(row, 1) = usefulEyePositionTraces(row, 1) * 1/parametersStructure.scalingFactor;
+    framePositions(row, 2) = usefulEyePositionTraces(row, 2) * 1/parametersStructure.scalingFactor;
+end
+% %% Perform cross-correlation using the temporary reference frame
 % frameNumber = 1;
 % while frameNumber <= totalFrames
 %     startIndex = ((frameNumber-1) * columns) + 1;
@@ -199,17 +204,17 @@ framePositions = usefulEyePositionTraces;
 %         legend('Vertical Traces', 'Horizontal Traces');
 %         
 %         % Adjust margins to guarantee that the user can see all points
-% %         xlim([0 max(timeAxis)*1.1])
-% %         mostNegative = min(min(framePositions(:, 1)), min(framePositions(:, 2)));
-% %         mostPositive = max(max(framePositions(:, 1)), max(framePositions(:, 2)));
-% %         if isnan(mostNegative)
-% %             mostNegative = -200;
-% %         end
-% %         if isnan(mostPositive)
-% %             mostPositive = 1;
-% %         end
-% %             
-% %         ylim([mostNegative*1.1 mostPositive*1.1])
+%         xlim([0 max(timeAxis)*1.1])
+%         mostNegative = min(min(framePositions(:, 1)), min(framePositions(:, 2)));
+%         mostPositive = max(max(framePositions(:, 1)), max(framePositions(:, 2)));
+%         if isnan(mostNegative)
+%             mostNegative = -200;
+%         end
+%         if isnan(mostPositive)
+%             mostPositive = 1;
+%         end
+%             
+%         ylim([mostNegative*1.1 mostPositive*1.1])
 %       
 %     end
 % 
@@ -246,11 +251,12 @@ end
 framePositions = [filteredStripIndices1 filteredStripIndices2];
 
 save('framePositions', 'framePositions');
-
+figure('name', 'interpolated')
+plot(1:max(size(framePositions)), framePositions)
 %% Set up the counter array and the template for the coarse reference frame.
-height = size(sampleFrame, 1);
-counterArray = zeros(height*2);
-coarseRefFrame = zeros(height*2);
+height = size(currFrame, 1) * 1/parametersStructure.scalingFactor;
+counterArray = zeros(height*3);
+coarseRefFrame = zeros(height*3);
 
 % Negate all frame positions
 framePositions = -framePositions;
@@ -283,6 +289,14 @@ if column2(column2<0.5)
     framePositions(:, 2) = framePositions(:, 2) + 2;
 end
 
+if ~any(column1)
+    framePositions(:, 1) = framePositions(:, 1) + 2;
+end
+
+if ~any(column2)
+    framePositions(:, 2) = framePositions(:, 2) + 2;
+end
+disp(framePositions)
 % "Rewind" the video so we can add to the template for the coarse
 % reference frame
 v.CurrentTime = timeToRemember;
@@ -313,16 +327,17 @@ for frameNumber = 1:totalFrames
     
     % I THINK THIS SHOULD BE CHANGED BECAUSE MINROW SHOULD BE THE SECOND
     % ELEMENT OF EACH ROW, NOT THE FIRST
-    minRow = framePositions(frameNumber, 1);
-    minColumn = framePositions(frameNumber, 2);
+    minRow = round(framePositions(frameNumber, 2));
+    minColumn = round(framePositions(frameNumber, 1));
     maxRow = size(frame, 1) + minRow - 1;
     maxColumn = size(frame, 2) + minColumn - 1;
-    
+
     % Now add the frame values to the template frame and increment the
     % counterArray, which is keeping track of how many frames are added 
     % to each pixel. 
     selectRow = round(minRow):round(maxRow);
     selectColumn = round(minColumn):round(maxColumn);
+    
     coarseRefFrame(selectRow, selectColumn) = coarseRefFrame(selectRow, ...
         selectColumn) + frame;
     counterArray(selectRow, selectColumn) = counterArray(selectRow, selectColumn) + 1;
