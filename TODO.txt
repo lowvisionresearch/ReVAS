@@ -156,3 +156,7 @@ parametersStructure.velocityMethod (1 is most basic, 2 is the one we will use) (
 -----------
 
 Fine ref add new strip height (default same as regular strip height) to gui
+
+Don't enable reconfig until after user has pressed ok after pressing abort.
+Reproduce error by running make coarse ref linearly and aborting and immediately
+pressing reconfig. No fatal but weird gui behavior results.

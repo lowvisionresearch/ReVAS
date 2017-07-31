@@ -15,14 +15,19 @@ stripsPerFrame = round(parametersStructure.samplingRate / videoFrameRate);
 
 stripIndices = zeros(stripsPerFrame*numberOfFrames, ndims(videoInputArray));
 
-distanceBetweenStrips = floor((frameHeight - parametersStructure.stripHeight)...
-    / (stripsPerFrame - 1));
+distanceBetweenStrips = (frameHeight - parametersStructure.stripHeight)...
+    / (stripsPerFrame - 1);
 
 % compute the rows of stripIndices
 for stripNumber = (1:stripsPerFrame*numberOfFrames)
     
     % Calculate row number and store in the 1st column of output array.
     rowNumber = mod(stripNumber - 1, stripsPerFrame) * distanceBetweenStrips + 1;
+    
+    % Edge case for if there is only strip per frame.
+    if isnan(rowNumber) && stripsPerFrame == 1
+        rowNumber = 1;
+    end
 
     % Column number is always 1 since we left align strips.
     columnNumber = 1;

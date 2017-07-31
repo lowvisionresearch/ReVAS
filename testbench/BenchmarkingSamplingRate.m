@@ -32,6 +32,12 @@ parfor i = 1:length(filenames)
     coarseParameters.overwrite = true;
     coarseParameters.enableVerbosity = false;
     coarseParameters.fileName = originalVideoPath;
+    coarseParameters.enableSubpixelInterpolation = false;
+    coarseParameters.adaptiveSearch = false;
+    coarseParameters.badFrames = [];
+    coarseParameters.minimumPeakRatio = 0;
+    coarseParameters.enableGaussianFiltering = false;
+    coarseParameters.minimumPeakThreshold = 0;
     coarseParameters.enableGPU = false;
 
     coarseResult = CoarseRef(originalVideoPath, coarseParameters);
