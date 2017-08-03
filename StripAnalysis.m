@@ -367,7 +367,7 @@ eyeTracesToRemove = repmat(eyeTracesToRemove,1,2); % duplicate vector first
 usefulEyePositionTraces = rawEyePositionTraces .* eyeTracesToRemove;
 
 %% Plot Useful Eye Traces
-if ~abortTriggered
+if ~abortTriggered && parametersStructure.enableVerbosity
     if isfield(parametersStructure, 'axesHandles')
         axes(parametersStructure.axesHandles(3));
     else
