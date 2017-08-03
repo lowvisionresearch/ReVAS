@@ -31,8 +31,17 @@ function coarseRefFrame = CoarseRef(filename, parametersStructure)
 
 %% Handle miscellaneous preliminary info
 
-% Check to see if operations can be performed on GPU and whether the user
-% wants to do so if there is a GPU
+% Identify which frames are bad frames
+blinkFramesFilename = filename;
+blinkFramesFilename(end-28:end) = [];
+blinkFramesFilename(end+1:end+15) = 'blinkframes.mat';
+try
+    load(blinkFramesFilename);
+catch 
+end
+
+% Check to see if operations can be performed on GPU and whether the
+% user wants to do so if there is a GPU
 enableGPU = (gpuDeviceCount > 0) & parametersStructure.enableGPU;
 
 % Write the output to a new MatLab file. First remove the '.avi' extension
@@ -71,7 +80,17 @@ tinyVideo = VideoWriter(tinyVideoName);
 if ~isfield(parametersStructure, 'refFrameNumber')
     parametersStructure.refFrameNumber = totalFrames/2;
 end
-
+if exist('badFrames', 'var')
+    while any(badFrames == parametersStructure.refFrameNumber)
+        if parametersStructure.refFrameNumber ~= 1
+            parametersStructure.refFrameNumber = parametersStructure.refFrameNumber...
+                - 1;
+        else
+            parametersStructure.refFrameNumber = parametersStructure.refFrameNumber...
+                + 1;
+        end
+    end
+end
 %% Create new shrunken video and call strip analysis on it
 open(tinyVideo)
 
@@ -105,12 +124,19 @@ params.stripWidth = size(currFrame, 2);
 [~, usefulEyePositionTraces, ~, ~] = StripAnalysis(tinyVideoName, ...
     temporaryRefFrame, params);
 
-% Scale the coordinates back up
+% Scale the coordinates back up. Throw out information from bad frames
 framePositions = zeros(totalFrames, 2);
 for row = 1:size(usefulEyePositionTraces, 1)
-    framePositions(row, 1) = usefulEyePositionTraces(row, 1) * 1/parametersStructure.scalingFactor;
-    framePositions(row, 2) = usefulEyePositionTraces(row, 2) * 1/parametersStructure.scalingFactor;
+    if exist('badFrames', 'var') && any(badFrames==row)
+        framePositions(row, :) = NaN;
+    else
+        framePositions(row, 1) = usefulEyePositionTraces(row, 1) * ...
+            1/parametersStructure.scalingFactor;
+        framePositions(row, 2) = usefulEyePositionTraces(row, 2) * ...
+            1/parametersStructure.scalingFactor;
+    end
 end
+
 % %% Perform cross-correlation using the temporary reference frame
 % frameNumber = 1;
 % while frameNumber <= totalFrames
@@ -251,8 +277,7 @@ end
 framePositions = [filteredStripIndices1 filteredStripIndices2];
 
 save('framePositions', 'framePositions');
-figure('name', 'interpolated')
-plot(1:max(size(framePositions)), framePositions)
+
 %% Set up the counter array and the template for the coarse reference frame.
 height = size(currFrame, 1) * 1/parametersStructure.scalingFactor;
 counterArray = zeros(height*3);
@@ -289,14 +314,14 @@ if column2(column2<0.5)
     framePositions(:, 2) = framePositions(:, 2) + 2;
 end
 
-if ~any(column1)
+if any(column1==0)
     framePositions(:, 1) = framePositions(:, 1) + 2;
 end
 
-if ~any(column2)
+if any(column2==0)
     framePositions(:, 2) = framePositions(:, 2) + 2;
 end
-disp(framePositions)
+
 % "Rewind" the video so we can add to the template for the coarse
 % reference frame
 v.CurrentTime = timeToRemember;
@@ -325,8 +350,6 @@ for frameNumber = 1:totalFrames
     % If minRow is 2 (moved down by one pixel) then maxRow will be 
     % 2 + 256 - 1 = 257)
     
-    % I THINK THIS SHOULD BE CHANGED BECAUSE MINROW SHOULD BE THE SECOND
-    % ELEMENT OF EACH ROW, NOT THE FIRST
     minRow = round(framePositions(frameNumber, 2));
     minColumn = round(framePositions(frameNumber, 1));
     maxRow = size(frame, 1) + minRow - 1;
@@ -391,5 +414,6 @@ if parametersStructure.enableVerbosity >= 1
     end
     imshow(coarseRefFrame)
 end
-
+figure('Name', 'CoarseRef')
+imshow(coarseRefFrame)
 end

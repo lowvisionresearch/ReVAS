@@ -41,8 +41,8 @@ totalFrames = frameRate * videoInfo.Duration;
 stripsPerFrame = floor(frameHeight/params.newStripHeight);
 
 % setting up templates for reference frame and counter array
-counterArray = zeros(frameHeight*2);
-refFrame = zeros(frameHeight*2);
+counterArray = zeros(frameHeight*3);
+refFrame = zeros(frameHeight*3);
 
 % Negate all positions. stripIndices tells how far a strip has moved from
 % the reference--therefore, to compensate for that movement, the

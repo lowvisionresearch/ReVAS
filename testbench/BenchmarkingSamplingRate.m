@@ -21,7 +21,18 @@ if ~iscell(filenames)
     end
 end
 
-parfor i = 1:length(filenames)
+badFramesCells = cell(1,length(filenames));
+
+for i = 1:length(filenames)
+    originalVideoPath = filenames{i};
+    
+    nameEnd = strfind(originalVideoPath,'dwt_');
+    blinkFramesPath = [originalVideoPath(1:nameEnd+length('dwt_')-1) 'blinkframes'];
+    load(blinkFramesPath, 'badFrames');
+    badFramesCells{i} = badFrames;
+end
+
+for i = 1:length(filenames)
     % Grab path out of cell.
     originalVideoPath = filenames{i};
     
@@ -34,15 +45,15 @@ parfor i = 1:length(filenames)
     coarseParameters.fileName = originalVideoPath;
     coarseParameters.enableSubpixelInterpolation = false;
     coarseParameters.adaptiveSearch = false;
-    coarseParameters.badFrames = [];
-    coarseParameters.minimumPeakRatio = 0;
+    coarseParameters.badFrames = badFramesCells{i};
+    coarseParameters.minimumPeakRatio = inf;
     coarseParameters.enableGaussianFiltering = false;
     coarseParameters.minimumPeakThreshold = 0;
     coarseParameters.enableGPU = false;
 
     coarseResult = CoarseRef(originalVideoPath, coarseParameters);
     fprintf('Process Completed for CoarseRef()\n');
-
+    
     % MAKE FINE REFERENCE FRAME
     fineParameters = struct;
     fineParameters.enableVerbosity = false;
@@ -58,7 +69,7 @@ parfor i = 1:length(filenames)
     fineParameters.subpixelInterpolationParameters.neighborhoodSize = 7;
     fineParameters.subpixelInterpolationParameters.subpixelDepth = 2;
     fineParameters.enableGaussianFiltering = false; % TODO
-    fineParameters.badFrames = []; % TODO
+    fineParameters.badFrames = badFramesCells{i};
     fineParameters.enableGPU = false;
 
     fineResult = FineRef(coarseResult, originalVideoPath, fineParameters);
@@ -94,7 +105,7 @@ parfor i = 1:length(filenames)
         stripParameters.subpixelInterpolationParameters.neighborhoodSize = 7;
         stripParameters.subpixelInterpolationParameters.subpixelDepth = 2;
         stripParameters.enableGPU = false;
-        stripParameters.badFrames = []; % TODO
+        stripParameters.badFrames = badFramesCells{i};
 
         StripAnalysis(currentVideoPath, fineResult, stripParameters);
         
