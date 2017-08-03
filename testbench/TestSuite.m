@@ -163,7 +163,7 @@ fprintf('Process Completed\n');
 %% Fine Reference Frame Test
 
 % First video
-videoPath = 'vertical_1_dwt_nostim_gamscaled_bandfilt.avi';
+videoPath = 'amd_den_os_gridsacc_13_54_31_3_dwt_nostim_gamscaled_bandfilt.avi';
 videoFrames = VideoPathToArray(videoPath);
 videoWidth = size(videoFrames, 2);
 params = struct;
@@ -177,15 +177,14 @@ params.stripWidth = videoWidth;
 params.enableVerbosity = 1;
 params.subpixelInterpolationParameters.neighborhoodSize = 7;
 params.subpixelInterpolationParameters.subpixelDepth = 2;
-params.badFrames = [149 150];
+params.badFrames = [];
 params.enableGaussianFiltering = false; 
-params.gaussianStandardDeviation = 10;
 params.minimumPeakRatio = 0.8;
 params.minimumPeakThreshold = 0;
 % params.axesHandles = [];
 params.newStripHeight = 11;
 params.overwrite = true;
-params.numberOfIterations = 1;
+params.numberOfIterations = 0;
 params.scalingFactor = 0.4;
 coarseRef = CoarseRef(videoPath, params);
 load('framePositions.mat')
@@ -204,7 +203,6 @@ FineRef(coarseRef, videoPath, params);
 % params.gaussianStandardDeviation = 10;
 % coarseRef = CoarseRef(params, 0.4);
 % RefineReferenceFrame(coarseRef, params);
-
 
 
 end
