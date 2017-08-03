@@ -97,7 +97,6 @@ referenceFramePath = 'testbench/mna_os_10_12_1_45_0_stabfix_17_36_21_409_dwt_nos
 %videoPath = 'testbench/jap_os_10_12_1_45_-1_stabfix_13_09_01_87_dwt_nostim_nostim_gamscaled_bandfilt_meanrem.avi';
 %referenceFramePath = ''; % No reference frame available yet...
 
-%load([videoPath(1:end-4) '_badframes']);
 %videoPath = [videoPath(1:end-4) '_nostim' videoPath(end-3:end)];
 videoFrames = VideoPathToArray(videoPath);
 videoWidth = size(videoFrames, 2);
@@ -113,8 +112,6 @@ parametersStructure.subpixelInterpolationParameters.subpixelDepth = 2;
 parametersStructure.adaptiveSearch = true;
 parametersStructure.adaptiveSearchScalingFactor = 8;
 parametersStructure.searchWindowHeight = 79;
-parametersStructure.badFrames = [29 30];
-%parametersStructure.badFrames = badFrames;
 parametersStructure.minimumPeakRatio = 0.8;
 parametersStructure.minimumPeakThreshold = 0;
 parametersStructure.enableVerbosity = true;
@@ -163,7 +160,8 @@ fprintf('Process Completed\n');
 %% Fine Reference Frame Test
 
 % First video
-videoPath = 'amd_den_os_gridsacc_13_54_31_3_dwt_nostim_gamscaled_bandfilt.avi';
+videoPath = 'testbench\benchmark\benchmark_realvideos\amd_den_os_gridsacc_13_54_31_3_dwt_nostim_gamscaled_bandfilt.avi';
+
 videoFrames = VideoPathToArray(videoPath);
 videoWidth = size(videoFrames, 2);
 params = struct;
@@ -177,11 +175,9 @@ params.stripWidth = videoWidth;
 params.enableVerbosity = 1;
 params.subpixelInterpolationParameters.neighborhoodSize = 7;
 params.subpixelInterpolationParameters.subpixelDepth = 2;
-params.badFrames = [];
 params.enableGaussianFiltering = false; 
 params.minimumPeakRatio = 0.8;
 params.minimumPeakThreshold = 0;
-% params.axesHandles = [];
 params.newStripHeight = 11;
 params.overwrite = true;
 params.numberOfIterations = 0;

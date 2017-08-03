@@ -1,4 +1,4 @@
-function coarseRefFrame = CoarseRef(filename, parametersStructure)
+function coarseRefFrame = CoarseRef(videoPath, parametersStructure)
 %CoarseRef    Generates a coarse reference frame.
 %   f = CoarseRef(filename, parametersStructure) is the coarse reference 
 %   frame of a video, generated using a scaled down version of each frame 
@@ -21,7 +21,7 @@ function coarseRefFrame = CoarseRef(filename, parametersStructure)
 %   params also needs params.peakRatio and params.minimumPeakThreshold
 %
 %   Example: 
-%       filename = 'MyVid.avi';
+%       videoPath = 'MyVid.avi';
 %       params.enableGPU = false;
 %       params.overwrite = true;
 %       params.refFrameNumber = 15;
@@ -32,11 +32,10 @@ function coarseRefFrame = CoarseRef(filename, parametersStructure)
 %% Handle miscellaneous preliminary info
 
 % Identify which frames are bad frames
-blinkFramesFilename = filename;
-blinkFramesFilename(end-28:end) = [];
-blinkFramesFilename(end+1:end+15) = 'blinkframes.mat';
+nameEnd = strfind(originalVideoPath,'dwt_');
+blinkFramesPath = [originalVideoPath(1:nameEnd+length('dwt_')-1) 'blinkframes'];
 try
-    load(blinkFramesFilename);
+    load(blinkFramesPath, 'badFrames');
 catch 
 end
 
@@ -45,7 +44,7 @@ end
 enableGPU = (gpuDeviceCount > 0) & parametersStructure.enableGPU;
 
 % Write the output to a new MatLab file. First remove the '.avi' extension
-outputFileName = filename;
+outputFileName = videoPath;
 outputFileName((end-3):end) = [];
 
 % Extend name because the file has been processed by coarseref
@@ -64,11 +63,11 @@ end
 
 %% Initialize variables
 % get video info
-v = VideoReader(filename);
+v = VideoReader(videoPath);
 timeToRemember = v.CurrentTime;
 frameRate = v.FrameRate;
 totalFrames = v.frameRate * v.Duration;
-tinyVideoName = filename;
+tinyVideoName = videoPath;
 tinyVideoName(end-3:end) = [];
 tinyVideoName(end+1:end+11) = '_shrunk.avi';
 tinyVideo = VideoWriter(tinyVideoName);

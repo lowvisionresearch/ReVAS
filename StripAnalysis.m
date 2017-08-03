@@ -35,6 +35,16 @@ ValidateVideoInput(videoInput);
 ValidateReferenceFrame(referenceFrame);
 ValidateParametersStructure(parametersStructure);
 
+% Identify which frames are bad frames
+nameEnd = strfind(originalVideoPath,'dwt_');
+blinkFramesPath = [originalVideoPath(1:nameEnd+length('dwt_')-1) 'blinkframes'];
+try
+    load(blinkFramesPath, 'badFrames');
+    parametersStructure.badFrames = badFrames;
+catch
+    parametersStructure.badFrames = [];
+end
+
 % *** TODO: needs testing on color video ***
 % Change 4D arrays to 3D by making video grayscale. Assumes 4D arrays are
 % in format (x, y, time, color).
