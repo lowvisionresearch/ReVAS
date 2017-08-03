@@ -119,7 +119,6 @@ if logical(handles.togFine.Value) && ~logical(abortTriggered)
     parametersStructure.subpixelInterpolationParameters.subpixelDepth ...
         = handles.config.fineSubpixelDepth;
     parametersStructure.enableGaussianFiltering = false; % TODO
-    parametersStructure.badFrames = []; % TODO
     parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
 
     % Call the function(s)

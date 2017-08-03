@@ -348,10 +348,6 @@
 %   sub-structure where subpixel interpolation parameters
 %   (|neighborhoodSize|
 %   and |subpixelDepth|) will be stored;
-%   an array indicating |bad frames| (i.e., frames where image
-%   quality is so bad to perform strip analysis, or frames where subject
-%   blinked. These frames will be included in the strip analysis to save
-%   computation time);
 %   |axesHandles| axes handles to be used to display progress if verbosity
 %   is enabled. use an empty array to have verbosity displayed in separate
 %   figure windows.
@@ -524,7 +520,7 @@
 % *Notes*
 %
 % # Produces a mat file that is stored in the same
-% location as the original video but with '_blinkframes' appended to the
+% location as the original video but with '_sacsdrifts' appended to the
 % original file name. Variables saved include:
 %   |saccadeStructs| and |driftStructs|, each as 1D arrays of structs.
 %   Each struct has fields:
