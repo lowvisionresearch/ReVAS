@@ -32,8 +32,8 @@ function coarseRefFrame = CoarseRef(videoPath, parametersStructure)
 %% Handle miscellaneous preliminary info
 
 % Identify which frames are bad frames
-nameEnd = strfind(originalVideoPath,'dwt_');
-blinkFramesPath = [originalVideoPath(1:nameEnd+length('dwt_')-1) 'blinkframes'];
+nameEnd = strfind(videoPath,'dwt_');
+blinkFramesPath = [videoPath(1:nameEnd+length('dwt_')-1) 'blinkframes'];
 try
     load(blinkFramesPath, 'badFrames');
 catch 
@@ -409,10 +409,8 @@ if parametersStructure.enableVerbosity >= 1
     if isfield(parametersStructure, 'axesHandles')
         axes(parametersStructure.axesHandles(3));
     else
-        figure(3);
+        figure('Name', 'Coarse Reference Frame');
     end
     imshow(coarseRefFrame)
 end
-figure('Name', 'CoarseRef')
-imshow(coarseRefFrame)
 end
