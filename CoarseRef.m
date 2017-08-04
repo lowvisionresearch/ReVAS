@@ -29,28 +29,9 @@ function coarseRefFrame = CoarseRef(videoPath, parametersStructure)
 %       params.scalingFactor = 0.5;
 %       CoarseRef(params, filename);
 
-%% Handle miscellaneous preliminary info
+outputFileName = [videoPath(1:end-4) '_coarseref'];
 
-% Identify which frames are bad frames
-nameEnd = strfind(videoPath,'dwt_');
-blinkFramesPath = [videoPath(1:nameEnd+length('dwt_')-1) 'blinkframes'];
-try
-    load(blinkFramesPath, 'badFrames');
-catch 
-end
-
-% Check to see if operations can be performed on GPU and whether the
-% user wants to do so if there is a GPU
-enableGPU = (gpuDeviceCount > 0) & parametersStructure.enableGPU;
-
-% Write the output to a new MatLab file. First remove the '.avi' extension
-outputFileName = videoPath;
-outputFileName((end-3):end) = [];
-
-% Extend name because the file has been processed by coarseref
-outputFileName(end + 1: end + 10) = '_coarseref';
-
-% Handle overwrite scenarios.
+%% Handle overwrite scenarios.
 if ~exist([outputFileName '.mat'], 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
@@ -60,6 +41,19 @@ elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwr
 else
     RevasWarning(['CoarseRef() is proceeding and overwriting an existing file. (' outputFileName ')'], parametersStructure);  
 end
+
+%% Identify which frames are bad frames
+nameEnd = strfind(originalVideoPath,'dwt_');
+blinkFramesPath = [originalVideoPath(1:nameEnd+length('dwt_')-1) 'blinkframes'];
+try
+    load(blinkFramesPath, 'badFrames');
+catch
+    badFrames = [];
+end
+
+%% Check to see if operations can be performed on GPU and whether the
+% user wants to do so if there is a GPU
+enableGPU = parametersStructure.enableGPU & (gpuDeviceCount > 0);
 
 %% Initialize variables
 % get video info
