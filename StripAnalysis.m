@@ -36,8 +36,8 @@ ValidateReferenceFrame(referenceFrame);
 ValidateParametersStructure(parametersStructure);
 
 % Identify which frames are bad frames
-nameEnd = strfind(originalVideoPath,'dwt_');
-blinkFramesPath = [originalVideoPath(1:nameEnd+length('dwt_')-1) 'blinkframes'];
+nameEnd = strfind(inputVideoPath,'dwt_');
+blinkFramesPath = [inputVideoPath(1:nameEnd+length('dwt_')-1) 'blinkframes'];
 try
     load(blinkFramesPath, 'badFrames');
     parametersStructure.badFrames = badFrames;
@@ -213,12 +213,13 @@ for stripNumber = (1:numberOfStrips)
         strip = videoInput(rowStart:rowEnd, columnStart:columnEnd, frame);
 
         correlation = normxcorr2(strip, referenceFrame);
-
-        upperBound = 1;
+        
+        parametersStructure.stripNumber = stripNumber;  
+        parametersStructure.stripsPerFrame = stripsPerFrame;
 
         if parametersStructure.adaptiveSearch ...
                 && ~isnan(estimatedStripYLocations(stripNumber))
-            % cut out a smaller search window from correlation.
+            % Cut out a smaller search window from correlation.
             upperBound = floor(min(max(1, ...
                 estimatedStripYLocations(stripNumber) ...
                 - ((parametersStructure.searchWindowHeight - parametersStructure.stripHeight)/2)), ...
@@ -227,15 +228,35 @@ for stripNumber = (1:numberOfStrips)
                 estimatedStripYLocations(stripNumber) ...
                 + ((parametersStructure.searchWindowHeight - parametersStructure.stripHeight)/2) ...
                 + parametersStructure.stripHeight));
-            correlation = correlation(upperBound:lowerBound,1:end);
-
-            searchWindowsArray(stripNumber,:) = [upperBound lowerBound];
+            adaptedCorrelation = correlation(upperBound:lowerBound,1:end);
+            
+            try
+                % Try to use adapted version of correlation map.
+                [xPeak, yPeak, peakValue, secondPeakValue] = ...
+                    FindPeak(adaptedCorrelation, parametersStructure);
+                
+                % See if adapted result is acceptable or not.
+                if peakValue <= 0 || secondPeakValue <= 0 ...
+                        || secondPeakValue / peakValue > parametersStructure.minimumPeakRatio ...
+                        || peakValue < parametersStructure.minimumPeakThreshold
+                    % Not acceptable, try again in the catch block with full correlation map.
+                    error('Jumping to catch block immediately below.');
+                end
+                correlation = adoptedCorrelation;
+                searchWindowsArray(stripNumber,:) = [upperBound lowerBound];
+            catch
+                upperBound = 1;
+                % It failed or was unacceptable, so use full correlation map.
+                [xPeak, yPeak, peakValue, secondPeakValue] = ...
+                    FindPeak(correlation, parametersStructure);
+                
+                searchWindowsArray(stripNumber,:) = [NaN NaN];
+            end
+        else
+            upperBound = 1;
+            [xPeak, yPeak, peakValue, secondPeakValue] = ...
+                FindPeak(correlation, parametersStructure);
         end
-
-        parametersStructure.stripNumber = stripNumber;  
-        parametersStructure.stripsPerFrame = stripsPerFrame;
-        [xPeak, yPeak, peakValue, secondPeakValue] = ...
-            FindPeak(correlation, parametersStructure);
 
         % 2D Interpolation if enabled
         if localParametersStructure.enableSubpixelInterpolation
@@ -280,7 +301,7 @@ for stripNumber = (1:numberOfStrips)
             drawnow;  
         end
 
-        % If these peaks are in terms of a smaller correlation map, restore it
+        % If these peaks are in terms of an adapted correlation map, restore it
         % back to in terms of the full map.
         yPeak = yPeak + upperBound - 1;
 
@@ -354,6 +375,7 @@ if ~localParametersStructure.enableVerbosity
 end
 
 %% Populate statisticsStructure
+
 statisticsStructure.peakValues = peakValueArray;
 statisticsStructure.peakRatios = secondPeakValueArray ./ peakValueArray;
 statisticsStructure.searchWindows = searchWindowsArray;
