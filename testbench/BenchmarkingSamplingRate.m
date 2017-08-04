@@ -38,7 +38,6 @@ for i = 1:length(filenames)
     
     % MAKE COARSE REFERENCE FRAME
     coarseParameters = struct;
-    coarseParameters.refFrameNumber = 15;
     coarseParameters.scalingFactor = 0.5;
     coarseParameters.overwrite = true;
     coarseParameters.enableVerbosity = false;
@@ -46,8 +45,8 @@ for i = 1:length(filenames)
     coarseParameters.enableSubpixelInterpolation = false;
     coarseParameters.adaptiveSearch = false;
     coarseParameters.badFrames = badFramesCells{i};
-    coarseParameters.minimumPeakRatio = inf;
     coarseParameters.enableGaussianFiltering = false;
+    coarseParameters.minimumPeakRatio = inf;
     coarseParameters.minimumPeakThreshold = 0;
     coarseParameters.enableGPU = false;
 

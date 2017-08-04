@@ -35,11 +35,6 @@ if ~isfield(parametersStructure, 'adaptiveSearch')
     error('Invalid Input for validateParametersStructure (parametersStructure does not have a adaptiveSearch field)');
 end
 
-% badFrames
-if ~isfield(parametersStructure, 'badFrames')
-    error('Invalid Input for validateParametersStructure (parametersStructure does not have a badFrames field)');
-end
-
 % minimumPeakRatio
 if ~isfield(parametersStructure, 'minimumPeakRatio')
     error('Invalid Input for validateParametersStructure (parametersStructure does not have a minimumPeakRatio field)');

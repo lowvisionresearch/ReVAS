@@ -159,6 +159,10 @@ fprintf('Process Completed\n');
 
 %% Fine Reference Frame Test
 
+clear;
+clc;
+close all;
+
 % First video
 videoPath = 'testbench\benchmark\benchmark_realvideos\amd_den_os_gridsacc_13_54_31_3_dwt_nostim_gamscaled_bandfilt.avi';
 
@@ -170,17 +174,20 @@ params.enableSubpixelInterpolation = true;
 params.stripHeight = 15;
 params.enableGPU = false;
 params.samplingRate = 540;
-params.adaptiveSearch = false;
+params.adaptiveSearch = true;
+params.adaptiveSearchScalingFactor = 8;
+params.searchWindowHeight = 79;
 params.stripWidth = videoWidth;
 params.enableVerbosity = 1;
 params.subpixelInterpolationParameters.neighborhoodSize = 7;
 params.subpixelInterpolationParameters.subpixelDepth = 2;
-params.enableGaussianFiltering = false; 
-params.minimumPeakRatio = 0.8;
+params.enableGaussianFiltering = true;
+params.gaussianStandardDeviation = 10;
+params.minimumPeakRatio = 0.1;
 params.minimumPeakThreshold = 0;
 params.newStripHeight = 11;
 params.overwrite = true;
-params.numberOfIterations = 0;
+params.numberOfIterations = 1;
 params.scalingFactor = 0.4;
 coarseRef = CoarseRef(videoPath, params);
 load('framePositions.mat')
