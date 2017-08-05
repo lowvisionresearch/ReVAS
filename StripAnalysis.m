@@ -31,6 +31,13 @@ if ischar(referenceFrame)
     referenceFrame = importdata(referenceFramePath);
 end
 
+% Set strip width if not provided
+if ~isfield(parametersStructure, 'stripWidth')
+    stripWidth = size(videoInput, 2);
+else
+    stripWidth = parametersStructure.stripWidth;
+end
+
 ValidateVideoInput(videoInput);
 ValidateReferenceFrame(referenceFrame);
 ValidateParametersStructure(parametersStructure);
@@ -209,7 +216,7 @@ for stripNumber = (1:numberOfStrips)
         rowStart = stripData(1,1);
         columnStart = stripData(1,2);
         rowEnd = rowStart + localParametersStructure.stripHeight - 1;
-        columnEnd = columnStart + localParametersStructure.stripWidth - 1;
+        columnEnd = columnStart + stripWidth - 1;
         strip = videoInput(rowStart:rowEnd, columnStart:columnEnd, frame);
 
         correlation = normxcorr2(strip, referenceFrame);
@@ -324,7 +331,7 @@ for stripNumber = (1:numberOfStrips)
             rawEyePositionTraces(stripNumber,2) = ...
                 rawEyePositionTraces(stripNumber,2) - (parametersStructure.stripHeight - 1);
             rawEyePositionTraces(stripNumber,1) = ...
-                rawEyePositionTraces(stripNumber,1) - (parametersStructure.stripWidth - 1);
+                rawEyePositionTraces(stripNumber,1) - (stripWidth - 1);
 
             % Adjust in vertical direction.
             % We must subtract back out the starting strip vertical coordinate in order
@@ -362,7 +369,7 @@ if ~localParametersStructure.enableVerbosity
     rawEyePositionTraces(:,2) = ...
         rawEyePositionTraces(:,2) - (parametersStructure.stripHeight - 1);
     rawEyePositionTraces(:,1) = ...
-        rawEyePositionTraces(:,1) - (parametersStructure.stripWidth - 1);
+        rawEyePositionTraces(:,1) - (stripWidth - 1);
 
     % Adjust in vertical direction.
     % We must subtract back out the starting strip vertical coordinate in order

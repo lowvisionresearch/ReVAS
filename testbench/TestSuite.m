@@ -98,13 +98,10 @@ referenceFramePath = 'testbench/mna_os_10_12_1_45_0_stabfix_17_36_21_409_dwt_nos
 %referenceFramePath = ''; % No reference frame available yet...
 
 %videoPath = [videoPath(1:end-4) '_nostim' videoPath(end-3:end)];
-videoFrames = VideoPathToArray(videoPath);
-videoWidth = size(videoFrames, 2);
 
 parametersStructure = struct;
 
 parametersStructure.stripHeight = 15;
-parametersStructure.stripWidth = videoWidth;
 parametersStructure.samplingRate = 540;
 parametersStructure.enableSubpixelInterpolation = true;
 parametersStructure.subpixelInterpolationParameters.neighborhoodSize = 7;
@@ -165,41 +162,36 @@ close all;
 
 % First video
 videoPath = 'testbench\benchmark\benchmark_realvideos\amd_den_os_gridsacc_13_54_31_3_dwt_nostim_gamscaled_bandfilt.avi';
+tracesPath = [videoPath(1:end-4) '_coarseframepositions'];
 
-videoFrames = VideoPathToArray(videoPath);
-videoWidth = size(videoFrames, 2);
 params = struct;
 params.videoPath = videoPath;
 params.enableSubpixelInterpolation = true;
-params.stripHeight = 15;
+params.stripHeight = 51;
 params.enableGPU = false;
 params.samplingRate = 540;
 params.adaptiveSearch = true;
 params.adaptiveSearchScalingFactor = 8;
 params.searchWindowHeight = 79;
-params.stripWidth = videoWidth;
 params.enableVerbosity = 1;
 params.subpixelInterpolationParameters.neighborhoodSize = 7;
 params.subpixelInterpolationParameters.subpixelDepth = 2;
 params.enableGaussianFiltering = true;
-params.gaussianStandardDeviation = 10;
-params.minimumPeakRatio = 0.1;
-params.minimumPeakThreshold = 0;
+params.gaussianStandardDeviation = 50;
+params.minimumPeakRatio = 0.9;
+params.minimumPeakThreshold = 0.3;
 params.newStripHeight = 11;
 params.overwrite = true;
 params.numberOfIterations = 1;
 params.scalingFactor = 0.4;
 coarseRef = CoarseRef(videoPath, params);
-load('framePositions.mat')
-params.roughEyePositionTraces = framePositions;
-FineRef(coarseRef, videoPath, params);
+%load(tracesPath)
+%params.roughEyePositionTraces = framePositions;
+%FineRef(coarseRef, videoPath, params);
 
 % Second Video
 % videoPath = 'djw_os_10_12_1_45_1_stabfix_16_39_42_176_dwt_nostim_gamscaled_bandfilt.avi';
-% videoFrames = VideoPathToArray(videoPath);
-% videoWidth = size(videoFrames, 2);
 % params.videoPath = videoPath;
-% params.stripWidth = videoWidth;
 % params.fileName = 'djw_os_10_12_1_45_1_stabfix_16_39_42_176_dwt_nostim_gamscaled_bandfilt.avi';
 % params.numberOfIterations = 0;
 % params.enableGaussianFiltering = false; 
