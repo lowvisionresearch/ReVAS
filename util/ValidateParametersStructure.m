@@ -5,12 +5,9 @@ function [] = validateParametersStructure(parametersStructure)
 %   An input is valid if ...
 %   If the input is invalid, an error will be thrown.
 
-% stripHeight and stripWidth
+% stripHeight
 if ~isfield(parametersStructure, 'stripHeight')
     error('Invalid Input for validateParametersStructure (parametersStructure does not have a stripHeight field)');
-end
-if ~isfield(parametersStructure, 'stripWidth')
-    error('Invalid Input for validateParametersStructure (parametersStructure does not have a stripWidth field)');
 end
 
 % samplingRate

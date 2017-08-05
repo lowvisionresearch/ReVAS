@@ -10,26 +10,29 @@ function coarseRefFrame = CoarseRef(videoPath, parametersStructure)
 %   scalingFactor to get the actual frame shifts. It then constructs the 
 %   coarse reference frame using those approximate frame shifts.
 %
-%   params must have the fields: params.scalingFactor, params.refFrameNumber, 
+%   parametersStructure must have the fields: parametersStructure.scalingFactor,
+%   parametersStructure.refFrameNumber, 
 %   an optional parameter that designates which frame to use as the initial 
-%   scaled down reference frame, params.overwrite (optional), 
-%   params.enableVerbosity, which is either 0, 1, or 2. Verbosity of 0 will 
+%   scaled down reference frame, parametersStructure.overwrite (optional), 
+%   parametersStructure.enableVerbosity, which is either 0, 1, or 2. Verbosity of 0 will 
 %   only save the output in a MatLab file. Verbosity of 1 will display the 
 %   final result. Verbosity of 2 will show the progress of the program. 
 %   scalingFactor is the factor by which each frame will be multiplied to 
 %   get the approximate frame shifts.
-%   params also needs params.peakRatio and params.minimumPeakThreshold
+%   parametersStructure also needs parametersStructure.peakRatio and
+%   parametersStructure.minimumPeakThreshold
 %
 %   Example: 
 %       videoPath = 'MyVid.avi';
-%       params.enableGPU = false;
-%       params.overwrite = true;
-%       params.refFrameNumber = 15;
-%       params.enableVerbosity = 2;
-%       params.scalingFactor = 0.5;
-%       CoarseRef(params, filename);
+%       parametersStructure.enableGPU = false;
+%       parametersStructure.overwrite = true;
+%       parametersStructure.refFrameNumber = 15;
+%       parametersStructure.enableVerbosity = 2;
+%       parametersStructure.scalingFactor = 0.5;
+%       CoarseRef(parametersStructure, filename);
 
 outputFileName = [videoPath(1:end-4) '_coarseref'];
+outputTracesPath = [videoPath(1:end-4) '_coarseframepositions'];
 
 %% Handle overwrite scenarios.
 if ~exist([outputFileName '.mat'], 'file')
@@ -43,8 +46,8 @@ else
 end
 
 %% Identify which frames are bad frames
-nameEnd = strfind(originalVideoPath,'dwt_');
-blinkFramesPath = [originalVideoPath(1:nameEnd+length('dwt_')-1) 'blinkframes'];
+nameEnd = strfind(videoPath,'dwt_');
+blinkFramesPath = [videoPath(1:nameEnd+length('dwt_')-1) 'blinkframes'];
 try
     load(blinkFramesPath, 'badFrames');
 catch
@@ -55,212 +58,53 @@ end
 % user wants to do so if there is a GPU
 enableGPU = parametersStructure.enableGPU & (gpuDeviceCount > 0);
 
-%% Initialize variables
-% get video info
-v = VideoReader(videoPath);
-timeToRemember = v.CurrentTime;
-frameRate = v.FrameRate;
-totalFrames = v.frameRate * v.Duration;
-tinyVideoName = videoPath;
-tinyVideoName(end-3:end) = [];
-tinyVideoName(end+1:end+11) = '_shrunk.avi';
-tinyVideo = VideoWriter(tinyVideoName);
+%% Shrink video, call strip analysis, and restore video's original scale.
+
+% Shrink each frame and write to a new video so that stripAnalysis can be
+% called, using each frame as one "strip"
+[videoInputArray, videoFrameRate] = VideoPathToArray(videoPath);
+shrunkFrames = imresize(videoInputArray, parametersStructure.scalingFactor);
 
 % if no frame number is designated as the original reference frame, then
 % the default frame should be the "middle" frame of the total frames (i.e.,
 % if frameRate = 30 Hz and duration is 2 seconds, there are 60 total frames
 % and the default frame should therefore be the 30th frame).
 if ~isfield(parametersStructure, 'refFrameNumber')
-    parametersStructure.refFrameNumber = totalFrames/2;
+    refFrameNumber = size(shrunkFrames,3)/2;
+else
+   refFrameNumber = parametersStructure.refFrameNumber; 
 end
 if exist('badFrames', 'var')
-    while any(badFrames == parametersStructure.refFrameNumber)
-        if parametersStructure.refFrameNumber ~= 1
-            parametersStructure.refFrameNumber = parametersStructure.refFrameNumber...
-                - 1;
+    while any(badFrames == refFrameNumber)
+        if refFrameNumber > 1
+            refFrameNumber = refFrameNumber - 1;
         else
-            parametersStructure.refFrameNumber = parametersStructure.refFrameNumber...
-                + 1;
+            refFrameNumber = refFrameNumber + 1;
         end
     end
 end
-%% Create new shrunken video and call strip analysis on it
-open(tinyVideo)
 
-% Shrink each frame and write to a new video so that stripAnalysis can be
-% called, using each frame as one "strip"
-while hasFrame(v)
-    currFrame = readFrame(v);
-    shrunkFrame = imresize(currFrame, parametersStructure.scalingFactor);
-    writeVideo(tinyVideo, shrunkFrame)
-end
-
-close(tinyVideo)
-
-tinyVideo = VideoReader(tinyVideoName);
-frameNumber = 1;
-
-while hasFrame(tinyVideo)
-    currFrame = readFrame(tinyVideo);
-    if frameNumber == parametersStructure.refFrameNumber
-        currFrame = rgb2gray(currFrame);
-        temporaryRefFrame = double(currFrame)/255;
-        break
-    end
-    frameNumber = frameNumber + 1;
-end
+temporaryRefFrame = shrunkFrames(:,:,refFrameNumber);
 
 params = parametersStructure;
-params.stripHeight = size(currFrame, 1);
-params.samplingRate = frameRate;
-params.stripWidth = size(currFrame, 2);
-[~, usefulEyePositionTraces, ~, ~] = StripAnalysis(tinyVideoName, ...
+params.stripHeight = size(shrunkFrames, 1);
+params.stripWidth = size(shrunkFrames, 2);
+params.samplingRate = videoFrameRate;
+[~, usefulEyePositionTraces, ~, ~] = StripAnalysis(shrunkFrames, ...
     temporaryRefFrame, params);
 
-% Scale the coordinates back up. Throw out information from bad frames
-framePositions = zeros(totalFrames, 2);
-for row = 1:size(usefulEyePositionTraces, 1)
-    if exist('badFrames', 'var') && any(badFrames==row)
-        framePositions(row, :) = NaN;
-    else
-        framePositions(row, 1) = usefulEyePositionTraces(row, 1) * ...
-            1/parametersStructure.scalingFactor;
-        framePositions(row, 2) = usefulEyePositionTraces(row, 2) * ...
-            1/parametersStructure.scalingFactor;
-    end
-end
-
-% %% Perform cross-correlation using the temporary reference frame
-% frameNumber = 1;
-% while frameNumber <= totalFrames
-%     startIndex = ((frameNumber-1) * columns) + 1;
-%     endIndex = frameNumber*columns;
-%     
-%     % Perform cross-correlation on GPU if enabled
-%     if enableGPU
-%         currFrame = gpuArray(frames(:, startIndex:endIndex));
-%         temporaryRefFrame = gpuArray(temporaryRefFrame);
-%     else
-%         currFrame = frames(:, startIndex:endIndex);
-%     end
-%     
-%     c = normxcorr2(temporaryRefFrame, currFrame);
-% 
-%     % Find peak in cross-correlation using FindPeak function. FindPeak
-%     % takes in a parametersStructure that has fields for Gaussian filtering
-%     % and standard deviation.
-%     parametersStructure.enableGaussianFiltering = 0;
-%     [xPeak, yPeak, peakValue, secondPeakValue] = FindPeak(c, parametersStructure);
-%     
-%     % Account for the padding that normxcorr2 adds.
-%     if enableGPU
-%         yoffSet = gather(yPeak-size(currFrame,1));
-%         xoffSet = gather(xPeak-size(currFrame,2));
-%         xPeak = gather(xPeak);
-%         yPeak = gather(yPeak);
-%         peakValue = gather(peakValue);
-%     else
-%         yoffSet = yPeak-size(currFrame,1);
-%         xoffSet = xPeak-size(currFrame,2);
-%     end
-%     
-%     % Use the peak to get the top-left coordinate of the frame relative 
-%     % to the temporary reference frame.
-%     peakRatio = secondPeakValue/peakValue;
-%     if peakRatio >= params.peakRatio && peakValue >= params.minimumPeakThreshold...
-%             && peakRatio < 0.99
-%         columnCoordinate = xoffSet + 1;
-%         rowCoordinate = yoffSet + 1;
-%    
-%         % Scale back up. Currently the program is using the shrunken frames
-%         % as a rough reference. Therefore, the positions need to be
-%         % multiplied by the reciprocal of the scaling factor to get the
-%         % real frame movements (i.e., if a frame is shrunken by 1/2 and
-%         % moves 6 units to the right of the shrunken reference frame, then 
-%         % the real frame moved 12 units to the right relative to the real 
-%         % reference frame).
-%         framePositions(frameNumber, 1) = (1/parametersStructure.scalingFactor) ...
-%             * rowCoordinate;
-%         framePositions(frameNumber, 2) = (1/parametersStructure.scalingFactor) ...
-%             * columnCoordinate;
-%     else
-%         framePositions(frameNumber, :) = NaN;
-%     end
-% 
-%     % Show surface plot for this correlation if verbosity enabled
-%     if parametersStructure.enableVerbosity == 2
-%         if isfield(parametersStructure, 'axesHandles')
-%             axes(parametersStructure.axesHandles(1));
-%         else
-%             figure(1);
-%         end
-%         [surfX,surfY] = meshgrid(1:size(c,2), 1:size(c,1));
-%         surf(surfX, surfY, c,'linestyle','none');
-%         title([num2str(frameNumber) ' out of ' num2str(totalFrames)]);
-%         xlim([1 size(c,2)]);
-%         ylim([1 size(c,1)]);
-%         zlim([-1 1]);
-%         
-%         % Mark the identified peak on the plot with an arrow.
-%         text(xPeak, yPeak, peakValue, '\downarrow', 'Color', 'red', ...
-%             'FontSize', 20, 'HorizontalAlignment', 'center', ...
-%             'VerticalAlignment', 'bottom', 'FontWeight', 'bold');
-%         
-%         drawnow;  
-%         
-%         % Also plot the positions of the frames as time progresses
-%         timeAxis = (1/v.frameRate):(1/v.frameRate):(frameNumber/v.frameRate);
-%         if isfield(parametersStructure, 'axesHandles')
-%             axes(parametersStructure.axesHandles(2));
-%         else
-%             figure(2);
-%         end
-%         plot(timeAxis, framePositions(1:frameNumber, :));
-%         title('Coarse Frame Shifts (scaled up)');
-%         xlabel('Time (sec)');
-%         ylabel('Approximate Frame Shifts (pixels)');
-%         legend('show');
-%         legend('Vertical Traces', 'Horizontal Traces');
-%         
-%         % Adjust margins to guarantee that the user can see all points
-%         xlim([0 max(timeAxis)*1.1])
-%         mostNegative = min(min(framePositions(:, 1)), min(framePositions(:, 2)));
-%         mostPositive = max(max(framePositions(:, 1)), max(framePositions(:, 2)));
-%         if isnan(mostNegative)
-%             mostNegative = -200;
-%         end
-%         if isnan(mostPositive)
-%             mostPositive = 1;
-%         end
-%             
-%         ylim([mostNegative*1.1 mostPositive*1.1])
-%       
-%     end
-% 
-%     frameNumber = frameNumber + 1;
-%     
-% end
+% Scale the coordinates back up.
+framePositions = ...
+    usefulEyePositionTraces * 1/parametersStructure.scalingFactor;
 
 %% Remove NaNs in framePositions
-% First handle the case in which NaNs are at the beginning of
-% framePositions
-numberOfNaNs = 0;
-NaNIndices = find(isnan(framePositions));
-if ~isempty(NaNIndices)
-    if NaNIndices(1) == 1
-        numberOfNaNs = 1;
-        index = 1;
-        while index <= size(NaNIndices, 1)
-            if NaNIndices(index + 1) == NaNIndices(index) + 1
-                numberOfNaNs = numberOfNaNs + 1;
-            else
-                break
-            end
-            index = index + 1;
-        end
-        framePositions(1:numberOfNaNs, :) = [];
-    end
+% Remove NaNs at the beginning of framePositions
+i = 1;
+while i < size(framePositions, 2) && ...
+        (isnan(framePositions(i,1)) || isnan(framePositions(i,2)))
+    i = i + 1;
 end
+framePositions(1:i,:) = [];
 
 % Then replace the rest of the NaNs with linear interpolation, done
 % manually in a helper function. NaNs at the end of framePositions will be
@@ -269,10 +113,15 @@ end
 [filteredStripIndices2, ~] = FilterStrips(framePositions(:, 2));
 framePositions = [filteredStripIndices1 filteredStripIndices2];
 
-save('framePositions', 'framePositions');
+save(outputTracesPath, 'framePositions');
 
 %% Set up the counter array and the template for the coarse reference frame.
-height = size(currFrame, 1) * 1/parametersStructure.scalingFactor;
+v = VideoReader(videoPath);
+timeToRemember = v.CurrentTime;
+frameRate = v.FrameRate;
+totalFrames = v.frameRate * v.Duration;
+
+height = size(framePositions, 1);
 counterArray = zeros(height*3);
 coarseRefFrame = zeros(height*3);
 
