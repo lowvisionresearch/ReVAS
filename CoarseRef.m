@@ -117,9 +117,8 @@ save(outputTracesPath, 'framePositions');
 
 %% Set up the counter array and the template for the coarse reference frame.
 v = VideoReader(videoPath);
-timeToRemember = v.CurrentTime;
 frameRate = v.FrameRate;
-totalFrames = v.frameRate * v.Duration;
+totalFrames = size(framePositions, 1);
 
 height = v.Height;
 counterArray = zeros(height*3);
@@ -163,10 +162,6 @@ end
 if any(column2==0)
     framePositions(:, 2) = framePositions(:, 2) + 2;
 end
-
-% "Rewind" the video so we can add to the template for the coarse
-% reference frame
-v.CurrentTime = timeToRemember;
 
 if enableGPU
     totalFrames = gpuArray(totalFrames);
