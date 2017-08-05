@@ -90,6 +90,7 @@ params = parametersStructure;
 params.stripHeight = size(shrunkFrames, 1);
 params.stripWidth = size(shrunkFrames, 2);
 params.samplingRate = videoFrameRate;
+params.badFrames = badFrames;
 [~, usefulEyePositionTraces, ~, ~] = StripAnalysis(shrunkFrames, ...
     temporaryRefFrame, params);
 
@@ -98,17 +99,9 @@ framePositions = ...
     usefulEyePositionTraces * 1/parametersStructure.scalingFactor;
 
 %% Remove NaNs in framePositions
-% Remove NaNs at the beginning of framePositions
-i = 1;
-while i < size(framePositions, 2) && ...
-        (isnan(framePositions(i,1)) || isnan(framePositions(i,2)))
-    i = i + 1;
-end
-framePositions(1:i,:) = [];
 
-% Then replace the rest of the NaNs with linear interpolation, done
-% manually in a helper function. NaNs at the end of framePositions will be
-% deleted.
+% Remove NaNs at beginning and end.
+% Interpolate for NaNs in between.
 [filteredStripIndices1, ~] = FilterStrips(framePositions(:, 1));
 [filteredStripIndices2, ~] = FilterStrips(framePositions(:, 2));
 framePositions = [filteredStripIndices1 filteredStripIndices2];

@@ -63,25 +63,6 @@ if size(t2, 1) ~= size(t1, 1) && size(t2, 2) ~= size(t1, 2)
 end
 
 %% Remove NaNs in stripIndices
-% First handle the case in which NaNs are at the beginning of stripIndices
-numberOfNaNs = 0;
-NaNIndices = find(isnan(stripIndices));
-if ~isempty(NaNIndices)
-    if NaNIndices(1) == 1
-        numberOfNaNs = 1;
-        index = 1;
-        while index <= size(NaNIndices, 1)
-            if NaNIndices(index + 1) == NaNIndices(index) + 1
-                numberOfNaNs = numberOfNaNs + 1;
-            else
-                break
-            end
-            index = index + 1;
-        end
-        stripIndices(1:numberOfNaNs, :) = [];
-        t1(1:numberOfNaNs) = [];
-    end
-end
 
 % Then replace the rest of the NaNs with linear interpolation, done
 % manually in a helper function. NaNs at the end of stripIndices will be

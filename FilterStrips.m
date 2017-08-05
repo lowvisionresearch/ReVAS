@@ -13,6 +13,20 @@ function [filteredStripIndices, lengthCutOut] = FilterStrips(stripIndices)
 %       ans = 
 %            8
 
+% Remove NaNs at the beginning of framePositions
+i = 1;
+while i < size(stripIndices, 1) && isnan(stripIndices(i))
+    i = i + 1;
+end
+stripIndices(1:i-1,:) = [];
+
+% Remove NaNs at the end of framePositions
+i = size(stripIndices, 1);
+while i > 0 && isnan(stripIndices(i))
+    i = i - 1;
+end
+stripIndices(i+1:end,:) = [];
+
 % get indices of all NaN values
 NaNIndices = find(isnan(stripIndices));
 NaNIndicesCopy = NaNIndices;
