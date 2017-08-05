@@ -43,13 +43,16 @@ ValidateReferenceFrame(referenceFrame);
 ValidateParametersStructure(parametersStructure);
 
 % Identify which frames are bad frames
-nameEnd = strfind(inputVideoPath,'dwt_');
-blinkFramesPath = [inputVideoPath(1:nameEnd+length('dwt_')-1) 'blinkframes'];
-try
-    load(blinkFramesPath, 'badFrames');
-    parametersStructure.badFrames = badFrames;
-catch
-    parametersStructure.badFrames = [];
+% The filename may not exist if a raw array was passed in.
+if ~isfield(parametersStructure, 'badFrames')
+    nameEnd = strfind(inputVideoPath,'dwt_');
+    blinkFramesPath = [inputVideoPath(1:nameEnd+length('dwt_')-1) 'blinkframes'];
+    try
+        load(blinkFramesPath, 'badFrames');
+        parametersStructure.badFrames = badFrames;
+    catch
+        parametersStructure.badFrames = [];
+    end
 end
 
 % *** TODO: needs testing on color video ***
