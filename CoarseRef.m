@@ -121,7 +121,7 @@ timeToRemember = v.CurrentTime;
 frameRate = v.FrameRate;
 totalFrames = v.frameRate * v.Duration;
 
-height = size(framePositions, 1);
+height = v.Height;
 counterArray = zeros(height*3);
 coarseRefFrame = zeros(height*3);
 
