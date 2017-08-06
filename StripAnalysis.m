@@ -247,7 +247,7 @@ for stripNumber = (1:numberOfStrips)
                 
                 % See if adapted result is acceptable or not.
                 if peakValue <= 0 || secondPeakValue <= 0 ...
-                        || secondPeakValue / peakValue > parametersStructure.minimumPeakRatio ...
+                        || secondPeakValue / peakValue > parametersStructure.maximumPeakRatio ...
                         || peakValue < parametersStructure.minimumPeakThreshold
                     % Not acceptable, try again in the catch block with full correlation map.
                     error('Jumping to catch block immediately below.');
@@ -395,7 +395,7 @@ statisticsStructure.errorStructure = struct(); %TODO needs to be implemented
 
 % Determine which eye traces to throw out
 % 1 = keep, 0 = toss
-eyeTracesToRemove = (statisticsStructure.peakRatios <= parametersStructure.minimumPeakRatio)...
+eyeTracesToRemove = (statisticsStructure.peakRatios <= parametersStructure.maximumPeakRatio)...
     & (statisticsStructure.peakValues >= parametersStructure.minimumPeakThreshold);
 
 % convert logical array to double array

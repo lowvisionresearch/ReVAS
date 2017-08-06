@@ -22,7 +22,7 @@ function varargout = StripParameters(varargin)
 
 % Edit the above text to modify the response to help StripParameters
 
-% Last Modified by GUIDE v2.5 01-Jul-2017 00:15:54
+% Last Modified by GUIDE v2.5 05-Aug-2017 16:45:00
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -67,7 +67,7 @@ handles.samplingRate.String = mainHandles.config.stripSamplingRate;
 handles.enableGaussFilt.Value = mainHandles.config.stripEnableGaussFilt;
 handles.disableGaussFilt.Value = mainHandles.config.stripDisableGaussFilt;
 handles.gaussSD.String = mainHandles.config.stripGaussSD;
-handles.minPeakRatio.String = mainHandles.config.stripMinPeakRatio;
+handles.maxPeakRatio.String = mainHandles.config.stripMaxPeakRatio;
 handles.minPeakThreshold.String = mainHandles.config.stripMinPeakThreshold;
 handles.adaptiveSearch.Value = mainHandles.config.stripAdaptiveSearch;
 handles.scalingFactor.String = mainHandles.config.stripScalingFactor;
@@ -78,11 +78,11 @@ handles.subpixelDepth.String = mainHandles.config.stripSubpixelDepth;
 
 if logical(handles.enableGaussFilt.Value)
     handles.gaussSD.Enable = 'on';
-    handles.minPeakRatio.Enable = 'off';
+    handles.maxPeakRatio.Enable = 'off';
     handles.minPeakThreshold.Enable = 'off';
 else
     handles.gaussSD.Enable = 'off';
-    handles.minPeakRatio.Enable = 'on';
+    handles.maxPeakRatio.Enable = 'on';
     handles.minPeakThreshold.Enable = 'on';
 end
 
@@ -109,7 +109,7 @@ handles.stripHeight.BackgroundColor = mainHandles.colors{4,2};
 handles.stripWidth.BackgroundColor = mainHandles.colors{4,2};
 handles.samplingRate.BackgroundColor = mainHandles.colors{4,2};
 handles.gaussSD.BackgroundColor = mainHandles.colors{4,2};
-handles.minPeakRatio.BackgroundColor = mainHandles.colors{4,2};
+handles.maxPeakRatio.BackgroundColor = mainHandles.colors{4,2};
 handles.minPeakThreshold.BackgroundColor = mainHandles.colors{4,2};
 handles.scalingFactor.BackgroundColor = mainHandles.colors{4,2};
 handles.searchWindowHeight.BackgroundColor = mainHandles.colors{4,2};
@@ -176,7 +176,7 @@ handles.stripHeight.ForegroundColor = mainHandles.colors{4,5};
 handles.stripWidth.ForegroundColor = mainHandles.colors{4,5};
 handles.samplingRate.ForegroundColor = mainHandles.colors{4,5};
 handles.gaussSD.ForegroundColor = mainHandles.colors{4,5};
-handles.minPeakRatio.ForegroundColor = mainHandles.colors{4,5};
+handles.maxPeakRatio.ForegroundColor = mainHandles.colors{4,5};
 handles.minPeakThreshold.ForegroundColor = mainHandles.colors{4,5};
 handles.scalingFactor.ForegroundColor = mainHandles.colors{4,5};
 handles.searchWindowHeight.ForegroundColor = mainHandles.colors{4,5};
@@ -194,7 +194,7 @@ guidata(hObject, handles);
 
 % Check parameter validity and change colors if needed
 gaussSD_Callback(handles.gaussSD, eventdata, handles);
-minPeakRatio_Callback(handles.minPeakRatio, eventdata, handles);
+maxPeakRatio_Callback(handles.maxPeakRatio, eventdata, handles);
 minPeakThreshold_Callback(handles.minPeakThreshold, eventdata, handles);
 scalingFactor_Callback(handles.scalingFactor, eventdata, handles);
 searchWindowHeight_Callback(handles.searchWindowHeight, eventdata, handles);
@@ -255,9 +255,9 @@ if logical(handles.enableGaussFilt.Value)
         return;
     end
 else
-    % minPeakRatio
-    minPeakRatio = str2double(handles.minPeakRatio.String);
-    if ~IsPositiveRealNumber(minPeakRatio)
+    % MaxPeakRatio
+    maxPeakRatio = str2double(handles.maxPeakRatio.String);
+    if ~IsPositiveRealNumber(maxPeakRatio)
         errordlg('Minimum Peak Ratio must be a positive, real number.', 'Invalid Parameter');
         return;
     end
@@ -311,7 +311,7 @@ mainHandles.config.stripSamplingRate = str2double(handles.samplingRate.String);
 mainHandles.config.stripEnableGaussFilt = logical(handles.enableGaussFilt.Value);
 mainHandles.config.stripDisableGaussFilt = logical(handles.disableGaussFilt.Value);
 mainHandles.config.stripGaussSD = str2double(handles.gaussSD.String);
-mainHandles.config.stripMinPeakRatio = str2double(handles.minPeakRatio.String);
+mainHandles.config.stripMaxPeakRatio = str2double(handles.maxPeakRatio.String);
 mainHandles.config.stripMinPeakThreshold = str2double(handles.minPeakThreshold.String);
 mainHandles.config.stripAdaptiveSearch = logical(handles.adaptiveSearch.Value);
 mainHandles.config.stripScalingFactor = str2double(handles.scalingFactor.String);
@@ -466,7 +466,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
 function samplingRate_Callback(hObject, eventdata, handles)
 % hObject    handle to samplingRate (see GCBO)
 % eventdata  reserved - to be destripd in a future version of MATLAB
@@ -491,6 +490,7 @@ end
 % Update handles structure
 guidata(hObject, handles);
 
+
 % --- Executes during object creation, after setting all properties.
 function samplingRate_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to samplingRate (see GCBO)
@@ -504,14 +504,13 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
-function minPeakRatio_Callback(hObject, eventdata, handles)
-% hObject    handle to minPeakRatio (see GCBO)
+function maxPeakRatio_Callback(hObject, eventdata, handles)
+% hObject    handle to MaxPeakRatio (see GCBO)
 % eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of minPeakRatio as text
-%        str2double(get(hObject,'String')) returns contents of minPeakRatio as a double
+% Hints: get(hObject,'String') returns contents of MaxPeakRatio as text
+%        str2double(get(hObject,'String')) returns contents of MaxPeakRatio as a double
 figureHandle = findobj(0, 'tag', 'jobQueue');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
@@ -530,8 +529,8 @@ end
 guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
-function minPeakRatio_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to minPeakRatio (see GCBO)
+function maxPeakRatio_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to MaxPeakRatio (see GCBO)
 % eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -793,11 +792,11 @@ function enableGaussFilt_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of enableGaussFilt
 if get(hObject,'Value') == 1
     handles.gaussSD.Enable = 'on';
-    handles.minPeakRatio.Enable = 'off';
+    handles.maxPeakRatio.Enable = 'off';
     handles.minPeakThreshold.Enable = 'off';
 else
     handles.gaussSD.Enable = 'off';
-    handles.minPeakRatio.Enable = 'on';
+    handles.maxPeakRatio.Enable = 'on';
     handles.minPeakThreshold.Enable = 'on';
 end
 
@@ -811,10 +810,10 @@ function disableGaussFilt_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of disableGaussFilt
 if get(hObject,'Value') == 0
     handles.gaussSD.Enable = 'on';
-    handles.minPeakRatio.Enable = 'off';
+    handles.maxPeakRatio.Enable = 'off';
     handles.minPeakThreshold.Enable = 'off';
 else
     handles.gaussSD.Enable = 'off';
-    handles.minPeakRatio.Enable = 'on';
+    handles.maxPeakRatio.Enable = 'on';
     handles.minPeakThreshold.Enable = 'on';
 end

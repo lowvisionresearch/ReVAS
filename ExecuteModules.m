@@ -108,7 +108,7 @@ if logical(handles.togFine.Value) && ~logical(abortTriggered)
     parametersStructure.stripHeight = handles.config.fineStripHeight;
     parametersStructure.stripWidth = handles.config.fineStripWidth;
     parametersStructure.samplingRate = handles.config.fineSamplingRate;
-    parametersStructure.minimumPeakRatio = handles.config.fineMinPeakRatio;
+    parametersStructure.maximumPeakRatio = handles.config.fineMaxPeakRatio;
     parametersStructure.minimumPeakThreshold = handles.config.fineMinPeakThreshold;
     parametersStructure.adaptiveSearch = handles.config.fineAdaptiveSearch;
     parametersStructure.adaptiveSearchScalingFactor = handles.config.fineScalingFactor;
@@ -139,7 +139,7 @@ if logical(handles.togStrip.Value) && ~logical(abortTriggered)
     parametersStructure.samplingRate = handles.config.stripSamplingRate;
     parametersStructure.enableGaussianFiltering = handles.config.stripEnableGaussFilt;
     parametersStructure.gaussianStandardDeviation = handles.config.stripGaussSD;
-    parametersStructure.minimumPeakRatio = handles.config.stripMinPeakRatio;
+    parametersStructure.maximumPeakRatio = handles.config.stripMaxPeakRatio;
     parametersStructure.minimumPeakThreshold = handles.config.stripMinPeakThreshold;
     parametersStructure.adaptiveSearch = handles.config.stripAdaptiveSearch;
     parametersStructure.adaptiveSearchScalingFactor = handles.config.stripScalingFactor;

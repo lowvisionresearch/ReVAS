@@ -216,7 +216,7 @@ handles.config.fineNumIterations = 1;
 handles.config.fineStripHeight = 15;
 handles.config.fineStripWidth = 488;
 handles.config.fineSamplingRate = 540;
-handles.config.fineMinPeakRatio = 0.8;
+handles.config.fineMaxPeakRatio = 0.8;
 handles.config.fineMinPeakThreshold = 0.2;
 handles.config.fineAdaptiveSearch = false;
 handles.config.fineScalingFactor = 8;
@@ -233,7 +233,7 @@ handles.config.stripSamplingRate = 540;
 handles.config.stripEnableGaussFilt = true;
 handles.config.stripDisableGaussFilt = false;
 handles.config.stripGaussSD = 10;
-handles.config.stripMinPeakRatio = 0.8;
+handles.config.stripMaxPeakRatio = 0.8;
 handles.config.stripMinPeakThreshold = 0;
 handles.config.stripAdaptiveSearch = false;
 handles.config.stripScalingFactor = 8;
@@ -560,7 +560,7 @@ while i <= size(handles.files, 2)
         % Append files to our list of files if they match the suffix
         folderFiles = dir(folder);
         for j = i:size(folderFiles, 1)
-            if contains(folderFiles(j).name, suffix) && ...
+            if ~isempty(findstr(folderFiles(j).name, suffix)) && ...
                     (~strcmp('.avi', suffix) || ...
                     isempty(findstr('_dwt', folderFiles(j).name)) && ...
                     isempty(findstr('_nostim', folderFiles(j).name)) && ...
@@ -571,7 +571,7 @@ while i <= size(handles.files, 2)
                     handles.files];
             end
         end
-    elseif ~contains(handles.files{i}, suffix) || ...
+    elseif isempty(findstr(handles.files{i}, suffix)) || ...
             (strcmp('.avi', suffix) && ...
                     (~isempty(findstr('_dwt', handles.files{i})) || ...
                     ~isempty(findstr('_nostim', handles.files{i})) || ...
