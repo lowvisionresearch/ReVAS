@@ -22,7 +22,7 @@ function varargout = FineParameters(varargin)
 
 % Edit the above text to modify the response to help FineParameters
 
-% Last Modified by GUIDE v2.5 01-Jul-2017 00:02:08
+% Last Modified by GUIDE v2.5 05-Aug-2017 16:47:17
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -65,7 +65,7 @@ handles.numIterations.String = mainHandles.config.fineNumIterations;
 handles.stripHeight.String = mainHandles.config.fineStripHeight;
 handles.stripWidth.String = mainHandles.config.fineStripWidth;
 handles.samplingRate.String = mainHandles.config.fineSamplingRate;
-handles.minPeakRatio.String = mainHandles.config.fineMinPeakRatio;
+handles.maxPeakRatio.String = mainHandles.config.fineMaxPeakRatio;
 handles.minPeakThreshold.String = mainHandles.config.fineMinPeakThreshold;
 handles.adaptiveSearch.Value = mainHandles.config.fineAdaptiveSearch;
 handles.scalingFactor.String = mainHandles.config.fineScalingFactor;
@@ -97,7 +97,7 @@ handles.numIterations.BackgroundColor = mainHandles.colors{4,2};
 handles.stripHeight.BackgroundColor = mainHandles.colors{4,2};
 handles.stripWidth.BackgroundColor = mainHandles.colors{4,2};
 handles.samplingRate.BackgroundColor = mainHandles.colors{4,2};
-handles.minPeakRatio.BackgroundColor = mainHandles.colors{4,2};
+handles.maxPeakRatio.BackgroundColor = mainHandles.colors{4,2};
 handles.minPeakThreshold.BackgroundColor = mainHandles.colors{4,2};
 handles.scalingFactor.BackgroundColor = mainHandles.colors{4,2};
 handles.searchWindowHeight.BackgroundColor = mainHandles.colors{4,2};
@@ -161,7 +161,7 @@ handles.numIterations.ForegroundColor = mainHandles.colors{4,5};
 handles.stripHeight.ForegroundColor = mainHandles.colors{4,5};
 handles.stripWidth.ForegroundColor = mainHandles.colors{4,5};
 handles.samplingRate.ForegroundColor = mainHandles.colors{4,5};
-handles.minPeakRatio.ForegroundColor = mainHandles.colors{4,5};
+handles.maxPeakRatio.ForegroundColor = mainHandles.colors{4,5};
 handles.minPeakThreshold.ForegroundColor = mainHandles.colors{4,5};
 handles.scalingFactor.ForegroundColor = mainHandles.colors{4,5};
 handles.searchWindowHeight.ForegroundColor = mainHandles.colors{4,5};
@@ -236,9 +236,9 @@ if ~IsPositiveRealNumber(samplingRate)
     return;
 end
 
-% minPeakRatio
-minPeakRatio = str2double(handles.minPeakRatio.String);
-if ~IsPositiveRealNumber(minPeakRatio)
+% MaxPeakRatio
+maxPeakRatio = str2double(handles.maxPeakRatio.String);
+if ~IsPositiveRealNumber(maxPeakRatio)
     errordlg('Minimum Peak Ratio must be a positive, real number.', 'Invalid Parameter');
     return;
 end
@@ -289,7 +289,7 @@ mainHandles.config.fineNumIterations = str2double(handles.numIterations.String);
 mainHandles.config.fineStripHeight = str2double(handles.stripHeight.String);
 mainHandles.config.fineStripWidth = str2double(handles.stripWidth.String);
 mainHandles.config.fineSamplingRate = str2double(handles.samplingRate.String);
-mainHandles.config.fineMinPeakRatio = str2double(handles.minPeakRatio.String);
+mainHandles.config.fineMaxPeakRatio = str2double(handles.maxPeakRatio.String);
 mainHandles.config.fineMinPeakThreshold = str2double(handles.minPeakThreshold.String);
 mainHandles.config.fineAdaptiveSearch = logical(handles.adaptiveSearch.Value);
 mainHandles.config.fineScalingFactor = str2double(handles.scalingFactor.String);
@@ -497,14 +497,13 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
-function minPeakRatio_Callback(hObject, eventdata, handles)
-% hObject    handle to minPeakRatio (see GCBO)
+function maxPeakRatio_Callback(hObject, eventdata, handles)
+% hObject    handle to MaxPeakRatio (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of minPeakRatio as text
-%        str2double(get(hObject,'String')) returns contents of minPeakRatio as a double
+% Hints: get(hObject,'String') returns contents of MaxPeakRatio as text
+%        str2double(get(hObject,'String')) returns contents of MaxPeakRatio as a double
 figureHandle = findobj(0, 'tag', 'jobQueue');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
@@ -522,9 +521,10 @@ end
 % Update handles structure
 guidata(hObject, handles);
 
+
 % --- Executes during object creation, after setting all properties.
-function minPeakRatio_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to minPeakRatio (see GCBO)
+function maxPeakRatio_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to MaxPeakRatio (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -533,7 +533,6 @@ function minPeakRatio_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 
 function minPeakThreshold_Callback(hObject, eventdata, handles)
