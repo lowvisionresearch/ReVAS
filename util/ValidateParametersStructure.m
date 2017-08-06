@@ -1,4 +1,4 @@
-function [] = validateParametersStructure(parametersStructure)
+function [] = ValidateParametersStructure(parametersStructure)
 %VALIDATE PARAMETERS STRUCTURE Ensures parameters structure input is valid.
 %   Ensures parameters structure input is valid.
 %   The function will take no action if the input is valid.
@@ -32,9 +32,9 @@ if ~isfield(parametersStructure, 'adaptiveSearch')
     error('Invalid Input for validateParametersStructure (parametersStructure does not have a adaptiveSearch field)');
 end
 
-% minimumPeakRatio
-if ~isfield(parametersStructure, 'minimumPeakRatio')
-    error('Invalid Input for validateParametersStructure (parametersStructure does not have a minimumPeakRatio field)');
+% maximumPeakRatio
+if ~isfield(parametersStructure, 'maximumPeakRatio')
+    error('Invalid Input for validateParametersStructure (parametersStructure does not have a maximumPeakRatio field)');
 end
 
 % enableVerbosity
