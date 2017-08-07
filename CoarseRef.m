@@ -102,8 +102,8 @@ framePositions = ...
 
 % Remove NaNs at beginning and end.
 % Interpolate for NaNs in between.
-[filteredStripIndices1, ~] = FilterStrips(framePositions(:, 1));
-[filteredStripIndices2, ~] = FilterStrips(framePositions(:, 2));
+[filteredStripIndices1, ~, ~] = FilterStrips(framePositions(:, 1));
+[filteredStripIndices2, ~, ~] = FilterStrips(framePositions(:, 2));
 framePositions = [filteredStripIndices1 filteredStripIndices2];
 
 save(outputTracesPath, 'framePositions');

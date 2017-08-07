@@ -1,4 +1,4 @@
-function [filteredStripIndices, lengthCutOut] = FilterStrips(stripIndices)
+function [filteredStripIndices, lengthCutOut, numberOfNaNs] = FilterStrips(stripIndices)
 % FilterStrips     Replace all NaNs in a column vector with interpolation
 %   FilterStrips(stripIndices) takes a column vector and interpolates
 %   between the values "bordering" each strip of consecutive NaNs. Then it
@@ -19,13 +19,7 @@ while i < size(stripIndices, 1) && isnan(stripIndices(i))
     i = i + 1;
 end
 stripIndices(1:i-1,:) = [];
-
-% Remove NaNs at the end of framePositions
-i = size(stripIndices, 1);
-while i > 0 && isnan(stripIndices(i))
-    i = i - 1;
-end
-stripIndices(i+1:end,:) = [];
+numberOfNaNs = i-1;
 
 % get indices of all NaN values
 NaNIndices = find(isnan(stripIndices));
