@@ -41,7 +41,6 @@ for i = 1:length(filenames)
     coarseParameters.scalingFactor = 0.5;
     coarseParameters.overwrite = true;
     coarseParameters.enableVerbosity = false;
-    coarseParameters.fileName = originalVideoPath;
     coarseParameters.enableSubpixelInterpolation = false;
     coarseParameters.adaptiveSearch = false;
     coarseParameters.badFrames = badFramesCells{i};
