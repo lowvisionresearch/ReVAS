@@ -67,8 +67,8 @@ end
 % Then replace the rest of the NaNs with linear interpolation, done
 % manually in a helper function. NaNs at the end of stripIndices will be
 % deleted, along with their corresponding time points.
-[filteredStripIndices1, lengthCutOut1] = FilterStrips(stripIndices(:, 1));
-[filteredStripIndices2, lengthCutOut2] = FilterStrips(stripIndices(:, 2));
+[filteredStripIndices1, lengthCutOut1, numberOfNaNs] = FilterStrips(stripIndices(:, 1));
+[filteredStripIndices2, lengthCutOut2, ~] = FilterStrips(stripIndices(:, 2));
 filteredStripIndices = [filteredStripIndices1 filteredStripIndices2];
 t1(end-max(lengthCutOut1, lengthCutOut2)+1:end) = [];
 
@@ -327,7 +327,7 @@ while k<=size(refFrame, 2)
     k = k + 1;
 end
 %% Save and display the reference frame.
-fileName(end-4:end) = [];
+fileName(end-3:end) = [];
 fileName(end+1:end+9) = '_refframe';
 save(fileName, 'refFrame');
 figure('Name', 'Reference Frame')
