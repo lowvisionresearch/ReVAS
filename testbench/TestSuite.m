@@ -54,9 +54,9 @@ parfor i = 1:length(filenames)
 
     % Step 3: Remove the stimulus
     parametersStructure.overwrite = true;
-    RemoveStimuli(videoPath, parametersStructure);
-    %copyfile(videoPath, ...
-    %    [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]); %#ok<*FXSET>
+    %RemoveStimuli(videoPath, parametersStructure);
+    copyfile(videoPath, ...
+        [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]); %#ok<*FXSET>
     fprintf('Process Completed for RemoveStimuli()\n');
 
     % Step 4: Detect blinks and bad frames

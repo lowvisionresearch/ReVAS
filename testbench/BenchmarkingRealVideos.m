@@ -1,0 +1,56 @@
+function [] = BenchmarkingRealVideos()
+%BENCHMARKING Script used to benchmark real videos.
+%   Script used to benchmark ReVAS.
+
+%% Strip Analysis - Real Videos
+% Loads parameters from a mat file and executes coarse, fine, and strip
+% modules.
+
+clc;
+clear;
+close all;
+addpath(genpath('..'));
+
+filenames = uipickfiles;
+if ~iscell(filenames)
+    if filenames == 0
+        fprintf('User cancelled file selection. Silently exiting...\n');
+        return;
+    end
+end
+
+coarseParamsCells = cell(1, length(filenames));
+fineParamsCells = cell(1, length(filenames));
+stripParamsCells = cell(1, length(filenames));
+
+for i = 1:length(filenames)
+    originalVideoPath = filenames{i};
+    
+    nameEnd = strfind(originalVideoPath,'bandfilt_');
+    paramsPath = [originalVideoPath(1:nameEnd+length('bandfilt_')-1) 'params'];
+    load(paramsPath, 'coarseParameters', 'fineParameters', 'stripParameters');
+    coarseParamsCells{i} = coarseParameters; 
+    fineParamsCells{i} = fineParameters; 
+    stripParamsCells{i} = stripParameters; 
+end
+
+for i = 1:length(filenames)
+    % Grab path out of cell.
+    originalVideoPath = filenames{i};
+    
+    % MAKE COARSE REFERENCE FRAME
+    coarseResult = CoarseRef(originalVideoPath, coarseParamsCells{i});
+    fprintf('Process Completed for CoarseRef()\n');
+    
+    % MAKE FINE REFERENCE FRAME
+    fineResult = FineRef(coarseResult, originalVideoPath, fineParamsCells{i});
+    fprintf('Process Completed for FineRef()\n');
+
+    % STRIP ANALYSIS
+    StripAnalysis(originalVideoPath, fineResult, fineParamsCells{i});
+    fprintf('Process Completed for StripAnalysis()\n');
+end
+fprintf('Process Completed.\n');
+
+end
+
