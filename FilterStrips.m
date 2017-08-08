@@ -123,9 +123,14 @@ while ~isempty(startAndEndPairs)
             end
         else
             dy = (ending-start)/numPoints;
-            for point = start+dy : dy : ending-dy
-                stripIndices(NaNIndices(1)) = point;
-                NaNIndices(1) = []; 
+            if max(size(NaNIndices)) == 1
+                stripIndices(NaNIndices(1)) = start+dy;
+                NaNIndices(1) = [];
+            else
+                for point = start+dy : dy : ending-dy
+                    stripIndices(NaNIndices(1)) = point;
+                    NaNIndices(1) = []; 
+                end
             end
         end
 %         disp([start ending])

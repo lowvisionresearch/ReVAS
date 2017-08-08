@@ -162,7 +162,7 @@ clc;
 close all;
 
 % First video
-videoPath = 'testbench\benchmark\benchmark_realvideos\amd_den_os_gridsacc_13_54_31_3_dwt_nostim_gamscaled_bandfilt.avi';
+videoPath = 'wobble_dwt_nostim_gamscaled_bandfilt.avi';
 tracesPath = [videoPath(1:end-4) '_coarseframepositions'];
 
 params = struct;
