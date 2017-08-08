@@ -40,7 +40,7 @@ numberOfFrames = size(videoInputArray, 3);
 
 % Preallocate.
 trimmedFrames = zeros(height - parametersStructure.borderTrimAmount, ...
-    width - parametersStructure.borderTrimAmount, numberOfFrames, 'uint8');
+    width - parametersStructure.borderTrimAmount, numberOfFrames);
 
 for frameNumber = 1:numberOfFrames
     frame = videoInputArray(:,:,frameNumber);

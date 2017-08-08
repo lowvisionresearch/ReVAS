@@ -9,7 +9,7 @@ function RodenstockTrim()
 top = 70;
 right = 10;
 bottom = 34;
-left = 36;
+left = 40;
 
 addpath(genpath('..'));
 
@@ -25,8 +25,7 @@ parfor i = 1:length(filenames)
     originalVideoPath = filenames{i};
     outputVideoPath = [originalVideoPath(1:end-4) '_dwt' originalVideoPath(end-3:end)];
 
-    % Trim the video frame by frame
-
+    % Trim the video frame by frame.
     writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
     open(writer);
 
@@ -38,7 +37,7 @@ parfor i = 1:length(filenames)
 
     % Preallocate.
     trimmedFrames = zeros(height - top - bottom, ...
-        width - left - right, numberOfFrames, 'uint8');
+        width - left - right, numberOfFrames);
 
     for frameNumber = 1:numberOfFrames
         frame = videoInputArray(:,:,frameNumber);
