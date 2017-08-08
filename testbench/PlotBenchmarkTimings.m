@@ -1,5 +1,5 @@
 clearvars;
-close all
+% close all
 clc;
 
 addpath(genpath('..'));
