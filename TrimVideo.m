@@ -15,7 +15,7 @@ outputVideoPath = [inputVideoPath(1:end-4) '_dwt' inputVideoPath(end-3:end)];
 %% Handle overwrite scenarios.
 if ~exist(outputVideoPath, 'file')
     % left blank to continue without issuing warning in this case
-elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
+elseif nargin == 1 || ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
     RevasWarning(['TrimVideo() did not execute because it would overwrite existing file. (' outputVideoPath ')'], parametersStructure);    
     return;
 else
@@ -40,7 +40,7 @@ numberOfFrames = size(videoInputArray, 3);
 
 % Preallocate.
 trimmedFrames = zeros(height - parametersStructure.borderTrimAmount, ...
-    width - parametersStructure.borderTrimAmount, numberOfFrames);
+    width - parametersStructure.borderTrimAmount, numberOfFrames, 'uint8');
 
 for frameNumber = 1:numberOfFrames
     frame = videoInputArray(:,:,frameNumber);
@@ -48,6 +48,7 @@ for frameNumber = 1:numberOfFrames
         frame(parametersStructure.borderTrimAmount+1 : height, ...
        1 : width-parametersStructure.borderTrimAmount);
 end
+colormap(gray(256));
 
 writeVideo(writer, trimmedFrames);
 close(writer);

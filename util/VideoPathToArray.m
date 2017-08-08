@@ -13,7 +13,7 @@ if ischar(videoInputPath)
     videoFrameRate = reader.FrameRate;
     videoWidth = reader.Width;
     videoHeight = reader.Height;
-    videoInputArray = zeros(videoHeight, videoWidth, numberOfFramesOfVideoInput);
+    videoInputArray = zeros(videoHeight, videoWidth, numberOfFramesOfVideoInput, 'uint8');
     
     % Remake this variable since readFrame() cannot be called after
     % NumberOfFrames property is accessed.
@@ -21,7 +21,7 @@ if ischar(videoInputPath)
     
     % Fill the output array with all of the frames.
     for k = (1:numberOfFramesOfVideoInput)
-        frame = double(readFrame(reader))/255;
+        frame = readFrame(reader);
         if ndims(frame) == 3
             frame = rgb2gray(frame);
         end
