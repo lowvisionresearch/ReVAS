@@ -21,7 +21,7 @@ if ischar(videoInputPath)
     
     % Fill the output array with all of the frames.
     for k = (1:numberOfFramesOfVideoInput)
-        frame = readFrame(reader);
+        frame = double(readFrame(reader))/255;
         if ndims(frame) == 3
             frame = rgb2gray(frame);
         end
