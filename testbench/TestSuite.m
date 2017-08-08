@@ -40,9 +40,9 @@ parfor i = 1:length(filenames)
 
     % Step 1: Trim the video's upper and right edges.
     parametersStructure.borderTrimAmount = 24;
-    TrimVideo(videoPath, parametersStructure);
+    %TrimVideo(videoPath, parametersStructure);
     fprintf('Process Completed for TrimVideo()\n');
-    videoPath = [videoPath(1:end-4) '_dwt' videoPath(end-3:end)]; %#ok<*FXSET>
+    %videoPath = [videoPath(1:end-4) '_dwt' videoPath(end-3:end)]; %#ok<*FXSET>
 
     % Step 2: Find stimulus location
     parametersStructure.enableVerbosity = false;
