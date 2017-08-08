@@ -42,13 +42,16 @@ parfor i = 1:length(filenames)
     parametersStructure.borderTrimAmount = 24;
     %TrimVideo(videoPath, parametersStructure);
     fprintf('Process Completed for TrimVideo()\n');
-    %videoPath = [videoPath(1:end-4) '_dwt' videoPath(end-3:end)]; %#ok<*FXSET>
+    videoPath = [videoPath(1:end-4) '_dwt' videoPath(end-3:end)]; %#ok<*FXSET>
 
     % Step 2: Find stimulus location
     parametersStructure.enableVerbosity = false;
     %FindStimulusLocations(videoPath, 'testbench/stimulus_cross.gif', parametersStructure);
-    stimulus.thickness = 1;
-    stimulus.size = 11;
+    %stimulus.thickness = 1;
+    %stimulus.size = 11;
+    % For Rodenstock:
+    stimulus.thickness = 3;
+    stimulus.size = 23;
     FindStimulusLocations(videoPath, stimulus, parametersStructure);
     fprintf('Process Completed for FindStimulusLocations()\n');
 

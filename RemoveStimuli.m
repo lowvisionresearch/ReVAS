@@ -65,19 +65,19 @@ for frameNumber = 1:numberOfFrames
     
     if xLow < 1
         xDiff = -xLow+1;
-    elseif xHigh > size(videoInputArray, 2)
-        xDiff = xHigh - size(videoInputArray, 2);
+    elseif xHigh > size(videoInputArray, 1)
+        xDiff = xHigh - size(videoInputArray, 1);
     end
     
     if yLow < 1
         yDiff = -yLow+1;
-    elseif yHigh > size(videoInputArray, 1)
-        yDiff = yHigh - size(videoInputArray, 1);
+    elseif yHigh > size(videoInputArray, 2)
+        yDiff = yHigh - size(videoInputArray, 2);
     end
     videoInputArray(max(location(2)-stimulusSize(1)+1, 1) : ...
-        min(location(2), size(videoInputArray, 2)),...
+        min(location(2), size(videoInputArray, 1)),...
         max(location(1)-stimulusSize(2)+1, 1) : ...
-        min(location(1), size(videoInputArray, 1)), ...
+        min(location(1), size(videoInputArray, 2)), ...
         frameNumber) = ...
         noise(1:end-xDiff, 1:end-yDiff);
 end
