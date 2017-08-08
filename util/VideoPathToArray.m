@@ -13,7 +13,7 @@ if ischar(videoInputPath)
     videoFrameRate = reader.FrameRate;
     videoWidth = reader.Width;
     videoHeight = reader.Height;
-    videoInputArray = zeros(videoHeight, videoWidth, numberOfFramesOfVideoInput, 'uint8');
+    videoInputArray = zeros(videoHeight, videoWidth, numberOfFramesOfVideoInput);
     
     % Remake this variable since readFrame() cannot be called after
     % NumberOfFrames property is accessed.
@@ -31,6 +31,4 @@ if ischar(videoInputPath)
 else
     error('Invalid Input for videoPathToArray (it was not a char array)');
 end
-
 end
-
