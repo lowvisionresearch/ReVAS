@@ -9,7 +9,7 @@ function RodenstockTrim()
 top = 70;
 right = 10;
 bottom = 34;
-left = 40;
+left = 46;
 
 addpath(genpath('..'));
 
@@ -37,7 +37,7 @@ parfor i = 1:length(filenames)
 
     % Preallocate.
     trimmedFrames = zeros(height - top - bottom, ...
-        width - left - right, numberOfFrames);
+        width - left - right, numberOfFrames, 'uint8');
 
     for frameNumber = 1:numberOfFrames
         frame = videoInputArray(:,:,frameNumber);
@@ -45,6 +45,7 @@ parfor i = 1:length(filenames)
             frame(top+1 : height-bottom, ...
            left+1 : width-right);
     end
+    colormap(gray(256));
 
     writeVideo(writer, trimmedFrames);
     close(writer);
