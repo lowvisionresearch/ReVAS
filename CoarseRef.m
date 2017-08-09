@@ -70,7 +70,7 @@ shrunkFrames = imresize(videoInputArray, parametersStructure.scalingFactor);
 % if frameRate = 30 Hz and duration is 2 seconds, there are 60 total frames
 % and the default frame should therefore be the 30th frame).
 if ~isfield(parametersStructure, 'refFrameNumber')
-    refFrameNumber = size(shrunkFrames,3)/2;
+    refFrameNumber = floor(size(shrunkFrames,3)/2);
 else
    refFrameNumber = parametersStructure.refFrameNumber; 
 end

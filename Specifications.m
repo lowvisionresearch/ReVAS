@@ -332,7 +332,7 @@
 %   Filtering as method to determine useful peaks;
 %   |gaussianStandardDeviation|, standard deviation used if Gaussian
 %   Filtering enabled;
-%   |minimumPeakRatio|, minimum ratio between maximum peak and second
+%   |maximumPeakRatio|, maximum ratio between maximum peak and second
 %   maximum peak required in order for a peak to be considered useful if
 %   Gaussian Filtering disabled, a measure of confidence for the estimated location of each strip;
 %   |minimumPeakThreshold|, minimum peak value required in order for a peak
