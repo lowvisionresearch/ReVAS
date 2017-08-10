@@ -18,7 +18,9 @@ i = 1;
 while i < size(stripIndices, 1) && isnan(stripIndices(i))
     i = i + 1;
 end
-stripIndices(1:i-1,:) = [];
+if i >= 2
+    stripIndices(1:i-1,:) = [];
+end
 numberOfNaNs = i-1;
 
 % get indices of all NaN values

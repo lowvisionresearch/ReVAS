@@ -77,11 +77,18 @@ end
 % Then replace the rest of the NaNs with linear interpolation, done
 % manually in a helper function. NaNs at the end of stripIndices will be
 % deleted, along with their corresponding time points.
-[filteredStripIndices1, lengthCutOut1, numberOfNaNs] = FilterStrips(stripIndices(:, 1));
-[filteredStripIndices2, lengthCutOut2, ~] = FilterStrips(stripIndices(:, 2));
+[filteredStripIndices1, lengthCutOut1, numberOfNaNs1] = FilterStrips(stripIndices(:, 1));
+[filteredStripIndices2, lengthCutOut2, numberOfNaNs2] = FilterStrips(stripIndices(:, 2));
+numberOfNaNs = max(numberOfNaNs1, numberOfNaNs2);
+lengthCutOut = max(lengthCutOut1, lengthCutOut2);
 filteredStripIndices = [filteredStripIndices1 filteredStripIndices2];
-t1(1:numberOfNaNs) = [];
-t1(end-max(lengthCutOut1, lengthCutOut2)+1:end) = [];
+if numberOfNaNs >= 1
+    t1(1:numberOfNaNs) = [];
+end
+
+if lengthCutOut >= 1
+    t1(end-lengthCutOut+1:end) = [];
+end
 
 %% Perform interpolation with finer time interval
 
