@@ -102,8 +102,14 @@ framePositions = ...
 
 % Remove NaNs at beginning and end.
 % Interpolate for NaNs in between.
-[filteredStripIndices1, ~, ~] = FilterStrips(framePositions(:, 1));
-[filteredStripIndices2, ~, ~] = FilterStrips(framePositions(:, 2));
+[filteredStripIndices1, endNaNs1, beginningNaNs1] = FilterStrips(framePositions(:, 1));
+[filteredStripIndices2, endNaNs2, beginningNaNs2] = FilterStrips(framePositions(:, 2));
+endNaNs = max(endNaNs1, endNaNs2);
+if endNaNs == -1
+    endNaNs = 0;
+end
+beginningNaNs = max(beginningNaNs1, beginningNaNs2);
+
 framePositions = [filteredStripIndices1 filteredStripIndices2];
 save(outputTracesPath, 'framePositions');
 
@@ -162,13 +168,12 @@ if enableGPU
     coarseRefFrame = gpuArray(coarseRefFrame);
 end
 
-for frameNumber = 1:totalFrames
+for frameNumber = 1+beginningNaNs:totalFrames-endNaNs
     % Use double function because readFrame gives unsigned integers,
     % whereas we need to use signed integers
+    frame = double(videoInputArray(:, :, frameNumber))/255;
     if enableGPU
-        frame = double(gpuArray(readFrame(v)))/255;
-    else
-        frame = double(readFrame(v))/255;
+        frame = gpuArray(frame);
     end
     if any(badFrames==frameNumber)
         continue
