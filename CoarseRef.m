@@ -163,17 +163,16 @@ if enableGPU
 end
 
 for frameNumber = 1:totalFrames
+    % Use double function because readFrame gives unsigned integers,
+    % whereas we need to use signed integers
+    if enableGPU
+        frame = double(gpuArray(readFrame(v)))/255;
+    else
+        frame = double(readFrame(v))/255;
+    end
     if any(badFrames==frameNumber)
         continue
     else
-        % Use double function because readFrame gives unsigned integers,
-        % whereas we need to use signed integers
-        if enableGPU
-            frame = double(gpuArray(readFrame(v)))/255;
-        else
-            frame = double(readFrame(v))/255;
-        end
-
         % framePositions has the top left coordinate of the frames, so those
         % coordinates will represent the minRow and minColumn to be added to
         % the template frame. maxRow and maxColumn will be the size of the
