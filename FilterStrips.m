@@ -100,8 +100,7 @@ while ~isempty(startAndEndPairs)
     % Remember from earlier that if the NaN strip goes to the end of the
     % matrix, we only put 2 values into startAndEndPairs (last number
     % before NaNs begin and number of NaNs in the strip). In that case,
-    % assume the last number before the NaNs remains constant, so set
-    % the rest of the NaN values in the matrix equal to that last number.
+    % cut out the rest of the NaNs, since we have no way of interpolating.
     if dimensions(2) == 2
         lengthCut = 1;
         lengthCutOut = size(stripIndices(NaNIndices(1):end));
