@@ -28,6 +28,16 @@ if isfield(params, 'newStripHeight')
 else
     params.newStripHeight = params.stripHeight;
 end
+
+%% Identify which frames are bad frames
+nameEnd = strfind(fileName,'dwt_');
+blinkFramesPath = [fileName(1:nameEnd+length('dwt_')-1) 'blinkframes'];
+try
+    load(blinkFramesPath, 'badFrames');
+catch
+    badFrames = [];
+end
+
 %% Set up all variables
 stripIndices = params.positions;
 t1 = params.time;
@@ -70,6 +80,7 @@ end
 [filteredStripIndices1, lengthCutOut1, numberOfNaNs] = FilterStrips(stripIndices(:, 1));
 [filteredStripIndices2, lengthCutOut2, ~] = FilterStrips(stripIndices(:, 2));
 filteredStripIndices = [filteredStripIndices1 filteredStripIndices2];
+t1(1:numberOfNaNs) = [];
 t1(end-max(lengthCutOut1, lengthCutOut2)+1:end) = [];
 
 %% Perform interpolation with finer time interval
@@ -142,14 +153,13 @@ skips = 0;
 
 %% Use interpolatedPositions to generate the reference frame.
 for frameNumber = 1:totalFrames
-
     % By default, the current frame is not one that needs the correction
     % factor for rounding
     correctionFrame = false;
     
     % Read frame and convert pixel values to signed integers
     videoFrame = double(readFrame(videoInfo))/255;
-
+    
     % get the appropriate strips from stripIndices for each frame
     startFrameStrips = round(1 + ((frameNumber-1)*(stripsPerFrame))) + skips;
     endFrameStrips = round(frameNumber * stripsPerFrame) + skips;
@@ -163,8 +173,8 @@ for frameNumber = 1:totalFrames
     % Instead, due to rounding, the first strip of the fourth frame will be
     % the 10th index. Here, we handle this rounding error.
     if leftover >= 0.999
-        % I chose the threshold to be 0.999 instead of 1 because sometimes 
-        % MatLab doesn't store enough digits in leftover to get proper 
+        % I chose the threshold to be 0.999 instead of 1 because sometimes
+        % MatLab doesn't store enough digits in leftover to get proper
         % numbers (i.e., if frame height is 488 and strip height is 9).
         correctionFrame = true;
         endFrameStrips = endFrameStrips + 1;
@@ -181,7 +191,7 @@ for frameNumber = 1:totalFrames
             frameStripsWithoutNaN(k, :) = interpolatedPositions(k, :);
         end
     end
-
+    
     % Remove extra 0's from frameStripsWithoutNaN, leftover from the
     % preallocation.
     k = 1;
@@ -196,99 +206,106 @@ for frameNumber = 1:totalFrames
     % Remove the used interpolatedPositions to speed up run time in later
     % iterations
     numberToRemove = size(frameStripsWithoutNaN, 1);
-    if numberToRemove < size(interpolatedPositions, 1)  
+    if numberToRemove < size(interpolatedPositions, 1)
         interpolatedPositions(1:numberToRemove, :) = [];
     end
-
-    % Add a fourth column to hold the stripNumbers
-    if size(frameStripsWithoutNaN, 1) >= 2
-        if correctionFrame == true
-            frameStripsWithoutNaN(1, 4) = mod(frameStripsWithoutNaN(1, 3)-skips, ...
-            stripsPerFrame) + 1;
-        else
-            frameStripsWithoutNaN(1, 4) = mod(frameStripsWithoutNaN(1, 3)-skips, ...
-            stripsPerFrame);
-        end
-        for k = 2:size(frameStripsWithoutNaN, 1)
-            % Using the first stripNumber as a reference, add the difference
-            % between the two indices. For example, if index 5 has stripNumber
-            % of 1 and the next valid index is 8, then the stripNumber for
-            % index 8 is (8-5)+1 = 4 (indices 6 and 7, which were
-            % presumably NaNs, would have been stripNumbers 2 and 3).
-            frameStripsWithoutNaN(k, 4) = (frameStripsWithoutNaN(k, 3)...
-            - frameStripsWithoutNaN(k-1,3)) + frameStripsWithoutNaN(k-1, 4);
-        end
-    elseif size(frameStripsWithoutNaN, 1) == 1
-        % Handle the obscure case in which frameStripsWithoutNaN is only
-        % one row, and that one row may be in the frame in which we need to
-        % correct for rounding errors.
-        if correctionFrame == true
-            x = frameStripsWithoutNaN(1, 3);
-            y = (stripsPerFrame+1)*skips + (stripsPerFrame*(frameNumber-...
-                 skips-1));
-            frameStripsWithoutNaN(1, 4) = x - y + 1;
-        else
-            frameStripsWithoutNaN(1, 4) = mod(frameStripsWithoutNaN(1, 3)-skips, ...
-            stripsPerFrame);
-            if frameStripsWithoutNaN(1, 4) == 0
-                frameStripsWithoutNaN(1, 4) = stripsPerFrame;
+    
+    % We skip the iteration here instead of at the beginning of the
+    % for-loop because the processing for interpolatedPositions and
+    % leftOver was necessary for future frames
+    if any(badFrames==frameNumber)
+        continue
+    else
+        % Add a fourth column to hold the stripNumbers
+        if size(frameStripsWithoutNaN, 1) >= 2
+            if correctionFrame == true
+                frameStripsWithoutNaN(1, 4) = mod(frameStripsWithoutNaN(1, 3)-skips, ...
+                    stripsPerFrame) + 1;
+            else
+                frameStripsWithoutNaN(1, 4) = mod(frameStripsWithoutNaN(1, 3)-skips, ...
+                    stripsPerFrame);
+            end
+            for k = 2:size(frameStripsWithoutNaN, 1)
+                % Using the first stripNumber as a reference, add the difference
+                % between the two indices. For example, if index 5 has stripNumber
+                % of 1 and the next valid index is 8, then the stripNumber for
+                % index 8 is (8-5)+1 = 4 (indices 6 and 7, which were
+                % presumably NaNs, would have been stripNumbers 2 and 3).
+                frameStripsWithoutNaN(k, 4) = (frameStripsWithoutNaN(k, 3)...
+                    - frameStripsWithoutNaN(k-1,3)) + frameStripsWithoutNaN(k-1, 4);
+            end
+        elseif size(frameStripsWithoutNaN, 1) == 1
+            % Handle the obscure case in which frameStripsWithoutNaN is only
+            % one row, and that one row may be in the frame in which we need to
+            % correct for rounding errors.
+            if correctionFrame == true
+                x = frameStripsWithoutNaN(1, 3);
+                y = (stripsPerFrame+1)*skips + (stripsPerFrame*(frameNumber-...
+                    skips-1));
+                frameStripsWithoutNaN(1, 4) = x - y + 1;
+            else
+                frameStripsWithoutNaN(1, 4) = mod(frameStripsWithoutNaN(1, 3)-skips, ...
+                    stripsPerFrame);
+                if frameStripsWithoutNaN(1, 4) == 0
+                    frameStripsWithoutNaN(1, 4) = stripsPerFrame;
+                end
             end
         end
-    end
-    
-    if size(frameStripsWithoutNaN, 1) >= 1
-        % In case the first stripNumber was 0, add one to the rest of the
-        % column (should be only in the case when there is only one row)
-        if frameStripsWithoutNaN(1, 4) == 0
-            frameStripsWithoutNaN(:, 4) = frameStripsWithoutNaN(:, 4) + 1;
+
+        if size(frameStripsWithoutNaN, 1) >= 1
+            % In case the first stripNumber was 0, add one to the rest of the
+            % column (should be only in the case when there is only one row)
+            if frameStripsWithoutNaN(1, 4) == 0
+                frameStripsWithoutNaN(:, 4) = frameStripsWithoutNaN(:, 4) + 1;
+            end
         end
-    end
-    
-    for strip = 1 : size(frameStripsWithoutNaN, 1)
-        
-        % Keep track of the stripNumber so we can shift it accordingly
-        stripNumber = frameStripsWithoutNaN(strip, 4);
 
-        % row and column "coordinates" of the top left pixel of each strip
-        topLeft = [frameStripsWithoutNaN(strip, 1), frameStripsWithoutNaN(strip, 2)];
-        rowIndex = topLeft(2);
-        columnIndex = topLeft(1);
-        
-        % move strip to proper position
-        rowIndex = rowIndex + ((stripNumber-1) * params.newStripHeight);
+        for strip = 1 : size(frameStripsWithoutNaN, 1)
 
-        % get max row/column of the strip
-        maxRow = rowIndex + params.newStripHeight - 1;
-        maxColumn = columnIndex + width - 1;
-        
-        % transfer values of the strip pixels to the reference frame, and
-        % increment the corresponding location on the counter array
-        templateSelectRow = rowIndex:maxRow;
-        templateSelectColumn = columnIndex:maxColumn;
-        vidStart = ((stripNumber-1)*params.newStripHeight)+1;
-        vidEnd = stripNumber * params.newStripHeight;
-        
-        % If the strip extends beyond the frame (i.e., the frame has a
-        % height of 512 pixels and strip of height 10 begins at row 511)
-        % set the max row of that strip to be the last row of the frame.
-        % Also make templateSelectRow smaller to match the dimensions of
-        % the new strip
-         if vidEnd > size(videoFrame, 1)
-             difference = vidEnd - size(videoFrame, 1);
-             vidEnd = size(videoFrame, 1);
-             templateSelectRow = rowIndex:(maxRow-difference);
-         end
+            % Keep track of the stripNumber so we can shift it accordingly
+            stripNumber = frameStripsWithoutNaN(strip, 4);
 
-        templateSelectRow = round(templateSelectRow);
-        templateSelectColumn = round(templateSelectColumn);
-        vidStart = round(vidStart);
-        vidEnd = round(vidEnd);
-        
-        refFrame(templateSelectRow, templateSelectColumn) = refFrame(...
-            templateSelectRow, templateSelectColumn) + videoFrame(...
-            vidStart:vidEnd, :);
-        counterArray(templateSelectRow, templateSelectColumn) = counterArray...
-            (templateSelectRow, templateSelectColumn) + 1;
+            % row and column "coordinates" of the top left pixel of each strip
+            topLeft = [frameStripsWithoutNaN(strip, 1), frameStripsWithoutNaN(strip, 2)];
+            rowIndex = topLeft(2);
+            columnIndex = topLeft(1);
+
+            % move strip to proper position
+            rowIndex = rowIndex + ((stripNumber-1) * params.newStripHeight);
+
+            % get max row/column of the strip
+            maxRow = rowIndex + params.newStripHeight - 1;
+            maxColumn = columnIndex + width - 1;
+
+            % transfer values of the strip pixels to the reference frame, and
+            % increment the corresponding location on the counter array
+            templateSelectRow = rowIndex:maxRow;
+            templateSelectColumn = columnIndex:maxColumn;
+            vidStart = ((stripNumber-1)*params.newStripHeight)+1;
+            vidEnd = stripNumber * params.newStripHeight;
+
+            % If the strip extends beyond the frame (i.e., the frame has a
+            % height of 512 pixels and strip of height 10 begins at row 511)
+            % set the max row of that strip to be the last row of the frame.
+            % Also make templateSelectRow smaller to match the dimensions of
+            % the new strip
+            if vidEnd > size(videoFrame, 1)
+                difference = vidEnd - size(videoFrame, 1);
+                vidEnd = size(videoFrame, 1);
+                templateSelectRow = rowIndex:(maxRow-difference);
+            end
+
+            templateSelectRow = round(templateSelectRow);
+            templateSelectColumn = round(templateSelectColumn);
+            vidStart = round(vidStart);
+            vidEnd = round(vidEnd);
+
+            refFrame(templateSelectRow, templateSelectColumn) = refFrame(...
+                templateSelectRow, templateSelectColumn) + videoFrame(...
+                vidStart:vidEnd, :);
+            counterArray(templateSelectRow, templateSelectColumn) = counterArray...
+                (templateSelectRow, templateSelectColumn) + 1;
+        end
     end
 end
 

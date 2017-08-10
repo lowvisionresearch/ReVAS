@@ -19,8 +19,8 @@ function coarseRefFrame = CoarseRef(videoPath, parametersStructure)
 %   final result. Verbosity of 2 will show the progress of the program. 
 %   scalingFactor is the factor by which each frame will be multiplied to 
 %   get the approximate frame shifts.
-%   parametersStructure also needs parametersStructure.peakRatio and
-%   parametersStructure.minimumPeakThreshold
+%   parametersStructure also needs parametersStructure.peakRatio,
+%   parametersStructure.minimumPeakThreshold.
 %
 %   Example: 
 %       videoPath = 'MyVid.avi';
@@ -105,7 +105,6 @@ framePositions = ...
 [filteredStripIndices1, ~, ~] = FilterStrips(framePositions(:, 1));
 [filteredStripIndices2, ~, ~] = FilterStrips(framePositions(:, 2));
 framePositions = [filteredStripIndices1 filteredStripIndices2];
-
 save(outputTracesPath, 'framePositions');
 
 %% Set up the counter array and the template for the coarse reference frame.
@@ -164,36 +163,40 @@ if enableGPU
 end
 
 for frameNumber = 1:totalFrames
-    % Use double function because readFrame gives unsigned integers,
-    % whereas we need to use signed integers
-    if enableGPU
-        frame = double(gpuArray(readFrame(v)))/255;
+    if any(badFrames==frameNumber)
+        continue
     else
-        frame = double(readFrame(v))/255;
-    end
-    
-    % framePositions has the top left coordinate of the frames, so those
-    % coordinates will represent the minRow and minColumn to be added to
-    % the template frame. maxRow and maxColumn will be the size of the
-    % frame added to the minRow/minColumn - 1. (i.e., if size of the frame
-    % is 256x256 and the minRow is 1, then the maxRow will be 1 + 256 - 1.
-    % If minRow is 2 (moved down by one pixel) then maxRow will be 
-    % 2 + 256 - 1 = 257)
-    
-    minRow = round(framePositions(frameNumber, 2));
-    minColumn = round(framePositions(frameNumber, 1));
-    maxRow = size(frame, 1) + minRow - 1;
-    maxColumn = size(frame, 2) + minColumn - 1;
+        % Use double function because readFrame gives unsigned integers,
+        % whereas we need to use signed integers
+        if enableGPU
+            frame = double(gpuArray(readFrame(v)))/255;
+        else
+            frame = double(readFrame(v))/255;
+        end
 
-    % Now add the frame values to the template frame and increment the
-    % counterArray, which is keeping track of how many frames are added 
-    % to each pixel. 
-    selectRow = round(minRow):round(maxRow);
-    selectColumn = round(minColumn):round(maxColumn);
-    
-    coarseRefFrame(selectRow, selectColumn) = coarseRefFrame(selectRow, ...
-        selectColumn) + frame;
-    counterArray(selectRow, selectColumn) = counterArray(selectRow, selectColumn) + 1;
+        % framePositions has the top left coordinate of the frames, so those
+        % coordinates will represent the minRow and minColumn to be added to
+        % the template frame. maxRow and maxColumn will be the size of the
+        % frame added to the minRow/minColumn - 1. (i.e., if size of the frame
+        % is 256x256 and the minRow is 1, then the maxRow will be 1 + 256 - 1.
+        % If minRow is 2 (moved down by one pixel) then maxRow will be 
+        % 2 + 256 - 1 = 257)
+
+        minRow = round(framePositions(frameNumber, 2));
+        minColumn = round(framePositions(frameNumber, 1));
+        maxRow = size(frame, 1) + minRow - 1;
+        maxColumn = size(frame, 2) + minColumn - 1;
+
+        % Now add the frame values to the template frame and increment the
+        % counterArray, which is keeping track of how many frames are added 
+        % to each pixel. 
+        selectRow = round(minRow):round(maxRow);
+        selectColumn = round(minColumn):round(maxColumn);
+
+        coarseRefFrame(selectRow, selectColumn) = coarseRefFrame(selectRow, ...
+            selectColumn) + frame;
+        counterArray(selectRow, selectColumn) = counterArray(selectRow, selectColumn) + 1;
+    end
 end
 
 % Divide the template frame by the counterArray to obtain the average value
