@@ -103,7 +103,7 @@ while ~isempty(startAndEndPairs)
     % cut out the rest of the NaNs, since we have no way of interpolating.
     if dimensions(2) == 2
         lengthCut = 1;
-        lengthCutOut = size(stripIndices(NaNIndices(1):end));
+        lengthCutOut = max(size(stripIndices(NaNIndices(1):end)));
         stripIndices(NaNIndices(1):end) = [];
         startAndEndPairs = [];
         
