@@ -81,6 +81,25 @@ end
 [filteredStripIndices2, lengthCutOut2, numberOfNaNs2] = FilterStrips(stripIndices(:, 2));
 numberOfNaNs = max(numberOfNaNs1, numberOfNaNs2);
 lengthCutOut = max(lengthCutOut1, lengthCutOut2);
+
+% Handle the case in which the two column vectors are different sizes
+difference1 = numberOfNaNs1 - numberOfNaNs2;
+difference2 = lengthCutOut1 - lengthCutOut2;
+
+if difference1 < 0
+    difference1 = -difference1;
+    filteredStripIndices1(1:difference1, :) = [];
+elseif difference1 > 0
+    filteredStripIndices2(1:difference1, :) = [];
+end
+
+if difference2 < 0
+    difference2 = -difference2;
+    filteredStripIndices1(end-difference2+1:end, :) = [];
+elseif difference2 > 0
+    filteredStripIndices2(end-difference2+1:end, :) = [];
+end
+
 filteredStripIndices = [filteredStripIndices1 filteredStripIndices2];
 if numberOfNaNs >= 1
     t1(1:numberOfNaNs) = [];
