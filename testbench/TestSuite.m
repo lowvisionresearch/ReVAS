@@ -18,7 +18,7 @@ if ~iscell(filenames)
     end
 end
 
-parfor i = 1:length(filenames)
+for i = 1:length(filenames)
     % Grab path out of cell.
     videoPath = filenames{i};
     parametersStructure = struct;
@@ -30,36 +30,30 @@ parfor i = 1:length(filenames)
     parametersStructure.overwrite = true;
 
     % Step 1: Trim the video's upper and right edges.
-    parametersStructure.borderTrimAmount = 24;
-    %TrimVideo(videoPath, parametersStructure);
+    parametersStructure.borderTrimAmount = 0;
+    TrimVideo(videoPath, parametersStructure);
     fprintf('Process Completed for TrimVideo()\n');
     videoPath = [videoPath(1:end-4) '_dwt' videoPath(end-3:end)]; %#ok<*FXSET>
 
     % Step 2: Find stimulus location
-    parametersStructure.enableVerbosity = false;
+    parametersStructure.enableVerbosity = true;
     %FindStimulusLocations(videoPath, 'testbench/stimulus_cross.gif', parametersStructure);
     %stimulus.thickness = 1;
     %stimulus.size = 11;
     % For Rodenstock:
     stimulus.thickness = 3;
     stimulus.size = 23;
-    try
-        FindStimulusLocations(videoPath, stimulus, parametersStructure);
-        fprintf('Process Completed for FindStimulusLocations()\n');
-    catch
-        fprintf('Skipped FindStimulusLocations()\n');
-    end
+    FindStimulusLocations(videoPath, stimulus, parametersStructure);
+    fprintf('Process Completed for FindStimulusLocations()\n');
+
     
     % Step 3: Remove the stimulus
     parametersStructure.overwrite = true;
-    try
-        RemoveStimuli(videoPath, parametersStructure);
-        %copyfile(videoPath, ...
-        %    [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]); %#ok<*FXSET>
-        fprintf('Process Completed for RemoveStimuli()\n');
-    catch
-        fprintf('Skipped RemoveStimuli()\n');
-    end
+    RemoveStimuli(videoPath, parametersStructure);
+    %copyfile(videoPath, ...
+    %    [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]); %#ok<*FXSET>
+    fprintf('Process Completed for RemoveStimuli()\n');
+
 
     % Step 5: Apply gamma correction
     videoPath = [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]; %#ok<*FXSET>
@@ -78,9 +72,9 @@ parfor i = 1:length(filenames)
     % Step 4: Detect blinks and bad frames
     % Default:
     %parametersStructure.thresholdValue = 4;
-    parametersStructure.thresholdValue = 7;
+    parametersStructure.thresholdValue = 1;
     parametersStructure.singleTail = true;
-    parametersStructure.upperTail = true;
+    parametersStructure.upperTail = false;
     % Use the final bandpass filtered video
     videoPath = [videoPath(1:end-4) '_bandfilt' videoPath(end-3:end)];
     FindBlinkFrames(videoPath, parametersStructure);
