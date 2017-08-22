@@ -45,8 +45,8 @@ ValidateParametersStructure(parametersStructure);
 % Identify which frames are bad frames
 % The filename may not exist if a raw array was passed in.
 if ~isfield(parametersStructure, 'badFrames')
-    nameEnd = strfind(inputVideoPath,'dwt_');
-    blinkFramesPath = [inputVideoPath(1:nameEnd+length('dwt_')-1) 'blinkframes'];
+    nameEnd = inputVideoPath(1:size(inputVideoPath, 2)-4);
+    blinkFramesPath = [nameEnd '_blinkframes.mat'];
     try
         load(blinkFramesPath, 'badFrames');
         parametersStructure.badFrames = badFrames;
