@@ -62,8 +62,6 @@ frameWidth = size(videoInputArray, 2);
 numberOfFrames = size(videoInputArray, 3);
 samplingRate = videoFrameRate;
 
-[videoInput, ~] = VideoPathToArray(inputVideoPath);
-
 % Populate time array
 timeArray = (1:numberOfFrames)' / samplingRate;
 
@@ -80,7 +78,7 @@ stimulusLocationInEachFrame = NaN(numberOfFrames, 2);
 
 for frameNumber = (1:numberOfFrames)
     
-    frame = videoInput(:,:, frameNumber);
+    frame = videoInputArray(:,:, frameNumber);
         
     correlation = normxcorr2(stimulus, frame);
         

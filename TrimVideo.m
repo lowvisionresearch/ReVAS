@@ -48,7 +48,6 @@ for frameNumber = 1:numberOfFrames
         frame(parametersStructure.borderTrimAmount+1 : height, ...
        1 : width-parametersStructure.borderTrimAmount);
 end
-colormap(gray(256));
 
 writeVideo(writer, trimmedFrames);
 close(writer);
