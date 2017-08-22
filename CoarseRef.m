@@ -245,9 +245,10 @@ save(outputFileName, 'coarseRefFrame');
 if parametersStructure.enableVerbosity >= 1
     if isfield(parametersStructure, 'axesHandles')
         axes(parametersStructure.axesHandles(3));
+        colormap(parametersStructure.axesHandles(3), 'gray');
     else
         figure('Name', 'Coarse Reference Frame');
     end
-    imshow(coarseRefFrame)
+    imshow(coarseRefFrame);
 end
 end

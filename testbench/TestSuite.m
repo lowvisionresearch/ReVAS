@@ -45,31 +45,27 @@ for i = 1:length(filenames)
     stimulus.size = 23;
     FindStimulusLocations(videoPath, stimulus, parametersStructure);
     fprintf('Process Completed for FindStimulusLocations()\n');
-
     
     % Step 3: Remove the stimulus
-    parametersStructure.overwrite = true;
     RemoveStimuli(videoPath, parametersStructure);
     %copyfile(videoPath, ...
     %    [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]); %#ok<*FXSET>
     fprintf('Process Completed for RemoveStimuli()\n');
 
-
-    % Step 5: Apply gamma correction
+    % Step 4: Apply gamma correction
     videoPath = [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]; %#ok<*FXSET>
     parametersStructure.gammaExponent = 0.6;
     GammaCorrect(videoPath, parametersStructure);
     fprintf('Process Completed for GammaCorrect()\n');
 
-    parametersStructure.overwrite = true;
-    % Step 6: Apply bandpass filtering
+    % Step 5: Apply bandpass filtering
     videoPath = [videoPath(1:end-4) '_gamscaled' videoPath(end-3:end)];
     parametersStructure.smoothing = 1;
     parametersStructure.lowSpatialFrequencyCutoff = 3;
     BandpassFilter(videoPath, parametersStructure);
     fprintf('Process Completed for BandpassFilter()\n');
         
-    % Step 4: Detect blinks and bad frames
+    % Step 6: Detect blinks and bad frames
     % Default:
     %parametersStructure.thresholdValue = 4;
     parametersStructure.thresholdValue = 1;

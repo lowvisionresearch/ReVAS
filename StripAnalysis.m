@@ -293,6 +293,7 @@ for stripNumber = (1:numberOfStrips)
             end
             if isfield(parametersStructure, 'axesHandles')
                 axes(parametersStructure.axesHandles(1));
+                colormap(parametersStructure.axesHandles(1), 'default');
             else
                 figure(1);
             end
@@ -349,6 +350,7 @@ for stripNumber = (1:numberOfStrips)
 
             if isfield(parametersStructure, 'axesHandles')
                 axes(parametersStructure.axesHandles(2));
+                colormap(parametersStructure.axesHandles(2), 'default');
             else
                 figure(2);
             end
@@ -417,6 +419,7 @@ usefulEyePositionTraces = rawEyePositionTraces .* eyeTracesToRemove;
 if ~abortTriggered && parametersStructure.enableVerbosity
     if isfield(parametersStructure, 'axesHandles')
         axes(parametersStructure.axesHandles(3));
+        colormap(parametersStructure.axesHandles(3), 'gray');
     else
         figure(3);
     end
