@@ -46,8 +46,8 @@ else
 end
 
 %% Identify which frames are bad frames
-nameEnd = strfind(videoPath,'dwt_');
-blinkFramesPath = [videoPath(1:nameEnd+length('dwt_')-1) 'blinkframes'];
+nameEnd = videoPath(1:end-4);
+blinkFramesPath = [nameEnd '_blinkframes.mat'];
 try
     load(blinkFramesPath, 'badFrames');
 catch
@@ -115,8 +115,7 @@ save(outputTracesPath, 'framePositions');
 
 %% Set up the counter array and the template for the coarse reference frame.
 v = VideoReader(videoPath);
-frameRate = v.FrameRate;
-totalFrames = size(framePositions, 1);
+totalFrames = v.FrameRate * v.Duration;
 
 height = v.Height;
 counterArray = zeros(height*3);
@@ -168,7 +167,7 @@ if enableGPU
     coarseRefFrame = gpuArray(coarseRefFrame);
 end
 
-for frameNumber = 1+beginningNaNs:totalFrames-endNaNs
+for frameNumber = 1+beginningNaNs:totalFrames-endNaNs-beginningNaNs
     % Use double function because readFrame gives unsigned integers,
     % whereas we need to use signed integers
     frame = double(videoInputArray(:, :, frameNumber))/255;
@@ -178,6 +177,7 @@ for frameNumber = 1+beginningNaNs:totalFrames-endNaNs
     if any(badFrames==frameNumber)
         continue
     else
+        
         % framePositions has the top left coordinate of the frames, so those
         % coordinates will represent the minRow and minColumn to be added to
         % the template frame. maxRow and maxColumn will be the size of the
@@ -185,7 +185,6 @@ for frameNumber = 1+beginningNaNs:totalFrames-endNaNs
         % is 256x256 and the minRow is 1, then the maxRow will be 1 + 256 - 1.
         % If minRow is 2 (moved down by one pixel) then maxRow will be 
         % 2 + 256 - 1 = 257)
-
         minRow = round(framePositions(frameNumber, 2));
         minColumn = round(framePositions(frameNumber, 1));
         maxRow = size(frame, 1) + minRow - 1;

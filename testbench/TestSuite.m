@@ -10,15 +10,6 @@ close all;
 
 addpath(genpath('..'));
 
-testVideos = cell(1, 4);
-testVideos{1} = 'testbench\mna_os_10_12_1_45_1_stabfix_17_36_21_990.avi';
-testVideos{2} = 'testbench\cmo_os_10_4_1_135_1_stabfix_09_33_36_910.avi';
-testVideos{3} = 'testbench\djw_os_10_12_1_45_1_stabfix_16_39_42_176.avi';
-testVideos{4} = 'testbench\jap_os_10_12_1_45_1_stabfix_11_37_35_135.avi';
-
-benchmarkingVideos = cell(1, 1);
-benchmarkingVideos{1} = 'testbench\benchmark\benchmark_realvideos\.avi';
-
 filenames = uipickfiles;
 if ~iscell(filenames)
     if filenames == 0
@@ -52,21 +43,23 @@ parfor i = 1:length(filenames)
     % For Rodenstock:
     stimulus.thickness = 3;
     stimulus.size = 23;
-    FindStimulusLocations(videoPath, stimulus, parametersStructure);
-    fprintf('Process Completed for FindStimulusLocations()\n');
-
+    try
+        FindStimulusLocations(videoPath, stimulus, parametersStructure);
+        fprintf('Process Completed for FindStimulusLocations()\n');
+    catch
+        fprintf('Skipped FindStimulusLocations()\n');
+    end
+    
     % Step 3: Remove the stimulus
     parametersStructure.overwrite = true;
-    RemoveStimuli(videoPath, parametersStructure);
-    %copyfile(videoPath, ...
-    %    [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]); %#ok<*FXSET>
-    fprintf('Process Completed for RemoveStimuli()\n');
-
-    % Step 4: Detect blinks and bad frames
-    parametersStructure.thresholdValue = 4;
-    FindBlinkFrames(videoPath, parametersStructure);
-    fprintf('Process Completed for FindBadFrames()\n');
-    % FindBlinkFrames still needs file name from before stim removal.
+    try
+        RemoveStimuli(videoPath, parametersStructure);
+        %copyfile(videoPath, ...
+        %    [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]); %#ok<*FXSET>
+        fprintf('Process Completed for RemoveStimuli()\n');
+    catch
+        fprintf('Skipped RemoveStimuli()\n');
+    end
 
     % Step 5: Apply gamma correction
     videoPath = [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]; %#ok<*FXSET>
@@ -81,6 +74,19 @@ parfor i = 1:length(filenames)
     parametersStructure.lowSpatialFrequencyCutoff = 3;
     BandpassFilter(videoPath, parametersStructure);
     fprintf('Process Completed for BandpassFilter()\n');
+        
+    % Step 4: Detect blinks and bad frames
+    % Default:
+    %parametersStructure.thresholdValue = 4;
+    parametersStructure.thresholdValue = 7;
+    parametersStructure.singleTail = true;
+    parametersStructure.upperTail = true;
+    % Use the final bandpass filtered video
+    videoPath = [videoPath(1:end-4) '_bandfilt' videoPath(end-3:end)];
+    FindBlinkFrames(videoPath, parametersStructure);
+    fprintf('Process Completed for FindBadFrames()\n');
+    % FindBlinkFrames still needs file name from before stim removal.
+    
 end
 fprintf('Process Completed.\n');
 

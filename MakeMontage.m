@@ -30,8 +30,8 @@ else
 end
 
 %% Identify which frames are bad frames
-nameEnd = strfind(fileName,'dwt_');
-blinkFramesPath = [fileName(1:nameEnd+length('dwt_')-1) 'blinkframes'];
+nameEnd = fileName(1:size(fileName, 2)-4);
+blinkFramesPath = [nameEnd '_blinkframes.mat'];
 try
     load(blinkFramesPath, 'badFrames');
 catch

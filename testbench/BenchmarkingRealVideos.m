@@ -29,15 +29,15 @@ for i = 1:length(filenames)
     nameEnd = strfind(originalVideoPath,'bandfilt');
     paramsPath = [originalVideoPath(1:nameEnd+length('bandfilt')-1) '_params'];
     load(paramsPath, 'coarseParameters', 'fineParameters', 'stripParameters');
-    coarseParameters.enableVerbosity = true;
-    fineParameters.enableVerbosity = true;
-    stripParameters.enableVerbosity = true;
+    coarseParameters.enableVerbosity = false;
+    fineParameters.enableVerbosity = false;
+    stripParameters.enableVerbosity = false;
     coarseParamsCells{i} = coarseParameters; 
     fineParamsCells{i} = fineParameters; 
     stripParamsCells{i} = stripParameters; 
 end
 
-for i = 1:length(filenames)
+parfor i = 1:length(filenames)
     % Grab path out of cell.
     originalVideoPath = filenames{i};
     

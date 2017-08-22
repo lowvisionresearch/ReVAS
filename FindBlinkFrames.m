@@ -59,7 +59,7 @@ end
 meanOfMeans = sum(means)/size(means, 2);
 meansCopy = means - meanOfMeans;
 meansCopy = meansCopy.^2;
-standardDeviation = (sum(meansCopy)/size(meansCopy, 2))^0.5;
+standardDeviation = (sum(meansCopy)/size(meansCopy, 2)-1)^0.5;
 
 % Mark frames that are beyond our threshold as bad frames
 threshold = thresholdValue * standardDeviation;
@@ -69,8 +69,20 @@ upperBound = meanOfMeans + threshold;
 
 for k = 1:size(means, 2)
     sample = means(1, k);
-    if sample < lowerBound || sample > upperBound
-        badFrames(1, k) = k;
+    if parametersStructure.singleTail == true
+        if parametersStructure.upperTail == true
+            if sample > upperBound
+                badFrames(1, k) = k;
+            end
+        else
+            if sample < lowerBound
+                badFrames(1, k) = k;
+            end
+        end
+    else
+        if sample > upperBound || sample < lowerBound
+            badFrames(1, k) = k;
+        end
     end
 end
 
