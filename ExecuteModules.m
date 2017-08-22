@@ -48,11 +48,9 @@ if logical(handles.togStim.Value) && ~logical(abortTriggered)
         stimulus.thickness = handles.config.stimThick;
         stimulus.size = handles.config.stimSize;
     end
-    parametersStructure.thresholdValue = 4; % TODO (used for blink detection)
 
     % Call the function(s)
     FindStimulusLocations(inputVideoPath, stimulus, parametersStructure);
-    FindBlinkFrames(inputVideoPath, parametersStructure);
     RemoveStimuli(inputVideoPath, parametersStructure);
 
     % Update file name to output file name
@@ -84,14 +82,31 @@ if logical(handles.togBandFilt.Value) && ~logical(abortTriggered)
     inputVideoPath = [inputVideoPath(1:end-4) '_bandfilt' inputVideoPath(end-3:end)];
 end
 
-if logical(handles.togCoarse.Value) && ~logical(abortTriggered) % TODO
+if (logical(handles.togCoarse.Value) ...
+        || logical(handles.togFine.Value) ...
+        || logical(handles.togStrip.Value)) && ~logical(abortTriggered)
+    parametersStructure.overwrite = handles.config.coarseOverwrite || ...
+        handles.config.fineOverwrite || ...
+        handles.config.stripOverwrite;
+    parametersStructure.thresholdValue = 4; % TODO (make changeable from GUI)
+    parametersStructure.singleTail = true;
+    parametersStructure.upperTail = false;
+    FindBlinkFrames(inputVideoPath, parametersStructure);
+end
+
+if logical(handles.togCoarse.Value) && ~logical(abortTriggered)
     % Set the parameters
     parametersStructure.refFrameNumber = handles.config.coarseRefFrameNum;
     parametersStructure.scalingFactor = handles.config.coarseScalingFactor;
     parametersStructure.overwrite = handles.config.coarseOverwrite;
     parametersStructure.enableVerbosity = handles.config.coarseVerbosity;
     parametersStructure.fileName = inputVideoPath;
+    parametersStructure.adaptiveSearch = false;
+    parametersStructure.enableSubpixelInterpolation = false;
+    parametersStructure.enableGaussianFiltering = false;
     parametersStructure.enableGPU = false; % TODO
+    parametersStructure.maximumPeakRatio = Inf;
+    parametersStructure.minimumPeakThreshold = -Inf;
     parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
 
     % Call the function(s)
