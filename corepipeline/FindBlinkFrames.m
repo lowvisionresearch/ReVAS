@@ -72,21 +72,38 @@ for k = 1:size(means, 2)
     if parametersStructure.singleTail == true
         if parametersStructure.upperTail == true
             if sample > upperBound
-                badFrames(1, k) = k;
+                badFrames(k) = 1;
             end
         else
             if sample < lowerBound
-                badFrames(1, k) = k;
+                badFrames(k) = 1;
             end
         end
     else
         if sample > upperBound || sample < lowerBound
-            badFrames(1, k) = k;
+            badFrames(k) = 1;
         end
     end
 end
 
-% Filter out leftover 0 padding
+%% Lump together blinks that are < |stitchCriteria| ms apart
+
+% If the difference between any two marked saccades is less than
+% |stitchCriteria|, then lump them together as one.
+if isfield(parametersStructure, 'stitchCriteria')
+    badFramesIndices = find(badFrames);
+    badFramesDiffs = diff(badFramesIndices);
+    for i = 1:size(badFramesDiffs, 2)
+        if badFramesDiffs(i) > 1 && badFramesDiffs(i) < parametersStructure.stitchCriteria
+            for j = 1:badFramesDiffs(i)
+                badFrames(badFramesIndices(i)+j) = 1;
+            end
+        end
+    end
+end
+
+%% Filter out leftover 0 padding
+badFrames = find(badFrames);
 badFrames = badFrames(badFrames ~= 0);
 
 %% Save to output mat file

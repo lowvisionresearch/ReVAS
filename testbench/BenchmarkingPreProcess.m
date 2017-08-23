@@ -9,6 +9,8 @@ close all;
 
 addpath(genpath('..'));
 
+CONTAINS_STIM = false;
+
 filenames = uipickfiles;
 if ~iscell(filenames)
     if filenames == 0
@@ -35,21 +37,26 @@ for i = 1:length(filenames)
     videoPath = [videoPath(1:end-4) '_dwt' videoPath(end-3:end)]; %#ok<*FXSET>
 
     % Step 2: Find stimulus location
-    parametersStructure.enableVerbosity = true;
-    %FindStimulusLocations(videoPath, 'testbench/stimulus_cross.gif', parametersStructure);
-    %stimulus.thickness = 1;
-    %stimulus.size = 11;
-    % For Rodenstock:
-    stimulus.thickness = 3;
-    stimulus.size = 23;
-    FindStimulusLocations(videoPath, stimulus, parametersStructure);
-    fprintf('Process Completed for FindStimulusLocations()\n');
+    if CONTAINS_STIM
+        parametersStructure.enableVerbosity = true; %#ok<UNRCH>
+        %FindStimulusLocations(videoPath, 'testbench/stimulus_cross.gif', parametersStructure);
+        %stimulus.thickness = 1;
+        %stimulus.size = 11;
+        % For Rodenstock:
+        stimulus.thickness = 3;
+        stimulus.size = 23;
+            FindStimulusLocations(videoPath, stimulus, parametersStructure);
+            fprintf('Process Completed for FindStimulusLocations()\n');
+    end
     
     % Step 3: Remove the stimulus
-    RemoveStimuli(videoPath, parametersStructure);
-    %copyfile(videoPath, ...
-    %    [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]); %#ok<*FXSET>
-    fprintf('Process Completed for RemoveStimuli()\n');
+    if CONTAINS_STIM
+        RemoveStimuli(videoPath, parametersStructure); %#ok<UNRCH>
+        fprintf('Process Completed for RemoveStimuli()\n');
+    else
+        copyfile(videoPath, ...
+            [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]); %#ok<*FXSET> 
+    end
 
     % Step 4: Apply gamma correction
     videoPath = [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]; %#ok<*FXSET>
@@ -68,8 +75,9 @@ for i = 1:length(filenames)
     % Default:
     %parametersStructure.thresholdValue = 4;
     parametersStructure.thresholdValue = 1;
-    parametersStructure.singleTail = true;
+    parametersStructure.singleTail = false;
     parametersStructure.upperTail = false;
+    parametersStructure.stitchCriteria = 6;
     % Use the final bandpass filtered video
     videoPath = [videoPath(1:end-4) '_bandfilt' videoPath(end-3:end)];
     FindBlinkFrames(videoPath, parametersStructure);
