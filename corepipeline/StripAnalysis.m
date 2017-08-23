@@ -370,7 +370,7 @@ end
 % enabled, then these operations were already performed for each point
 % before it was plotted to the eye traces graph. If verbosity was not
 % enabled, then we do it now in order to take advantage of vectorization.
-if ~localParametersStructure.enableVerbosity
+if ~parametersStructure.enableVerbosity
     rawEyePositionTraces(:,2) = ...
         rawEyePositionTraces(:,2) - (parametersStructure.stripHeight - 1);
     rawEyePositionTraces(:,1) = ...

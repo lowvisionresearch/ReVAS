@@ -322,14 +322,15 @@ end
 % Combine results from both vertical and horizontal approaches
 saccades = or(verticalSaccades, horizontalSaccades);
 
-%% Lump together microsaccades that are < |stitchCriteria| ms apart
+%% Lump together blinks that are < |stitchCriteria| ms apart
 
 % If the difference between any two marked saccades is less than
 % |stitchCriteria|, then lump them together as one.
 saccadesIndices = find(saccades);
-for i = diff(saccadesIndices)
-    if i > 1 && i < stitchCriteria
-        for j = 1:i
+saccadesDiffs = diff(saccadesIndices);
+for i = 1:size(saccadesDiffs, 2)
+    if saccadesDiffs(i) > 1 && saccadesDiffs(i) < stitchCriteria
+        for j = 1:saccadesDiffs(i)
             saccades(saccadesIndices(i)+j) = 1;
         end
     end

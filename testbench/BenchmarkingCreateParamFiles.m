@@ -48,6 +48,11 @@ for i = 1:length(filenames)
     stripsPerFrame = floor(frameHeight/stripParameters.stripHeight);
     stripParameters.samplingRate = stripsPerFrame * framesPerSecond;
     
+    % Blink Params
+    coarseParameters.thresholdValue = 0.1;
+    coarseParameters.singleTail = true;
+    coarseParameters.upperTail = false;
+    
     save(paramsPath, 'coarseParameters', 'fineParameters', 'stripParameters');
     fprintf('%d of %d completed.\n', i, length(filenames));
 end
