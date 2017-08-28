@@ -49,10 +49,10 @@ for i = 1:length(filenames)
     stripParameters.samplingRate = stripsPerFrame * framesPerSecond;
     
     % Blink Params
-    coarseParameters.thresholdValue = 0.5;
+    coarseParameters.thresholdValue = 1;
     coarseParameters.singleTail = true;
     coarseParameters.upperTail = true;
-    coarseParameters.stitchCriteria = 6;    
+    %coarseParameters.stitchCriteria = 6;    
     
     save(paramsPath, 'coarseParameters', 'fineParameters', 'stripParameters');
     fprintf('%d of %d completed.\n', i, length(filenames));
