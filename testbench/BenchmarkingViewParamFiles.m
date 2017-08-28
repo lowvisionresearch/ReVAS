@@ -1,6 +1,9 @@
 function [] = BenchmarkingViewParamFiles()
 %BENCHMARKING Script used to view param files used to benchmark real videos.
 %   Script used to benchmark ReVAS.
+%   ** From the file selector, choose the Bandfilt Videos corresponding to the
+%   params you want.
+%   ** Run this script using Run Section to see variables after it has run.
 
 %%
 clc;
@@ -30,9 +33,16 @@ for i = 1:length(filenames)
     fineStructs = [fineStructs fineParameters];
     stripStructs = [stripStructs stripParameters];
 end
-struct2table(coarseStructs);
-struct2table(fineStructs);
-struct2table(stripStructs);
+
+clear coarseParameters;
+clear filenames;
+clear fineParameters;
+clear i;
+clear nameEnd;
+clear originalVideoPath;
+clear paramsPath;
+clear stripParameters;
+
 fprintf('Process Completed.\n');
 
 end
