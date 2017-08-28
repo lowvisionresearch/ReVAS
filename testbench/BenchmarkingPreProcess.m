@@ -58,7 +58,7 @@ for i = 1:length(filenames)
         fprintf('Process Completed for RemoveStimuli()\n');
     else
         copyfile(videoPath, ...
-            [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]); %#ok<*FXSET> 
+            [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]); %#ok<UNRCH,*FXSET> 
     end
 
     % Step 4: Apply gamma correction
@@ -78,8 +78,8 @@ for i = 1:length(filenames)
     % Default:
     parametersStructure.thresholdValue = 1;
     %parametersStructure.thresholdValue = 1;
-    parametersStructure.singleTail = true;
-    parametersStructure.upperTail = true;
+    parametersStructure.singleTail = false;
+    parametersStructure.upperTail = false;
     %parametersStructure.stitchCriteria = 6;
     % Use the final bandpass filtered video
     videoPath = [videoPath(1:end-4) '_bandfilt' videoPath(end-3:end)];
