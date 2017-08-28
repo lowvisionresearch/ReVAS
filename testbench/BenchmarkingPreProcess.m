@@ -9,7 +9,8 @@ close all;
 
 addpath(genpath('..'));
 
-CONTAINS_STIM = false;
+CONTAINS_STIM = true;
+SKIP_TRIM = true;
 
 filenames = uipickfiles;
 if ~iscell(filenames)
@@ -31,14 +32,16 @@ for i = 1:length(filenames)
     parametersStructure.overwrite = true;
 
     % Step 1: Trim the video's upper and right edges.
-    parametersStructure.borderTrimAmount = 0;
-    TrimVideo(videoPath, parametersStructure);
-    fprintf('Process Completed for TrimVideo()\n');
+    if ~SKIP_TRIM
+        parametersStructure.borderTrimAmount = 0;
+        TrimVideo(videoPath, parametersStructure);
+        fprintf('Process Completed for TrimVideo()\n');
+    end
     videoPath = [videoPath(1:end-4) '_dwt' videoPath(end-3:end)]; %#ok<*FXSET>
 
     % Step 2: Find stimulus location
     if CONTAINS_STIM
-        parametersStructure.enableVerbosity = true; %#ok<UNRCH>
+        parametersStructure.enableVerbosity = false; %#ok<UNRCH>
         %FindStimulusLocations(videoPath, 'testbench/stimulus_cross.gif', parametersStructure);
         %stimulus.thickness = 1;
         %stimulus.size = 11;
@@ -73,11 +76,11 @@ for i = 1:length(filenames)
         
     % Step 6: Detect blinks and bad frames
     % Default:
-    %parametersStructure.thresholdValue = 4;
     parametersStructure.thresholdValue = 1;
-    parametersStructure.singleTail = false;
-    parametersStructure.upperTail = false;
-    parametersStructure.stitchCriteria = 6;
+    %parametersStructure.thresholdValue = 1;
+    parametersStructure.singleTail = true;
+    parametersStructure.upperTail = true;
+    %parametersStructure.stitchCriteria = 6;
     % Use the final bandpass filtered video
     videoPath = [videoPath(1:end-4) '_bandfilt' videoPath(end-3:end)];
     FindBlinkFrames(videoPath, parametersStructure);
