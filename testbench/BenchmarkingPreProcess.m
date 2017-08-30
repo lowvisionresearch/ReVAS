@@ -82,9 +82,9 @@ parfor i = 1:length(filenames)
     % Step 6: Detect blinks and bad frames
     % Default:
     parametersStructure.thresholdValue = 0;
-    parametersStructure.singleTail = true;
+    parametersStructure.singleTail = false;
     parametersStructure.upperTail = true;
-    %parametersStructure.stitchCriteria = 6;
+    parametersStructure.stitchCriteria = 10;
     % Use the final bandpass filtered video
     videoPath = [videoPath(1:end-4) '_bandfilt' videoPath(end-3:end)];
     FindBlinkFrames(videoPath, parametersStructure);
