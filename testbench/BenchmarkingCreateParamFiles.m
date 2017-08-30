@@ -49,10 +49,16 @@ for i = 1:length(filenames)
     stripParameters.samplingRate = stripsPerFrame * framesPerSecond;
     
     % Blink Params
-    coarseParameters.thresholdValue = 1;
-    coarseParameters.singleTail = true;
-    coarseParameters.upperTail = true;
-    %coarseParameters.stitchCriteria = 6;    
+    coarseParameters.thresholdValue = 0.5;
+    coarseParameters.singleTail = false;
+    coarseParameters.upperTail = false;
+    coarseParameters.stitchCriteria = 6;
+    
+    coarseParameters.minimumPeakThreshold = 0.35;
+    fineParameters.numberOfIterations = 2;
+    fineParameters.enableSubpixelInterpolation = 1;
+    stripParameters.enableSubpixelInterpolation = 1;
+    stripParameters.minimumPeakThreshold = 0.35;
     
     save(paramsPath, 'coarseParameters', 'fineParameters', 'stripParameters');
     fprintf('%d of %d completed.\n', i, length(filenames));
