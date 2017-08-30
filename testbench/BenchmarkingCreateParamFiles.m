@@ -1,6 +1,7 @@
 function [] = BenchmarkingCreateParamFiles()
 %BENCHMARKING Script used to create param files to benchmark real videos.
 %   Script used to benchmark ReVAS.
+%   When prompted, user should select the pre-processed videos.
 
 %%
 clc;
@@ -52,9 +53,9 @@ for i = 1:length(filenames)
     coarseParameters.thresholdValue = 0.5;
     coarseParameters.singleTail = false;
     coarseParameters.upperTail = false;
-    coarseParameters.stitchCriteria = 6;
+    coarseParameters.stitchCriteria = 10;
     
-    coarseParameters.minimumPeakThreshold = 0.35;
+    coarseParameters.minimumPeakThreshold = 0.5;
     fineParameters.numberOfIterations = 2;
     fineParameters.enableSubpixelInterpolation = 1;
     stripParameters.enableSubpixelInterpolation = 1;
