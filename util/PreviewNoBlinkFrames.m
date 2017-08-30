@@ -47,6 +47,7 @@ for i = 1:length(filenames)
 
     writeVideo(writer, result);
     close(writer);
+    fprintf('%d of %d completed.\n', i, length(filenames));
 end
 fprintf('Process Completed.\n');
 end
