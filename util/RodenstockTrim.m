@@ -5,6 +5,8 @@ function RodenstockTrim()
 %   |inputVideoPath| is the path to the video. The result is that the
 %   trimmed version of this video is stored with '_dwt' appended to the
 %   original file name.
+%   When prompted, user should select raw videos.
+
 
 top = 70;
 right = 10;

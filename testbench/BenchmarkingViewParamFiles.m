@@ -4,6 +4,7 @@ function [] = BenchmarkingViewParamFiles()
 %   ** From the file selector, choose the Bandfilt Videos corresponding to the
 %   params you want.
 %   ** Run this script using Run Section to see variables after it has run.
+%   When prompted, user should select the pre-processed videos.
 
 %%
 clc;

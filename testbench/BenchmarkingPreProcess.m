@@ -1,6 +1,7 @@
 function [] = BenchmarkingPreProcess()
 %BENCHMARKING Script used to pre-process.
 %   Script used to benchmark ReVAS.
+%   When prompted, user should select raw videos.
 
 %%
 clc;
@@ -81,7 +82,7 @@ parfor i = 1:length(filenames)
         
     % Step 6: Detect blinks and bad frames
     % Default:
-    parametersStructure.thresholdValue = 0;
+    parametersStructure.thresholdValue = 0.5;
     parametersStructure.singleTail = false;
     parametersStructure.upperTail = true;
     parametersStructure.stitchCriteria = 10;
