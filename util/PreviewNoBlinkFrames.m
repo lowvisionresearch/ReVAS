@@ -14,7 +14,7 @@ if ~iscell(filenames)
     end
 end
 
-parfor i = 1:length(filenames)
+for i = 1:length(filenames)
     originalVideoPath = filenames{i};
     blinkFramesPath = [originalVideoPath(1:end-4) '_blinkframes'];
     outputVideoPath = [originalVideoPath(1:end-4) '_noblink' originalVideoPath(end-3:end)];

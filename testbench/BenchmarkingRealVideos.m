@@ -29,6 +29,13 @@ for i = 1:length(filenames)
     nameEnd = strfind(originalVideoPath,'bandfilt');
     paramsPath = [originalVideoPath(1:nameEnd+length('bandfilt')-1) '_params'];
     load(paramsPath, 'coarseParameters', 'fineParameters', 'stripParameters');
+    
+    % Verbosity flags
+    enableVerbosity = false;
+    coarseParameters.enableVerbosity = enableVerbosity;
+    fineParameters.enableVerbosity = enableVerbosity;
+    stripParameters.enableVerbosity = enableVerbosity;
+    
     coarseParamsCells{i} = coarseParameters; 
     fineParamsCells{i} = fineParameters; 
     stripParamsCells{i} = stripParameters; 

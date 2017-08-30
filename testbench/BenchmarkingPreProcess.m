@@ -11,6 +11,7 @@ addpath(genpath('..'));
 
 CONTAINS_STIM = true;
 SKIP_TRIM = true;
+ONLY_REGENERATE_BLINKS = true;
 
 filenames = uipickfiles;
 if ~iscell(filenames)
@@ -20,7 +21,7 @@ if ~iscell(filenames)
     end
 end
 
-for i = 1:length(filenames)
+parfor i = 1:length(filenames)
     % Grab path out of cell.
     videoPath = filenames{i};
     parametersStructure = struct;
@@ -32,7 +33,7 @@ for i = 1:length(filenames)
     parametersStructure.overwrite = true;
 
     % Step 1: Trim the video's upper and right edges.
-    if ~SKIP_TRIM
+    if ~SKIP_TRIM && ~ONLY_REGENERATE_BLINKS
         parametersStructure.borderTrimAmount = 0;
         TrimVideo(videoPath, parametersStructure);
         fprintf('Process Completed for TrimVideo()\n');
@@ -40,7 +41,7 @@ for i = 1:length(filenames)
     videoPath = [videoPath(1:end-4) '_dwt' videoPath(end-3:end)]; %#ok<*FXSET>
 
     % Step 2: Find stimulus location
-    if CONTAINS_STIM
+    if CONTAINS_STIM && ~ONLY_REGENERATE_BLINKS
         parametersStructure.enableVerbosity = false; %#ok<UNRCH>
         %FindStimulusLocations(videoPath, 'testbench/stimulus_cross.gif', parametersStructure);
         %stimulus.thickness = 1;
@@ -53,7 +54,7 @@ for i = 1:length(filenames)
     end
     
     % Step 3: Remove the stimulus
-    if CONTAINS_STIM
+    if CONTAINS_STIM && ~ONLY_REGENERATE_BLINKS
         RemoveStimuli(videoPath, parametersStructure); %#ok<UNRCH>
         fprintf('Process Completed for RemoveStimuli()\n');
     else
@@ -63,29 +64,43 @@ for i = 1:length(filenames)
 
     % Step 4: Apply gamma correction
     videoPath = [videoPath(1:end-4) '_nostim' videoPath(end-3:end)]; %#ok<*FXSET>
-    parametersStructure.gammaExponent = 0.6;
-    GammaCorrect(videoPath, parametersStructure);
-    fprintf('Process Completed for GammaCorrect()\n');
+    if ~ONLY_REGENERATE_BLINKS
+        parametersStructure.gammaExponent = 0.6;
+        GammaCorrect(videoPath, parametersStructure);
+        fprintf('Process Completed for GammaCorrect()\n');
+    end
 
     % Step 5: Apply bandpass filtering
     videoPath = [videoPath(1:end-4) '_gamscaled' videoPath(end-3:end)];
-    parametersStructure.smoothing = 1;
-    parametersStructure.lowSpatialFrequencyCutoff = 3;
-    BandpassFilter(videoPath, parametersStructure);
-    fprintf('Process Completed for BandpassFilter()\n');
+    if ~ONLY_REGENERATE_BLINKS
+        parametersStructure.smoothing = 1;
+        parametersStructure.lowSpatialFrequencyCutoff = 3;
+        BandpassFilter(videoPath, parametersStructure);
+        fprintf('Process Completed for BandpassFilter()\n');
+    end
         
     % Step 6: Detect blinks and bad frames
     % Default:
-    parametersStructure.thresholdValue = 1;
-    %parametersStructure.thresholdValue = 1;
-    parametersStructure.singleTail = false;
-    parametersStructure.upperTail = false;
+    parametersStructure.thresholdValue = 0;
+    parametersStructure.singleTail = true;
+    parametersStructure.upperTail = true;
     %parametersStructure.stitchCriteria = 6;
     % Use the final bandpass filtered video
     videoPath = [videoPath(1:end-4) '_bandfilt' videoPath(end-3:end)];
     FindBlinkFrames(videoPath, parametersStructure);
     fprintf('Process Completed for FindBadFrames()\n');
     % FindBlinkFrames still needs file name from before stim removal.
+    
+    % ^ Above:
+    % Black blink:
+    %   - singleTail = true;
+    %   - upperTail = false;
+    % White blink:
+    %   - singleTail = true;
+    %   - upperTail = true;
+    % Mixed blink:
+    %   - singleTail = false;
+    %   - upperTail = doesn't matter
     
 end
 fprintf('Process Completed.\n');
