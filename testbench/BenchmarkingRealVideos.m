@@ -1,6 +1,7 @@
 function [] = BenchmarkingRealVideos()
 %BENCHMARKING Script used to benchmark real videos.
 %   Script used to benchmark ReVAS.
+%   When prompted, user should select the pre-processed videos.
 
 %% Strip Analysis - Real Videos
 % Loads parameters from a mat file and executes coarse, fine, and strip
