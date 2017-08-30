@@ -3,6 +3,7 @@ function PreviewNoBlinkFrames()
 %   Generates a video with blink frames ommitted. This can be helpful in
 %   determining whether an adequate number of blink frames have been
 %   removed or whether pre-processing should be adjusted.
+%   When prompted, user should select the pre-processed videos.
 
 addpath(genpath('..'));
 
@@ -43,7 +44,6 @@ for i = 1:length(filenames)
             resultIndex = resultIndex + 1;
         end
     end
-    colormap(gray(256));
 
     writeVideo(writer, result);
     close(writer);
