@@ -433,7 +433,7 @@ end
 
 %% Save to output mat file
 
-if ~abortTriggered
+if ~abortTriggered && ~isempty(inputVideoPath)
     eyePositionTraces = usefulEyePositionTraces;
 
     save(outputFileName, 'eyePositionTraces', 'timeArray', ...
