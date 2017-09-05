@@ -52,8 +52,8 @@ for i = 1:length(filenames)
     % Blink Params
     coarseParameters.thresholdValue = 1;
     coarseParameters.singleTail = false;
-    coarseParameters.upperTail = false;
-    coarseParameters.stitchCriteria = 10;
+    coarseParameters.upperTail = true;
+    %coarseParameters.stitchCriteria = 10;
     
     coarseParameters.minimumPeakThreshold = 0.5;
     fineParameters.numberOfIterations = 2;
