@@ -32,17 +32,17 @@ for i = 1:length(filenames)
     load(paramsPath, 'coarseParameters', 'fineParameters', 'stripParameters');
     
     % Verbosity flags
-    enableVerbosity = false;
-    coarseParameters.enableVerbosity = enableVerbosity;
-    fineParameters.enableVerbosity = enableVerbosity;
-    stripParameters.enableVerbosity = enableVerbosity;
+%     enableVerbosity = false;
+%     coarseParameters.enableVerbosity = enableVerbosity;
+%     fineParameters.enableVerbosity = enableVerbosity;
+%     stripParameters.enableVerbosity = enableVerbosity;
     
     coarseParamsCells{i} = coarseParameters; 
     fineParamsCells{i} = fineParameters; 
     stripParamsCells{i} = stripParameters; 
 end
 
-parfor i = 1:length(filenames)
+for i = 1:length(filenames)
     % Grab path out of cell.
     originalVideoPath = filenames{i};
     

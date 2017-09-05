@@ -50,7 +50,7 @@ for i = 1:length(filenames)
     stripParameters.samplingRate = stripsPerFrame * framesPerSecond;
     
     % Blink Params
-    coarseParameters.thresholdValue = 0.5;
+    coarseParameters.thresholdValue = 1;
     coarseParameters.singleTail = false;
     coarseParameters.upperTail = false;
     coarseParameters.stitchCriteria = 10;

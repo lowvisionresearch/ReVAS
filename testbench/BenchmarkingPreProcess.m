@@ -11,8 +11,8 @@ close all;
 addpath(genpath('..'));
 
 CONTAINS_STIM = true;
-SKIP_TRIM = true;
-ONLY_REGENERATE_BLINKS = true;
+SKIP_TRIM = false;
+ONLY_REGENERATE_BLINKS = false;
 
 filenames = uipickfiles;
 if ~iscell(filenames)
@@ -22,7 +22,7 @@ if ~iscell(filenames)
     end
 end
 
-parfor i = 1:length(filenames)
+for i = 1:length(filenames)
     % Grab path out of cell.
     videoPath = filenames{i};
     parametersStructure = struct;
@@ -35,7 +35,7 @@ parfor i = 1:length(filenames)
 
     % Step 1: Trim the video's upper and right edges.
     if ~SKIP_TRIM && ~ONLY_REGENERATE_BLINKS
-        parametersStructure.borderTrimAmount = 0;
+        parametersStructure.borderTrimAmount = 80;
         TrimVideo(videoPath, parametersStructure);
         fprintf('Process Completed for TrimVideo()\n');
     end
@@ -82,10 +82,10 @@ parfor i = 1:length(filenames)
         
     % Step 6: Detect blinks and bad frames
     % Default:
-    parametersStructure.thresholdValue = 0.5;
+    parametersStructure.thresholdValue = 1;
     parametersStructure.singleTail = false;
     parametersStructure.upperTail = true;
-    parametersStructure.stitchCriteria = 10;
+    %parametersStructure.stitchCriteria = 10;
     % Use the final bandpass filtered video
     videoPath = [videoPath(1:end-4) '_bandfilt' videoPath(end-3:end)];
     FindBlinkFrames(videoPath, parametersStructure);
