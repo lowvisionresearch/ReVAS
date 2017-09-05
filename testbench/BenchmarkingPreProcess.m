@@ -11,7 +11,7 @@ close all;
 addpath(genpath('..'));
 
 CONTAINS_STIM = true;
-SKIP_TRIM = false;
+IS_RODENSTOCK = false;
 ONLY_REGENERATE_BLINKS = false;
 
 filenames = uipickfiles;
@@ -22,7 +22,7 @@ if ~iscell(filenames)
     end
 end
 
-for i = 1:length(filenames)
+parfor i = 1:length(filenames)
     % Grab path out of cell.
     videoPath = filenames{i};
     parametersStructure = struct;
@@ -34,9 +34,13 @@ for i = 1:length(filenames)
     parametersStructure.overwrite = true;
 
     % Step 1: Trim the video's upper and right edges.
-    if ~SKIP_TRIM && ~ONLY_REGENERATE_BLINKS
-        parametersStructure.borderTrimAmount = 80;
-        TrimVideo(videoPath, parametersStructure);
+    if ~ONLY_REGENERATE_BLINKS
+        if ~IS_RODENSTOCK
+            parametersStructure.borderTrimAmount = 80;
+            TrimVideo(videoPath, parametersStructure);
+        else
+            RodenstockTrim(videoPath);
+        end
         fprintf('Process Completed for TrimVideo()\n');
     end
     videoPath = [videoPath(1:end-4) '_dwt' videoPath(end-3:end)]; %#ok<*FXSET>
@@ -44,14 +48,16 @@ for i = 1:length(filenames)
     % Step 2: Find stimulus location
     if CONTAINS_STIM && ~ONLY_REGENERATE_BLINKS
         parametersStructure.enableVerbosity = false; %#ok<UNRCH>
-        %FindStimulusLocations(videoPath, 'testbench/stimulus_cross.gif', parametersStructure);
-        %stimulus.thickness = 1;
-        %stimulus.size = 11;
-        % For Rodenstock:
-        stimulus.thickness = 3;
-        stimulus.size = 23;
-            FindStimulusLocations(videoPath, stimulus, parametersStructure);
-            fprintf('Process Completed for FindStimulusLocations()\n');
+        if ~IS_RODENSTOCK
+            %FindStimulusLocations(videoPath, 'testbench/stimulus_cross.gif', parametersStructure);
+            stimulus.thickness = 1;
+            stimulus.size = 11;
+        else
+            stimulus.thickness = 3;
+            stimulus.size = 23;
+        end
+        FindStimulusLocations(videoPath, stimulus, parametersStructure);
+        fprintf('Process Completed for FindStimulusLocations()\n');
     end
     
     % Step 3: Remove the stimulus
@@ -92,7 +98,7 @@ for i = 1:length(filenames)
     fprintf('Process Completed for FindBadFrames()\n');
     % FindBlinkFrames still needs file name from before stim removal.
     
-    % ^ Above:
+    % ^ Above parameter settings:
     % Black blink:
     %   - singleTail = true;
     %   - upperTail = false;
@@ -102,6 +108,9 @@ for i = 1:length(filenames)
     % Mixed blink:
     %   - singleTail = false;
     %   - upperTail = doesn't matter
+    
+    PreviewNoBlinkFrames(videoPath);
+    fprintf('Process Completed for PreviewNoBlinkFrames()\n');
     
 end
 fprintf('Process Completed.\n');
