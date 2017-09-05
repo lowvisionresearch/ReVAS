@@ -311,7 +311,7 @@ for stripNumber = (1:numberOfStrips)
 
             drawnow;  
         end
-
+        
         % If these peaks are in terms of an adapted correlation map, restore it
         % back to in terms of the full map.
         yPeak = yPeak + upperBound - 1;

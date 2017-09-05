@@ -5,6 +5,7 @@ function PreviewNoBlinkFrames()
 %   removed or whether pre-processing should be adjusted.
 %   When prompted, user should select the pre-processed videos.
 
+%%
 addpath(genpath('..'));
 
 filenames = uipickfiles;
