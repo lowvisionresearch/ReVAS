@@ -4,6 +4,7 @@ function ExecuteModules(inputVideoPath, handles)
 %   modules for one video. Call this function in a loop to execute on all
 %   videos.
 
+addpath(genpath('..'));
 global abortTriggered;
 
 % parfor does not support global variables.
@@ -48,6 +49,7 @@ if logical(handles.togStim.Value) && ~logical(abortTriggered)
         stimulus.thickness = handles.config.stimThick;
         stimulus.size = handles.config.stimSize;
     end
+    parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
 
     % Call the function(s)
     FindStimulusLocations(inputVideoPath, stimulus, parametersStructure);
