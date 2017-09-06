@@ -12,7 +12,7 @@ addpath(genpath('..'));
 
 CONTAINS_STIM = true;
 IS_RODENSTOCK = false;
-ONLY_REGENERATE_BLINKS = false;
+ONLY_REGENERATE_BLINKS = true;
 
 filenames = uipickfiles;
 if ~iscell(filenames)
