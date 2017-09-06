@@ -99,19 +99,23 @@ framePositions = ...
     usefulEyePositionTraces * 1/parametersStructure.scalingFactor;
 
 %% Remove NaNs in framePositions
+try
+    % Remove NaNs at beginning and end.
+    % Interpolate for NaNs in between.
+    [filteredStripIndices1, endNaNs1, beginningNaNs1] = FilterStrips(framePositions(:, 1));
+    [filteredStripIndices2, endNaNs2, beginningNaNs2] = FilterStrips(framePositions(:, 2));
+    endNaNs = max(endNaNs1, endNaNs2);
+    if endNaNs == -1
+        endNaNs = 0;
+    end
+    beginningNaNs = max(beginningNaNs1, beginningNaNs2);
 
-% Remove NaNs at beginning and end.
-% Interpolate for NaNs in between.
-[filteredStripIndices1, endNaNs1, beginningNaNs1] = FilterStrips(framePositions(:, 1));
-[filteredStripIndices2, endNaNs2, beginningNaNs2] = FilterStrips(framePositions(:, 2));
-endNaNs = max(endNaNs1, endNaNs2);
-if endNaNs == -1
-    endNaNs = 0;
+    framePositions = [filteredStripIndices1 filteredStripIndices2];
+    save(outputTracesPath, 'framePositions');
+catch
+    RevasError(outputFileName, 'There were no useful eye position traces. Lower the minimumPeakThreshold and/or raise the maximumPeakRatio.', parametersStructure);
+    error('There were no useful eye position traces. Lower the minimumPeakThreshold and/or raise the maximumPeakRatio.');
 end
-beginningNaNs = max(beginningNaNs1, beginningNaNs2);
-
-framePositions = [filteredStripIndices1 filteredStripIndices2];
-save(outputTracesPath, 'framePositions');
 
 %% Set up the counter array and the template for the coarse reference frame.
 v = VideoReader(videoPath);

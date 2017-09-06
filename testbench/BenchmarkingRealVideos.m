@@ -42,21 +42,25 @@ for i = 1:length(filenames)
     stripParamsCells{i} = stripParameters; 
 end
 
-for i = 1:length(filenames)
-    % Grab path out of cell.
-    originalVideoPath = filenames{i};
-    
-    % MAKE COARSE REFERENCE FRAME
-    coarseResult = CoarseRef(originalVideoPath, coarseParamsCells{i});
-    fprintf('Process Completed for CoarseRef()\n');
-    
-    % MAKE FINE REFERENCE FRAME
-    fineResult = FineRef(coarseResult, originalVideoPath, fineParamsCells{i});
-    fprintf('Process Completed for FineRef()\n');
+parfor i = 1:length(filenames)
+    try
+        % Grab path out of cell.
+        originalVideoPath = filenames{i};
 
-    % STRIP ANALYSIS
-    StripAnalysis(originalVideoPath, fineResult, fineParamsCells{i});
-    fprintf('Process Completed for StripAnalysis()\n');
+        % MAKE COARSE REFERENCE FRAME
+        coarseResult = CoarseRef(originalVideoPath, coarseParamsCells{i});
+        fprintf('Process Completed for CoarseRef()\n');
+
+        % MAKE FINE REFERENCE FRAME
+        fineResult = FineRef(coarseResult, originalVideoPath, fineParamsCells{i});
+        fprintf('Process Completed for FineRef()\n');
+
+        % STRIP ANALYSIS
+        StripAnalysis(originalVideoPath, fineResult, fineParamsCells{i});
+        fprintf('Process Completed for StripAnalysis()\n');
+    catch e
+        fprintf(e.message);
+    end
 end
 fprintf('Process Completed.\n');
 
