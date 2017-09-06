@@ -89,7 +89,12 @@ for frameNumber = (1:numberOfFrames)
         
     % Show surface plot for this correlation if verbosity enabled
     if parametersStructure.enableVerbosity
-        figure(1);
+        if isfield(parametersStructure, 'axesHandles')
+            axes(parametersStructure.axesHandles(1));
+            colormap(parametersStructure.axesHandles(1), 'default');
+        else
+            figure(1);
+        end
         [surfX,surfY] = meshgrid(1:size(correlation,2), 1:size(correlation,1));
         surf(surfX, surfY, correlation,'linestyle','none');
         title([num2str(frameNumber) ' out of ' num2str(numberOfFrames)]);
@@ -103,7 +108,6 @@ for frameNumber = (1:numberOfFrames)
             'VerticalAlignment', 'bottom', 'FontWeight', 'bold');
         
         drawnow;
-   
     end
     
     stimulusLocationInEachFrame(frameNumber,:) = [xPeak yPeak];
@@ -113,7 +117,12 @@ for frameNumber = (1:numberOfFrames)
     if parametersStructure.enableVerbosity
         
         % Plotting bottom right corner of box surrounding stimulus.
-        figure(2);
+        if isfield(parametersStructure, 'axesHandles')
+            axes(parametersStructure.axesHandles(2));
+            colormap(parametersStructure.axesHandles(2), 'default');
+        else
+            figure(2);
+        end
         plot(timeArray, stimulusLocationInEachFrame);
         title('Stimulus Locations');
         xlabel('Time (sec)');
