@@ -134,17 +134,27 @@ handles.togFilt.BackgroundColor = handles.colors{1,4};
 handles.togReRef.BackgroundColor = handles.colors{1,4};
 handles.togSacDrift.BackgroundColor = handles.colors{1,4};
 % Select/Enable button text
-handles.selectFiles.ForegroundColor = handles.colors{1,2};
-handles.togTrim.ForegroundColor = handles.colors{1,2};
-handles.togStim.ForegroundColor = handles.colors{1,2};
-handles.togGamma.ForegroundColor = handles.colors{1,2};
-handles.togBandFilt.ForegroundColor = handles.colors{1,2};
-handles.togCoarse.ForegroundColor = handles.colors{1,2};
-handles.togFine.ForegroundColor = handles.colors{1,2};
-handles.togStrip.ForegroundColor = handles.colors{1,2};
-handles.togFilt.ForegroundColor = handles.colors{1,2};
-handles.togReRef.ForegroundColor = handles.colors{1,2};
-handles.togSacDrift.ForegroundColor = handles.colors{1,2};
+% handles.selectFiles.ForegroundColor = handles.colors{1,2};
+% handles.togTrim.ForegroundColor = handles.colors{1,2};
+% handles.togStim.ForegroundColor = handles.colors{1,2};
+% handles.togGamma.ForegroundColor = handles.colors{1,2};
+% handles.togBandFilt.ForegroundColor = handles.colors{1,2};
+% handles.togCoarse.ForegroundColor = handles.colors{1,2};
+% handles.togFine.ForegroundColor = handles.colors{1,2};
+% handles.togStrip.ForegroundColor = handles.colors{1,2};
+% handles.togFilt.ForegroundColor = handles.colors{1,2};
+% handles.togReRef.ForegroundColor = handles.colors{1,2};
+% handles.togSacDrift.ForegroundColor = handles.colors{1,2};
+handles.togTrim.ForegroundColor = handles.colors{1,4};
+handles.togStim.ForegroundColor = handles.colors{1,4};
+handles.togGamma.ForegroundColor = handles.colors{1,4};
+handles.togBandFilt.ForegroundColor = handles.colors{1,4};
+handles.togCoarse.ForegroundColor = handles.colors{1,4};
+handles.togFine.ForegroundColor = handles.colors{1,4};
+handles.togStrip.ForegroundColor = handles.colors{1,4};
+handles.togFilt.ForegroundColor = handles.colors{1,4};
+handles.togReRef.ForegroundColor = handles.colors{1,4};
+handles.togSacDrift.ForegroundColor = handles.colors{1,4};
 % Configure buttons backgrounds
 handles.configTrim.BackgroundColor = handles.colors{4,4};
 handles.configStim.BackgroundColor = handles.colors{4,4};
@@ -681,9 +691,11 @@ function togTrim_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
+    hObject.ForegroundColor = handles.colors{1,4};
 else
     hObject.String = 'DISABLED';
     hObject.BackgroundColor = handles.colors{1,1};
+    hObject.ForegroundColor = handles.colors{1,3};
 end
 
 % --- Executes on button press in togStrip.
@@ -691,6 +703,7 @@ function togStrip_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
+    hObject.ForegroundColor = handles.colors{1,4};
 else
     if handles.togFilt.Value == 1 || ...
             handles.togReRef.Value == 1 || ...
@@ -702,6 +715,7 @@ else
     end
     hObject.String = 'DISABLED';
     hObject.BackgroundColor = handles.colors{1,1};
+    hObject.ForegroundColor = handles.colors{1,3};
 end
 
 % --- Executes on button press in togStim.
@@ -709,9 +723,11 @@ function togStim_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
+    hObject.ForegroundColor = handles.colors{1,4};
 else
     hObject.String = 'DISABLED';
     hObject.BackgroundColor = handles.colors{1,1};
+    hObject.ForegroundColor = handles.colors{1,3};
 end
 
 % --- Executes on button press in togGamma.
@@ -719,9 +735,11 @@ function togGamma_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
+    hObject.ForegroundColor = handles.colors{1,4};
 else
     hObject.String = 'DISABLED';
     hObject.BackgroundColor = handles.colors{1,1};
+    hObject.ForegroundColor = handles.colors{1,3};
 end
 
 % --- Executes on button press in togCoarse.
@@ -729,6 +747,7 @@ function togCoarse_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
+    hObject.ForegroundColor = handles.colors{1,4};
 else
     if handles.togFine.Value == 1
         errordlg(...
@@ -738,6 +757,7 @@ else
     end
     hObject.String = 'DISABLED';
     hObject.BackgroundColor = handles.colors{1,1};
+    hObject.ForegroundColor = handles.colors{1,3};
 end
 
 % --- Executes on button press in togReRef.
@@ -750,9 +770,11 @@ if hObject.Value == 1
     end
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
+    hObject.ForegroundColor = handles.colors{1,4};
 else
     hObject.String = 'DISABLED';
     hObject.BackgroundColor = handles.colors{1,1};
+    hObject.ForegroundColor = handles.colors{1,3};
 end
 
 % --- Executes on button press in togFilt.
@@ -765,9 +787,11 @@ if hObject.Value == 1
     end
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
+    hObject.ForegroundColor = handles.colors{1,4};
 else
     hObject.String = 'DISABLED';
     hObject.BackgroundColor = handles.colors{1,1};
+    hObject.ForegroundColor = handles.colors{1,3};
 end
 
 % --- Executes on button press in togSacDrift.
@@ -780,9 +804,11 @@ if hObject.Value == 1
     end
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
+    hObject.ForegroundColor = handles.colors{1,4};
 else
     hObject.String = 'DISABLED';
     hObject.BackgroundColor = handles.colors{1,1};
+    hObject.ForegroundColor = handles.colors{1,3};
 end
 
 % --- Executes on button press in togFine.
@@ -795,9 +821,11 @@ if hObject.Value == 1
     end
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
+    hObject.ForegroundColor = handles.colors{1,4};
 else
     hObject.String = 'DISABLED';
     hObject.BackgroundColor = handles.colors{1,1};
+    hObject.ForegroundColor = handles.colors{1,3};
 end
 
 % --- Executes on button press in togBandFilt.
@@ -805,9 +833,11 @@ function togBandFilt_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
+    hObject.ForegroundColor = handles.colors{1,4};
 else
     hObject.String = 'DISABLED';
     hObject.BackgroundColor = handles.colors{1,1};
+    hObject.ForegroundColor = handles.colors{1,3};
 end
 
 % --- Executes on button press in configTrim.
