@@ -1,0 +1,2185 @@
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (MiKTeX 2.9.6200 64-bit) (preloaded format=pdflatex 2017.1.1)  10 SEP 2017 17:53
+entering extended mode
+**./analysis_report.tex
+(analysis_report.tex
+LaTeX2e <2016/03/31> patch level 3
+Babel <3.9r> and hyphenation patterns for 76 language(s) loaded.
+("C:\Program Files\MiKTeX 2.9\tex\latex\base\article.cls"
+Document Class: article 2014/09/29 v1.4h Standard LaTeX document class
+("C:\Program Files\MiKTeX 2.9\tex\latex\base\size11.clo"
+File: size11.clo 2014/09/29 v1.4h Standard LaTeX file (size option)
+)
+\c@part=\count79
+\c@section=\count80
+\c@subsection=\count81
+\c@subsubsection=\count82
+\c@paragraph=\count83
+\c@subparagraph=\count84
+\c@figure=\count85
+\c@table=\count86
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+\bibindent=\dimen102
+)
+("C:\Program Files\MiKTeX 2.9\tex\latex\preprint\fullpage.sty"
+Package: fullpage 1999/02/23 1.1 (PWD)
+\FP@margin=\skip43
+)
+("C:\Program Files\MiKTeX 2.9\tex\latex\amsfonts\amsfonts.sty"
+Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
+\@emptytoks=\toks14
+\symAMSa=\mathgroup4
+\symAMSb=\mathgroup5
+LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
+(Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
+)
+("C:\Program Files\MiKTeX 2.9\tex\latex\graphics\graphicx.sty"
+Package: graphicx 2014/10/28 v1.0g Enhanced LaTeX Graphics (DPC,SPQR)
+
+("C:\Program Files\MiKTeX 2.9\tex\latex\graphics\keyval.sty"
+Package: keyval 2014/10/28 v1.15 key=value parser (DPC)
+\KV@toks@=\toks15
+)
+("C:\Program Files\MiKTeX 2.9\tex\latex\graphics\graphics.sty"
+Package: graphics 2016/07/10 v1.0t Standard LaTeX Graphics (DPC,SPQR)
+
+("C:\Program Files\MiKTeX 2.9\tex\latex\graphics\trig.sty"
+Package: trig 2016/01/03 v1.10 sin cos tan (DPC)
+)
+("C:\Program Files\MiKTeX 2.9\tex\latex\graphics-cfg\graphics.cfg"
+File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
+)
+Package graphics Info: Driver file: pdftex.def on input line 99.
+
+("C:\Program Files\MiKTeX 2.9\tex\latex\graphics-def\pdftex.def"
+File: pdftex.def 2016/07/10 v0.06j Graphics/color for pdfTeX
+
+("C:\Program Files\MiKTeX 2.9\tex\generic\oberdiek\infwarerr.sty"
+Package: infwarerr 2016/05/16 v1.4 Providing info/warning/error messages (HO)
+)
+("C:\Program Files\MiKTeX 2.9\tex\generic\oberdiek\ltxcmds.sty"
+Package: ltxcmds 2016/05/16 v1.23 LaTeX kernel commands for general use (HO)
+)
+\Gread@gobject=\count87
+))
+\Gin@req@height=\dimen103
+\Gin@req@width=\dimen104
+)
+("C:\Program Files\MiKTeX 2.9\tex\latex\adjustbox\adjustbox.sty"
+Package: adjustbox 2012/05/21 v1.0 Adjusting TeX boxes (trim, clip, ...)
+
+("C:\Program Files\MiKTeX 2.9\tex\latex\xkeyval\xkeyval.sty"
+Package: xkeyval 2014/12/03 v2.7a package option processing (HA)
+
+("C:\Program Files\MiKTeX 2.9\tex\generic\xkeyval\xkeyval.tex"
+("C:\Program Files\MiKTeX 2.9\tex\generic\xkeyval\xkvutils.tex"
+\XKV@toks=\toks16
+\XKV@tempa@toks=\toks17
+)
+\XKV@depth=\count88
+File: xkeyval.tex 2014/12/03 v2.7a key=value parser (HA)
+))
+("C:\Program Files\MiKTeX 2.9\tex\latex\adjustbox\adjcalc.sty"
+Package: adjcalc 2012/05/16 v1.1 Provides advanced setlength with multiple back
+-ends (calc, etex, pgfmath)
+)
+("C:\Program Files\MiKTeX 2.9\tex\latex\adjustbox\trimclip.sty"
+Package: trimclip 2012/05/16 v1.0 Trim and clip general TeX material
+
+("C:\Program Files\MiKTeX 2.9\tex\latex\collectbox\collectbox.sty"
+Package: collectbox 2012/05/17 v0.4b Collect macro arguments as boxes
+\collectedbox=\box26
+)
+\tc@llx=\dimen105
+\tc@lly=\dimen106
+\tc@urx=\dimen107
+\tc@ury=\dimen108
+Package trimclip Info: Using driver 'tc-pdftex.def'.
+
+("C:\Program Files\MiKTeX 2.9\tex\latex\adjustbox\tc-pdftex.def"
+File: tc-pdftex.def 2012/05/13 v1.0 Clipping driver for pdftex
+))
+\adjbox@Width=\dimen109
+\adjbox@Height=\dimen110
+\adjbox@Depth=\dimen111
+\adjbox@Totalheight=\dimen112
+
+("C:\Program Files\MiKTeX 2.9\tex\latex\ifoddpage\ifoddpage.sty"
+Package: ifoddpage 2016/04/23 v1.1 Conditionals for odd/even page detection
+\c@checkoddpage=\count89
+)
+("C:\Program Files\MiKTeX 2.9\tex\latex\ltxmisc\varwidth.sty"
+Package: varwidth 2009/03/30 ver 0.92;  Variable-width minipages
+\@vwid@box=\box27
+\sift@deathcycles=\count90
+\@vwid@loff=\dimen113
+\@vwid@roff=\dimen114
+))
+(analysis_report.aux)
+\openout1 = `analysis_report.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 8.
+LaTeX Font Info:    ... okay on input line 8.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 8.
+LaTeX Font Info:    ... okay on input line 8.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 8.
+LaTeX Font Info:    ... okay on input line 8.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 8.
+LaTeX Font Info:    ... okay on input line 8.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 8.
+LaTeX Font Info:    ... okay on input line 8.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 8.
+LaTeX Font Info:    ... okay on input line 8.
+
+("C:\Program Files\MiKTeX 2.9\tex\context\base\supp-pdf.mkii"
+[Loading MPS to PDF converter (version 2006.09.02).]
+\scratchcounter=\count91
+\scratchdimen=\dimen115
+\scratchbox=\box28
+\nofMPsegments=\count92
+\nofMParguments=\count93
+\everyMPshowfont=\toks18
+\MPscratchCnt=\count94
+\MPscratchDim=\dimen116
+\MPnumerator=\count95
+\makeMPintoPDFobject=\count96
+\everyMPtoPDFconversion=\toks19
+) ("C:\Program Files\MiKTeX 2.9\tex\generic\oberdiek\pdftexcmds.sty"
+Package: pdftexcmds 2016/05/21 v0.22 Utility functions of pdfTeX for LuaTeX (HO
+)
+
+("C:\Program Files\MiKTeX 2.9\tex\generic\oberdiek\ifluatex.sty"
+Package: ifluatex 2016/05/16 v1.4 Provides the ifluatex switch (HO)
+Package ifluatex Info: LuaTeX not detected.
+)
+("C:\Program Files\MiKTeX 2.9\tex\generic\oberdiek\ifpdf.sty"
+Package: ifpdf 2016/05/14 v3.1 Provides the ifpdf switch
+)
+Package pdftexcmds Info: LuaTeX not detected.
+Package pdftexcmds Info: \pdf@primitive is available.
+Package pdftexcmds Info: \pdf@ifprimitive is available.
+Package pdftexcmds Info: \pdfdraftmode found.
+)
+("C:\Program Files\MiKTeX 2.9\tex\latex\oberdiek\epstopdf-base.sty"
+Package: epstopdf-base 2016/05/15 v2.6 Base part for package epstopdf
+
+("C:\Program Files\MiKTeX 2.9\tex\latex\oberdiek\grfext.sty"
+Package: grfext 2016/05/16 v1.2 Manage graphics extensions (HO)
+
+("C:\Program Files\MiKTeX 2.9\tex\generic\oberdiek\kvdefinekeys.sty"
+Package: kvdefinekeys 2016/05/16 v1.4 Define keys (HO)
+))
+("C:\Program Files\MiKTeX 2.9\tex\latex\oberdiek\kvoptions.sty"
+Package: kvoptions 2016/05/16 v3.12 Key value format for package options (HO)
+
+("C:\Program Files\MiKTeX 2.9\tex\generic\oberdiek\kvsetkeys.sty"
+Package: kvsetkeys 2016/05/16 v1.17 Key value parser (HO)
+
+("C:\Program Files\MiKTeX 2.9\tex\generic\oberdiek\etexcmds.sty"
+Package: etexcmds 2016/05/16 v1.6 Avoid name clashes with e-TeX commands (HO)
+Package etexcmds Info: Could not find \expanded.
+(etexcmds)             That can mean that you are not using pdfTeX 1.50 or
+(etexcmds)             that some package has redefined \expanded.
+(etexcmds)             In the latter case, load this package earlier.
+)))
+Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
+38.
+Package grfext Info: Graphics extension search list:
+(grfext)             [.png,.pdf,.jpg,.mps,.jpeg,.jbig2,.jb2,.PNG,.PDF,.JPG,.JPE
+G,.JBIG2,.JB2,.eps]
+(grfext)             \AppendGraphicsExtensions on input line 456.
+)
+LaTeX Font Info:    Try loading font information for U+msa on input line 13.
+
+("C:\Program Files\MiKTeX 2.9\tex\latex\amsfonts\umsa.fd"
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
+)
+LaTeX Font Info:    Try loading font information for U+msb on input line 13.
+
+("C:\Program Files\MiKTeX 2.9\tex\latex\amsfonts\umsb.fd"
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+)
+<referenceframes/tslo_amd/amd_den_os_10_1_1_45_0_stabfix_10_51_22_181_dwt_nosti
+m_gamscaled_bandfilt_refframe.jpg, id=1, 438.63875pt x 444.66125pt>
+File: referenceframes/tslo_amd/amd_den_os_10_1_1_45_0_stabfix_10_51_22_181_dwt_
+nostim_gamscaled_bandfilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/tslo_amd/amd_den_os_10_1_1_45_0_stabfix_10_51_22_181_dwt_n
+ostim_gamscaled_bandfilt_refframe.jpg>
+Package pdftex.def Info: referenceframes/tslo_amd/amd_den_os_10_1_1_45_0_stabfi
+x_10_51_22_181_dwt_nostim_gamscaled_bandfilt_refframe.jpg used on input line 18
+.
+(pdftex.def)             Requested size: 187.89914pt x 190.4814pt.
+
+<eyepositiontraces/tslo_amd/amd_den_os_10_1_1_45_0_stabfix_10_51_22_181.jpg, id
+=2, 878.28125pt x 658.46pt>
+File: eyepositiontraces/tslo_amd/amd_den_os_10_1_1_45_0_stabfix_10_51_22_181.jp
+g Graphic file (type jpg)
+
+<use eyepositiontraces/tslo_amd/amd_den_os_10_1_1_45_0_stabfix_10_51_22_181.jpg
+>
+Package pdftex.def Info: eyepositiontraces/tslo_amd/amd_den_os_10_1_1_45_0_stab
+fix_10_51_22_181.jpg used on input line 19.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 18--20
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 18--20
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 21--68
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 21--68
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 21--68
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 21--68
+
+ []
+
+[1
+
+{C:/ProgramData/MiKTeX/2.9/pdftex/config/pdftex.map} <./referenceframes/tslo_am
+d/amd_den_os_10_1_1_45_0_stabfix_10_51_22_181_dwt_nostim_gamscaled_bandfilt_ref
+frame.jpg> <./eyepositiontraces/tslo_amd/amd_den_os_10_1_1_45_0_stabfix_10_51_2
+2_181.jpg>] [2]
+<referenceframes/tslo_amd/amd_den_os_10_5_1_45_0_stabfix_10_36_05_428_dwt_nosti
+m_gamscaled_bandfilt_refframe.jpg, id=15, 495.8525pt x 468.75125pt>
+File: referenceframes/tslo_amd/amd_den_os_10_5_1_45_0_stabfix_10_36_05_428_dwt_
+nostim_gamscaled_bandfilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/tslo_amd/amd_den_os_10_5_1_45_0_stabfix_10_36_05_428_dwt_n
+ostim_gamscaled_bandfilt_refframe.jpg>
+Package pdftex.def Info: referenceframes/tslo_amd/amd_den_os_10_5_1_45_0_stabfi
+x_10_36_05_428_dwt_nostim_gamscaled_bandfilt_refframe.jpg used on input line 71
+.
+(pdftex.def)             Requested size: 187.89914pt x 177.62663pt.
+
+<eyepositiontraces/tslo_amd/amd_den_os_10_5_1_45_0_stabfix_10_36_05_428.jpg, id
+=16, 878.28125pt x 658.46pt>
+File: eyepositiontraces/tslo_amd/amd_den_os_10_5_1_45_0_stabfix_10_36_05_428.jp
+g Graphic file (type jpg)
+
+<use eyepositiontraces/tslo_amd/amd_den_os_10_5_1_45_0_stabfix_10_36_05_428.jpg
+>
+Package pdftex.def Info: eyepositiontraces/tslo_amd/amd_den_os_10_5_1_45_0_stab
+fix_10_36_05_428.jpg used on input line 72.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 71--73
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 71--73
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 74--121
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 74--121
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 74--121
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 74--121
+
+ []
+
+[3 <./referenceframes/tslo_amd/amd_den_os_10_5_1_45_0_stabfix_10_36_05_428_dwt_
+nostim_gamscaled_bandfilt_refframe.jpg> <./eyepositiontraces/tslo_amd/amd_den_o
+s_10_5_1_45_0_stabfix_10_36_05_428.jpg>] [4]
+<referenceframes/tslo_amd/amd_kah_od_10_1_1_135_0_stabfix_14_31_02_362_dwt_nost
+im_gamscaled_bandfilt_refframe.jpg, id=23, 859.21pt x 676.5275pt>
+File: referenceframes/tslo_amd/amd_kah_od_10_1_1_135_0_stabfix_14_31_02_362_dwt
+_nostim_gamscaled_bandfilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/tslo_amd/amd_kah_od_10_1_1_135_0_stabfix_14_31_02_362_dwt_
+nostim_gamscaled_bandfilt_refframe.jpg>
+Package pdftex.def Info: referenceframes/tslo_amd/amd_kah_od_10_1_1_135_0_stabf
+ix_14_31_02_362_dwt_nostim_gamscaled_bandfilt_refframe.jpg used on input line 1
+24.
+(pdftex.def)             Requested size: 187.89914pt x 147.94873pt.
+
+<eyepositiontraces/tslo_amd/amd_kah_od_10_1_1_135_0_stabfix_14_31_02_362.jpg, i
+d=24, 878.28125pt x 658.46pt>
+File: eyepositiontraces/tslo_amd/amd_kah_od_10_1_1_135_0_stabfix_14_31_02_362.j
+pg Graphic file (type jpg)
+
+<use eyepositiontraces/tslo_amd/amd_kah_od_10_1_1_135_0_stabfix_14_31_02_362.jp
+g>
+Package pdftex.def Info: eyepositiontraces/tslo_amd/amd_kah_od_10_1_1_135_0_sta
+bfix_14_31_02_362.jpg used on input line 125.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 124--126
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 124--126
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 127--174
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 127--174
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 127--174
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 127--174
+
+ []
+
+[5 <./referenceframes/tslo_amd/amd_kah_od_10_1_1_135_0_stabfix_14_31_02_362_dwt
+_nostim_gamscaled_bandfilt_refframe.jpg> <./eyepositiontraces/tslo_amd/amd_kah_
+od_10_1_1_135_0_stabfix_14_31_02_362.jpg>] [6]
+<referenceframes/tslo_amd/amd_kah_od_10_1_1_45_0_stabfix_14_31_02_138_dwt_nosti
+m_gamscaled_bandfilt_refframe.jpg, id=31, 814.04124pt x 562.1pt>
+File: referenceframes/tslo_amd/amd_kah_od_10_1_1_45_0_stabfix_14_31_02_138_dwt_
+nostim_gamscaled_bandfilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/tslo_amd/amd_kah_od_10_1_1_45_0_stabfix_14_31_02_138_dwt_n
+ostim_gamscaled_bandfilt_refframe.jpg>
+Package pdftex.def Info: referenceframes/tslo_amd/amd_kah_od_10_1_1_45_0_stabfi
+x_14_31_02_138_dwt_nostim_gamscaled_bandfilt_refframe.jpg used on input line 17
+7.
+(pdftex.def)             Requested size: 187.89914pt x 129.74344pt.
+
+<eyepositiontraces/tslo_amd/amd_kah_od_10_1_1_45_0_stabfix_14_31_02_138.jpg, id
+=32, 878.28125pt x 658.46pt>
+File: eyepositiontraces/tslo_amd/amd_kah_od_10_1_1_45_0_stabfix_14_31_02_138.jp
+g Graphic file (type jpg)
+
+<use eyepositiontraces/tslo_amd/amd_kah_od_10_1_1_45_0_stabfix_14_31_02_138.jpg
+>
+Package pdftex.def Info: eyepositiontraces/tslo_amd/amd_kah_od_10_1_1_45_0_stab
+fix_14_31_02_138.jpg used on input line 178.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 177--179
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 177--179
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 180--228
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 180--228
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 180--228
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 180--228
+
+ []
+
+[7 <./referenceframes/tslo_amd/amd_kah_od_10_1_1_45_0_stabfix_14_31_02_138_dwt_
+nostim_gamscaled_bandfilt_refframe.jpg> <./eyepositiontraces/tslo_amd/amd_kah_o
+d_10_1_1_45_0_stabfix_14_31_02_138.jpg>] [8]
+<referenceframes/tslo_amd/amd_tgf_os_10_3_1_135_0_stabfix_11_03_42_849_dwt_nost
+im_gamscaled_bandfilt_refframe.jpg, id=40, 840.13875pt x 522.95375pt>
+File: referenceframes/tslo_amd/amd_tgf_os_10_3_1_135_0_stabfix_11_03_42_849_dwt
+_nostim_gamscaled_bandfilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/tslo_amd/amd_tgf_os_10_3_1_135_0_stabfix_11_03_42_849_dwt_
+nostim_gamscaled_bandfilt_refframe.jpg>
+Package pdftex.def Info: referenceframes/tslo_amd/amd_tgf_os_10_3_1_135_0_stabf
+ix_11_03_42_849_dwt_nostim_gamscaled_bandfilt_refframe.jpg used on input line 2
+31.
+(pdftex.def)             Requested size: 187.89914pt x 116.9573pt.
+
+<eyepositiontraces/tslo_amd/amd_tgf_os_10_3_1_135_0_stabfix_11_03_42_849.jpg, i
+d=41, 878.28125pt x 658.46pt>
+File: eyepositiontraces/tslo_amd/amd_tgf_os_10_3_1_135_0_stabfix_11_03_42_849.j
+pg Graphic file (type jpg)
+
+<use eyepositiontraces/tslo_amd/amd_tgf_os_10_3_1_135_0_stabfix_11_03_42_849.jp
+g>
+Package pdftex.def Info: eyepositiontraces/tslo_amd/amd_tgf_os_10_3_1_135_0_sta
+bfix_11_03_42_849.jpg used on input line 232.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 231--233
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 231--233
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 234--281
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 234--281
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 234--281
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 234--281
+
+ []
+
+[9 <./referenceframes/tslo_amd/amd_tgf_os_10_3_1_135_0_stabfix_11_03_42_849_dwt
+_nostim_gamscaled_bandfilt_refframe.jpg> <./eyepositiontraces/tslo_amd/amd_tgf_
+os_10_3_1_135_0_stabfix_11_03_42_849.jpg>] [10]
+<referenceframes/tslo_amd/amd_tgf_os_10_3_1_45_0_stabfix_11_34_57_205_dwt_nosti
+m_gamscaled_bandfilt_refframe.jpg, id=48, 441.65pt x 446.66875pt>
+File: referenceframes/tslo_amd/amd_tgf_os_10_3_1_45_0_stabfix_11_34_57_205_dwt_
+nostim_gamscaled_bandfilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/tslo_amd/amd_tgf_os_10_3_1_45_0_stabfix_11_34_57_205_dwt_n
+ostim_gamscaled_bandfilt_refframe.jpg>
+Package pdftex.def Info: referenceframes/tslo_amd/amd_tgf_os_10_3_1_45_0_stabfi
+x_11_34_57_205_dwt_nostim_gamscaled_bandfilt_refframe.jpg used on input line 28
+4.
+(pdftex.def)             Requested size: 187.89914pt x 190.03276pt.
+
+<eyepositiontraces/tslo_amd/amd_tgf_os_10_3_1_45_0_stabfix_11_34_57_205.jpg, id
+=49, 878.28125pt x 658.46pt>
+File: eyepositiontraces/tslo_amd/amd_tgf_os_10_3_1_45_0_stabfix_11_34_57_205.jp
+g Graphic file (type jpg)
+
+<use eyepositiontraces/tslo_amd/amd_tgf_os_10_3_1_45_0_stabfix_11_34_57_205.jpg
+>
+Package pdftex.def Info: eyepositiontraces/tslo_amd/amd_tgf_os_10_3_1_45_0_stab
+fix_11_34_57_205.jpg used on input line 285.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 284--286
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 284--286
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 287--334
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 287--334
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 287--334
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 287--334
+
+ []
+
+[11 <./referenceframes/tslo_amd/amd_tgf_os_10_3_1_45_0_stabfix_11_34_57_205_dwt
+_nostim_gamscaled_bandfilt_refframe.jpg> <./eyepositiontraces/tslo_amd/amd_tgf_
+os_10_3_1_45_0_stabfix_11_34_57_205.jpg>] [12]
+<referenceframes/rodenstock_normal/CHK095753f_1_dwt_nostim_gamscaled_bandfilt_r
+efframe.jpg, id=56, 673.51625pt x 384.43625pt>
+File: referenceframes/rodenstock_normal/CHK095753f_1_dwt_nostim_gamscaled_bandf
+ilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/rodenstock_normal/CHK095753f_1_dwt_nostim_gamscaled_bandfi
+lt_refframe.jpg>
+Package pdftex.def Info: referenceframes/rodenstock_normal/CHK095753f_1_dwt_nos
+tim_gamscaled_bandfilt_refframe.jpg used on input line 339.
+(pdftex.def)             Requested size: 187.89914pt x 107.24838pt.
+
+<eyepositiontraces/rodenstock_normal/CHK095753f_1.jpg, id=57, 878.28125pt x 658
+.46pt>
+File: eyepositiontraces/rodenstock_normal/CHK095753f_1.jpg Graphic file (type j
+pg)
+ <use eyepositiontraces/rodenstock_normal/CHK095753f_1.jpg>
+Package pdftex.def Info: eyepositiontraces/rodenstock_normal/CHK095753f_1.jpg u
+sed on input line 340.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 339--341
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 339--341
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 342--390
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 342--390
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 342--390
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 342--390
+
+ []
+
+[13 <./referenceframes/rodenstock_normal/CHK095753f_1_dwt_nostim_gamscaled_band
+filt_refframe.jpg> <./eyepositiontraces/rodenstock_normal/CHK095753f_1.jpg>]
+[14]
+<referenceframes/rodenstock_normal/jasonC092224f_1_dwt_nostim_gamscaled_bandfil
+t_refframe.jpg, id=65, 675.52374pt x 383.4325pt>
+File: referenceframes/rodenstock_normal/jasonC092224f_1_dwt_nostim_gamscaled_ba
+ndfilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/rodenstock_normal/jasonC092224f_1_dwt_nostim_gamscaled_ban
+dfilt_refframe.jpg>
+Package pdftex.def Info: referenceframes/rodenstock_normal/jasonC092224f_1_dwt_
+nostim_gamscaled_bandfilt_refframe.jpg used on input line 393.
+(pdftex.def)             Requested size: 187.89914pt x 106.65242pt.
+
+<eyepositiontraces/rodenstock_normal/jasonC092224f_1.jpg, id=66, 878.28125pt x 
+658.46pt>
+File: eyepositiontraces/rodenstock_normal/jasonC092224f_1.jpg Graphic file (typ
+e jpg)
+ <use eyepositiontraces/rodenstock_normal/jasonC092224f_1.jpg>
+Package pdftex.def Info: eyepositiontraces/rodenstock_normal/jasonC092224f_1.jp
+g used on input line 394.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 393--395
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 393--395
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 396--444
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 396--444
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 396--444
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 396--444
+
+ []
+
+[15 <./referenceframes/rodenstock_normal/jasonC092224f_1_dwt_nostim_gamscaled_b
+andfilt_refframe.jpg> <./eyepositiontraces/rodenstock_normal/jasonC092224f_1.jp
+g>] [16]
+<referenceframes/rodenstock_normal/stephanieP135934f_1_dwt_nostim_gamscaled_ban
+dfilt_refframe.jpg, id=73, 677.53125pt x 397.485pt>
+File: referenceframes/rodenstock_normal/stephanieP135934f_1_dwt_nostim_gamscale
+d_bandfilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/rodenstock_normal/stephanieP135934f_1_dwt_nostim_gamscaled
+_bandfilt_refframe.jpg>
+Package pdftex.def Info: referenceframes/rodenstock_normal/stephanieP135934f_1_
+dwt_nostim_gamscaled_bandfilt_refframe.jpg used on input line 447.
+(pdftex.def)             Requested size: 187.89914pt x 110.23364pt.
+
+<eyepositiontraces/rodenstock_normal/stephanieP135934f_1.jpg, id=74, 878.28125p
+t x 658.46pt>
+File: eyepositiontraces/rodenstock_normal/stephanieP135934f_1.jpg Graphic file 
+(type jpg)
+
+<use eyepositiontraces/rodenstock_normal/stephanieP135934f_1.jpg>
+Package pdftex.def Info: eyepositiontraces/rodenstock_normal/stephanieP135934f_
+1.jpg used on input line 448.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 447--449
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 447--449
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 450--498
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 450--498
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 450--498
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 450--498
+
+ []
+
+[17 <./referenceframes/rodenstock_normal/stephanieP135934f_1_dwt_nostim_gamscal
+ed_bandfilt_refframe.jpg> <./eyepositiontraces/rodenstock_normal/stephanieP1359
+34f_1.jpg>] [18]
+<referenceframes/rodenstock_amblyopes/cal_os150228f_1_dwt_nostim_gamscaled_band
+filt_refframe.jpg, id=81, 722.7pt x 391.4625pt>
+File: referenceframes/rodenstock_amblyopes/cal_os150228f_1_dwt_nostim_gamscaled
+_bandfilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/rodenstock_amblyopes/cal_os150228f_1_dwt_nostim_gamscaled_
+bandfilt_refframe.jpg>
+Package pdftex.def Info: referenceframes/rodenstock_amblyopes/cal_os150228f_1_d
+wt_nostim_gamscaled_bandfilt_refframe.jpg used on input line 503.
+(pdftex.def)             Requested size: 187.89914pt x 101.77785pt.
+
+<eyepositiontraces/rodenstock_amblyopes/cal_os150228f_1.jpg, id=82, 878.28125pt
+ x 658.46pt>
+File: eyepositiontraces/rodenstock_amblyopes/cal_os150228f_1.jpg Graphic file (
+type jpg)
+ <use eyepositiontraces/rodenstock_amblyopes/cal_os150228f_1.jpg>
+Package pdftex.def Info: eyepositiontraces/rodenstock_amblyopes/cal_os150228f_1
+.jpg used on input line 504.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 503--505
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 503--505
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 506--553
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 506--553
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 506--553
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 506--553
+
+ []
+
+[19 <./referenceframes/rodenstock_amblyopes/cal_os150228f_1_dwt_nostim_gamscale
+d_bandfilt_refframe.jpg> <./eyepositiontraces/rodenstock_amblyopes/cal_os150228
+f_1.jpg>] [20]
+<referenceframes/rodenstock_amblyopes/jhs_ae143314f_1_dwt_nostim_gamscaled_band
+filt_refframe.jpg, id=90, 697.60625pt x 579.16376pt>
+File: referenceframes/rodenstock_amblyopes/jhs_ae143314f_1_dwt_nostim_gamscaled
+_bandfilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/rodenstock_amblyopes/jhs_ae143314f_1_dwt_nostim_gamscaled_
+bandfilt_refframe.jpg>
+Package pdftex.def Info: referenceframes/rodenstock_amblyopes/jhs_ae143314f_1_d
+wt_nostim_gamscaled_bandfilt_refframe.jpg used on input line 556.
+(pdftex.def)             Requested size: 187.89914pt x 155.99629pt.
+
+<eyepositiontraces/rodenstock_amblyopes/jhs_ae143314f_1.jpg, id=91, 878.28125pt
+ x 658.46pt>
+File: eyepositiontraces/rodenstock_amblyopes/jhs_ae143314f_1.jpg Graphic file (
+type jpg)
+ <use eyepositiontraces/rodenstock_amblyopes/jhs_ae143314f_1.jpg>
+Package pdftex.def Info: eyepositiontraces/rodenstock_amblyopes/jhs_ae143314f_1
+.jpg used on input line 557.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 556--558
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 556--558
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 559--607
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 559--607
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 559--607
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 559--607
+
+ []
+
+[21 <./referenceframes/rodenstock_amblyopes/jhs_ae143314f_1_dwt_nostim_gamscale
+d_bandfilt_refframe.jpg> <./eyepositiontraces/rodenstock_amblyopes/jhs_ae143314
+f_1.jpg>] [22]
+<referenceframes/rodenstock_amblyopes/jil_ae182727f_1_dwt_nostim_gamscaled_band
+filt_refframe.jpg, id=98, 680.5425pt x 385.44pt>
+File: referenceframes/rodenstock_amblyopes/jil_ae182727f_1_dwt_nostim_gamscaled
+_bandfilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/rodenstock_amblyopes/jil_ae182727f_1_dwt_nostim_gamscaled_
+bandfilt_refframe.jpg>
+Package pdftex.def Info: referenceframes/rodenstock_amblyopes/jil_ae182727f_1_d
+wt_nostim_gamscaled_bandfilt_refframe.jpg used on input line 610.
+(pdftex.def)             Requested size: 187.89914pt x 106.41684pt.
+
+<eyepositiontraces/rodenstock_amblyopes/jil_ae182727f_1.jpg, id=99, 878.28125pt
+ x 658.46pt>
+File: eyepositiontraces/rodenstock_amblyopes/jil_ae182727f_1.jpg Graphic file (
+type jpg)
+ <use eyepositiontraces/rodenstock_amblyopes/jil_ae182727f_1.jpg>
+Package pdftex.def Info: eyepositiontraces/rodenstock_amblyopes/jil_ae182727f_1
+.jpg used on input line 611.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 610--612
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 610--612
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 613--661
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 613--661
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 613--661
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 613--661
+
+ []
+
+[23 <./referenceframes/rodenstock_amblyopes/jil_ae182727f_1_dwt_nostim_gamscale
+d_bandfilt_refframe.jpg> <./eyepositiontraces/rodenstock_amblyopes/jil_ae182727
+f_1.jpg>] [24]
+<referenceframes/rodenstock_amblyopes/pri_ae165027f_1_dwt_nostim_gamscaled_band
+filt_refframe.jpg, id=106, 683.55376pt x 388.45125pt>
+File: referenceframes/rodenstock_amblyopes/pri_ae165027f_1_dwt_nostim_gamscaled
+_bandfilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/rodenstock_amblyopes/pri_ae165027f_1_dwt_nostim_gamscaled_
+bandfilt_refframe.jpg>
+Package pdftex.def Info: referenceframes/rodenstock_amblyopes/pri_ae165027f_1_d
+wt_nostim_gamscaled_bandfilt_refframe.jpg used on input line 664.
+(pdftex.def)             Requested size: 187.89914pt x 106.77995pt.
+
+<eyepositiontraces/rodenstock_amblyopes/pri_ae165027f_1.jpg, id=107, 878.28125p
+t x 658.46pt>
+File: eyepositiontraces/rodenstock_amblyopes/pri_ae165027f_1.jpg Graphic file (
+type jpg)
+ <use eyepositiontraces/rodenstock_amblyopes/pri_ae165027f_1.jpg>
+Package pdftex.def Info: eyepositiontraces/rodenstock_amblyopes/pri_ae165027f_1
+.jpg used on input line 665.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 664--666
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 664--666
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 667--715
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 667--715
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 667--715
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 667--715
+
+ []
+
+[25 <./referenceframes/rodenstock_amblyopes/pri_ae165027f_1_dwt_nostim_gamscale
+d_bandfilt_refframe.jpg> <./eyepositiontraces/rodenstock_amblyopes/pri_ae165027
+f_1.jpg>] [26]
+<referenceframes/aoslo/10003_V003_5_23_11_55_dwt_nostim_gamscaled_bandfilt_reff
+rame.jpg, id=115, 822.07124pt x 603.25375pt>
+File: referenceframes/aoslo/10003_V003_5_23_11_55_dwt_nostim_gamscaled_bandfilt
+_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/aoslo/10003_V003_5_23_11_55_dwt_nostim_gamscaled_bandfilt_
+refframe.jpg>
+Package pdftex.def Info: referenceframes/aoslo/10003_V003_5_23_11_55_dwt_nostim
+_gamscaled_bandfilt_refframe.jpg used on input line 720.
+(pdftex.def)             Requested size: 187.89914pt x 137.88017pt.
+
+<eyepositiontraces/aoslo/10003_V003_5_23_11_55.jpg, id=116, 878.28125pt x 658.4
+6pt>
+File: eyepositiontraces/aoslo/10003_V003_5_23_11_55.jpg Graphic file (type jpg)
+
+ <use eyepositiontraces/aoslo/10003_V003_5_23_11_55.jpg>
+Package pdftex.def Info: eyepositiontraces/aoslo/10003_V003_5_23_11_55.jpg used
+ on input line 721.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 720--722
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 720--722
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 723--769
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 723--769
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 723--769
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 723--769
+
+ []
+
+[27 <./referenceframes/aoslo/10003_V003_5_23_11_55_dwt_nostim_gamscaled_bandfil
+t_refframe.jpg> <./eyepositiontraces/aoslo/10003_V003_5_23_11_55.jpg>] [28]
+<referenceframes/aoslo/10003_V004_5_23_11_55_dwt_nostim_gamscaled_bandfilt_reff
+rame.jpg, id=123, 594.22pt x 603.25375pt>
+File: referenceframes/aoslo/10003_V004_5_23_11_55_dwt_nostim_gamscaled_bandfilt
+_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/aoslo/10003_V004_5_23_11_55_dwt_nostim_gamscaled_bandfilt_
+refframe.jpg>
+Package pdftex.def Info: referenceframes/aoslo/10003_V004_5_23_11_55_dwt_nostim
+_gamscaled_bandfilt_refframe.jpg used on input line 772.
+(pdftex.def)             Requested size: 187.89914pt x 190.75311pt.
+
+<eyepositiontraces/aoslo/10003_V004_5_23_11_55.jpg, id=124, 878.28125pt x 658.4
+6pt>
+File: eyepositiontraces/aoslo/10003_V004_5_23_11_55.jpg Graphic file (type jpg)
+
+ <use eyepositiontraces/aoslo/10003_V004_5_23_11_55.jpg>
+Package pdftex.def Info: eyepositiontraces/aoslo/10003_V004_5_23_11_55.jpg used
+ on input line 773.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 772--774
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 772--774
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 775--821
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 775--821
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 775--821
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 775--821
+
+ []
+
+[29 <./referenceframes/aoslo/10003_V004_5_23_11_55_dwt_nostim_gamscaled_bandfil
+t_refframe.jpg> <./eyepositiontraces/aoslo/10003_V004_5_23_11_55.jpg>] [30]
+<referenceframes/aoslo/10003_V005_5_23_11_55_dwt_nostim_gamscaled_bandfilt_reff
+rame.jpg, id=131, 611.28375pt x 605.26125pt>
+File: referenceframes/aoslo/10003_V005_5_23_11_55_dwt_nostim_gamscaled_bandfilt
+_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/aoslo/10003_V005_5_23_11_55_dwt_nostim_gamscaled_bandfilt_
+refframe.jpg>
+Package pdftex.def Info: referenceframes/aoslo/10003_V005_5_23_11_55_dwt_nostim
+_gamscaled_bandfilt_refframe.jpg used on input line 824.
+(pdftex.def)             Requested size: 187.89914pt x 186.04053pt.
+
+<eyepositiontraces/aoslo/10003_V005_5_23_11_55.jpg, id=132, 878.28125pt x 658.4
+6pt>
+File: eyepositiontraces/aoslo/10003_V005_5_23_11_55.jpg Graphic file (type jpg)
+
+ <use eyepositiontraces/aoslo/10003_V005_5_23_11_55.jpg>
+Package pdftex.def Info: eyepositiontraces/aoslo/10003_V005_5_23_11_55.jpg used
+ on input line 825.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 824--826
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 824--826
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 827--873
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 827--873
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 827--873
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 827--873
+
+ []
+
+[31 <./referenceframes/aoslo/10003_V005_5_23_11_55_dwt_nostim_gamscaled_bandfil
+t_refframe.jpg> <./eyepositiontraces/aoslo/10003_V005_5_23_11_55.jpg>] [32]
+<referenceframes/aoslo/20109R_V003_6_13_16_35_dwt_nostim_gamscaled_bandfilt_ref
+frame.jpg, id=140, 647.41875pt x 1234.6125pt>
+File: referenceframes/aoslo/20109R_V003_6_13_16_35_dwt_nostim_gamscaled_bandfil
+t_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/aoslo/20109R_V003_6_13_16_35_dwt_nostim_gamscaled_bandfilt
+_refframe.jpg>
+Package pdftex.def Info: referenceframes/aoslo/20109R_V003_6_13_16_35_dwt_nosti
+m_gamscaled_bandfilt_refframe.jpg used on input line 876.
+(pdftex.def)             Requested size: 187.89914pt x 358.31104pt.
+
+<eyepositiontraces/aoslo/20109R_V003_6_13_16_35.jpg, id=141, 562.1pt x 421.575p
+t>
+File: eyepositiontraces/aoslo/20109R_V003_6_13_16_35.jpg Graphic file (type jpg
+)
+ <use eyepositiontraces/aoslo/20109R_V003_6_13_16_35.jpg>
+Package pdftex.def Info: eyepositiontraces/aoslo/20109R_V003_6_13_16_35.jpg use
+d on input line 877.
+(pdftex.def)             Requested size: 281.85587pt x 211.39165pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 876--878
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 876--878
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 879--931
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 879--931
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 879--931
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 879--931
+
+ []
+
+[33 <./referenceframes/aoslo/20109R_V003_6_13_16_35_dwt_nostim_gamscaled_bandfi
+lt_refframe.jpg> <./eyepositiontraces/aoslo/20109R_V003_6_13_16_35.jpg>]
+[34]
+<referenceframes/aoslo/20109R_V004_6_13_16_35_dwt_nostim_gamscaled_bandfilt_ref
+frame.jpg, id=148, 787.94376pt x 1365.1pt>
+File: referenceframes/aoslo/20109R_V004_6_13_16_35_dwt_nostim_gamscaled_bandfil
+t_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/aoslo/20109R_V004_6_13_16_35_dwt_nostim_gamscaled_bandfilt
+_refframe.jpg>
+Package pdftex.def Info: referenceframes/aoslo/20109R_V004_6_13_16_35_dwt_nosti
+m_gamscaled_bandfilt_refframe.jpg used on input line 934.
+(pdftex.def)             Requested size: 187.89914pt x 325.52689pt.
+
+<eyepositiontraces/aoslo/20109R_V004_6_13_16_35.jpg, id=149, 562.1pt x 421.575p
+t>
+File: eyepositiontraces/aoslo/20109R_V004_6_13_16_35.jpg Graphic file (type jpg
+)
+ <use eyepositiontraces/aoslo/20109R_V004_6_13_16_35.jpg>
+Package pdftex.def Info: eyepositiontraces/aoslo/20109R_V004_6_13_16_35.jpg use
+d on input line 935.
+(pdftex.def)             Requested size: 281.85587pt x 211.39165pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 934--936
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 934--936
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 937--983
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 937--983
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 937--983
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 937--983
+
+ []
+
+[35 <./referenceframes/aoslo/20109R_V004_6_13_16_35_dwt_nostim_gamscaled_bandfi
+lt_refframe.jpg> <./eyepositiontraces/aoslo/20109R_V004_6_13_16_35.jpg>]
+[36]
+<referenceframes/aoslo/20109R_V005_6_13_16_35_dwt_nostim_gamscaled_bandfilt_ref
+frame.jpg, id=156, 711.65875pt x 1071.00125pt>
+File: referenceframes/aoslo/20109R_V005_6_13_16_35_dwt_nostim_gamscaled_bandfil
+t_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/aoslo/20109R_V005_6_13_16_35_dwt_nostim_gamscaled_bandfilt
+_refframe.jpg>
+Package pdftex.def Info: referenceframes/aoslo/20109R_V005_6_13_16_35_dwt_nosti
+m_gamscaled_bandfilt_refframe.jpg used on input line 986.
+(pdftex.def)             Requested size: 187.89914pt x 282.76808pt.
+
+<eyepositiontraces/aoslo/20109R_V005_6_13_16_35.jpg, id=157, 562.1pt x 421.575p
+t>
+File: eyepositiontraces/aoslo/20109R_V005_6_13_16_35.jpg Graphic file (type jpg
+)
+ <use eyepositiontraces/aoslo/20109R_V005_6_13_16_35.jpg>
+Package pdftex.def Info: eyepositiontraces/aoslo/20109R_V005_6_13_16_35.jpg use
+d on input line 987.
+(pdftex.def)             Requested size: 281.85587pt x 211.39165pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 986--988
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 986--988
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 989--1036
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 989--1036
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 989--1036
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 989--1036
+
+ []
+
+[37 <./referenceframes/aoslo/20109R_V005_6_13_16_35_dwt_nostim_gamscaled_bandfi
+lt_refframe.jpg> <./eyepositiontraces/aoslo/20109R_V005_6_13_16_35.jpg>]
+[38]
+<referenceframes/aoslo/20112R_V010_7_24_11_55_dwt_nostim_gamscaled_bandfilt_ref
+frame.jpg, id=165, 635.37375pt x 687.56876pt>
+File: referenceframes/aoslo/20112R_V010_7_24_11_55_dwt_nostim_gamscaled_bandfil
+t_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/aoslo/20112R_V010_7_24_11_55_dwt_nostim_gamscaled_bandfilt
+_refframe.jpg>
+Package pdftex.def Info: referenceframes/aoslo/20112R_V010_7_24_11_55_dwt_nosti
+m_gamscaled_bandfilt_refframe.jpg used on input line 1039.
+(pdftex.def)             Requested size: 187.89914pt x 203.33461pt.
+
+<eyepositiontraces/aoslo/20112R_V010_7_24_11_55.jpg, id=166, 562.1pt x 421.575p
+t>
+File: eyepositiontraces/aoslo/20112R_V010_7_24_11_55.jpg Graphic file (type jpg
+)
+ <use eyepositiontraces/aoslo/20112R_V010_7_24_11_55.jpg>
+Package pdftex.def Info: eyepositiontraces/aoslo/20112R_V010_7_24_11_55.jpg use
+d on input line 1040.
+(pdftex.def)             Requested size: 281.85587pt x 211.39165pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 1039--1041
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1039--1041
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1042--1089
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1042--1089
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1042--1089
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1042--1089
+
+ []
+
+[39 <./referenceframes/aoslo/20112R_V010_7_24_11_55_dwt_nostim_gamscaled_bandfi
+lt_refframe.jpg> <./eyepositiontraces/aoslo/20112R_V010_7_24_11_55.jpg>]
+[40]
+<referenceframes/aoslo/20112R_V011_7_24_11_55_dwt_nostim_gamscaled_bandfilt_ref
+frame.jpg, id=173, 787.94376pt x 625.33624pt>
+File: referenceframes/aoslo/20112R_V011_7_24_11_55_dwt_nostim_gamscaled_bandfil
+t_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/aoslo/20112R_V011_7_24_11_55_dwt_nostim_gamscaled_bandfilt
+_refframe.jpg>
+Package pdftex.def Info: referenceframes/aoslo/20112R_V011_7_24_11_55_dwt_nosti
+m_gamscaled_bandfilt_refframe.jpg used on input line 1092.
+(pdftex.def)             Requested size: 187.89914pt x 149.12003pt.
+
+<eyepositiontraces/aoslo/20112R_V011_7_24_11_55.jpg, id=174, 562.1pt x 421.575p
+t>
+File: eyepositiontraces/aoslo/20112R_V011_7_24_11_55.jpg Graphic file (type jpg
+)
+ <use eyepositiontraces/aoslo/20112R_V011_7_24_11_55.jpg>
+Package pdftex.def Info: eyepositiontraces/aoslo/20112R_V011_7_24_11_55.jpg use
+d on input line 1093.
+(pdftex.def)             Requested size: 281.85587pt x 211.39165pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 1092--1094
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1092--1094
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1095--1141
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1095--1141
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1095--1141
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1095--1141
+
+ []
+
+[41 <./referenceframes/aoslo/20112R_V011_7_24_11_55_dwt_nostim_gamscaled_bandfi
+lt_refframe.jpg> <./eyepositiontraces/aoslo/20112R_V011_7_24_11_55.jpg>]
+[42]
+<referenceframes/aoslo/20112R_V012_7_24_11_55_dwt_nostim_gamscaled_bandfilt_ref
+frame.jpg, id=181, 860.21375pt x 989.6975pt>
+File: referenceframes/aoslo/20112R_V012_7_24_11_55_dwt_nostim_gamscaled_bandfil
+t_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/aoslo/20112R_V012_7_24_11_55_dwt_nostim_gamscaled_bandfilt
+_refframe.jpg>
+Package pdftex.def Info: referenceframes/aoslo/20112R_V012_7_24_11_55_dwt_nosti
+m_gamscaled_bandfilt_refframe.jpg used on input line 1144.
+(pdftex.def)             Requested size: 187.89914pt x 216.17867pt.
+
+<eyepositiontraces/aoslo/20112R_V012_7_24_11_55.jpg, id=182, 562.1pt x 421.575p
+t>
+File: eyepositiontraces/aoslo/20112R_V012_7_24_11_55.jpg Graphic file (type jpg
+)
+ <use eyepositiontraces/aoslo/20112R_V012_7_24_11_55.jpg>
+Package pdftex.def Info: eyepositiontraces/aoslo/20112R_V012_7_24_11_55.jpg use
+d on input line 1145.
+(pdftex.def)             Requested size: 281.85587pt x 211.39165pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 1144--1146
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1144--1146
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1147--1196
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1147--1196
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1147--1196
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1147--1196
+
+ []
+
+[43 <./referenceframes/aoslo/20112R_V012_7_24_11_55_dwt_nostim_gamscaled_bandfi
+lt_refframe.jpg> <./eyepositiontraces/aoslo/20112R_V012_7_24_11_55.jpg>]
+[44]
+<referenceframes/tslo_normal/normal_dew_os_10_12_1_135_0_stabfix_14_13_43_822_d
+wt_nostim_gamscaled_bandfilt_refframe.jpg, id=190, 495.8525pt x 508.90125pt>
+File: referenceframes/tslo_normal/normal_dew_os_10_12_1_135_0_stabfix_14_13_43_
+822_dwt_nostim_gamscaled_bandfilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/tslo_normal/normal_dew_os_10_12_1_135_0_stabfix_14_13_43_8
+22_dwt_nostim_gamscaled_bandfilt_refframe.jpg>
+Package pdftex.def Info: referenceframes/tslo_normal/normal_dew_os_10_12_1_135_
+0_stabfix_14_13_43_822_dwt_nostim_gamscaled_bandfilt_refframe.jpg used on input
+ line 1201.
+(pdftex.def)             Requested size: 187.89914pt x 192.84091pt.
+
+<eyepositiontraces/tslo_normal/normal_dew_os_10_12_1_135_0_stabfix_14_13_43_822
+.jpg, id=191, 878.28125pt x 658.46pt>
+File: eyepositiontraces/tslo_normal/normal_dew_os_10_12_1_135_0_stabfix_14_13_4
+3_822.jpg Graphic file (type jpg)
+
+<use eyepositiontraces/tslo_normal/normal_dew_os_10_12_1_135_0_stabfix_14_13_43
+_822.jpg>
+Package pdftex.def Info: eyepositiontraces/tslo_normal/normal_dew_os_10_12_1_13
+5_0_stabfix_14_13_43_822.jpg used on input line 1202.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 1201--1203
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1201--1203
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1204--1247
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1204--1247
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1204--1247
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1204--1247
+
+ []
+
+[45 <./referenceframes/tslo_normal/normal_dew_os_10_12_1_135_0_stabfix_14_13_43
+_822_dwt_nostim_gamscaled_bandfilt_refframe.jpg> <./eyepositiontraces/tslo_norm
+al/normal_dew_os_10_12_1_135_0_stabfix_14_13_43_822.jpg>] [46]
+<referenceframes/tslo_normal/normal_dew_os_10_12_1_45_1_stabfix_10_18_41_907_dw
+t_nostim_gamscaled_bandfilt_refframe.jpg, id=198, 491.8375pt x 519.9425pt>
+File: referenceframes/tslo_normal/normal_dew_os_10_12_1_45_1_stabfix_10_18_41_9
+07_dwt_nostim_gamscaled_bandfilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/tslo_normal/normal_dew_os_10_12_1_45_1_stabfix_10_18_41_90
+7_dwt_nostim_gamscaled_bandfilt_refframe.jpg>
+Package pdftex.def Info: referenceframes/tslo_normal/normal_dew_os_10_12_1_45_1
+_stabfix_10_18_41_907_dwt_nostim_gamscaled_bandfilt_refframe.jpg used on input 
+line 1250.
+(pdftex.def)             Requested size: 187.89914pt x 198.63538pt.
+
+<eyepositiontraces/tslo_normal/normal_dew_os_10_12_1_45_1_stabfix_10_18_41_907.
+jpg, id=199, 878.28125pt x 658.46pt>
+File: eyepositiontraces/tslo_normal/normal_dew_os_10_12_1_45_1_stabfix_10_18_41
+_907.jpg Graphic file (type jpg)
+
+<use eyepositiontraces/tslo_normal/normal_dew_os_10_12_1_45_1_stabfix_10_18_41_
+907.jpg>
+Package pdftex.def Info: eyepositiontraces/tslo_normal/normal_dew_os_10_12_1_45
+_1_stabfix_10_18_41_907.jpg used on input line 1251.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 1250--1252
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1250--1252
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1253--1296
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1253--1296
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1253--1296
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1253--1296
+
+ []
+
+[47 <./referenceframes/tslo_normal/normal_dew_os_10_12_1_45_1_stabfix_10_18_41_
+907_dwt_nostim_gamscaled_bandfilt_refframe.jpg> <./eyepositiontraces/tslo_norma
+l/normal_dew_os_10_12_1_45_1_stabfix_10_18_41_907.jpg>] [48]
+<referenceframes/tslo_normal/normal_jap_os_10_12_1_45_0_stabfix_11_58_10_611_dw
+t_nostim_gamscaled_bandfilt_refframe.jpg, id=206, 490.83376pt x 501.875pt>
+File: referenceframes/tslo_normal/normal_jap_os_10_12_1_45_0_stabfix_11_58_10_6
+11_dwt_nostim_gamscaled_bandfilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/tslo_normal/normal_jap_os_10_12_1_45_0_stabfix_11_58_10_61
+1_dwt_nostim_gamscaled_bandfilt_refframe.jpg>
+Package pdftex.def Info: referenceframes/tslo_normal/normal_jap_os_10_12_1_45_0
+_stabfix_11_58_10_611_dwt_nostim_gamscaled_bandfilt_refframe.jpg used on input 
+line 1299.
+(pdftex.def)             Requested size: 187.89914pt x 192.12354pt.
+
+<eyepositiontraces/tslo_normal/normal_jap_os_10_12_1_45_0_stabfix_11_58_10_611.
+jpg, id=207, 878.28125pt x 658.46pt>
+File: eyepositiontraces/tslo_normal/normal_jap_os_10_12_1_45_0_stabfix_11_58_10
+_611.jpg Graphic file (type jpg)
+
+<use eyepositiontraces/tslo_normal/normal_jap_os_10_12_1_45_0_stabfix_11_58_10_
+611.jpg>
+Package pdftex.def Info: eyepositiontraces/tslo_normal/normal_jap_os_10_12_1_45
+_0_stabfix_11_58_10_611.jpg used on input line 1300.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 1299--1301
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1299--1301
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1302--1345
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1302--1345
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1302--1345
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1302--1345
+
+ []
+
+[49 <./referenceframes/tslo_normal/normal_jap_os_10_12_1_45_0_stabfix_11_58_10_
+611_dwt_nostim_gamscaled_bandfilt_refframe.jpg> <./eyepositiontraces/tslo_norma
+l/normal_jap_os_10_12_1_45_0_stabfix_11_58_10_611.jpg>] [50]
+<referenceframes/tslo_normal/normal_jap_os_10_12_1_45_1_stabfix_11_51_49_212_dw
+t_nostim_gamscaled_bandfilt_refframe.jpg, id=215, 495.8525pt x 520.94624pt>
+File: referenceframes/tslo_normal/normal_jap_os_10_12_1_45_1_stabfix_11_51_49_2
+12_dwt_nostim_gamscaled_bandfilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/tslo_normal/normal_jap_os_10_12_1_45_1_stabfix_11_51_49_21
+2_dwt_nostim_gamscaled_bandfilt_refframe.jpg>
+Package pdftex.def Info: referenceframes/tslo_normal/normal_jap_os_10_12_1_45_1
+_stabfix_11_51_49_212_dwt_nostim_gamscaled_bandfilt_refframe.jpg used on input 
+line 1348.
+(pdftex.def)             Requested size: 187.89914pt x 197.4052pt.
+
+<eyepositiontraces/tslo_normal/normal_jap_os_10_12_1_45_1_stabfix_11_51_49_212.
+jpg, id=216, 878.28125pt x 658.46pt>
+File: eyepositiontraces/tslo_normal/normal_jap_os_10_12_1_45_1_stabfix_11_51_49
+_212.jpg Graphic file (type jpg)
+
+<use eyepositiontraces/tslo_normal/normal_jap_os_10_12_1_45_1_stabfix_11_51_49_
+212.jpg>
+Package pdftex.def Info: eyepositiontraces/tslo_normal/normal_jap_os_10_12_1_45
+_1_stabfix_11_51_49_212.jpg used on input line 1349.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 1348--1350
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1348--1350
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1351--1394
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1351--1394
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1351--1394
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1351--1394
+
+ []
+
+[51 <./referenceframes/tslo_normal/normal_jap_os_10_12_1_45_1_stabfix_11_51_49_
+212_dwt_nostim_gamscaled_bandfilt_refframe.jpg> <./eyepositiontraces/tslo_norma
+l/normal_jap_os_10_12_1_45_1_stabfix_11_51_49_212.jpg>] [52]
+<referenceframes/tslo_normal/normal_mna_os_10_12_1_45_0_stabfix_17_36_21_53_dwt
+_nostim_gamscaled_bandfilt_refframe.jpg, id=223, 491.8375pt x 498.86375pt>
+File: referenceframes/tslo_normal/normal_mna_os_10_12_1_45_0_stabfix_17_36_21_5
+3_dwt_nostim_gamscaled_bandfilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/tslo_normal/normal_mna_os_10_12_1_45_0_stabfix_17_36_21_53
+_dwt_nostim_gamscaled_bandfilt_refframe.jpg>
+Package pdftex.def Info: referenceframes/tslo_normal/normal_mna_os_10_12_1_45_0
+_stabfix_17_36_21_53_dwt_nostim_gamscaled_bandfilt_refframe.jpg used on input l
+ine 1397.
+(pdftex.def)             Requested size: 187.89914pt x 190.5826pt.
+
+<eyepositiontraces/tslo_normal/normal_mna_os_10_12_1_45_0_stabfix_17_36_21_53.j
+pg, id=224, 878.28125pt x 658.46pt>
+File: eyepositiontraces/tslo_normal/normal_mna_os_10_12_1_45_0_stabfix_17_36_21
+_53.jpg Graphic file (type jpg)
+
+<use eyepositiontraces/tslo_normal/normal_mna_os_10_12_1_45_0_stabfix_17_36_21_
+53.jpg>
+Package pdftex.def Info: eyepositiontraces/tslo_normal/normal_mna_os_10_12_1_45
+_0_stabfix_17_36_21_53.jpg used on input line 1398.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 1397--1399
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1397--1399
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1400--1443
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1400--1443
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1400--1443
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1400--1443
+
+ []
+
+[53 <./referenceframes/tslo_normal/normal_mna_os_10_12_1_45_0_stabfix_17_36_21_
+53_dwt_nostim_gamscaled_bandfilt_refframe.jpg> <./eyepositiontraces/tslo_normal
+/normal_mna_os_10_12_1_45_0_stabfix_17_36_21_53.jpg>] [54]
+<referenceframes/tslo_normal/normal_mna_os_10_12_1_45_1_stabfix_17_37_42_610_dw
+t_nostim_gamscaled_bandfilt_refframe.jpg, id=231, 495.8525pt x 534.99875pt>
+File: referenceframes/tslo_normal/normal_mna_os_10_12_1_45_1_stabfix_17_37_42_6
+10_dwt_nostim_gamscaled_bandfilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/tslo_normal/normal_mna_os_10_12_1_45_1_stabfix_17_37_42_61
+0_dwt_nostim_gamscaled_bandfilt_refframe.jpg>
+Package pdftex.def Info: referenceframes/tslo_normal/normal_mna_os_10_12_1_45_1
+_stabfix_17_37_42_610_dwt_nostim_gamscaled_bandfilt_refframe.jpg used on input 
+line 1446.
+(pdftex.def)             Requested size: 187.89914pt x 202.7302pt.
+
+<eyepositiontraces/tslo_normal/normal_mna_os_10_12_1_45_1_stabfix_17_37_42_610.
+jpg, id=232, 878.28125pt x 658.46pt>
+File: eyepositiontraces/tslo_normal/normal_mna_os_10_12_1_45_1_stabfix_17_37_42
+_610.jpg Graphic file (type jpg)
+
+<use eyepositiontraces/tslo_normal/normal_mna_os_10_12_1_45_1_stabfix_17_37_42_
+610.jpg>
+Package pdftex.def Info: eyepositiontraces/tslo_normal/normal_mna_os_10_12_1_45
+_1_stabfix_17_37_42_610.jpg used on input line 1447.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 1446--1448
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1446--1448
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1449--1492
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1449--1492
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1449--1492
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1449--1492
+
+ []
+
+[55 <./referenceframes/tslo_normal/normal_mna_os_10_12_1_45_1_stabfix_17_37_42_
+610_dwt_nostim_gamscaled_bandfilt_refframe.jpg> <./eyepositiontraces/tslo_norma
+l/normal_mna_os_10_12_1_45_1_stabfix_17_37_42_610.jpg>] [56]
+<referenceframes/tslo_normal/normal_tyf_os_10_12_1_45_0_stabfix_11_19_25_919_dw
+t_nostim_gamscaled_bandfilt_refframe.jpg, id=240, 501.875pt x 492.84125pt>
+File: referenceframes/tslo_normal/normal_tyf_os_10_12_1_45_0_stabfix_11_19_25_9
+19_dwt_nostim_gamscaled_bandfilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/tslo_normal/normal_tyf_os_10_12_1_45_0_stabfix_11_19_25_91
+9_dwt_nostim_gamscaled_bandfilt_refframe.jpg>
+Package pdftex.def Info: referenceframes/tslo_normal/normal_tyf_os_10_12_1_45_0
+_stabfix_11_19_25_919_dwt_nostim_gamscaled_bandfilt_refframe.jpg used on input 
+line 1495.
+(pdftex.def)             Requested size: 187.89914pt x 184.52171pt.
+
+<eyepositiontraces/tslo_normal/normal_tyf_os_10_12_1_45_0_stabfix_11_19_25_919.
+jpg, id=241, 878.28125pt x 658.46pt>
+File: eyepositiontraces/tslo_normal/normal_tyf_os_10_12_1_45_0_stabfix_11_19_25
+_919.jpg Graphic file (type jpg)
+
+<use eyepositiontraces/tslo_normal/normal_tyf_os_10_12_1_45_0_stabfix_11_19_25_
+919.jpg>
+Package pdftex.def Info: eyepositiontraces/tslo_normal/normal_tyf_os_10_12_1_45
+_0_stabfix_11_19_25_919.jpg used on input line 1496.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 1495--1497
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1495--1497
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1498--1541
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1498--1541
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1498--1541
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1498--1541
+
+ []
+
+[57 <./referenceframes/tslo_normal/normal_tyf_os_10_12_1_45_0_stabfix_11_19_25_
+919_dwt_nostim_gamscaled_bandfilt_refframe.jpg> <./eyepositiontraces/tslo_norma
+l/normal_tyf_os_10_12_1_45_0_stabfix_11_19_25_919.jpg>] [58]
+<referenceframes/tslo_normal/normal_tyf_os_10_12_1_45_1_stabfix_13_08_06_384_dw
+t_nostim_gamscaled_bandfilt_refframe.jpg, id=248, 505.89pt x 556.0775pt>
+File: referenceframes/tslo_normal/normal_tyf_os_10_12_1_45_1_stabfix_13_08_06_3
+84_dwt_nostim_gamscaled_bandfilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/tslo_normal/normal_tyf_os_10_12_1_45_1_stabfix_13_08_06_38
+4_dwt_nostim_gamscaled_bandfilt_refframe.jpg>
+Package pdftex.def Info: referenceframes/tslo_normal/normal_tyf_os_10_12_1_45_1
+_stabfix_13_08_06_384_dwt_nostim_gamscaled_bandfilt_refframe.jpg used on input 
+line 1544.
+(pdftex.def)             Requested size: 187.89914pt x 206.54305pt.
+
+<eyepositiontraces/tslo_normal/normal_tyf_os_10_12_1_45_1_stabfix_13_08_06_384.
+jpg, id=249, 878.28125pt x 658.46pt>
+File: eyepositiontraces/tslo_normal/normal_tyf_os_10_12_1_45_1_stabfix_13_08_06
+_384.jpg Graphic file (type jpg)
+
+<use eyepositiontraces/tslo_normal/normal_tyf_os_10_12_1_45_1_stabfix_13_08_06_
+384.jpg>
+Package pdftex.def Info: eyepositiontraces/tslo_normal/normal_tyf_os_10_12_1_45
+_1_stabfix_13_08_06_384.jpg used on input line 1545.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 1544--1546
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1544--1546
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1547--1590
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1547--1590
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1547--1590
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1547--1590
+
+ []
+
+[59 <./referenceframes/tslo_normal/normal_tyf_os_10_12_1_45_1_stabfix_13_08_06_
+384_dwt_nostim_gamscaled_bandfilt_refframe.jpg> <./eyepositiontraces/tslo_norma
+l/normal_tyf_os_10_12_1_45_1_stabfix_13_08_06_384.jpg>] [60]
+<referenceframes/rodenstock_amd/beh150746f_1_dwt_nostim_gamscaled_bandfilt_reff
+rame.jpg, id=256, 869.2475pt x 454.69875pt>
+File: referenceframes/rodenstock_amd/beh150746f_1_dwt_nostim_gamscaled_bandfilt
+_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/rodenstock_amd/beh150746f_1_dwt_nostim_gamscaled_bandfilt_
+refframe.jpg>
+Package pdftex.def Info: referenceframes/rodenstock_amd/beh150746f_1_dwt_nostim
+_gamscaled_bandfilt_refframe.jpg used on input line 1595.
+(pdftex.def)             Requested size: 187.89914pt x 98.28561pt.
+
+<eyepositiontraces/rodenstock_amd/beh150746f_1.jpg, id=257, 878.28125pt x 658.4
+6pt>
+File: eyepositiontraces/rodenstock_amd/beh150746f_1.jpg Graphic file (type jpg)
+
+ <use eyepositiontraces/rodenstock_amd/beh150746f_1.jpg>
+Package pdftex.def Info: eyepositiontraces/rodenstock_amd/beh150746f_1.jpg used
+ on input line 1596.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 1595--1597
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1595--1597
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1598--1645
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1598--1645
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1598--1645
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1598--1645
+
+ []
+
+[61 <./referenceframes/rodenstock_amd/beh150746f_1_dwt_nostim_gamscaled_bandfil
+t_refframe.jpg> <./eyepositiontraces/rodenstock_amd/beh150746f_1.jpg>] [62]
+<referenceframes/rodenstock_amd/daj105144f_1_dwt_nostim_gamscaled_bandfilt_reff
+rame.jpg, id=265, 828.09375pt x 424.58624pt>
+File: referenceframes/rodenstock_amd/daj105144f_1_dwt_nostim_gamscaled_bandfilt
+_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/rodenstock_amd/daj105144f_1_dwt_nostim_gamscaled_bandfilt_
+refframe.jpg>
+Package pdftex.def Info: referenceframes/rodenstock_amd/daj105144f_1_dwt_nostim
+_gamscaled_bandfilt_refframe.jpg used on input line 1648.
+(pdftex.def)             Requested size: 187.89914pt x 96.3376pt.
+
+<eyepositiontraces/rodenstock_amd/daj105144f_1.jpg, id=266, 878.28125pt x 658.4
+6pt>
+File: eyepositiontraces/rodenstock_amd/daj105144f_1.jpg Graphic file (type jpg)
+
+ <use eyepositiontraces/rodenstock_amd/daj105144f_1.jpg>
+Package pdftex.def Info: eyepositiontraces/rodenstock_amd/daj105144f_1.jpg used
+ on input line 1649.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 1648--1650
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1648--1650
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1651--1697
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1651--1697
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1651--1697
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1651--1697
+
+ []
+
+[63 <./referenceframes/rodenstock_amd/daj105144f_1_dwt_nostim_gamscaled_bandfil
+t_refframe.jpg> <./eyepositiontraces/rodenstock_amd/daj105144f_1.jpg>] [64]
+<referenceframes/rodenstock_amd/daj_os110402f_1_dwt_nostim_gamscaled_bandfilt_r
+efframe.jpg, id=273, 760.8425pt x 442.65375pt>
+File: referenceframes/rodenstock_amd/daj_os110402f_1_dwt_nostim_gamscaled_bandf
+ilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/rodenstock_amd/daj_os110402f_1_dwt_nostim_gamscaled_bandfi
+lt_refframe.jpg>
+Package pdftex.def Info: referenceframes/rodenstock_amd/daj_os110402f_1_dwt_nos
+tim_gamscaled_bandfilt_refframe.jpg used on input line 1700.
+(pdftex.def)             Requested size: 187.89914pt x 109.31905pt.
+
+<eyepositiontraces/rodenstock_amd/daj_os110402f_1.jpg, id=274, 878.28125pt x 65
+8.46pt>
+File: eyepositiontraces/rodenstock_amd/daj_os110402f_1.jpg Graphic file (type j
+pg)
+ <use eyepositiontraces/rodenstock_amd/daj_os110402f_1.jpg>
+Package pdftex.def Info: eyepositiontraces/rodenstock_amd/daj_os110402f_1.jpg u
+sed on input line 1701.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 1700--1702
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1700--1702
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1703--1749
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1703--1749
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1703--1749
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1703--1749
+
+ []
+
+[65 <./referenceframes/rodenstock_amd/daj_os110402f_1_dwt_nostim_gamscaled_band
+filt_refframe.jpg> <./eyepositiontraces/rodenstock_amd/daj_os110402f_1.jpg>]
+[66]
+<referenceframes/rodenstock_amd/den_od093924f_1_dwt_nostim_gamscaled_bandfilt_r
+efframe.jpg, id=281, 706.64pt x 412.54124pt>
+File: referenceframes/rodenstock_amd/den_od093924f_1_dwt_nostim_gamscaled_bandf
+ilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/rodenstock_amd/den_od093924f_1_dwt_nostim_gamscaled_bandfi
+lt_refframe.jpg>
+Package pdftex.def Info: referenceframes/rodenstock_amd/den_od093924f_1_dwt_nos
+tim_gamscaled_bandfilt_refframe.jpg used on input line 1752.
+(pdftex.def)             Requested size: 187.89914pt x 109.6943pt.
+
+<eyepositiontraces/rodenstock_amd/den_od093924f_1.jpg, id=282, 878.28125pt x 65
+8.46pt>
+File: eyepositiontraces/rodenstock_amd/den_od093924f_1.jpg Graphic file (type j
+pg)
+ <use eyepositiontraces/rodenstock_amd/den_od093924f_1.jpg>
+Package pdftex.def Info: eyepositiontraces/rodenstock_amd/den_od093924f_1.jpg u
+sed on input line 1753.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 1752--1754
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1752--1754
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1755--1801
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1755--1801
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1755--1801
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1755--1801
+
+ []
+
+[67 <./referenceframes/rodenstock_amd/den_od093924f_1_dwt_nostim_gamscaled_band
+filt_refframe.jpg> <./eyepositiontraces/rodenstock_amd/den_od093924f_1.jpg>]
+[68]
+<referenceframes/rodenstock_amd/den_os093000f_1_dwt_nostim_gamscaled_bandfilt_r
+efframe.jpg, id=290, 705.63625pt x 420.57124pt>
+File: referenceframes/rodenstock_amd/den_os093000f_1_dwt_nostim_gamscaled_bandf
+ilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/rodenstock_amd/den_os093000f_1_dwt_nostim_gamscaled_bandfi
+lt_refframe.jpg>
+Package pdftex.def Info: referenceframes/rodenstock_amd/den_os093000f_1_dwt_nos
+tim_gamscaled_bandfilt_refframe.jpg used on input line 1804.
+(pdftex.def)             Requested size: 187.89914pt x 111.9899pt.
+
+<eyepositiontraces/rodenstock_amd/den_os093000f_1.jpg, id=291, 878.28125pt x 65
+8.46pt>
+File: eyepositiontraces/rodenstock_amd/den_os093000f_1.jpg Graphic file (type j
+pg)
+ <use eyepositiontraces/rodenstock_amd/den_os093000f_1.jpg>
+Package pdftex.def Info: eyepositiontraces/rodenstock_amd/den_os093000f_1.jpg u
+sed on input line 1805.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 1804--1806
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1804--1806
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1807--1853
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1807--1853
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1807--1853
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1807--1853
+
+ []
+
+[69 <./referenceframes/rodenstock_amd/den_os093000f_1_dwt_nostim_gamscaled_band
+filt_refframe.jpg> <./eyepositiontraces/rodenstock_amd/den_os093000f_1.jpg>]
+[70]
+<referenceframes/rodenstock_amd/lep_od111234f_1_dwt_nostim_gamscaled_bandfilt_r
+efframe.jpg, id=298, 843.15pt x 466.74374pt>
+File: referenceframes/rodenstock_amd/lep_od111234f_1_dwt_nostim_gamscaled_bandf
+ilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/rodenstock_amd/lep_od111234f_1_dwt_nostim_gamscaled_bandfi
+lt_refframe.jpg>
+Package pdftex.def Info: referenceframes/rodenstock_amd/lep_od111234f_1_dwt_nos
+tim_gamscaled_bandfilt_refframe.jpg used on input line 1856.
+(pdftex.def)             Requested size: 187.89914pt x 104.01573pt.
+
+<eyepositiontraces/rodenstock_amd/lep_od111234f_1.jpg, id=299, 878.28125pt x 65
+8.46pt>
+File: eyepositiontraces/rodenstock_amd/lep_od111234f_1.jpg Graphic file (type j
+pg)
+ <use eyepositiontraces/rodenstock_amd/lep_od111234f_1.jpg>
+Package pdftex.def Info: eyepositiontraces/rodenstock_amd/lep_od111234f_1.jpg u
+sed on input line 1857.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 1856--1858
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1856--1858
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1859--1906
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1859--1906
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1859--1906
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1859--1906
+
+ []
+
+[71 <./referenceframes/rodenstock_amd/lep_od111234f_1_dwt_nostim_gamscaled_band
+filt_refframe.jpg> <./eyepositiontraces/rodenstock_amd/lep_od111234f_1.jpg>]
+[72]
+<referenceframes/rodenstock_amd/tgf_os101647f_1_dwt_nostim_gamscaled_bandfilt_r
+efframe.jpg, id=306, 731.73375pt x 385.44pt>
+File: referenceframes/rodenstock_amd/tgf_os101647f_1_dwt_nostim_gamscaled_bandf
+ilt_refframe.jpg Graphic file (type jpg)
+
+<use referenceframes/rodenstock_amd/tgf_os101647f_1_dwt_nostim_gamscaled_bandfi
+lt_refframe.jpg>
+Package pdftex.def Info: referenceframes/rodenstock_amd/tgf_os101647f_1_dwt_nos
+tim_gamscaled_bandfilt_refframe.jpg used on input line 1909.
+(pdftex.def)             Requested size: 187.89914pt x 98.97694pt.
+
+<eyepositiontraces/rodenstock_amd/tgf_os101647f_1.jpg, id=307, 878.28125pt x 65
+8.46pt>
+File: eyepositiontraces/rodenstock_amd/tgf_os101647f_1.jpg Graphic file (type j
+pg)
+ <use eyepositiontraces/rodenstock_amd/tgf_os101647f_1.jpg>
+Package pdftex.def Info: eyepositiontraces/rodenstock_amd/tgf_os101647f_1.jpg u
+sed on input line 1910.
+(pdftex.def)             Requested size: 281.85587pt x 211.31435pt.
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 1909--1911
+[] [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1909--1911
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1912--1958
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1912--1958
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1912--1958
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1912--1958
+
+ []
+
+[73 <./referenceframes/rodenstock_amd/tgf_os101647f_1_dwt_nostim_gamscaled_band
+filt_refframe.jpg> <./eyepositiontraces/rodenstock_amd/tgf_os101647f_1.jpg>]
+[74] (analysis_report.aux) ) 
+Here is how much of TeX's memory you used:
+ 2704 strings out of 493329
+ 63577 string characters out of 3139058
+ 94719 words of memory out of 3000000
+ 6105 multiletter control sequences out of 15000+200000
+ 10104 words of font info for 38 fonts, out of 3000000 for 9000
+ 1141 hyphenation exceptions out of 8191
+ 40i,6n,37p,320b,197s stack positions out of 5000i,500n,10000p,200000b,50000s
+<C:/Program Files/MiKTeX 2.9/fonts/type1/public/ams
+fonts/cm/cmbx10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm
+/cmbx12.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.p
+fb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Pr
+ogram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr17.pfb>
+Output written on analysis_report.pdf (74 pages, 2944652 bytes).
+PDF statistics:
+ 335 PDF objects out of 1000 (max. 8388607)
+ 0 named destinations out of 1000 (max. 500000)
+ 371 words of extra memory for PDF output out of 10000 (max. 10000000)
+
