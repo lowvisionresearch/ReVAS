@@ -1,0 +1,3 @@
+(18:41:35) Execution in Progress...
+(18:41:35) ERROR: (Error while processing C:\Users\Matthew\Documents\Coursework\2016-17 Spring\Chung Lab\ReVAS\testbench\mna_od_1_794.avi. Proceeding to next video.) Undefined function 'TrimVideo' for input arguments of type 'struct'. ExecuteModules(34) < execute_Callback(449) < gui_mainfcn(95) < JobQueue(42) < @(hObject,eventdata)JobQueue('execute_Callback',hObject,eventdata,guidata(hObject))(0).
+(18:41:35) Process completed.
