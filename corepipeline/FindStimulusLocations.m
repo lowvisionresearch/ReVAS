@@ -1,4 +1,4 @@
-function FindStimulusLocations(inputVideoPath, stimulus, parametersStructure)
+function FindStimulusLocations(inputVideoPath, stimulus, parametersStructure, removalAreaSize)
 %FIND STIMULUS LOCATIONS Records in a mat file the location of the stimulus
 %in each frame of the video.
 %   The result is stored with '_stimlocs' appended to the input video file
@@ -144,7 +144,15 @@ for i = 1:numberOfFrames
 end
 
 %% Save stimulus size
-stimulusSize = size(stimulus);
+
+% Set default for |removalAreaSize| if not specified as size of stimulus.
+if nargin == 3
+   stimulusSize = size(stimulus); 
+else
+   stimulusSize = removalAreaSize;
+   stimulusLocationInEachFrame(:,1) = stimulusLocationInEachFrame(:,1) + floor((removalAreaSize(2) - size(stimulus, 2)) / 2);
+   stimulusLocationInEachFrame(:,2) = stimulusLocationInEachFrame(:,2) + floor((removalAreaSize(1) - size(stimulus, 1)) / 2);
+end
 
 %% Save to output mat file
 save(outputFileName, 'stimulusLocationInEachFrame', 'stimulusSize', ...

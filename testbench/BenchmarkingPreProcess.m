@@ -12,7 +12,7 @@ addpath(genpath('..'));
 
 CONTAINS_STIM = true;
 IS_RODENSTOCK = false;
-ONLY_REGENERATE_BLINKS = true;
+ONLY_REGENERATE_BLINKS = false;
 
 filenames = uipickfiles;
 if ~iscell(filenames)
@@ -36,7 +36,7 @@ for i = 1:length(filenames)
     % Step 1: Trim the video's upper and right edges.
     if ~ONLY_REGENERATE_BLINKS
         if ~IS_RODENSTOCK
-            parametersStructure.borderTrimAmount = 80;
+            parametersStructure.borderTrimAmount = 24;
             TrimVideo(videoPath, parametersStructure);
         else
             RodenstockTrim(videoPath);
@@ -52,11 +52,13 @@ for i = 1:length(filenames)
             %FindStimulusLocations(videoPath, 'testbench/stimulus_cross.gif', parametersStructure);
             stimulus.thickness = 1;
             stimulus.size = 11;
+            % For TSLO Normal to remove entire stimulus and black shadow.
+            removalAreaSize = [60, 100];
         else
             stimulus.thickness = 3;
             stimulus.size = 23;
         end
-        FindStimulusLocations(videoPath, stimulus, parametersStructure);
+        FindStimulusLocations(videoPath, stimulus, parametersStructure, removalAreaSize);
         fprintf('Process Completed for FindStimulusLocations()\n');
     end
     
@@ -88,7 +90,7 @@ for i = 1:length(filenames)
         
     % Step 6: Detect blinks and bad frames
     % Default:
-    parametersStructure.thresholdValue = 1.3;
+    parametersStructure.thresholdValue = Inf;
     parametersStructure.singleTail = false;
     parametersStructure.upperTail = true;
     %parametersStructure.stitchCriteria = 10;
