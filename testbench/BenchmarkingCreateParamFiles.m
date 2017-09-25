@@ -53,13 +53,14 @@ for i = 1:length(filenames)
     coarseParameters.thresholdValue = inf;
     coarseParameters.singleTail = false;
     coarseParameters.upperTail = true;
+    coarseParameters.removalAreaSize = [60, 100];
     %coarseParameters.stitchCriteria = 10;
     
-    coarseParameters.minimumPeakThreshold = 0.1;
-    fineParameters.numberOfIterations = 2;
+    coarseParameters.minimumPeakThreshold = 0;
+    fineParameters.numberOfIterations = 1;
     fineParameters.enableSubpixelInterpolation = 1;
     stripParameters.enableSubpixelInterpolation = 1;
-    stripParameters.minimumPeakThreshold = 0.1;
+    stripParameters.minimumPeakThreshold = 0;
     
     save(paramsPath, 'coarseParameters', 'fineParameters', 'stripParameters');
     fprintf('%d of %d completed.\n', i, length(filenames));
