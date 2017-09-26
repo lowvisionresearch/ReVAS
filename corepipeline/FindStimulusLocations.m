@@ -109,7 +109,7 @@ for frameNumber = (1:numberOfFrames)
         
         drawnow;
     end
-    
+
     stimulusLocationInEachFrame(frameNumber,:) = [xPeak yPeak];
     
     % If verbosity is enabled, also show stimulus location plot with points
@@ -144,7 +144,6 @@ for i = 1:numberOfFrames
 end
 
 %% Save stimulus size
-
 % Set default for |removalAreaSize| if not specified as size of stimulus.
 if nargin == 3
    stimulusSize = size(stimulus); 

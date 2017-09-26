@@ -22,7 +22,7 @@ function varargout = StimParameters(varargin)
 
 % Edit the above text to modify the response to help StimParameters
 
-% Last Modified by GUIDE v2.5 05-Jul-2017 12:31:58
+% Last Modified by GUIDE v2.5 20-Sep-2017 18:47:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -66,6 +66,9 @@ handles.cross.Value = mainHandles.config.stimOption2;
 handles.stimPath.String = mainHandles.config.stimPath;
 handles.size.String = mainHandles.config.stimSize;
 handles.thick.String = mainHandles.config.stimThick;
+handles.length.String = mainHandles.config.stimRectangleX;
+handles.width.String = mainHandles.config.stimRectangleY;
+handles.rectangle.Value = mainHandles.config.stimUseRectangle;
 handles.stimFullPath = mainHandles.config.stimFullPath;
 
 if logical(handles.upload.Value)
@@ -80,6 +83,14 @@ else
     handles.select.Enable = 'off';
     handles.size.Enable = 'on';
     handles.thick.Enable = 'on';
+end
+
+if logical(handles.rectangle.Value)
+    handles.length.Enable = 'on';
+    handles.width.Enable = 'on';
+else
+    handles.length.Enable = 'off'; 
+    handles.width.Enable = 'off';
 end
 
 % Set colors
@@ -97,6 +108,9 @@ handles.upload.BackgroundColor = mainHandles.colors{4,3};
 handles.cross.BackgroundColor = mainHandles.colors{4,3};
 handles.sizeText.BackgroundColor = mainHandles.colors{4,3};
 handles.thickText.BackgroundColor = mainHandles.colors{4,3};
+handles.lengthText.BackgroundColor = mainHandles.colors{4,3};
+handles.widthText.BackgroundColor = mainHandles.colors{4,3};
+handles.rectangle.BackgroundColor = mainHandles.colors{4,3};
 % Box text
 handles.titleBox.ForegroundColor = mainHandles.colors{4,5};
 handles.usageBox.ForegroundColor = mainHandles.colors{4,5};
@@ -107,6 +121,9 @@ handles.upload.ForegroundColor = mainHandles.colors{4,5};
 handles.cross.ForegroundColor = mainHandles.colors{4,5};
 handles.sizeText.ForegroundColor = mainHandles.colors{4,5};
 handles.thickText.ForegroundColor = mainHandles.colors{4,5};
+handles.lengthText.ForegroundColor = mainHandles.colors{4,5};
+handles.widthText.ForegroundColor = mainHandles.colors{4,5};
+handles.rectangle.ForegroundColor = mainHandles.colors{4,5};
 handles.stimPath.ForegroundColor = mainHandles.colors{4,5};
 % Select button
 handles.select.BackgroundColor = mainHandles.colors{4,4};
@@ -125,6 +142,9 @@ guidata(hObject, handles);
 stimPath_Callback(handles.stimPath, eventdata, handles);
 size_Callback(handles.size, eventdata, handles);
 thick_Callback(handles.thick, eventdata, handles);
+length_Callback(handles.length, eventdata, handles);
+width_Callback(handles.width, eventdata, handles);
+
 
 % UIWAIT makes StimParameters wait for user response (see UIRESUME)
 % uiwait(handles.stimParameters);
@@ -169,6 +189,8 @@ mainHandles = guidata(figureHandle);
 % Validate new configurations
 size = str2double(handles.size.String);
 thick = str2double(handles.thick.String);
+length = str2double(handles.length.String);
+width = str2double(handles.width.String);
 
 if logical(handles.upload.Value)
     % full path
@@ -190,6 +212,20 @@ else
     end    
 end
 
+if logical(handles.rectangle.Value)
+    % length
+    if ~IsOddNaturalNumber(length)
+        errordlg('Length must be an odd, natural number.', 'Invalid Parameter');
+        return;
+    end
+    
+    % width
+    if ~IsOddNaturalNumber(width)
+        errordlg('Width must be an odd, natural number.', 'Invalid Parameter');
+        return;
+    end
+end
+
 % Save new configurations
 mainHandles.config.stimVerbosity = logical(handles.verbosity.Value);
 mainHandles.config.stimOverwrite = logical(handles.overwrite.Value);
@@ -199,6 +235,9 @@ mainHandles.config.stimPath = handles.stimPath.String;
 mainHandles.config.stimFullPath = handles.stimFullPath;
 mainHandles.config.stimSize = size;
 mainHandles.config.stimThick = thick;
+mainHandles.config.stimRectangleX = length;
+mainHandles.config.stimRectangleY = width;
+mainHandles.config.stimUseRectangle = logical(handles.rectangle.Value);
 
 % Update handles structure
 guidata(figureHandle, mainHandles);
@@ -390,4 +429,96 @@ else
     handles.select.Enable = 'off';
     handles.size.Enable = 'on';
     handles.thick.Enable = 'on';
+end
+
+
+function width_Callback(hObject, eventdata, handles)
+% hObject    handle to width (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of width as text
+%        str2double(get(hObject,'String')) returns contents of width as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
+
+if ~IsOddNaturalNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be an odd, natural number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function width_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to width (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function length_Callback(hObject, eventdata, handles)
+% hObject    handle to length (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of length as text
+%        str2double(get(hObject,'String')) returns contents of length as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
+
+if ~IsOddNaturalNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be an odd, natural number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function length_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to length (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in rectangle.
+function rectangle_Callback(hObject, eventdata, handles)
+% hObject    handle to rectangle (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of rectangle
+if logical(hObject.Value)
+    handles.length.Enable = 'on';
+    handles.width.Enable = 'on';
+else
+    handles.length.Enable = 'off';
+    handles.width.Enable = 'off';
 end

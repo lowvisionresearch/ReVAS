@@ -207,6 +207,9 @@ handles.config.stimPath = '';
 handles.config.stimFullPath = '';
 handles.config.stimSize = 11;
 handles.config.stimThick = 1;
+handles.config.stimRectangleX = 11;
+handles.config.stimRectangleY = 11;
+handles.config.stimUseRectangle = true;
 % Gamma
 handles.config.gammaExponent = 0.6;
 handles.config.gammaOverwrite = true;
@@ -603,7 +606,7 @@ for i = 1:size(handles.files, 2)
     [~,displayFileList{i},~] = fileparts(handles.files{i});
     displayFileList{i} = [displayFileList{i} '.avi'];
 end
-handles.inputList.String = displayFileList';
+handles.inputList.String = displayFileList;
 
 % Update handles structure
 guidata(hObject, handles);
