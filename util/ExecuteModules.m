@@ -54,7 +54,6 @@ if logical(handles.togStim.Value) && ~logical(abortTriggered)
 
     % Call the function(s)
     if logical(handles.config.stimUseRectangle)
-        disp('The correct choice.');
         FindStimulusLocations(inputVideoPath, stimulus, parametersStructure, ...
                               removalAreaSize);
     else
