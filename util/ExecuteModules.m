@@ -49,10 +49,18 @@ if logical(handles.togStim.Value) && ~logical(abortTriggered)
         stimulus.thickness = handles.config.stimThick;
         stimulus.size = handles.config.stimSize;
     end
+    removalAreaSize = [handles.config.stimRectangleY, handles.config.stimRectangleX];
     parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
 
     % Call the function(s)
-    FindStimulusLocations(inputVideoPath, stimulus, parametersStructure);
+    if logical(handles.config.stimUseRectangle)
+        disp('The correct choice.');
+        FindStimulusLocations(inputVideoPath, stimulus, parametersStructure, ...
+                              removalAreaSize);
+    else
+        FindStimulusLocations(inputVideoPath, stimulus, parametersStructure);
+    end
+
     RemoveStimuli(inputVideoPath, parametersStructure);
 
     % Update file name to output file name
