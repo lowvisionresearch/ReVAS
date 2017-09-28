@@ -1,4 +1,4 @@
-(16:22:28) Execution in Progress...
+(14:57:29) Execution in Progress...
 Starting parallel pool (parpool) using the 'local' profile ... connected to 12 workers.
 Warning: TrimVideo() is proceeding and overwriting an existing file. (E:\ail_os\Va Fix Expt\10 Deg\11_21_2013_12_22\ail_os_16_dwt.avi)
 > In RevasWarning (line 13)
@@ -6,16 +6,15 @@ Warning: TrimVideo() is proceeding and overwriting an existing file. (E:\ail_os\
   In ExecuteModules (line 35)
   In parallel_function>make_general_channel/channel_general (line 929)
   In remoteParallelFunction (line 38)
-The correct choice.
 Warning: FindStimulusLocations() is proceeding and overwriting an existing file.
 > In FindStimulusLocations (line 21)
-  In ExecuteModules (line 58)
+  In ExecuteModules (line 57)
   In parallel_function>make_general_channel/channel_general (line 929)
   In remoteParallelFunction (line 38)
 Warning: RemoveStimuli() is proceeding and overwriting an existing file. (E:\ail_os\Va Fix Expt\10 Deg\11_21_2013_12_22\ail_os_16_dwt_nostim.avi)
 > In RevasWarning (line 13)
   In RemoveStimuli (line 23)
-  In ExecuteModules (line 64)
+  In ExecuteModules (line 63)
   In parallel_function>make_general_channel/channel_general (line 929)
   In remoteParallelFunction (line 38)
-(16:22:28) Process completed.
+(14:57:29) Process completed.
