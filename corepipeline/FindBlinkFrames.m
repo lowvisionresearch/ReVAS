@@ -62,18 +62,12 @@ upperBound = meanOfMeans + threshold;
 
 for k = 1:size(means, 2)
     sample = means(1, k);
-    if parametersStructure.singleTail == true
-        if parametersStructure.upperTail == true
-            if sample > upperBound
-                badFrames(k) = 1;
-            end
-        else
-            if sample < lowerBound
-                badFrames(k) = 1;
-            end
+    if parametersStructure.upperTail == true
+        if sample > upperBound
+            badFrames(k) = 1;
         end
     else
-        if sample > upperBound || sample < lowerBound
+        if sample < lowerBound
             badFrames(k) = 1;
         end
     end
