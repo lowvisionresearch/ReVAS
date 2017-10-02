@@ -10,6 +10,19 @@ function [xPeak, yPeak, peakValue, secondPeakValue] = ...
 %   to find search windows around each strip according to the approximate
 %   shifts. It will then search for a peak in those windows.
 
+% Cut out smaller correlation map to search in if applicable. Doing this
+% will essentially restrict searching to the center area and any false
+% peaks near the edges will be ignored.
+yOffset = 0;
+xOffset = 0;
+if isfield(parametersStructure, 'searchWindowPercentage')
+    yOffset = floor(size(correlationMap, 1) * (1 - parametersStructure.searchWindowPercentage)/2);
+    xOffset = floor(size(correlationMap, 2) * (1 - parametersStructure.searchWindowPercentage)/2);
+    correlationMap = correlationMap( ...
+        yOffset+1 : yOffset+ceil(size(correlationMap, 1) * parametersStructure.searchWindowPercentage), ...
+        xOffset+1 : xOffset+ceil(size(correlationMap, 2) * parametersStructure.searchWindowPercentage));
+end
+
 % Use the appropriate method to identify the peak
     if parametersStructure.enableGaussianFiltering
         % Apply Gaussian Filter and get difference between correlations
@@ -44,6 +57,13 @@ function [xPeak, yPeak, peakValue, secondPeakValue] = ...
         end
         secondPeakValue = max(correlationMap(:));
     end
+    
+    % Add back in the offset removed in the beginning if applicable.
+    if isfield(parametersStructure, 'searchWindowPercentage')
+       yPeak = yPeak + yOffset;
+       xPeak = xPeak + xOffset;
+    end
+
 
 end
 

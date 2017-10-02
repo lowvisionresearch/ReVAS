@@ -389,9 +389,9 @@ end
 %% Populate statisticsStructure
 
 % Remove any negative secondary peak values.
-if ~parametersStructure.enableGaussianFiltering
-    secondPeakValueArray(secondPeakValueArray<=0) = NaN;
-end
+%if ~parametersStructure.enableGaussianFiltering
+    %secondPeakValueArray(secondPeakValueArray<=0) = NaN;
+%end
 
 statisticsStructure.peakValues = peakValueArray;
 statisticsStructure.peakRatios = secondPeakValueArray ./ peakValueArray;
