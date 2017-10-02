@@ -113,8 +113,8 @@ try
     framePositions = [filteredStripIndices1 filteredStripIndices2];
     save(outputTracesPath, 'framePositions');
 catch
-    RevasError(outputFileName, 'There were no useful eye position traces. Lower the minimumPeakThreshold and/or raise the maximumPeakRatio.', parametersStructure);
-    error('There were no useful eye position traces. Lower the minimumPeakThreshold and/or raise the maximumPeakRatio.');
+    RevasError(outputFileName, 'There were no useful eye position traces. Lower the minimumPeakThreshold and/or raise the maximumPeakRatio.\n', parametersStructure);
+    error('There were no useful eye position traces. Lower the minimumPeakThreshold and/or raise the maximumPeakRatio.\n');
 end
 
 %% Set up the counter array and the template for the coarse reference frame.
