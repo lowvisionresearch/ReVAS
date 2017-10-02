@@ -91,7 +91,6 @@ for i = 1:length(filenames)
     % Step 6: Detect blinks and bad frames
     % Default:
     parametersStructure.thresholdValue = Inf;
-    parametersStructure.singleTail = false;
     parametersStructure.upperTail = true;
     %parametersStructure.stitchCriteria = 10;
     % Use the final bandpass filtered video
@@ -102,14 +101,9 @@ for i = 1:length(filenames)
     
     % ^ Above parameter settings:
     % Black blink:
-    %   - singleTail = true;
     %   - upperTail = false;
     % White blink:
-    %   - singleTail = true;
     %   - upperTail = true;
-    % Mixed blink:
-    %   - singleTail = false;
-    %   - upperTail = doesn't matter
     
     PreviewNoBlinkFrames(videoPath);
     fprintf('Process Completed for PreviewNoBlinkFrames()\n');
