@@ -28,22 +28,15 @@ else
     thresholdValue = parametersStructure.thresholdValue;
 end
 
-%% Load mat file with output from |FindStimulusLocations|
-
-%load(stimLocsMatFileName);
-
-% Variables that should be Loaded now:
-% - stimulusLocationInEachFrame
-% - stimulusSize
-% - meanOfEachFrame
-% - standardDeviationOfEachFrame
-
 %% Identify bad frames
 v = VideoReader(inputVideoPath);
 means = zeros(1, v.FrameRate*v.Duration);
 frameNumber = 1;
 
 % First find the average pixel value of each individual frame
+% We must compute this again because there is no gaurantee that a
+% |stimlocs| file exists and even if it does, we cannot say for sure that
+% those values are the most updated.
 while hasFrame(v)
     frame = readFrame(v);
     try 
