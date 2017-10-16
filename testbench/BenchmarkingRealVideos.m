@@ -42,8 +42,9 @@ for i = 1:length(filenames)
     fineParameters.searchWindowPercentage = 0.5;
     stripParameters.searchWindowPercentage = 0.5;
     
-    %coarseParameters.enableGaussianFiltering = 1;
-    %coarseParameters.gaussianStandardDeviation = 5;
+    coarseParameters.enableGaussianFiltering = 1;
+    coarseParameters.gaussianStandardDeviation = 5;
+    coarseParameters.maximumSD = 10;
         
     coarseParamsCells{i} = coarseParameters; 
     fineParamsCells{i} = fineParameters; 

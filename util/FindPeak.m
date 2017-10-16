@@ -38,7 +38,7 @@ end
         
         % We do not use the second peak when using Gaussian approach
         % because we do not care about peak ratio in this case.
-        secondPeakValue = -inf;
+        secondPeakValue = NaN;
         
     else
         % Find peak of correlation map
