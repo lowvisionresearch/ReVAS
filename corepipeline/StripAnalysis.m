@@ -396,7 +396,6 @@ end
 statisticsStructure.peakValues = peakValueArray;
 statisticsStructure.peakRatios = secondPeakValueArray ./ peakValueArray;
 statisticsStructure.searchWindows = searchWindowsArray;
-statisticsStructure.errorStructure = struct(); %TODO needs to be implemented
 
 %% Populate usefulEyePositionTraces
 
