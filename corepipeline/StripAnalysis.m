@@ -97,6 +97,9 @@ rawEyePositionTraces = NaN(numberOfStrips, 2);
 peakValueArray = zeros(numberOfStrips, 1);
 secondPeakValueArray = zeros(numberOfStrips, 1);
 
+% array for standard deviations (used for gaussian peaks approach)
+standardDeviationsArray = NaN(numberOfStrips, 2);
+
 % array for search windows
 estimatedStripYLocations = NaN(numberOfStrips, 1);
 searchWindowsArray = NaN(numberOfStrips, 2);
@@ -213,6 +216,9 @@ for stripNumber = (1:numberOfStrips)
         frame = stripData(1,3);
 
         if ismember(frame, localParametersStructure.badFrames)
+            rawEyePositionTraces(stripNumber,:) = [NaN NaN];
+            peakValueArray(stripNumber) = NaN;
+            secondPeakValueArray(stripNumber) = NaN;
             continue
         end
 
@@ -246,9 +252,10 @@ for stripNumber = (1:numberOfStrips)
                     FindPeak(adaptedCorrelation, parametersStructure);
                 
                 % See if adapted result is acceptable or not.
-                if peakValue <= 0 || secondPeakValue <= 0 ...
+                if ~parametersStructure.enableGaussianFiltering && ...
+                        (peakValue <= 0 || secondPeakValue <= 0 ...
                         || secondPeakValue / peakValue > parametersStructure.maximumPeakRatio ...
-                        || peakValue < parametersStructure.minimumPeakThreshold
+                        || peakValue < parametersStructure.minimumPeakThreshold)
                     % Not acceptable, try again in the catch block with full correlation map.
                     error('Jumping to catch block immediately below.');
                 end
@@ -285,6 +292,26 @@ for stripNumber = (1:numberOfStrips)
             peakValue = gather(peakValue, gpuTask.ID);
             secondPeakValue = gather(secondPeakValue, gpuTask.ID);
         end
+        
+        if parametersStructure.enableGaussianFiltering
+            % Fit a gaussian in a 25x25 pixel window around the identified peak.
+            % Take the middle row and the middle column, and fit a one-dimensional
+            % gaussian to both in order to get the standard deviations.
+            % Store results in statisticsStructure for choosing bad frames
+            % later.
+
+            % Middle row SDs in column 1, Middle column SDs in column 2.
+            x = (-12:12)';
+            middleRow = ...
+                correlation(yPeak-12:yPeak+12, xPeak);
+            middleCol = ...
+                correlation(yPeak, xPeak-12:xPeak+12)';
+            fitOutput = fit(x, middleRow, 'gauss1');
+            standardDeviationsArray(stripNumber, 1) = fitOutput.c1;
+            fitOutput = fit(x, middleCol, 'gauss1');
+            standardDeviationsArray(stripNumber, 2) = fitOutput.c1;
+            clear fitOutput;
+        end
 
         % Show surface plot for this correlation if verbosity enabled
         if localParametersStructure.enableVerbosity
@@ -298,7 +325,7 @@ for stripNumber = (1:numberOfStrips)
                 figure(1);
             end
             [surfX,surfY] = meshgrid(1:size(correlation,2), 1:size(correlation,1));
-            surf(surfX, surfY, correlation,'linestyle','none');
+            surf(surfX, surfY, correlation, 'linestyle', 'none');
             title([num2str(stripNumber) ' out of ' num2str(numberOfStrips)]);
             xlim([1 size(correlation,2)]);
             ylim([1 size(correlation,1)]);
@@ -388,21 +415,36 @@ end
 
 %% Populate statisticsStructure
 
-% Remove any negative secondary peak values.
-%if ~parametersStructure.enableGaussianFiltering
-    %secondPeakValueArray(secondPeakValueArray<=0) = NaN;
-%end
-
 statisticsStructure.peakValues = peakValueArray;
 statisticsStructure.peakRatios = secondPeakValueArray ./ peakValueArray;
 statisticsStructure.searchWindows = searchWindowsArray;
+statisticsStructure.standardDeviations = standardDeviationsArray;
 
 %% Populate usefulEyePositionTraces
 
-% Determine which eye traces to throw out
-% 1 = keep, 0 = toss
-eyeTracesToRemove = (statisticsStructure.peakRatios <= parametersStructure.maximumPeakRatio)...
-    & (statisticsStructure.peakValues >= parametersStructure.minimumPeakThreshold);
+if parametersStructure.enableGaussianFiltering
+    % Criteria for gaussian filtering method is to ensure that:
+    %   * the peak value is above a minimum threshold
+    %   * after a guassian is fitted in a 25x25 pixel window around the
+    %   identified peak, the standard deviation of the curve must be below
+    %   a maximum threshold in both the horizontal and vertical axes.
+    
+    % Determine which eye traces to throw out
+    % 1 = keep, 0 = toss
+    eyeTracesToRemove = (statisticsStructure.standardDeviations(:,1) <= parametersStructure.maximumSD)...
+        & (statisticsStructure.standardDeviations(:,2) <= parametersStructure.maximumSD)...
+        & (statisticsStructure.peakValues >= parametersStructure.minimumPeakThreshold);
+else
+    % Criteria for peak ratio method is to ensure that:
+    %   * the peak value is above a minimum threshold
+    %   * the ratio of the second peak to the first peak is smaller than a
+    %   maximum threshold (they must be sufficiently distinct).
+    
+    % Determine which eye traces to throw out
+    % 1 = keep, 0 = toss
+    eyeTracesToRemove = (statisticsStructure.peakRatios <= parametersStructure.maximumPeakRatio)...
+        & (statisticsStructure.peakValues >= parametersStructure.minimumPeakThreshold);
+end
 
 % convert logical array to double array
 eyeTracesToRemove = double(eyeTracesToRemove);
