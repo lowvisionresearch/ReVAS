@@ -91,8 +91,16 @@ params.stripHeight = size(shrunkFrames, 1);
 params.stripWidth = size(shrunkFrames, 2);
 params.samplingRate = videoFrameRate;
 params.badFrames = badFrames;
+
+% Check if user has flag enabled. Flag will check for torsional movement.
+if isfield('params', 'flag') && params.flag == true
+    correlationValues = RotateCorrect(shrunkFrames, temporaryRefFrame, params);
+    degrees = correlationValues(:, 1);
+    usefulEyePositionTraces = correlationValues(:, 3:4);
+else
 [~, usefulEyePositionTraces, ~, ~] = StripAnalysis(shrunkFrames, ...
     temporaryRefFrame, params);
+end
 
 % Scale the coordinates back up.
 framePositions = ...
@@ -117,11 +125,21 @@ catch
     error('There were no useful eye position traces. Lower the minimumPeakThreshold and/or raise the maximumPeakRatio.\n');
 end
 
-%% Set up the counter array and the template for the coarse reference frame.
-v = VideoReader(videoPath);
-totalFrames = v.FrameRate * v.Duration;
+% Also remove corresponding degree corrections because those frames are no
+% longer relevant.
+if exist('degrees', 'var')
+    if endNaNs > 0
+        degrees(end-endNaNs + 1:end, 1) = [];
+    end
+    
+    if beginningNaNs > 0
+        degrees(1:beginningNaNs, 1) = [];
+    end
+end
 
-height = v.Height;
+%% Set up the counter array and the template for the coarse reference frame.
+totalFrames = size(videoInputArray, 3);
+height = size(videoInputArray, 1);
 counterArray = zeros(height*3);
 coarseRefFrame = zeros(height*3);
 
@@ -172,14 +190,20 @@ if enableGPU
 end
 
 for frameNumber = 1+beginningNaNs:totalFrames-endNaNs-beginningNaNs
+    if any(badFrames==frameNumber)
+        continue
     % Use double function because readFrame gives unsigned integers,
     % whereas we need to use signed integers
     frame = double(videoInputArray(:, :, frameNumber))/255;
+ 
+    if isfield('params', 'flag') && params.flag == true
+        frame = imrotate(frame, degrees(frameNumber));
+    end
+    
     if enableGPU
         frame = gpuArray(frame);
     end
-    if any(badFrames==frameNumber)
-        continue
+    
     else
         
         % framePositions has the top left coordinate of the frames, so those
@@ -224,25 +248,17 @@ for k = 1:size(NaNindices)
 end
 
 % Crop out the leftover 0 padding from the original template. First check
-% for 0 rows
-k = 1;
-while k<=size(coarseRefFrame, 1)
-    if coarseRefFrame(k, :) == 0
-        coarseRefFrame(k, :) = [];
-        continue
-    end
-    k = k + 1;
-end
+% for 0 columns
+indices = coarseRefFrame == 0;
+sumColumns = sum(indices);
+columnsToRemove = sumColumns == size(coarseRefFrame, 1);
+coarseRefFrame(:, columnsToRemove) = [];
 
-% Then sweep for 0 columns
-k = 1;
-while k<=size(coarseRefFrame, 2)
-    if coarseRefFrame(:, k) == 0
-        coarseRefFrame(:, k) = [];
-        continue
-    end
-    k = k + 1;
-end
+% Then check for 0 rows
+indices = coarseRefFrame == 0;
+sumRows = sum(indices, 2);
+rowsToRemove = sumRows == size(coarseRefFrame, 2);
+coarseRefFrame(rowsToRemove, :) = [];
 
 save(outputFileName, 'coarseRefFrame');
 
