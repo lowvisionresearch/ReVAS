@@ -350,25 +350,42 @@ for k = 1:size(NaNindices)
 end
 
 % Crop out the leftover 0 padding from the original template. First check
-% for 0 rows
-k = 1;
-while k<=size(refFrame, 1)
-    if refFrame(k, :) == 0
-        refFrame(k, :) = [];
-        continue
-    end
-    k = k + 1;
-end
+% for 0 columns
+indices = refFrame == 0;
+sumColumns = sum(indices);
+columnsToRemove = sumColumns == size(refFrame, 1);
+refFrame(:, columnsToRemove) = [];
 
-% Then sweep for 0 columns
-k = 1;
-while k<=size(refFrame, 2)
-    if refFrame(:, k) == 0
-        refFrame(:, k) = [];
-        continue
-    end
-    k = k + 1;
-end
+% Then check for 0 rows
+indices = refFrame == 0;
+sumRows = sum(indices, 2);
+rowsToRemove = sumRows == size(refFrame, 2);
+refFrame(rowsToRemove, :) = [];
+
+% Replace remaining black regions with random noise
+indices = refFrame == 0;
+refFrame(indices) = mean(refFrame(~indices)) + (std(refFrame(~indices)) ...
+    * randn(sum(sum(indices)), 1));
+
+
+% k = 1;
+% while k<=size(refFrame, 1)
+%     if refFrame(k, :) == 0
+%         refFrame(k, :) = [];
+%         continue
+%     end
+%     k = k + 1;
+% end
+% 
+% % Then sweep for 0 columns
+% k = 1;
+% while k<=size(refFrame, 2)
+%     if refFrame(:, k) == 0
+%         refFrame(:, k) = [];
+%         continue
+%     end
+%     k = k + 1;
+% end
 %% Save and display the reference frame.
 fileName(end-3:end) = [];
 fileName(end+1:end+9) = '_refframe';
