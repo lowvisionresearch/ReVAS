@@ -76,6 +76,10 @@ timeArray = (1:numberOfFrames)' / samplingRate;
 % preallocate two columns for horizontal and vertical movements
 stimulusLocationInEachFrame = NaN(numberOfFrames, 2);
 
+% Threshold value for detecting stimulus. Any peak value below this
+% threshold will not be marked as a stimulus.
+stimulusThresholdValue = 0.8;
+
 for frameNumber = (1:numberOfFrames)
     
     frame = videoInputArray(:,:, frameNumber);
@@ -108,6 +112,10 @@ for frameNumber = (1:numberOfFrames)
             'VerticalAlignment', 'bottom', 'FontWeight', 'bold');
         
         drawnow;
+    end
+    
+    if peakValue < stimulusThresholdValue
+        continue;
     end
 
     stimulusLocationInEachFrame(frameNumber,:) = [xPeak yPeak];

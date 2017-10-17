@@ -54,6 +54,10 @@ for frameNumber = 1:numberOfFrames
     
     location = stimulusLocationInEachFrame(frameNumber,:);
     
+    if isnan(location)
+        continue;
+    end
+    
     % Account for removal target at edge of array
     xLow = location(2)-stimulusSize(1)+1;
     xHigh = location(2);
