@@ -192,20 +192,18 @@ end
 for frameNumber = 1+beginningNaNs:totalFrames-endNaNs-beginningNaNs
     if any(badFrames==frameNumber)
         continue
-    % Use double function because readFrame gives unsigned integers,
-    % whereas we need to use signed integers
-    frame = double(videoInputArray(:, :, frameNumber))/255;
- 
-    if isfield('params', 'flag') && params.flag == true
-        frame = imrotate(frame, degrees(frameNumber));
-    end
-    
-    if enableGPU
-        frame = gpuArray(frame);
-    end
-    
     else
+        % Use double function because readFrame gives unsigned integers,
+        % whereas we need to use signed integers
+        frame = double(videoInputArray(:, :, frameNumber))/255;
         
+        if isfield('params', 'flag') && params.flag == true
+            frame = imrotate(frame, degrees(frameNumber));
+        end
+        
+        if enableGPU
+            frame = gpuArray(frame);
+        end
         % framePositions has the top left coordinate of the frames, so those
         % coordinates will represent the minRow and minColumn to be added to
         % the template frame. maxRow and maxColumn will be the size of the
