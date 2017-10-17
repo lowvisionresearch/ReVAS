@@ -25,16 +25,21 @@ for k = 1:size(rotations, 2)
         rotatedFrames(:, :, tempFrame) = tempFrame;
     end
     
-    % StripAnalysis needs to save the correlation values for each frame
     [~, usefulEyePositionTraces, ~, statisticsStructure] = ...
         StripAnalysis(rotatedFrames, referenceFrame, params);
     
     tempCorrelationValues = statisticsStructure.peakValues;
     
+    % Set all NaNs to 0, in order to prevent error'ing when comparing
+    % new correlation values to previous NaNs
+    NaNindices = isnan(tempCorrelationValues);
+    tempCorrelationValues(NaNindices, 1) = 0;
+    
     if k == 1
         correlationValues(:, 1) = degree;
         correlationValues(:, 2) = tempCorrelationValues;
         correlationValues(:, 3:4) = usefulEyePositionTraces;
+       
     else
         % Find the frames in which the correlation value is higher with
         % this degree correction. Replace the information in all 4 columns
