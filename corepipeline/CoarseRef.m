@@ -191,41 +191,42 @@ end
 
 for frameNumber = 1+beginningNaNs:totalFrames-endNaNs-beginningNaNs
     if any(badFrames==frameNumber)
-        continue
-    else
-        % Use double function because readFrame gives unsigned integers,
-        % whereas we need to use signed integers
-        frame = double(videoInputArray(:, :, frameNumber))/255;
-        
-        if isfield('params', 'flag') && params.flag == true
-            frame = imrotate(frame, degrees(frameNumber));
-        end
-        
-        if enableGPU
-            frame = gpuArray(frame);
-        end
-        % framePositions has the top left coordinate of the frames, so those
-        % coordinates will represent the minRow and minColumn to be added to
-        % the template frame. maxRow and maxColumn will be the size of the
-        % frame added to the minRow/minColumn - 1. (i.e., if size of the frame
-        % is 256x256 and the minRow is 1, then the maxRow will be 1 + 256 - 1.
-        % If minRow is 2 (moved down by one pixel) then maxRow will be 
-        % 2 + 256 - 1 = 257)
-        minRow = round(framePositions(frameNumber, 2));
-        minColumn = round(framePositions(frameNumber, 1));
-        maxRow = size(frame, 1) + minRow - 1;
-        maxColumn = size(frame, 2) + minColumn - 1;
-
-        % Now add the frame values to the template frame and increment the
-        % counterArray, which is keeping track of how many frames are added 
-        % to each pixel. 
-        selectRow = round(minRow):round(maxRow);
-        selectColumn = round(minColumn):round(maxColumn);
-
-        coarseRefFrame(selectRow, selectColumn) = coarseRefFrame(selectRow, ...
-            selectColumn) + frame;
-        counterArray(selectRow, selectColumn) = counterArray(selectRow, selectColumn) + 1;
+        continue;
     end
+
+    % Use double function because readFrame gives unsigned integers,
+    % whereas we need to use signed integers
+    frame = double(videoInputArray(:, :, frameNumber))/255;
+ 
+    if isfield('params', 'flag') && params.flag == true
+        frame = imrotate(frame, degrees(frameNumber));
+    end
+    
+    if enableGPU
+        frame = gpuArray(frame);
+    end
+
+    % framePositions has the top left coordinate of the frames, so those
+    % coordinates will represent the minRow and minColumn to be added to
+    % the template frame. maxRow and maxColumn will be the size of the
+    % frame added to the minRow/minColumn - 1. (i.e., if size of the frame
+    % is 256x256 and the minRow is 1, then the maxRow will be 1 + 256 - 1.
+    % If minRow is 2 (moved down by one pixel) then maxRow will be 
+    % 2 + 256 - 1 = 257)
+    minRow = round(framePositions(frameNumber, 2));
+    minColumn = round(framePositions(frameNumber, 1));
+    maxRow = size(frame, 1) + minRow - 1;
+    maxColumn = size(frame, 2) + minColumn - 1;
+
+    % Now add the frame values to the template frame and increment the
+    % counterArray, which is keeping track of how many frames are added 
+    % to each pixel. 
+    selectRow = round(minRow):round(maxRow);
+    selectColumn = round(minColumn):round(maxColumn);
+
+    coarseRefFrame(selectRow, selectColumn) = coarseRefFrame(selectRow, ...
+        selectColumn) + frame;
+    counterArray(selectRow, selectColumn) = counterArray(selectRow, selectColumn) + 1;
 end
 
 % Divide the template frame by the counterArray to obtain the average value
