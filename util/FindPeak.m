@@ -13,14 +13,11 @@ function [xPeak, yPeak, peakValue, secondPeakValue] = ...
 % Cut out smaller correlation map to search in if applicable. Doing this
 % will essentially restrict searching to the center area and any false
 % peaks near the edges will be ignored.
-yOffset = 0;
-xOffset = 0;
+offset = 0;
 if isfield(parametersStructure, 'searchWindowPercentage')
-    yOffset = floor(size(correlationMap, 1) * (1 - parametersStructure.searchWindowPercentage)/2);
-    xOffset = floor(size(correlationMap, 2) * (1 - parametersStructure.searchWindowPercentage)/2);
-    correlationMap = correlationMap( ...
-        yOffset+1 : yOffset+ceil(size(correlationMap, 1) * parametersStructure.searchWindowPercentage), ...
-        xOffset+1 : xOffset+ceil(size(correlationMap, 2) * parametersStructure.searchWindowPercentage));
+    offset = floor(size(correlationMap, 2) * (1 - parametersStructure.searchWindowPercentage)/2);
+    correlationMap = ...
+        correlationMap(:,offset+1 : offset+ceil(size(correlationMap, 2) * parametersStructure.searchWindowPercentage));
 end
 
 % Use the appropriate method to identify the peak
@@ -43,7 +40,7 @@ end
     else
         % Find peak of correlation map
         [yPeak, xPeak] = find(correlationMap==max(correlationMap(:)));
-        peakValue = max(correlationMap(:));
+        peakValue = correlationMap(yPeak, xPeak);
 
         % Find second highest point of correlation map
         peakWindowMinX = max(1, xPeak - parametersStructure.stripHeight);
@@ -60,8 +57,7 @@ end
     
     % Add back in the offset removed in the beginning if applicable.
     if isfield(parametersStructure, 'searchWindowPercentage')
-       yPeak = yPeak + yOffset;
-       xPeak = xPeak + xOffset;
+       xPeak = xPeak + offset;
     end
 
 

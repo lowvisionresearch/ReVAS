@@ -39,12 +39,16 @@ for i = 1:length(filenames)
 
     % Temporary testing
     coarseParameters.searchWindowPercentage = 0.04;
-    fineParameters.searchWindowPercentage = 0.5;
-    stripParameters.searchWindowPercentage = 0.5;
+    fineParameters.searchWindowPercentage = 0.75;
+    stripParameters.searchWindowPercentage = 0.75;
     
     coarseParameters.enableGaussianFiltering = 1;
-    coarseParameters.gaussianStandardDeviation = 5;
-    coarseParameters.maximumSD = 10;
+    coarseParameters.gaussianStandardDeviation = 10;
+    coarseParameters.maximumSD = 30;
+    
+    fineParameters.enableGaussianFiltering = 1;
+    fineParameters.gaussianStandardDeviation = 10;
+    fineParameters.maximumSD = 30;
         
     coarseParamsCells{i} = coarseParameters; 
     fineParamsCells{i} = fineParameters; 
