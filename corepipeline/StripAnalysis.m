@@ -294,21 +294,28 @@ for stripNumber = (1:numberOfStrips)
         end
         
         if parametersStructure.enableGaussianFiltering
-            % Fit a gaussian in a 25x25 pixel window around the identified peak.
+            % Fit a gaussian in a pixel window around the identified peak.
+            % The pixel window is of size
+            % |parametersStructure.SDWindowSize| x
+            % |parametersStructure.SDWindowSize/2|
+            %
             % Take the middle row and the middle column, and fit a one-dimensional
             % gaussian to both in order to get the standard deviations.
             % Store results in statisticsStructure for choosing bad frames
             % later.
 
             % Middle row SDs in column 1, Middle column SDs in column 2.
-            x = (-12:12)';
             middleRow = ...
-                correlationMap(max(floor(yPeak)-12,1):min(floor(yPeak)+12,size(correlationMap,1)), floor(xPeak));
+                correlationMap(max(ceil(yPeak-parametersStructure.SDWindowSize/2), 1): ...
+                min(floor(yPeak+parametersStructure.SDWindowSize/2), size(correlationMap,1)), ...
+                floor(xPeak));
             middleCol = ...
-                correlationMap(floor(yPeak), max(floor(xPeak)-12,1):min(floor(xPeak)+12,size(correlationMap,2)))';
-            fitOutput = fit(x, middleRow, 'gauss1');
+                correlationMap(floor(yPeak), ...
+                max(ceil(xPeak-parametersStructure.SDWindowSize/2), 1): ...
+                min(floor(xPeak+parametersStructure.SDWindowSize/2), size(correlationMap,2)))';
+            fitOutput = fit(((1:size(middleRow,1))-ceil(size(middleRow,1)/2))', middleRow, 'gauss1');
             standardDeviationsArray(stripNumber, 1) = fitOutput.c1;
-            fitOutput = fit(x, middleCol, 'gauss1');
+            fitOutput = fit(((1:size(middleCol,1))-ceil(size(middleCol,1)/2))', middleCol, 'gauss1');
             standardDeviationsArray(stripNumber, 2) = fitOutput.c1;
             clear fitOutput;
         end
