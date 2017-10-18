@@ -12,17 +12,35 @@ end
 % First column will store the optimal degree correction, second column will 
 % store the associated correlation value, third column and fourth columns 
 % will store the x and y positions (column and row positions), respectively
-rotations = -degreeRange:0.1:degreeRange;
+rotations = -params.degreeRange:0.1:params.degreeRange;
 correlationValues = zeros(size(frames, 3), 4);
 
-rotatedFrames = zeros(size(frames));
+rotatedFrames = zeros(size(frames, 1) * 1.5, size(frames, 2) * 1.5, size(frames, 3));
 
 for k = 1:size(rotations, 2)
     degree = rotations(1, k);
     for frameNumber = 1:size(frames, 3)
         frame = frames(:, :, frameNumber);
         tempFrame = imrotate(frame, degree);
-        rotatedFrames(:, :, tempFrame) = tempFrame;
+        rotatedFrames(1:size(tempFrame, 1), 1:size(tempFrame, 2), ...
+            frameNumber) = tempFrame;
+    end
+    
+    % Crop out the leftover 0 padding from the original template. First check
+    % for 0 columns
+    for frameNumber = 1:size(frames, 3)
+        frame = rotatedFrames(:, :, frameNumber);
+        
+        indices = frame == 0;
+        sumColumns = sum(indices);
+        columnsToRemove = sumColumns == size(frame, 1);
+        frame(:, columnsToRemove) = [];
+        
+        % Then check for 0 rows
+        indices = frame == 0;
+        sumRows = sum(indices, 2);
+        rowsToRemove = sumRows == size(frame, 2);
+        frame(rowsToRemove, :) = [];
     end
     
     [~, usefulEyePositionTraces, ~, statisticsStructure] = ...
