@@ -45,11 +45,18 @@ for i = 1:length(filenames)
     coarseParameters.enableGaussianFiltering = 1;
     coarseParameters.gaussianStandardDeviation = 10;
     coarseParameters.maximumSD = 30;
+    coarseParameters.SDWindowSize = 25;
     
     fineParameters.enableGaussianFiltering = 1;
     fineParameters.gaussianStandardDeviation = 10;
     fineParameters.maximumSD = 30;
-        
+    fineParameters.SDWindowSize = 25;
+    
+    stripParameters.enableGaussianFiltering = 1;
+    stripParameters.gaussianStandardDeviation = 10;
+    stripParameters.maximumSD = 30;
+    stripParameters.SDWindowSize = 25;
+
     coarseParamsCells{i} = coarseParameters; 
     fineParamsCells{i} = fineParameters; 
     stripParamsCells{i} = stripParameters; 
