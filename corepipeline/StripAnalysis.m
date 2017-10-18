@@ -133,10 +133,10 @@ if parametersStructure.adaptiveSearch
             1:parametersStructure.adaptiveSearchScalingFactor:end, ...
             1:parametersStructure.adaptiveSearchScalingFactor:end);
 
-        correlation = normxcorr2(scaledDownFrame, scaledDownReferenceFrame);
+        correlationMap = normxcorr2(scaledDownFrame, scaledDownReferenceFrame);
 
         [~, yPeak, ~, ~] = ...
-            FindPeak(correlation, parametersStructure);
+            FindPeak(correlationMap, parametersStructure);
 
         % Account for padding introduced by normxcorr2
         yPeak = yPeak - (size(scaledDownFrame, 1) - 1);
@@ -228,7 +228,7 @@ for stripNumber = (1:numberOfStrips)
         columnEnd = columnStart + stripWidth - 1;
         strip = videoInput(rowStart:rowEnd, columnStart:columnEnd, frame);
 
-        correlation = normxcorr2(strip, referenceFrame);
+        correlationMap = normxcorr2(strip, referenceFrame);
         
         parametersStructure.stripNumber = stripNumber;  
         parametersStructure.stripsPerFrame = stripsPerFrame;
@@ -244,7 +244,7 @@ for stripNumber = (1:numberOfStrips)
                 estimatedStripYLocations(stripNumber) ...
                 + ((parametersStructure.searchWindowHeight - parametersStructure.stripHeight)/2) ...
                 + parametersStructure.stripHeight));
-            adaptedCorrelation = correlation(upperBound:lowerBound,1:end);
+            adaptedCorrelation = correlationMap(upperBound:lowerBound,1:end);
             
             try
                 % Try to use adapted version of correlation map.
@@ -259,26 +259,26 @@ for stripNumber = (1:numberOfStrips)
                     % Not acceptable, try again in the catch block with full correlation map.
                     error('Jumping to catch block immediately below.');
                 end
-                correlation = adoptedCorrelation;
+                correlationMap = adoptedCorrelation;
                 searchWindowsArray(stripNumber,:) = [upperBound lowerBound];
             catch
                 upperBound = 1;
                 % It failed or was unacceptable, so use full correlation map.
                 [xPeak, yPeak, peakValue, secondPeakValue] = ...
-                    FindPeak(correlation, parametersStructure);
+                    FindPeak(correlationMap, parametersStructure);
                 
                 searchWindowsArray(stripNumber,:) = [NaN NaN];
             end
         else
             upperBound = 1;
             [xPeak, yPeak, peakValue, secondPeakValue] = ...
-                FindPeak(correlation, parametersStructure);
+                FindPeak(correlationMap, parametersStructure);
         end
 
         % 2D Interpolation if enabled
         if localParametersStructure.enableSubpixelInterpolation
             [interpolatedPeakCoordinates, statisticsStructure.errorStructure] = ...
-                Interpolation2D(correlation, [yPeak, xPeak], ...
+                Interpolation2D(correlationMap, [yPeak, xPeak], ...
                 localParametersStructure.subpixelInterpolationParameters);
 
             xPeak = interpolatedPeakCoordinates(2);
@@ -303,9 +303,9 @@ for stripNumber = (1:numberOfStrips)
             % Middle row SDs in column 1, Middle column SDs in column 2.
             x = (-12:12)';
             middleRow = ...
-                correlation(yPeak-12:yPeak+12, xPeak);
+                correlationMap(max(floor(yPeak)-12,1):min(floor(yPeak)+12,size(correlationMap,1)), floor(xPeak));
             middleCol = ...
-                correlation(yPeak, xPeak-12:xPeak+12)';
+                correlationMap(floor(yPeak), max(floor(xPeak)-12,1):min(floor(xPeak)+12,size(correlationMap,2)))';
             fitOutput = fit(x, middleRow, 'gauss1');
             standardDeviationsArray(stripNumber, 1) = fitOutput.c1;
             fitOutput = fit(x, middleCol, 'gauss1');
@@ -316,7 +316,7 @@ for stripNumber = (1:numberOfStrips)
         % Show surface plot for this correlation if verbosity enabled
         if localParametersStructure.enableVerbosity
             if enableGPU
-                correlation = gather(correlation, gpuTask.ID);
+                correlationMap = gather(correlationMap, gpuTask.ID);
             end
             if isfield(parametersStructure, 'axesHandles')
                 axes(parametersStructure.axesHandles(1));
@@ -324,11 +324,11 @@ for stripNumber = (1:numberOfStrips)
             else
                 figure(1);
             end
-            [surfX,surfY] = meshgrid(1:size(correlation,2), 1:size(correlation,1));
-            surf(surfX, surfY, correlation, 'linestyle', 'none');
+            [surfX,surfY] = meshgrid(1:size(correlationMap,2), 1:size(correlationMap,1));
+            surf(surfX, surfY, correlationMap, 'linestyle', 'none');
             title([num2str(stripNumber) ' out of ' num2str(numberOfStrips)]);
-            xlim([1 size(correlation,2)]);
-            ylim([1 size(correlation,1)]);
+            xlim([1 size(correlationMap,2)]);
+            ylim([1 size(correlationMap,1)]);
             zlim([-1 1]);
 
             % Mark the identified peak on the plot with an arrow.
