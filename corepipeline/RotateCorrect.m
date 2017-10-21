@@ -1,5 +1,5 @@
-function [correlationValues] = RotateCorrect(shrunkFrames, bigFrames, ...
-    referenceFrame, params)
+function [coarseRefFrame, coordinatesAndDegrees] = RotateCorrect(shrunkFrames, bigFrames, ...
+    referenceFrame, outputFileName, params)
 %%ROTATE CORRECT      RotateCorrect takes in a frames and reference frame--
 % both represented as 2D matrices--and returns a 4-column matrix. It
 % rotates frames until they correlate with the reference frame with a 
@@ -121,6 +121,20 @@ for frameNumber = 1:size(shrunkFrames, 3)
         
         end
     end
+end
+
+coarseRefFrame = rotateCorrectedCoarse./counterArray;
+coarseRefFrame = Crop(coarseRefFrame);
+save(outputFileName, 'result');
+
+if parametersStructure.enableVerbosity >= 1
+    if isfield(parametersStructure, 'axesHandles')
+        axes(parametersStructure.axesHandles(3));
+        colormap(parametersStructure.axesHandles(3), 'gray');
+    else
+        figure('Name', 'Coarse Reference Frame');
+    end
+    imshow(coarseRefFrame);
 end
 
 end
