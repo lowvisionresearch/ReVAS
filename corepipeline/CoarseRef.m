@@ -85,18 +85,21 @@ if exist('badFrames', 'var')
 end
 
 temporaryRefFrame = shrunkFrames(:,:,refFrameNumber);
-
 params = parametersStructure;
 params.stripHeight = size(shrunkFrames, 1);
 params.stripWidth = size(shrunkFrames, 2);
 params.samplingRate = videoFrameRate;
 params.badFrames = badFrames;
 
-% Check if user has flag enabled. Flag will check for torsional movement.
-if isfield('params', 'flag') && params.flag == true
-    correlationValues = RotateCorrect(shrunkFrames, temporaryRefFrame, params);
-    degrees = correlationValues(:, 1);
-    usefulEyePositionTraces = correlationValues(:, 3:4);
+% Check if user has rotateCorrection enabled. Flag will check for torsional 
+% movement.
+if isfield(params, 'rotateCorrection') && params.rotateCorrection == true
+    % RotateCorrect used to be integrated with CoarseRef but is now its own
+    % independent function. Too tedious to go back and change the parts of
+    % CoarseRef that depended on RotateCorrect, so just stop CoarseRef here
+    % if RotateCorrect is enabled.
+    RotateCorrect(shrunkFrames, temporaryRefFrame, params);
+    return
 else
 [~, usefulEyePositionTraces, ~, ~] = StripAnalysis(shrunkFrames, ...
     temporaryRefFrame, params);
@@ -143,44 +146,7 @@ height = size(videoInputArray, 1);
 counterArray = zeros(height*3);
 coarseRefFrame = zeros(height*3);
 
-% Negate all frame positions
-framePositions = -framePositions;
-
-% Scale the strip coordinates so that all values are positive. Take the
-% negative value with the highest magnitude in each column of
-% framePositions and add that value to all the values in the column. This
-% will zero the most negative value (like taring a weight scale). Then add
-% a positive integer to make sure all values are > 0 (i.e., if we leave the
-% zero'd value in framePositions, there will be indexing problems later,
-% since MatLab indexing starts from 1 not 0).
-column1 = framePositions(:, 1);
-column2 = framePositions(:, 2); 
-
-if column1(column1<0)
-   mostNegative = max(-1*column1);
-   framePositions(:, 1) = framePositions(:, 1) + mostNegative + 2;
-end
-
-if column2(column2<0)
-    mostNegative = max(-1*column2);
-    framePositions(:, 2) = framePositions(:, 2) + mostNegative + 2;
-end
-
-if column1(column1<0.5)
-    framePositions(:, 1) = framePositions(:, 1) + 2;
-end
-
-if column2(column2<0.5)
-    framePositions(:, 2) = framePositions(:, 2) + 2;
-end
-
-if any(column1==0)
-    framePositions(:, 1) = framePositions(:, 1) + 2;
-end
-
-if any(column2==0)
-    framePositions(:, 2) = framePositions(:, 2) + 2;
-end
+framePositions = round(ScaleCoordinates(framePositions));
 
 if enableGPU
     totalFrames = gpuArray(totalFrames);
@@ -191,42 +157,41 @@ end
 
 for frameNumber = 1+beginningNaNs:totalFrames-endNaNs-beginningNaNs
     if any(badFrames==frameNumber)
-        continue;
+        continue
+    else
+        % Use double function because readFrame gives unsigned integers,
+        % whereas we need to use signed integers
+        frame = double(videoInputArray(:, :, frameNumber))/255;
+        
+        if isfield(params, 'rotateCorrection') && params.rotateCorrection == true
+            frame = imrotate(frame, degrees(frameNumber));
+        end
+        
+        if enableGPU
+            frame = gpuArray(frame);
+        end
+        % framePositions has the top left coordinate of the frames, so those
+        % coordinates will represent the minRow and minColumn to be added to
+        % the template frame. maxRow and maxColumn will be the size of the
+        % frame added to the minRow/minColumn - 1. (i.e., if size of the frame
+        % is 256x256 and the minRow is 1, then the maxRow will be 1 + 256 - 1.
+        % If minRow is 2 (moved down by one pixel) then maxRow will be 
+        % 2 + 256 - 1 = 257)
+        minRow = round(framePositions(frameNumber, 2));
+        minColumn = round(framePositions(frameNumber, 1));
+        maxRow = size(frame, 1) + minRow - 1;
+        maxColumn = size(frame, 2) + minColumn - 1;
+
+        % Now add the frame values to the template frame and increment the
+        % counterArray, which is keeping track of how many frames are added 
+        % to each pixel. 
+        selectRow = round(minRow):round(maxRow);
+        selectColumn = round(minColumn):round(maxColumn);
+
+        coarseRefFrame(selectRow, selectColumn) = coarseRefFrame(selectRow, ...
+            selectColumn) + frame;
+        counterArray(selectRow, selectColumn) = counterArray(selectRow, selectColumn) + 1;
     end
-
-    % Use double function because readFrame gives unsigned integers,
-    % whereas we need to use signed integers
-    frame = double(videoInputArray(:, :, frameNumber))/255;
- 
-    if isfield('params', 'flag') && params.flag == true
-        frame = imrotate(frame, degrees(frameNumber));
-    end
-    
-    if enableGPU
-        frame = gpuArray(frame);
-    end
-
-    % framePositions has the top left coordinate of the frames, so those
-    % coordinates will represent the minRow and minColumn to be added to
-    % the template frame. maxRow and maxColumn will be the size of the
-    % frame added to the minRow/minColumn - 1. (i.e., if size of the frame
-    % is 256x256 and the minRow is 1, then the maxRow will be 1 + 256 - 1.
-    % If minRow is 2 (moved down by one pixel) then maxRow will be 
-    % 2 + 256 - 1 = 257)
-    minRow = round(framePositions(frameNumber, 2));
-    minColumn = round(framePositions(frameNumber, 1));
-    maxRow = size(frame, 1) + minRow - 1;
-    maxColumn = size(frame, 2) + minColumn - 1;
-
-    % Now add the frame values to the template frame and increment the
-    % counterArray, which is keeping track of how many frames are added 
-    % to each pixel. 
-    selectRow = round(minRow):round(maxRow);
-    selectColumn = round(minColumn):round(maxColumn);
-
-    coarseRefFrame(selectRow, selectColumn) = coarseRefFrame(selectRow, ...
-        selectColumn) + frame;
-    counterArray(selectRow, selectColumn) = counterArray(selectRow, selectColumn) + 1;
 end
 
 % Divide the template frame by the counterArray to obtain the average value
@@ -238,26 +203,7 @@ if enableGPU
 end
 
 %% Remove extra padding from the coarse reference frame
-% Convert any NaN values in the reference frame to a 0. Otherwise, running
-% strip analysis on this new frame will not work
-NaNindices = find(isnan(coarseRefFrame));
-for k = 1:size(NaNindices)
-    NaNindex = NaNindices(k);
-    coarseRefFrame(NaNindex) = 0;
-end
-
-% Crop out the leftover 0 padding from the original template. First check
-% for 0 columns
-indices = coarseRefFrame == 0;
-sumColumns = sum(indices);
-columnsToRemove = sumColumns == size(coarseRefFrame, 1);
-coarseRefFrame(:, columnsToRemove) = [];
-
-% Then check for 0 rows
-indices = coarseRefFrame == 0;
-sumRows = sum(indices, 2);
-rowsToRemove = sumRows == size(coarseRefFrame, 2);
-coarseRefFrame(rowsToRemove, :) = [];
+coarseRefFrame = Crop(coarseRefFrame);
 
 save(outputFileName, 'coarseRefFrame');
 
