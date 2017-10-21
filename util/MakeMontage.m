@@ -141,32 +141,8 @@ while k<=size(interpolatedPositions, 1)
     k = k + 1;
 end
 
-% Scale the strip coordinates so that all values are positive. Take the
-% negative value with the highest magnitude in each column of
-% framePositions and add that value to all the values in the column. This
-% will zero the most negative value (like taring a weight scale). Then add
-% a positive integer to make sure all values are > 0 (i.e., if we leave the
-% zero'd value in framePositions, there will be indexing problems later,
-% since MatLab indexing starts from 1 not 0).
-column1 = interpolatedPositions(:, 1);
-column2 = interpolatedPositions(:, 2); 
-if column1(column1<0)
-   mostNegative = max(-1*column1);
-   interpolatedPositions(:, 1) = interpolatedPositions(:, 1) + mostNegative + 2;
-end
-
-if column2(column2<0)
-    mostNegative = max(-1*column2);
-    interpolatedPositions(:, 2) = interpolatedPositions(:, 2) + mostNegative + 2;
-end
-
-if column1(column1<0.5)
-    interpolatedPositions(:, 1) = interpolatedPositions(:, 1) + 2;
-end
-
-if column2(column2<0.5)
-    interpolatedPositions(:, 2) = interpolatedPositions(:, 2) + 2;
-end
+% Scale the strip coordinates so that all values are positive. 
+interpolatedPositions = ScaleCoordinates(interpolatedPositions);
 
 % Round the final scaled positions to get valid matrix indices
 interpolatedPositions = round(interpolatedPositions);
@@ -341,32 +317,7 @@ refFrame = refFrame./counterArray;
 
 %% Take care of miscellaneous issues from preallocation and division by 0.
 
-% Convert any NaN values in the reference frame to a 0. Otherwise, running
-% strip analysis on this new frame will not work
-NaNindices = find(isnan(refFrame));
-for k = 1:size(NaNindices)
-    NaNindex = NaNindices(k);
-    refFrame(NaNindex) = 0;
-end
-
-% Crop out the leftover 0 padding from the original template. First check
-% for 0 columns
-indices = refFrame == 0;
-sumColumns = sum(indices);
-columnsToRemove = sumColumns == size(refFrame, 1);
-refFrame(:, columnsToRemove) = [];
-
-% Then check for 0 rows
-indices = refFrame == 0;
-sumRows = sum(indices, 2);
-rowsToRemove = sumRows == size(refFrame, 2);
-refFrame(rowsToRemove, :) = [];
-
-% Replace remaining black regions with random noise
-indices = refFrame == 0;
-refFrame(indices) = mean(refFrame(~indices)) + (std(refFrame(~indices)) ...
-    * randn(sum(sum(indices)), 1));
-
+refFrame = Crop(refFrame);
 
 % k = 1;
 % while k<=size(refFrame, 1)
