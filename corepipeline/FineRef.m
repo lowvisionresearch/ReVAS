@@ -66,6 +66,11 @@ while k < params.numberOfIterations
     k = k + 1;
 end
 
+% Replace remaining black regions with random noise
+indices = newRefFrame == 0;
+newRefFrame(indices) = mean(newRefFrame(~indices)) + (std(newRefFrame(~indices)) ...
+    * randn(sum(sum(indices)), 1));
+
 refinedFrame = newRefFrame;
 
 end
