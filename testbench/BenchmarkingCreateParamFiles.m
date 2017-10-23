@@ -49,18 +49,31 @@ for i = 1:length(filenames)
     stripsPerFrame = floor(frameHeight/stripParameters.stripHeight);
     stripParameters.samplingRate = stripsPerFrame * framesPerSecond;
     
-    % Blink Params
+    % Blink Params (Can be customized)
     coarseParameters.thresholdValue = inf;
-    coarseParameters.singleTail = false;
     coarseParameters.upperTail = true;
-    coarseParameters.removalAreaSize = [60, 100];
-    %coarseParameters.stitchCriteria = 10;
+    %coarseParameters.removalAreaSize = [60, 100];
     
-    coarseParameters.minimumPeakThreshold = 0;
-    fineParameters.numberOfIterations = 1;
-    fineParameters.enableSubpixelInterpolation = 1;
-    stripParameters.enableSubpixelInterpolation = 1;
-    stripParameters.minimumPeakThreshold = 0;
+    % Other customized params (for TSLO)
+    coarseParameters.searchWindowPercentage = 0.04;
+    fineParameters.searchWindowPercentage = 0.75;
+    stripParameters.searchWindowPercentage = 0.75;
+    
+    coarseParameters.enableGaussianFiltering = 1;
+    coarseParameters.gaussianStandardDeviation = 10;
+    coarseParameters.maximumSD = 30;
+    coarseParameters.SDWindowSize = 25;
+    
+    fineParameters.enableGaussianFiltering = 1;
+    fineParameters.gaussianStandardDeviation = 10;
+    fineParameters.maximumSD = 30;
+    fineParameters.SDWindowSize = 25;
+    
+    stripParameters.enableGaussianFiltering = 1;
+    stripParameters.gaussianStandardDeviation = 10;
+    stripParameters.maximumSD = 30;
+    stripParameters.SDWindowSize = 25;
+    % End of custom params (for TSLO)
     
     save(paramsPath, 'coarseParameters', 'fineParameters', 'stripParameters');
     fprintf('%d of %d completed.\n', i, length(filenames));

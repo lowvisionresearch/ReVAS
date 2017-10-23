@@ -98,8 +98,8 @@ if isfield(params, 'rotateCorrection') && params.rotateCorrection == true
     % independent function. Too tedious to go back and change the parts of
     % CoarseRef that depended on RotateCorrect, so just stop CoarseRef here
     % if RotateCorrect is enabled.
-    RotateCorrect(shrunkFrames, videoInputArray, temporaryRefFrame, ...
-        outputFileName, params);
+    [coarseRefFrame, x] = RotateCorrect(shrunkFrames, videoInputArray, ...
+        temporaryRefFrame, outputFileName, params);
     return
 else
 [~, usefulEyePositionTraces, ~, ~] = StripAnalysis(shrunkFrames, ...

@@ -142,7 +142,8 @@ while k<=size(interpolatedPositions, 1)
 end
 
 % Scale the strip coordinates so that all values are positive. 
-interpolatedPositions = ScaleCoordinates(interpolatedPositions);
+interpolatedPositions(:, 1:2) = ScaleCoordinates(interpolatedPositions(:,...
+    1:2));
 
 % Round the final scaled positions to get valid matrix indices
 interpolatedPositions = round(interpolatedPositions);
@@ -166,7 +167,7 @@ for frameNumber = 1:totalFrames
     startFrameStrips = round(1 + ((frameNumber-1)*(stripsPerFrame))) + skips;
     endFrameStrips = round(frameNumber * stripsPerFrame) + skips;
     frameStripsWithoutNaN = zeros(size(startFrameStrips:endFrameStrips, 2), 3);
-    
+
     % However, keep in mind that there will be errors that accumulate
     % through rounding the start/end frame strip indices. For example, if
     % there are 4 frames of height 10 and a strip height of 3, then there
@@ -193,7 +194,7 @@ for frameNumber = 1:totalFrames
             frameStripsWithoutNaN(k, :) = interpolatedPositions(k, :);
         end
     end
-    
+
     % Remove extra 0's from frameStripsWithoutNaN, leftover from the
     % preallocation.
     k = 1;
@@ -261,7 +262,7 @@ for frameNumber = 1:totalFrames
                 frameStripsWithoutNaN(:, 4) = frameStripsWithoutNaN(:, 4) + 1;
             end
         end
-
+        
         for strip = 1 : size(frameStripsWithoutNaN, 1)
 
             % Keep track of the stripNumber so we can shift it accordingly
@@ -316,27 +317,8 @@ end
 refFrame = refFrame./counterArray;
 
 %% Take care of miscellaneous issues from preallocation and division by 0.
-
 refFrame = Crop(refFrame);
 
-% k = 1;
-% while k<=size(refFrame, 1)
-%     if refFrame(k, :) == 0
-%         refFrame(k, :) = [];
-%         continue
-%     end
-%     k = k + 1;
-% end
-% 
-% % Then sweep for 0 columns
-% k = 1;
-% while k<=size(refFrame, 2)
-%     if refFrame(:, k) == 0
-%         refFrame(:, k) = [];
-%         continue
-%     end
-%     k = k + 1;
-% end
 %% Save and display the reference frame.
 fileName(end-3:end) = [];
 fileName(end+1:end+9) = '_refframe';

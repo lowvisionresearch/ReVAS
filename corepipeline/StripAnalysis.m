@@ -229,7 +229,6 @@ for stripNumber = (1:numberOfStrips)
         strip = videoInput(rowStart:rowEnd, columnStart:columnEnd, frame);
 
         correlationMap = normxcorr2(strip, referenceFrame);
-        
         parametersStructure.stripNumber = stripNumber;  
         parametersStructure.stripsPerFrame = stripsPerFrame;
 
@@ -250,7 +249,7 @@ for stripNumber = (1:numberOfStrips)
                 % Try to use adapted version of correlation map.
                 [xPeak, yPeak, peakValue, secondPeakValue] = ...
                     FindPeak(adaptedCorrelation, parametersStructure);
-                
+  
                 % See if adapted result is acceptable or not.
                 if ~parametersStructure.enableGaussianFiltering && ...
                         (peakValue <= 0 || secondPeakValue <= 0 ...
@@ -266,13 +265,13 @@ for stripNumber = (1:numberOfStrips)
                 % It failed or was unacceptable, so use full correlation map.
                 [xPeak, yPeak, peakValue, secondPeakValue] = ...
                     FindPeak(correlationMap, parametersStructure);
-                
+    
                 searchWindowsArray(stripNumber,:) = [NaN NaN];
             end
         else
             upperBound = 1;
             [xPeak, yPeak, peakValue, secondPeakValue] = ...
-                FindPeak(correlationMap, parametersStructure);
+                FindPeak(correlationMap, parametersStructure);        
         end
 
         % 2D Interpolation if enabled
@@ -292,7 +291,7 @@ for stripNumber = (1:numberOfStrips)
             peakValue = gather(peakValue, gpuTask.ID);
             secondPeakValue = gather(secondPeakValue, gpuTask.ID);
         end
-        
+
         if parametersStructure.enableGaussianFiltering
             % Fit a gaussian in a pixel window around the identified peak.
             % The pixel window is of size
@@ -345,12 +344,12 @@ for stripNumber = (1:numberOfStrips)
 
             drawnow;  
         end
-        
+ 
         % If these peaks are in terms of an adapted correlation map, restore it
         % back to in terms of the full map.
         yPeak = yPeak + upperBound - 1;
-
         rawEyePositionTraces(stripNumber,:) = [xPeak yPeak];
+        
         peakValueArray(stripNumber) = peakValue;
         secondPeakValueArray(stripNumber) = secondPeakValue;
 

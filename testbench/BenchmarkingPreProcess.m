@@ -11,7 +11,7 @@ close all;
 addpath(genpath('..'));
 
 CONTAINS_STIM = true;
-IS_RODENSTOCK = false;
+IS_RODENSTOCK = true;
 ONLY_REGENERATE_BLINKS = false;
 
 filenames = uipickfiles;
@@ -22,7 +22,7 @@ if ~iscell(filenames)
     end
 end
 
-for i = 1:length(filenames)
+parfor i = 1:length(filenames)
     % Grab path out of cell.
     videoPath = filenames{i};
     parametersStructure = struct;
@@ -54,11 +54,13 @@ for i = 1:length(filenames)
             stimulus.size = 11;
             % For TSLO Normal to remove entire stimulus and black shadow.
             removalAreaSize = [60, 100];
+            FindStimulusLocations(videoPath, stimulus, parametersStructure, removalAreaSize);
+
         else
             stimulus.thickness = 3;
             stimulus.size = 23;
+            FindStimulusLocations(videoPath, stimulus, parametersStructure);
         end
-        FindStimulusLocations(videoPath, stimulus, parametersStructure, removalAreaSize);
         fprintf('Process Completed for FindStimulusLocations()\n');
     end
     
@@ -90,8 +92,9 @@ for i = 1:length(filenames)
         
     % Step 6: Detect blinks and bad frames
     % Default:
-    parametersStructure.thresholdValue = Inf;
+    parametersStructure.thresholdValue = inf;
     parametersStructure.upperTail = true;
+    parametersStructure.removalAreaSize = [60, 100];
     %parametersStructure.stitchCriteria = 10;
     % Use the final bandpass filtered video
     videoPath = [videoPath(1:end-4) '_bandfilt' videoPath(end-3:end)];
