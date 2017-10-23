@@ -58,7 +58,6 @@ end
 [videoInputArray, videoFrameRate] = VideoPathToArray(inputVideoPath);
 
 frameHeight = size(videoInputArray, 1);
-frameWidth = size(videoInputArray, 2);
 numberOfFrames = size(videoInputArray, 3);
 samplingRate = videoFrameRate;
 
@@ -78,18 +77,18 @@ stimulusLocationInEachFrame = NaN(numberOfFrames, 2);
 
 % Threshold value for detecting stimulus. Any peak value below this
 % threshold will not be marked as a stimulus.
-stimulusThresholdValue = 0.8;
+stimulusThresholdValue = 0.8; % TODO hard-coded threshold.
 
 for frameNumber = (1:numberOfFrames)
     
     frame = videoInputArray(:,:, frameNumber);
         
-    correlation = normxcorr2(stimulus, frame);
+    correlationMap = normxcorr2(stimulus, frame);
         
     findPeakParametersStructure.enableGaussianFiltering = false;
-    findPeakParametersStructure.stripHeight = frameHeight;
     [xPeak, yPeak, peakValue, ~] = ...
-        FindPeak(correlation, findPeakParametersStructure);
+        FindPeak(correlationMap, findPeakParametersStructure);
+    clear findPeakParametersStructure;
         
     % Show surface plot for this correlation if verbosity enabled
     if parametersStructure.enableVerbosity
@@ -99,11 +98,11 @@ for frameNumber = (1:numberOfFrames)
         else
             figure(1);
         end
-        [surfX,surfY] = meshgrid(1:size(correlation,2), 1:size(correlation,1));
-        surf(surfX, surfY, correlation,'linestyle','none');
+        [surfX,surfY] = meshgrid(1:size(correlationMap,2), 1:size(correlationMap,1));
+        surf(surfX, surfY, correlationMap,'linestyle','none');
         title([num2str(frameNumber) ' out of ' num2str(numberOfFrames)]);
-        xlim([1 size(correlation,2)]);
-        ylim([1 size(correlation,1)]);
+        xlim([1 size(correlationMap,2)]);
+        ylim([1 size(correlationMap,1)]);
         zlim([-1 1]);
         
         % Mark the identified peak on the plot with an arrow.
