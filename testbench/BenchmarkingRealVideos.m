@@ -32,55 +32,52 @@ for i = 1:length(filenames)
     load(paramsPath, 'coarseParameters', 'fineParameters', 'stripParameters');
     
     % Verbosity flags
-    enableVerbosity = true;
+    enableVerbosity = false;
     coarseParameters.enableVerbosity = enableVerbosity;
     fineParameters.enableVerbosity = enableVerbosity;
     stripParameters.enableVerbosity = enableVerbosity;
 
     % Temporary testing
-    coarseParameters.searchWindowPercentage = 0.04;
-    fineParameters.searchWindowPercentage = 0.75;
-    stripParameters.searchWindowPercentage = 0.75;
-    
-    coarseParameters.enableGaussianFiltering = 1;
-    coarseParameters.gaussianStandardDeviation = 10;
-    coarseParameters.maximumSD = 30;
-    coarseParameters.SDWindowSize = 25;
-    
-    fineParameters.enableGaussianFiltering = 1;
-    fineParameters.gaussianStandardDeviation = 10;
-    fineParameters.maximumSD = 30;
-    fineParameters.SDWindowSize = 25;
-    
-    stripParameters.enableGaussianFiltering = 1;
-    stripParameters.gaussianStandardDeviation = 10;
-    stripParameters.maximumSD = 30;
-    stripParameters.SDWindowSize = 25;
+      % FOR TSLO AMD:
+%     coarseParameters.searchWindowPercentage = 0.04;
+%     fineParameters.searchWindowPercentage = 0.75;
+%     stripParameters.searchWindowPercentage = 0.75;
+%     
+%     coarseParameters.enableGaussianFiltering = 1;
+%     coarseParameters.gaussianStandardDeviation = 10;
+%     coarseParameters.maximumSD = 30;
+%     coarseParameters.SDWindowSize = 25;
+%     
+%     fineParameters.enableGaussianFiltering = 1;
+%     fineParameters.gaussianStandardDeviation = 10;
+%     fineParameters.maximumSD = 30;
+%     fineParameters.SDWindowSize = 25;
+%     
+%     stripParameters.enableGaussianFiltering = 1;
+%     stripParameters.gaussianStandardDeviation = 10;
+%     stripParameters.maximumSD = 30;
+%     stripParameters.SDWindowSize = 25;
 
     coarseParamsCells{i} = coarseParameters; 
     fineParamsCells{i} = fineParameters; 
     stripParamsCells{i} = stripParameters; 
 end
 
-for i = 1:length(filenames)
-    try
-        % Grab path out of cell.
-        originalVideoPath = filenames{i};
+parfor i = 1:length(filenames)
+    % Grab path out of cell.
+    originalVideoPath = filenames{i};
 
-        % MAKE COARSE REFERENCE FRAME
-        coarseResult = CoarseRef(originalVideoPath, coarseParamsCells{i});
-        fprintf('Process Completed for CoarseRef()\n');
+    % MAKE COARSE REFERENCE FRAME
+    coarseResult = CoarseRef(originalVideoPath, coarseParamsCells{i});
+    fprintf('Process Completed for CoarseRef()\n');
 
-        % MAKE FINE REFERENCE FRAME
-        fineResult = FineRef(coarseResult, originalVideoPath, fineParamsCells{i});
-        fprintf('Process Completed for FineRef()\n');
+    % MAKE FINE REFERENCE FRAME
+    fineResult = FineRef(coarseResult, originalVideoPath, fineParamsCells{i});
+    fprintf('Process Completed for FineRef()\n');
 
-        % STRIP ANALYSIS
-        StripAnalysis(originalVideoPath, fineResult, fineParamsCells{i});
-        fprintf('Process Completed for StripAnalysis()\n');
-    catch e
-        fprintf([e.message '\n']);
-    end
+    % STRIP ANALYSIS
+    StripAnalysis(originalVideoPath, fineResult, fineParamsCells{i});
+    fprintf('Process Completed for StripAnalysis()\n');
 end
 fprintf('Process Completed.\n');
 

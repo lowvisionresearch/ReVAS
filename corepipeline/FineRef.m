@@ -26,7 +26,7 @@ end
 if params.numberOfIterations > 0
     [~, usefulEyePositionTraces, timeArray, ~] = ...
         StripAnalysis(filename, coarseRefFrame, params);
-    
+
     if logical(abortTriggered)
         refinedFrame = [];
         return;
