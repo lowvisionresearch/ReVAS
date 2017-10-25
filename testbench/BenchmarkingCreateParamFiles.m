@@ -50,14 +50,14 @@ for i = 1:length(filenames)
     stripParameters.samplingRate = stripsPerFrame * framesPerSecond;
     
     % Blink Params (Can be customized)
-    coarseParameters.thresholdValue = inf;
+    coarseParameters.thresholdValue = 1.4;
     coarseParameters.upperTail = true;
     %coarseParameters.removalAreaSize = [60, 100];
     
     % Other customized params (for TSLO)
-    coarseParameters.searchWindowPercentage = 0.04;
-    fineParameters.searchWindowPercentage = 0.75;
-    stripParameters.searchWindowPercentage = 0.75;
+    coarseParameters.searchWindowPercentage = 0.4;
+    fineParameters.searchWindowPercentage = 0.33;
+    stripParameters.searchWindowPercentage = 0.33;
     
     coarseParameters.enableGaussianFiltering = 1;
     coarseParameters.gaussianStandardDeviation = 10;

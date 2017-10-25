@@ -63,7 +63,7 @@ for i = 1:length(filenames)
     stripParamsCells{i} = stripParameters; 
 end
 
-parfor i = 1:length(filenames)
+for i = 1:length(filenames)
     % Grab path out of cell.
     originalVideoPath = filenames{i};
 

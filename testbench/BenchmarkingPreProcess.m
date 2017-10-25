@@ -12,7 +12,7 @@ addpath(genpath('..'));
 
 CONTAINS_STIM = true;
 IS_RODENSTOCK = true;
-ONLY_REGENERATE_BLINKS = false;
+ONLY_REGENERATE_BLINKS = true;
 
 filenames = uipickfiles;
 if ~iscell(filenames)
@@ -92,9 +92,9 @@ parfor i = 1:length(filenames)
         
     % Step 6: Detect blinks and bad frames
     % Default:
-    parametersStructure.thresholdValue = inf;
+    parametersStructure.thresholdValue = 1.4;
     parametersStructure.upperTail = true;
-    parametersStructure.removalAreaSize = [60, 100];
+    %parametersStructure.removalAreaSize = [60, 100];
     %parametersStructure.stitchCriteria = 10;
     % Use the final bandpass filtered video
     videoPath = [videoPath(1:end-4) '_bandfilt' videoPath(end-3:end)];
