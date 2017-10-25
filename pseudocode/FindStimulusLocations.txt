@@ -1,0 +1,10 @@
+for each frame in numberOfFrames:
+    correlationMap = normxcorr2(stimulus, frame);
+    xPeak, yPeak, peakValue, _ = FindPeak(correlationMap, enableGaussianFiltering = false);
+
+    if peakValue < stimulusThresholdValue:
+        continue;
+
+    stimulusLocationInEachFrame[frame] = [xPeak, yPeak];
+    meanOfEachFrame[frame] = mean2(frame);
+    standardDeviationOfEachFrame[frame] = std2(frame);

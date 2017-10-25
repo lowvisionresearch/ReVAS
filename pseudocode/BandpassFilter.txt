@@ -1,0 +1,12 @@
+xVector = (-width/2):(width/2);
+yVector = transpose((-height/2):(height/2));
+radiusMatrix = sqrt(repmat(xVector,height,1)**2 + repmat(yVector,1,width)**2)
+
+highPassFilter = radiusMatrix > lowSpatialFrequencyCutoff;
+
+for each frame in numberOfFrames:
+    smoothedFrame = imgaussfilt(inputVideo[,,frame], smoothing);
+    lowSpatialFreqRemovedFrame = abs(ifft2(fft2(smoothedFrame) .* ifftshift(highPassFilter)));
+    normalizedFrame = normalize(lowSpatialFreqRemovedFrame);
+
+    inputVideo[,,frame] = normalizedFrame;

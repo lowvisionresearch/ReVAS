@@ -1,0 +1,27 @@
+for each frame in numberOfFrames:
+    meanOfEachFrame[frame] = mean2(frame);
+
+standardDeviation = std2(meanOfEachFrame);
+threshold = thresholdValue * standardDeviation;
+lowerBound = mean2(means) - threshold;
+upperBound = mean2(means) + threshold;
+
+# Identify frames outside the threshold.
+for each frame in numberOfFrames:
+    if upperTail:
+        if meanOfEachFrame[frame] > upperBound:
+            badFrames[frame] = true;
+    else:
+        if meanOfEachFrame[frame] < lowerBound:
+            badFrames[frame] = true;
+
+# Lump together blinks that are less than stitchCriteria apart.
+badFramesIndices = find(badFrames);
+badFramesDiffs = diff(badFramesIndices);
+for each difference in badFramesDiffs:
+    if difference < stitchCriteria:
+        for each frame in inside this distance:
+            badFrames[frame] = true;
+
+# Convert boolean array to list of bad frames indices.
+badFrames = find(badFrames);
