@@ -49,31 +49,28 @@ while hasFrame(v)
 end
 
 % Then find the standard deviation of the average pixel values
-meanOfMeans = sum(means)/size(means, 2);
-meansCopy = means - meanOfMeans;
-meansCopy = meansCopy.^2;
-standardDeviation = (sum(meansCopy)/size(meansCopy, 2)-1)^0.5;
+standardDeviation = std2(means);
 
 % Mark frames that are beyond our threshold as bad frames
 threshold = thresholdValue * standardDeviation;
 badFrames = zeros(1, size(means, 2));
-lowerBound = meanOfMeans - threshold;
-upperBound = meanOfMeans + threshold;
+lowerBound = mean2(means) - threshold;
+upperBound = mean2(means) + threshold;
 
-for k = 1:size(means, 2)
-    sample = means(1, k);
+for frameNumber = 1:size(means, 2)
+    kthMean = means(1, frameNumber);
     if parametersStructure.upperTail == true
-        if sample > upperBound
-            badFrames(k) = 1;
+        if kthMean > upperBound
+            badFrames(frameNumber) = 1;
         end
     else
-        if sample < lowerBound
-            badFrames(k) = 1;
+        if kthMean < lowerBound
+            badFrames(frameNumber) = 1;
         end
     end
 end
 
-%% Lump together blinks that are < |stitchCriteria| ms apart
+%% Lump together blinks that are < |stitchCriteria| frames apart
 
 % If the difference between any two marked saccades is less than
 % |stitchCriteria|, then lump them together as one.
