@@ -14,6 +14,7 @@ function [xPeak, yPeak, peakValue, secondPeakValue] = ...
 % will essentially restrict searching to the center area and any false
 % peaks near the edges will be ignored.
 offset = 0;
+originalCorrelationMap = correlationMap;
 if isfield(parametersStructure, 'searchWindowPercentage')
     offset = floor(size(correlationMap, 2) * (1 - parametersStructure.searchWindowPercentage)/2);
     correlationMap = ...
@@ -93,11 +94,61 @@ end
         secondPeakValue = max(correlationMap(:));
     end
     
-    % Add back in the offset removed in the beginning if applicable.
     if isfield(parametersStructure, 'searchWindowPercentage')
+       % Add back in the offset removed in the beginning if applicable.
        xPeak = xPeak + offset;
+       
+       % If results using this searchWindowPercentage are not acceptable,
+       % try again with a larger searchWindow.
+       isAcceptable = true;
+       if peakValue < parametersStructure.minimumPeakThreshold
+           isAcceptable = false;
+       end
+       if parametersStructure.enableGaussianFiltering
+            % Fit a gaussian in a pixel window around the identified peak.
+            % The pixel window is of size
+            % |parametersStructure.SDWindowSize| x
+            % |parametersStructure.SDWindowSize/2|
+            %
+            % Take the middle row and the middle column, and fit a one-dimensional
+            % gaussian to both in order to get the standard deviations.
+            % Store results in statisticsStructure for choosing bad frames
+            % later.
+
+            % Middle row SDs in column 1, Middle column SDs in column 2.
+            middleRow = ...
+                correlationMap(max(ceil(yPeak-parametersStructure.SDWindowSize/2), 1): ...
+                min(floor(yPeak+parametersStructure.SDWindowSize/2), size(correlationMap,1)), ...
+                floor(xPeak));
+            middleCol = ...
+                correlationMap(floor(yPeak), ...
+                max(ceil(xPeak-parametersStructure.SDWindowSize/2), 1): ...
+                min(floor(xPeak+parametersStructure.SDWindowSize/2), size(correlationMap,2)))';
+            fitOutput = fit(((1:size(middleRow,1))-ceil(size(middleRow,1)/2))', middleRow, 'gauss1');
+            if fitOutput.c1 > parametersStructure.maximumSD
+                isAcceptable = false;
+            end
+            fitOutput = fit(((1:size(middleCol,1))-ceil(size(middleCol,1)/2))', middleCol, 'gauss1');
+            if fitOutput.c1 > parametersStructure.maximumSD
+                isAcceptable = false;
+            end
+       else
+           % Check peak ratio if not using gaussian filtering.
+           if secondPeakValue/peakValue > parametersStructure.maximumPeakRatio
+               isAcceptable = false;
+           end
+       end
+       
+       % If the above checks found that this result was not acceptable and
+       % we can expand the searchWindowPercentage, run FindPeak again with
+       % a larger searchWindowPercentage via recursion.
+       if parametersStructure.searchWindowPercentage < 1 && ~isAcceptable
+           largerSearchWindowParams = parametersStructure;
+           largerSearchWindowParams.searchWindowPercentage = ...
+               min(parametersStructure.searchWindowPercentage + 0.1, 1);
+           [xPeak, yPeak, peakValue, secondPeakValue] = ...
+               FindPeak(originalCorrelationMap, largerSearchWindowParams);
+       end
     end
-
-
 end
 
