@@ -53,13 +53,6 @@ stripsPerFrame = floor(frameHeight/params.newStripHeight);
 % setting up templates for reference frame and counter array
 counterArray = zeros(frameHeight*3);
 refFrame = zeros(frameHeight*3);
-
-% Negate all positions. stripIndices tells how far a strip has moved from
-% the reference--therefore, to compensate for that movement, the
-% stripIndices have to be negated when placing the strip on the template
-% frame.
-stripIndices = -stripIndices;
-
 %% Set up the interpolation
 % scaling the time array to accomodate new strip height
 scalingFactor = ((params.stripHeight)/2)/(frameRate*frameHeight);

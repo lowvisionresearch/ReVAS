@@ -92,7 +92,7 @@ parfor i = 1:length(filenames)
         
     % Step 6: Detect blinks and bad frames
     % Default:
-    parametersStructure.thresholdValue = 1.4;
+    parametersStructure.thresholdValue = 0.25;
     parametersStructure.upperTail = true;
     %parametersStructure.removalAreaSize = [60, 100];
     %parametersStructure.stitchCriteria = 10;
