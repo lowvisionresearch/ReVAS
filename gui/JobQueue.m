@@ -22,7 +22,7 @@ function varargout = JobQueue(varargin)
 
 % Edit the above text to modify the response to help JobQueue
 
-% Last Modified by GUIDE v2.5 11-Jul-2017 13:53:04
+% Last Modified by GUIDE v2.5 28-Oct-2017 14:27:11
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -481,6 +481,8 @@ if logical(abortTriggered)
     handles.commandWindow.String = ['(' time ') Process aborted by user.'; ...
         handles.commandWindow.String];
     warndlg('Process aborted by user.', 'Process Aborted');
+    handles.saveLog.Enable = 'on';
+    handles.reconfig.Enable = 'on';
 else   
     handles.commandWindow.String = ['(' time ') Process completed.'; ...
         handles.commandWindow.String];
@@ -1064,8 +1066,6 @@ function abort_Callback(hObject, eventdata, handles)
 global abortTriggered;
 abortTriggered = true;
 
-handles.saveLog.Enable = 'on';
-handles.reconfig.Enable = 'on';
 hObject.Enable = 'off';
 
 
@@ -1311,3 +1311,30 @@ end
 fclose(fileID);
 
 msgbox('Log saved.', 'Log Saved');
+
+% --- Executes on mouse press over axes background.
+function axes1_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if isValid(hObject)
+    figure(hObject);
+end
+
+% --- Executes on mouse press over axes background.
+function axes2_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if isValid(hObject)
+    figure(hObject);
+end
+
+% --- Executes on mouse press over axes background.
+function axes3_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axes3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if isValid(hObject)
+    figure(hObject);
+end
