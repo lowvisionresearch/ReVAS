@@ -370,9 +370,9 @@ for stripNumber = (1:numberOfStrips)
             rawEyePositionTraces(stripNumber,1) = ...
                 rawEyePositionTraces(stripNumber,1) - (stripWidth - 1);
 
-            % Adjust in vertical direction.
-            % We must subtract back out the starting strip vertical coordinate in order
-            % to obtain the net vertical movement.
+            % We must subtract back out the expected strip coordinates in order
+            % to obtain the net movement (the net difference between no
+            % movement and the movement that was observed).
             rawEyePositionTraces(stripNumber,1) = ...
                 rawEyePositionTraces(stripNumber,1) - stripIndices(stripNumber,2);
             rawEyePositionTraces(stripNumber,2) = ...
