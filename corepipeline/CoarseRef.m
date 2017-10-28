@@ -103,10 +103,13 @@ if isfield(params, 'rotateCorrection') && params.rotateCorrection == true
         temporaryRefFrame, outputFileName, params);
     return
 else
-[~, usefulEyePositionTraces, ~, ~] = StripAnalysis(shrunkFrames, ...
+[~, usefulEyePositionTraces, ~, statisticsStructure] = StripAnalysis(shrunkFrames, ...
     temporaryRefFrame, params);
 end
-
+sum(~isnan(usefulEyePositionTraces))
+if params.enableVerbosity
+    plot(1:max(size(statisticsStructure.peakRatios)), statisticsStructure.peakRatios);
+end
 % Scale the coordinates back up.
 framePositions = ...
     usefulEyePositionTraces * 1/parametersStructure.scalingFactor;
