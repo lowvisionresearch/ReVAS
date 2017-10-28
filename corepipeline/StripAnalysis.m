@@ -20,7 +20,6 @@ else
     % ASSUMPTION
     % If only a raw matrix is provided, then we will take the frame rate to
     % be 30.
-    % TODO
     warning('A raw matrix was provided; assuming that frame rate is 30 fps.');
     videoFrameRate = 30;
 end
@@ -70,8 +69,23 @@ end
 
 %% Handle overwrite scenarios.
 
+rawOutputFileName = [inputVideoPath(1:end-4) '_' ...
+    int2str(parametersStructure.samplingRate) '_hz_raw'];
 outputFileName = [inputVideoPath(1:end-4) '_' ...
     int2str(parametersStructure.samplingRate) '_hz_final'];
+
+if ~exist([rawOutputFileName '.mat'], 'file')
+    % left blank to continue without issuing warning in this case
+elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
+    RevasWarning(['StripAnalysis() did not execute because it would overwrite existing file. (' rawOutputFileName ')'], parametersStructure);
+    rawEyePositionTraces = [];
+    usefulEyePositionTraces = [];
+    timeArray = [];
+    statisticsStructure = struct();
+    return;
+else
+    RevasWarning(['StripAnalysis() is proceeding and overwriting an existing file. (' rawOutputFileName ')'], parametersStructure);  
+end
 
 if ~exist([outputFileName '.mat'], 'file')
     % left blank to continue without issuing warning in this case
@@ -481,8 +495,13 @@ end
 %% Save to output mat file
 
 if ~abortTriggered && ~isempty(inputVideoPath)
+    % Save a copy of the raw traces.
+    eyePositionTraces = rawEyePositionTraces;
+    save(rawOutputFileName, 'eyePositionTraces', 'timeArray', ...
+        'parametersStructure', 'referenceFramePath');
+    
+    % Save a copy of the useful traces (under file labeled 'final').
     eyePositionTraces = usefulEyePositionTraces;
-
     save(outputFileName, 'eyePositionTraces', 'timeArray', ...
         'parametersStructure', 'referenceFramePath');
 end
