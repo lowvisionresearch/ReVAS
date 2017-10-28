@@ -52,18 +52,103 @@ for i = 1:length(filenames)
     
     % Blink Params (Can be customized)
     % thresholdvalue was 0.7 for last video in AOSLO
-    coarseParameters.thresholdValue = 1.4;
+    coarseParameters.thresholdValue = inf;
     coarseParameters.upperTail = true;
     %coarseParameters.removalAreaSize = [60, 100];
     
-    % Customized params (for AOSLO)
-    coarseParameters.minimumPeakThreshold = 0.1;
-    coarseParameters.maximumPeakRatio = 0.85;
-    coarseParameters.searchWindowPercentage = 0.33;
+    % Customized params (for TSLO AMD)
+    coarseParameters.minimumPeakThreshold = 0.25;
+    coarseParameters.maximumPeakRatio = 0.95;
+    coarseParameters.searchWindowPercentage = 0.66;
     
-    fineParameters.searchWindowPercentage = 0.33;
-    stripParameters.searchWindowPercentage = 0.33;
-    fineParameters.numberOfIterations = 3;
+    fineParameters.maximumPeakRatio = 0.9;
+    fineParameters.minimumPeakThreshold = 0.25;
+    fineParameters.searchWindowPercentage = 0.66;
+    fineParameters.numberOfIterations = 2;
+    
+    stripParameters.minimumPeakThreshold = 0.25;
+    stripParameters.maximumPeakRatio = 0.9;
+    stripParameters.searchWindowPercentage = 0.66;
+    % End of TSLO AMD params
+    
+    % Customized params for TSLO normal
+%     coarseParameters.thresholdValue = inf;
+%     coarseParameters.minimumPeakThreshold = 0.2;
+%     coarseParameters.maximumPeakRatio = 0.95;
+%     coarseParameters.searchWindowPercentage = 0.66;
+%     
+%     fineParameters.numberOfIterations = 2;
+%     fineParameters.minimumPeakThreshold = 0.25;
+%     fineParameters.maximumPeakRatio = 0.85;
+%     fineParameters.searchWindowPercentage = 0.66;
+%     
+%     stripParameters.minimumPeakValue = 0.25;
+%     stripParameters.maximumPeakRatio = 0.85;
+%     stripParameters.searchWindowPercentage = 0.66;
+ 
+    % End of TSLO normal params
+    
+    
+    
+    % Customized params for Rodenstock AMD
+%     coarseParameters.thresholdValue = 1.25;
+%     coarseParameters.upperTail = true;
+%     coarseParameters.minimumPeakThreshold = 0.2;
+%     coarseParameters.maximumPeakRatio = 0.95;
+%     coarseParameters.searchWindowPercentage = 0.5;
+%     
+%     fineParameters.minimumPeakThreshold = 0.25;
+%     fineParameters.maximumPeakRatio = 0.8;
+%     fineParameters.numberOfIterations = 1;
+%     fineParameters.searchWindowPercentage = 0.5;
+%     
+%     stripParameters.searchWindowPercentage = 0.5;
+%     stripParameters.minimumPeakThreshold = 0.3;
+%     stripParameters.maximumPeakRatio = 0.8;
+    
+    % End of Rodenstock AMD params
+    
+    
+    % Customized params for Rodenstock AMD
+%     coarseParameters.thresholdValue = inf;
+%     coarseParameters.minimumPeakThreshold = 0.2;
+%     coarseParameters.maximumPeakRatio = 0.95;
+%     coarseParameters.searchWindowPercentage = 0.5;
+%     
+%     fineParameters.minimumPeakThreshold = 0.25;
+%     fineParameters.maximumPeakRatio = 0.8;
+%     fineParameters.numberOfIterations = 2;
+%     fineParameters.searchWindowPercentage = 0.5;
+%     
+%     stripParameters.searchWindowPercentage = 0.5;
+%     stripParameters.minimumPeakThreshold = 0.3;
+%     stripParameters.maximumPeakRatio = 0.8;
+    % End of Rodenstock AMD params
+    
+    
+    % Customized params for Rodenstock Normal
+%     coarseParameters.thresholdValue = 1;
+%     fineParameters.numberOfIterations = 1;
+%     
+%     coarseParameters.minimumPeakThreshold = 0.2;
+%     coarseParameters.maximumPeakRatio = 0.95;
+%     coarseParameters.searchWindowPercentage = 0.7;
+%     
+%     fineParameters.searchWindowPercentage = 0.7;
+%     fineParameters.minimumPeakThreshold = 0.3;
+%     
+%     stripParameters.minimumPeakThreshold = 0.35;
+    
+    % End of Rodenstock Normal params
+    
+    % Customized params (for AOSLO)
+%     coarseParameters.minimumPeakThreshold = 0.1;
+%     coarseParameters.maximumPeakRatio = 0.85;
+%     coarseParameters.searchWindowPercentage = 0.33;
+%     
+%     fineParameters.searchWindowPercentage = 0.33;
+%     stripParameters.searchWindowPercentage = 0.33;
+%     fineParameters.numberOfIterations = 3;
     % End of AOSLO parameters
     
     % Other customized params (for TSLO)

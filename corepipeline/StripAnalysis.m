@@ -227,7 +227,7 @@ for stripNumber = (1:numberOfStrips)
         rowEnd = rowStart + localParametersStructure.stripHeight - 1;
         columnEnd = columnStart + stripWidth - 1;
         strip = videoInput(rowStart:rowEnd, columnStart:columnEnd, frame);
-
+        
         correlationMap = normxcorr2(strip, referenceFrame);
         parametersStructure.stripNumber = stripNumber;  
         parametersStructure.stripsPerFrame = stripsPerFrame;
