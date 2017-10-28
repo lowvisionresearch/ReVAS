@@ -451,7 +451,7 @@ if parametersStructure.enableGaussianFiltering
     
     % Determine which eye traces to throw out
     % 1 = keep, 0 = toss
-    eyeTracesToRemove = (statisticsStructure.standardDeviations(:,1) <= parametersStructure.maximumSD)...
+    eyeTracesToKeep = (statisticsStructure.standardDeviations(:,1) <= parametersStructure.maximumSD)...
         & (statisticsStructure.standardDeviations(:,2) <= parametersStructure.maximumSD)...
         & (statisticsStructure.peakValues >= parametersStructure.minimumPeakThreshold);
 else
@@ -462,19 +462,13 @@ else
     
     % Determine which eye traces to throw out
     % 1 = keep, 0 = toss
-    eyeTracesToRemove = (statisticsStructure.peakRatios <= parametersStructure.maximumPeakRatio)...
+    eyeTracesToKeep = (statisticsStructure.peakRatios <= parametersStructure.maximumPeakRatio)...
         & (statisticsStructure.peakValues >= parametersStructure.minimumPeakThreshold);
 end
 
-% convert logical array to double array
-eyeTracesToRemove = double(eyeTracesToRemove);
-
-% change all 0 = toss to be NaN = toss
-eyeTracesToRemove(eyeTracesToRemove == 0) = NaN;
-
 % multiply each component by 1 to keep eyePositionTraces or by NaN to toss.
-eyeTracesToRemove = repmat(eyeTracesToRemove,1,2); % duplicate vector first
-usefulEyePositionTraces = rawEyePositionTraces .* eyeTracesToRemove;
+usefulEyePositionTraces = rawEyePositionTraces; % duplicate vector first
+usefulEyePositionTraces(~eyeTracesToKeep,:) = NaN;
 
 %% Plot Useful Eye Traces
 if ~abortTriggered && parametersStructure.enableVerbosity
