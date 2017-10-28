@@ -55,7 +55,7 @@ function JobQueue_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 % Add util to path
-addpath(fullfile(pwd, 'util'));
+addpath(genpath('..'));
 
 % COLOR PALETTE
 % http://paletton.com/palette.php?uid=c491l5-2L0kj0tK00%2B%2B6SNBlToaqM2g
