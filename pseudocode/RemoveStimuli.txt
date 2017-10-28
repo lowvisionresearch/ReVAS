@@ -1,5 +1,6 @@
 for each frame in numberOfFrames:
-    replacementPixels = randn(stimulusSize) * standardDeviationOfEachFrame[frame] + meanOfEachFrame[frame];
+    replacementPixels = normal_random_number(stimulusSize) *
+        standardDeviationOfEachFrame[frame] + meanOfEachFrame[frame];
     location = stimulusLocationInEachFrame[frame];
     inputVideo[location[y] - stimulusSize[y],
         location[x] - stimulusSize[x],

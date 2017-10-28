@@ -1,10 +1,10 @@
 for each frame in numberOfFrames:
-    meanOfEachFrame[frame] = mean2(frame);
+    meanOfEachFrame[frame] = mean(frame);
 
-standardDeviation = std2(meanOfEachFrame);
+standardDeviation = standDev(meanOfEachFrame);
 threshold = thresholdValue * standardDeviation;
-lowerBound = mean2(means) - threshold;
-upperBound = mean2(means) + threshold;
+lowerBound = mean(means) - threshold;
+upperBound = mean(means) + threshold;
 
 # Identify frames outside the threshold.
 for each frame in numberOfFrames:
@@ -20,7 +20,7 @@ badFramesIndices = find(badFrames);
 badFramesDiffs = diff(badFramesIndices);
 for each difference in badFramesDiffs:
     if difference < stitchCriteria:
-        for each frame in inside this distance:
+        for each frame inside this distance:
             badFrames[frame] = true;
 
 # Convert boolean array to list of bad frames indices.
