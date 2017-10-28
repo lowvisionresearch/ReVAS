@@ -22,7 +22,7 @@ if ~iscell(filenames)
     end
 end
 
-parfor i = 1:length(filenames)
+for i = 1:length(filenames)
     % Grab path out of cell.
     videoPath = filenames{i};
     parametersStructure = struct;
@@ -92,8 +92,8 @@ parfor i = 1:length(filenames)
         
     % Step 6: Detect blinks and bad frames
     % Default:
-    parametersStructure.thresholdValue = 0.25;
-    parametersStructure.upperTail = true;
+    parametersStructure.thresholdValue = 1.2;
+    parametersStructure.upperTail = false;
     %parametersStructure.removalAreaSize = [60, 100];
     %parametersStructure.stitchCriteria = 10;
     % Use the final bandpass filtered video

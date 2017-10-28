@@ -24,7 +24,7 @@ coordinatesAndDegrees = zeros(size(shrunkFrames, 3), 3);
 % Pre-allocate the template frame
 rotateCorrectedCoarse = zeros(size(bigFrames, 1)*2, size(bigFrames, 2)*2);
 counterArray = rotateCorrectedCoarse;
-a = [];
+
 %% Examine each frame
 %for frameNumber = 1:size(shrunkFrames, 3)
 for frameNumber = 1:size(shrunkFrames, 3)
@@ -55,8 +55,7 @@ for frameNumber = 1:size(shrunkFrames, 3)
         coordinatesAndDegrees(frameNumber, 1:2) = usefulEyePositionTraces ...
             * 1/params.scalingFactor;
         coordinatesAndDegrees(frameNumber, 3) = 0;
-        a = [a frameNumber];
-        disp(peakRatio)
+
         coordinates = coordinatesAndDegrees(frameNumber, 1:2);
         coordinates = round(ScaleCoordinates(coordinates));
         
@@ -118,8 +117,7 @@ for frameNumber = 1:size(shrunkFrames, 3)
             % then move on to the next frame by breaking out of the
             % rotations for-loop. Otherwise, continue rotating
             if peakRatio <= params.maximumPeakRatio
-                a = [a frameNumber];
-                disp(peakRatio)
+
                 coordinatesAndDegrees(frameNumber, 1:2) = ...
                     usefulEyePositionTraces * 1/params.scalingFactor;
                 coordinatesAndDegrees(frameNumber, 3) = rotation;
@@ -170,7 +168,7 @@ for frameNumber = 1:size(shrunkFrames, 3)
         end
     end
 end
-disp(a)
+
 coarseRefFrame = rotateCorrectedCoarse./counterArray;
 coarseRefFrame = Crop(coarseRefFrame);
 coarseRefFrame = double(coarseRefFrame)/255;

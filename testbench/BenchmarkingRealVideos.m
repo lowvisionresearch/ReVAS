@@ -32,7 +32,7 @@ for i = 1:length(filenames)
     load(paramsPath, 'coarseParameters', 'fineParameters', 'stripParameters');
     
     % Verbosity flags
-    enableVerbosity = true;
+    enableVerbosity = false;
     coarseParameters.enableVerbosity = enableVerbosity;
     fineParameters.enableVerbosity = enableVerbosity;
     stripParameters.enableVerbosity = enableVerbosity;

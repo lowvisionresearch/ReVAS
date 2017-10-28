@@ -98,6 +98,7 @@ if isfield(params, 'rotateCorrection') && params.rotateCorrection == true
     % independent function. Too tedious to go back and change the parts of
     % CoarseRef that depended on RotateCorrect, so just stop CoarseRef here
     % if RotateCorrect is enabled.
+    params.maximumPeakRatio = params.rotateMaximumPeakRatio;
     [coarseRefFrame, ~] = RotateCorrect(shrunkFrames, videoInputArray, ...
         temporaryRefFrame, outputFileName, params);
     return
