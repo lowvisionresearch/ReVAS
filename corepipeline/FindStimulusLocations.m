@@ -86,6 +86,7 @@ for frameNumber = (1:numberOfFrames)
     correlationMap = normxcorr2(stimulus, frame);
         
     findPeakParametersStructure.enableGaussianFiltering = false;
+    findPeakParametersStructure.stripHeight = frameHeight;    
     [xPeak, yPeak, peakValue, ~] = ...
         FindPeak(correlationMap, findPeakParametersStructure);
     clear findPeakParametersStructure;
