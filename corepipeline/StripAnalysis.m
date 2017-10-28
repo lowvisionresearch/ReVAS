@@ -284,7 +284,7 @@ for stripNumber = (1:numberOfStrips)
                     % Not acceptable, try again in the catch block with full correlation map.
                     error('Jumping to catch block immediately below.');
                 end
-                correlationMap = adoptedCorrelation;
+                correlationMap = adaptedCorrelation;
                 searchWindowsArray(stripNumber,:) = [upperBound lowerBound];
             catch
                 upperBound = 1;
