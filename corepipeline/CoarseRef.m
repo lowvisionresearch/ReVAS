@@ -103,17 +103,13 @@ if isfield(params, 'rotateCorrection') && params.rotateCorrection == true
         temporaryRefFrame, outputFileName, params);
     return
 else
-[~, usefulEyePositionTraces, ~, statisticsStructure] = StripAnalysis(shrunkFrames, ...
+
+params.peakDropWindow = 20;
+[~, usefulEyePositionTraces, ~, ~] = StripAnalysis(shrunkFrames, ...
     temporaryRefFrame, params);
 end
-sum(~isnan(usefulEyePositionTraces))
-if params.enableVerbosity
-    plot(1:max(size(statisticsStructure.peakRatios)), statisticsStructure.peakRatios);
-end
-% Scale the coordinates back up.
-framePositions = ...
-    usefulEyePositionTraces * 1/parametersStructure.scalingFactor;
 
+framePositions = usefulEyePositionTraces;
 %% Remove NaNs in framePositions
 try
     % Remove NaNs at beginning and end.
@@ -133,17 +129,9 @@ catch
     error('There were no useful eye position traces. Lower the minimumPeakThreshold and/or raise the maximumPeakRatio.\n');
 end
 
-% Also remove corresponding degree corrections because those frames are no
-% longer relevant.
-if exist('degrees', 'var')
-    if endNaNs > 0
-        degrees(end-endNaNs + 1:end, 1) = [];
-    end
-    
-    if beginningNaNs > 0
-        degrees(1:beginningNaNs, 1) = [];
-    end
-end
+%% Scale the coordinates back up.
+framePositions = ...
+    framePositions * 1/parametersStructure.scalingFactor;
 
 %% Set up the counter array and the template for the coarse reference frame.
 totalFrames = size(videoInputArray, 3);
@@ -160,17 +148,16 @@ if enableGPU
     coarseRefFrame = gpuArray(coarseRefFrame);
 end
 
-for frameNumber = 1+beginningNaNs:totalFrames-endNaNs-beginningNaNs
+nonNanIndices = find(~isnan(usefulEyePositionTraces(:,1)));
+
+for i = 1:length(nonNanIndices)
+    frameNumber = nonNanIndices(i);
     if any(badFrames==frameNumber)
         continue
     else
         % Use double function because readFrame gives unsigned integers,
         % whereas we need to use signed integers
         frame = double(videoInputArray(:, :, frameNumber))/255;
-        
-        if isfield(params, 'rotateCorrection') && params.rotateCorrection == true
-            frame = imrotate(frame, degrees(frameNumber));
-        end
         
         if enableGPU
             frame = gpuArray(frame);
@@ -182,8 +169,9 @@ for frameNumber = 1+beginningNaNs:totalFrames-endNaNs-beginningNaNs
         % is 256x256 and the minRow is 1, then the maxRow will be 1 + 256 - 1.
         % If minRow is 2 (moved down by one pixel) then maxRow will be 
         % 2 + 256 - 1 = 257)
-        minRow = round(framePositions(frameNumber, 2));
-        minColumn = round(framePositions(frameNumber, 1));
+        
+        minRow = round(framePositions(i, 2));
+        minColumn = round(framePositions(i, 1));
         maxRow = size(frame, 1) + minRow - 1;
         maxColumn = size(frame, 2) + minColumn - 1;
 
