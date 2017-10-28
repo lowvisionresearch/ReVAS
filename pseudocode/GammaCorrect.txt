@@ -1,2 +1,2 @@
 for each frame in numberOfFrames:
-    inputVideo[,,frame] = imadjust(inputVideo[,,frame], [], [], gammaExponent);
+    inputVideo[,,frame] = adjust_image(inputVideo[,,frame], gammaExponent);
