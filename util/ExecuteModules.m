@@ -6,6 +6,7 @@ function ExecuteModules(inputVideoPath, handles)
 
 addpath(genpath('..'));
 global abortTriggered;
+originalInputVideoPath = inputVideoPath(1:end-4);
 
 % parfor does not support global variables.
 % cannot abort when run in parallel.
@@ -177,6 +178,17 @@ if logical(handles.togStrip.Value) && ~logical(abortTriggered)
     parametersStructure.subpixelInterpolationParameters.subpixelDepth ...
         = handles.config.stripSubpixelDepth;
 
+    % Load a fine result if we didn't run the previous module in this
+    % session.
+    if ~exist('fineResult', 'var')
+        if exist([originalInputVideoPath '_refframe.mat'], 'file')
+           load([originalInputVideoPath '_refframe.mat']);
+           fineResult = refFrame;
+        else
+            error('No reference frame available for strip analysis.');
+        end
+    end
+    
     % Call the function(s)
     if strcmp(handles.togFine.Enable, 'on') 
         [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
@@ -188,7 +200,8 @@ if logical(handles.togStrip.Value) && ~logical(abortTriggered)
             = StripAnalysis(inputVideoPath, coarseResult, parametersStructure);
     else
         % TODO use a specific frame of the video as reference
-    end        
+    end
+    clear fineResult;
 end
 
 if false

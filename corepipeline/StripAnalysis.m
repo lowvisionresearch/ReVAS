@@ -41,6 +41,18 @@ ValidateVideoInput(videoInput);
 ValidateReferenceFrame(referenceFrame);
 ValidateParametersStructure(parametersStructure);
 
+% Set SDWindowSize if not provided
+if ~isfield(parametersStructure, 'SDWindowSize')
+    SDWindowSize = 25;
+else
+    SDWindowSize = parametersStructure.SDWindowSize;
+end
+
+ValidateVideoInput(videoInput);
+ValidateReferenceFrame(referenceFrame);
+ValidateParametersStructure(parametersStructure);
+
+
 % Identify which frames are bad frames
 % The filename may not exist if a raw array was passed in.
 if ~isfield(parametersStructure, 'badFrames')
@@ -309,8 +321,8 @@ for stripNumber = (1:numberOfStrips)
         if parametersStructure.enableGaussianFiltering
             % Fit a gaussian in a pixel window around the identified peak.
             % The pixel window is of size
-            % |parametersStructure.SDWindowSize| x
-            % |parametersStructure.SDWindowSize/2|
+            % |SDWindowSize| x
+            % |SDWindowSize/2|
             %
             % Take the middle row and the middle column, and fit a one-dimensional
             % gaussian to both in order to get the standard deviations.
@@ -319,13 +331,13 @@ for stripNumber = (1:numberOfStrips)
 
             % Middle row SDs in column 1, Middle column SDs in column 2.
             middleRow = ...
-                correlationMap(max(ceil(yPeak-parametersStructure.SDWindowSize/2), 1): ...
-                min(floor(yPeak+parametersStructure.SDWindowSize/2), size(correlationMap,1)), ...
+                correlationMap(max(ceil(yPeak-SDWindowSize/2), 1): ...
+                min(floor(yPeak+SDWindowSize/2), size(correlationMap,1)), ...
                 floor(xPeak));
             middleCol = ...
                 correlationMap(floor(yPeak), ...
-                max(ceil(xPeak-parametersStructure.SDWindowSize/2), 1): ...
-                min(floor(xPeak+parametersStructure.SDWindowSize/2), size(correlationMap,2)))';
+                max(ceil(xPeak-SDWindowSize/2), 1): ...
+                min(floor(xPeak+SDWindowSize/2), size(correlationMap,2)))';
             fitOutput = fit(((1:size(middleRow,1))-ceil(size(middleRow,1)/2))', middleRow, 'gauss1');
             standardDeviationsArray(stripNumber, 1) = fitOutput.c1;
             fitOutput = fit(((1:size(middleCol,1))-ceil(size(middleCol,1)/2))', middleCol, 'gauss1');
@@ -473,8 +485,8 @@ usefulEyePositionTraces(~eyeTracesToKeep,:) = NaN;
 %% Plot Useful Eye Traces
 if ~abortTriggered && parametersStructure.enableVerbosity
     if isfield(parametersStructure, 'axesHandles')
-        axes(parametersStructure.axesHandles(3));
-        colormap(parametersStructure.axesHandles(3), 'gray');
+        axes(parametersStructure.axesHandles(2));
+        colormap(parametersStructure.axesHandles(2), 'gray');
     else
         figure(3);
     end
@@ -484,6 +496,24 @@ if ~abortTriggered && parametersStructure.enableVerbosity
     ylabel('Eye Position Traces (pixels)');
     legend('show');
     legend('Horizontal Traces', 'Vertical Traces');
+end
+
+%% Plot stimuli on reference frame
+if ~abortTriggered && parametersStructure.enableVerbosity
+    if isfield(parametersStructure, 'axesHandles')
+        axes(parametersStructure.axesHandles(3));
+        colormap(parametersStructure.axesHandles(3), 'gray');
+    else
+        figure(4);
+    end
+    
+    imshow(referenceFrame);
+    hold on;
+    
+    center = fliplr(size(referenceFrame)/2);
+    positionsToBePlotted = repmat(center, length(usefulEyePositionTraces),1) + usefulEyePositionTraces;
+    
+    scatter(positionsToBePlotted(:,1), positionsToBePlotted(:,2), 'y', 'o' , 'filled');
 end
 
 %% Save to output mat file

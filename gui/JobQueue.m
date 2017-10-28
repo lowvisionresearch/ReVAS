@@ -22,7 +22,7 @@ function varargout = JobQueue(varargin)
 
 % Edit the above text to modify the response to help JobQueue
 
-% Last Modified by GUIDE v2.5 28-Oct-2017 14:27:11
+% Last Modified by GUIDE v2.5 28-Oct-2017 15:58:21
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -99,7 +99,7 @@ handles.textCoarse.BackgroundColor = handles.colors{1,3};
 handles.textFine.BackgroundColor = handles.colors{1,3};
 handles.textStrip.BackgroundColor = handles.colors{1,3};
 handles.textFilt.BackgroundColor = handles.colors{1,3};
-handles.textReRef.BackgroundColor = handles.colors{1,3};
+handles.textFilt.BackgroundColor = handles.colors{1,3};
 handles.textSacDrift.BackgroundColor = handles.colors{1,3};
 % Box text
 handles.inputList.ForegroundColor = handles.colors{1,5};
@@ -118,7 +118,7 @@ handles.textCoarse.ForegroundColor = handles.colors{1,5};
 handles.textFine.ForegroundColor = handles.colors{1,5};
 handles.textStrip.ForegroundColor = handles.colors{1,5};
 handles.textFilt.ForegroundColor = handles.colors{1,5};
-handles.textReRef.ForegroundColor = handles.colors{1,5};
+handles.textFilt.ForegroundColor = handles.colors{1,5};
 handles.textSacDrift.ForegroundColor = handles.colors{1,5};
 handles.commandWindow.ForegroundColor = handles.colors{1,5};
 % Select/Enable buttons backgrounds
@@ -130,31 +130,21 @@ handles.togBandFilt.BackgroundColor = handles.colors{1,4};
 handles.togCoarse.BackgroundColor = handles.colors{1,4};
 handles.togFine.BackgroundColor = handles.colors{1,4};
 handles.togStrip.BackgroundColor = handles.colors{1,4};
-handles.togFilt.BackgroundColor = handles.colors{1,4};
+handles.togReRef.BackgroundColor = handles.colors{1,4};
 handles.togReRef.BackgroundColor = handles.colors{1,4};
 handles.togSacDrift.BackgroundColor = handles.colors{1,4};
 % Select/Enable button text
-% handles.selectFiles.ForegroundColor = handles.colors{1,2};
-% handles.togTrim.ForegroundColor = handles.colors{1,2};
-% handles.togStim.ForegroundColor = handles.colors{1,2};
-% handles.togGamma.ForegroundColor = handles.colors{1,2};
-% handles.togBandFilt.ForegroundColor = handles.colors{1,2};
-% handles.togCoarse.ForegroundColor = handles.colors{1,2};
-% handles.togFine.ForegroundColor = handles.colors{1,2};
-% handles.togStrip.ForegroundColor = handles.colors{1,2};
-% handles.togFilt.ForegroundColor = handles.colors{1,2};
-% handles.togReRef.ForegroundColor = handles.colors{1,2};
-% handles.togSacDrift.ForegroundColor = handles.colors{1,2};
-handles.togTrim.ForegroundColor = handles.colors{1,4};
-handles.togStim.ForegroundColor = handles.colors{1,4};
-handles.togGamma.ForegroundColor = handles.colors{1,4};
-handles.togBandFilt.ForegroundColor = handles.colors{1,4};
-handles.togCoarse.ForegroundColor = handles.colors{1,4};
-handles.togFine.ForegroundColor = handles.colors{1,4};
-handles.togStrip.ForegroundColor = handles.colors{1,4};
-handles.togFilt.ForegroundColor = handles.colors{1,4};
-handles.togReRef.ForegroundColor = handles.colors{1,4};
-handles.togSacDrift.ForegroundColor = handles.colors{1,4};
+handles.selectFiles.ForegroundColor = handles.colors{1,2};
+handles.togTrim.ForegroundColor = handles.colors{1,2};
+handles.togStim.ForegroundColor = handles.colors{1,2};
+handles.togGamma.ForegroundColor = handles.colors{1,2};
+handles.togBandFilt.ForegroundColor = handles.colors{1,2};
+handles.togCoarse.ForegroundColor = handles.colors{1,2};
+handles.togFine.ForegroundColor = handles.colors{1,2};
+handles.togStrip.ForegroundColor = handles.colors{1,2};
+handles.togReRef.ForegroundColor = handles.colors{1,2};
+handles.togReRef.ForegroundColor = handles.colors{1,2};
+handles.togSacDrift.ForegroundColor = handles.colors{1,2};
 % Configure buttons backgrounds
 handles.configTrim.BackgroundColor = handles.colors{4,4};
 handles.configStim.BackgroundColor = handles.colors{4,4};
@@ -164,7 +154,7 @@ handles.configCoarse.BackgroundColor = handles.colors{4,4};
 handles.configFine.BackgroundColor = handles.colors{4,4};
 handles.configStrip.BackgroundColor = handles.colors{4,4};
 handles.configFilt.BackgroundColor = handles.colors{4,4};
-handles.configReRef.BackgroundColor = handles.colors{4,4};
+handles.configFilt.BackgroundColor = handles.colors{4,4};
 handles.configSacDrift.BackgroundColor = handles.colors{4,4};
 % Configure button text
 handles.configTrim.ForegroundColor = handles.colors{4,2};
@@ -175,7 +165,7 @@ handles.configCoarse.ForegroundColor = handles.colors{4,2};
 handles.configFine.ForegroundColor = handles.colors{4,2};
 handles.configStrip.ForegroundColor = handles.colors{4,2};
 handles.configFilt.ForegroundColor = handles.colors{4,2};
-handles.configReRef.ForegroundColor = handles.colors{4,2};
+handles.configFilt.ForegroundColor = handles.colors{4,2};
 handles.configSacDrift.ForegroundColor = handles.colors{4,2};
 % Parallelization button background
 handles.parallelization.BackgroundColor = handles.colors{4,4};
@@ -366,7 +356,7 @@ handles.textCoarse.Visible = 'off';
 handles.textFine.Visible = 'off';
 handles.textStrip.Visible = 'off';
 handles.textFilt.Visible = 'off';
-handles.textReRef.Visible = 'off';
+handles.textFilt.Visible = 'off';
 handles.textSacDrift.Visible = 'off';
 handles.togTrim.Visible = 'off';
 handles.togStim.Visible = 'off';
@@ -375,7 +365,7 @@ handles.togBandFilt.Visible = 'off';
 handles.togCoarse.Visible = 'off';
 handles.togFine.Visible = 'off';
 handles.togStrip.Visible = 'off';
-handles.togFilt.Visible = 'off';
+handles.togReRef.Visible = 'off';
 handles.togReRef.Visible = 'off';
 handles.togSacDrift.Visible = 'off';
 handles.configTrim.Visible = 'off';
@@ -386,7 +376,7 @@ handles.configCoarse.Visible = 'off';
 handles.configFine.Visible = 'off';
 handles.configStrip.Visible = 'off';
 handles.configFilt.Visible = 'off';
-handles.configReRef.Visible = 'off';
+handles.configFilt.Visible = 'off';
 handles.configSacDrift.Visible = 'off';
 handles.parallelization.Visible = 'off';
 handles.execute.Visible = 'off';
@@ -697,7 +687,7 @@ function togTrim_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
-    hObject.ForegroundColor = handles.colors{1,4};
+    hObject.ForegroundColor = handles.colors{1,2};
 else
     hObject.String = 'DISABLED';
     hObject.BackgroundColor = handles.colors{1,1};
@@ -709,9 +699,9 @@ function togStrip_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
-    hObject.ForegroundColor = handles.colors{1,4};
+    hObject.ForegroundColor = handles.colors{1,2};
 else
-    if handles.togFilt.Value == 1 || ...
+    if handles.togReRef.Value == 1 || ...
             handles.togReRef.Value == 1 || ...
             handles.togSacDrift.Value == 1
         errordlg(...
@@ -729,7 +719,7 @@ function togStim_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
-    hObject.ForegroundColor = handles.colors{1,4};
+    hObject.ForegroundColor = handles.colors{1,2};
 else
     hObject.String = 'DISABLED';
     hObject.BackgroundColor = handles.colors{1,1};
@@ -741,7 +731,7 @@ function togGamma_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
-    hObject.ForegroundColor = handles.colors{1,4};
+    hObject.ForegroundColor = handles.colors{1,2};
 else
     hObject.String = 'DISABLED';
     hObject.BackgroundColor = handles.colors{1,1};
@@ -753,7 +743,7 @@ function togCoarse_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
-    hObject.ForegroundColor = handles.colors{1,4};
+    hObject.ForegroundColor = handles.colors{1,2};
 else
     if handles.togFine.Value == 1
         errordlg(...
@@ -776,14 +766,14 @@ if hObject.Value == 1
     end
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
-    hObject.ForegroundColor = handles.colors{1,4};
+    hObject.ForegroundColor = handles.colors{1,2};
 else
     hObject.String = 'DISABLED';
     hObject.BackgroundColor = handles.colors{1,1};
     hObject.ForegroundColor = handles.colors{1,3};
 end
 
-% --- Executes on button press in togFilt.
+% --- Executes on button press in togReRef.
 function togFilt_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
     if handles.togStrip.Value == 0
@@ -793,7 +783,7 @@ if hObject.Value == 1
     end
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
-    hObject.ForegroundColor = handles.colors{1,4};
+    hObject.ForegroundColor = handles.colors{1,2};
 else
     hObject.String = 'DISABLED';
     hObject.BackgroundColor = handles.colors{1,1};
@@ -810,7 +800,7 @@ if hObject.Value == 1
     end
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
-    hObject.ForegroundColor = handles.colors{1,4};
+    hObject.ForegroundColor = handles.colors{1,2};
 else
     hObject.String = 'DISABLED';
     hObject.BackgroundColor = handles.colors{1,1};
@@ -827,7 +817,7 @@ if hObject.Value == 1
     end
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
-    hObject.ForegroundColor = handles.colors{1,4};
+    hObject.ForegroundColor = handles.colors{1,2};
 else
     hObject.String = 'DISABLED';
     hObject.BackgroundColor = handles.colors{1,1};
@@ -839,7 +829,7 @@ function togBandFilt_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
-    hObject.ForegroundColor = handles.colors{1,4};
+    hObject.ForegroundColor = handles.colors{1,2};
 else
     hObject.String = 'DISABLED';
     hObject.BackgroundColor = handles.colors{1,1};
@@ -902,9 +892,9 @@ function configFilt_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 
-% --- Executes on button press in configReRef.
+% --- Executes on button press in configFilt.
 function configReRef_Callback(hObject, eventdata, handles)
-% hObject    handle to configReRef (see GCBO)
+% hObject    handle to configFilt (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -1125,7 +1115,7 @@ if size(toggleButtonStates,1) == 1 && size(toggleButtonStates,2) == 10
     handles.togCoarse.Value = toggleButtonStates(5);
     handles.togFine.Value = toggleButtonStates(6);
     handles.togStrip.Value = toggleButtonStates(7);
-    handles.togFilt.Value = toggleButtonStates(8);
+    handles.togReRef.Value = toggleButtonStates(8);
     handles.togReRef.Value = toggleButtonStates(9);
     handles.togSacDrift.Value = toggleButtonStates(10);
     
@@ -1136,7 +1126,7 @@ if size(toggleButtonStates,1) == 1 && size(toggleButtonStates,2) == 10
     togCoarse_Callback(handles.togCoarse, eventdata, handles);
     togFine_Callback(handles.togFine, eventdata, handles);
     togStrip_Callback(handles.togStrip, eventdata, handles);
-    togFilt_Callback(handles.togFilt, eventdata, handles);
+    togFilt_Callback(handles.togReRef, eventdata, handles);
     togReRef_Callback(handles.togReRef, eventdata, handles);
     togSacDrift_Callback(handles.togSacDrift, eventdata, handles);
 end
@@ -1162,7 +1152,7 @@ toggleButtonStates = [handles.togTrim.Value ...
     handles.togCoarse.Value ...
     handles.togFine.Value ...
     handles.togStrip.Value ...
-    handles.togFilt.Value ...
+    handles.togReRef.Value ...
     handles.togReRef.Value ...
     handles.togSacDrift.Value];
 if strcmp(handles.togTrim.Enable, 'off')
@@ -1254,7 +1244,7 @@ handles.textCoarse.Visible = 'on';
 handles.textFine.Visible = 'on';
 handles.textStrip.Visible = 'on';
 handles.textFilt.Visible = 'on';
-handles.textReRef.Visible = 'on';
+handles.textFilt.Visible = 'on';
 handles.textSacDrift.Visible = 'on';
 handles.togTrim.Visible = 'on';
 handles.togStim.Visible = 'on';
@@ -1263,7 +1253,7 @@ handles.togBandFilt.Visible = 'on';
 handles.togCoarse.Visible = 'on';
 handles.togFine.Visible = 'on';
 handles.togStrip.Visible = 'on';
-handles.togFilt.Visible = 'on';
+handles.togReRef.Visible = 'on';
 handles.togReRef.Visible = 'on';
 handles.togSacDrift.Visible = 'on';
 handles.configTrim.Visible = 'on';
@@ -1274,7 +1264,7 @@ handles.configCoarse.Visible = 'on';
 handles.configFine.Visible = 'on';
 handles.configStrip.Visible = 'on';
 handles.configFilt.Visible = 'on';
-handles.configReRef.Visible = 'on';
+handles.configFilt.Visible = 'on';
 handles.configSacDrift.Visible = 'on';
 handles.parallelization.Visible = 'on';
 handles.execute.Visible = 'on';
