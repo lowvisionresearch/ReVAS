@@ -322,7 +322,7 @@ end
 % Combine results from both vertical and horizontal approaches
 saccades = or(verticalSaccades, horizontalSaccades);
 
-%% Lump together blinks that are < |stitchCriteria| ms apart
+%% Lump together blinks that are < |stitchCriteria| apart
 
 % If the difference between any two marked saccades is less than
 % |stitchCriteria|, then lump them together as one.
