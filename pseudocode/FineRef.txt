@@ -1,5 +1,5 @@
 referenceFrame = coarseReferenceFrame;
-for _ in range(numIterations):
+for each in numIterations:
     usefulEyePositionTraces = StripAnalysis(scaledDownInputVideoFrames, referenceFrame);
 
     cumulativePixelValues = [][];

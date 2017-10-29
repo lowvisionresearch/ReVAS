@@ -1,0 +1,70 @@
+# Convert eye position traces from pixels to degrees
+eyePositionTraces = eyePositionTraces * degreesPerPixel;
+
+# Saccade Detection
+if velocityMethod == 1:
+    v_x(t) = [x(t + \Delta t) - x(t)] / [\Delta t];
+    velocityDiffs = diff(v_x);
+else if velocityMethod == 2:
+    v_x(t) = [x(t + \Delta t) - x(t - \Delta t)] / [2 \Delta t];
+    velocityDiffs = diff(v_x);
+
+# Identify large changes in velocity using a threshold.
+medianOfVelocityDiffs = median(velocityDiffs);
+standDevOfVelocityDiffs = standDev(velocityDiffs);
+if detectionMethod == 1:
+    threshold = +/- hardVelocityThreshold;
+else if detectionMethod == 2:
+    threshold = medianofVelocityDiffs +/- thresholdValue * standDevOfVelocityDiffs;
+saccades = velocityDiffs >/< threshold;
+
+# Extend to entire saccade for those identified using first threshold.
+if detectionMethod == 1:
+    secondThreshold = +/- hardVelocityThreshold;
+else if detectionMethod == 2:
+    secondThreshold = medianofVelocityDiffs +/- thresholdValue * standDevOfVelocityDiffs;
+for saccade in saccades:
+    if previousSaccade >/< secondThreshold:
+        saccades[previousSaccade] = true;
+    if nextSaccade >/< secondThreshold:
+        saccades[nextSaccade] = true;
+
+# Lump together blinks that are less than stitchCriteria apart.
+saccades = find(saccades);
+saccadesDiffs = diff(saccades);
+for each difference in saccadesDiffs:
+    if difference < stitchCriteria:
+        for each frame inside this distance:
+            saccades[frame] = true;
+
+# Toss out fake saccades.
+for saccade in saccades:
+    if duration(saccade) > maxDuration:
+        toss;
+    if amplitude(saccade) < minAmplitude:
+        toss;
+
+# Compute and stores statistics for saccades and drifts.
+for each saccade or drift:
+    onsetTime();
+    offsetTime();
+    xStart();
+    xEnd();
+    yStart();
+    yEnd();
+    duration();
+    amplitudeX();
+    amplitudeY();
+    amplitudeVector();
+    direction();
+    xPositions();
+    yPositions();
+    time();
+    xVelocity();
+    yVelocity();
+    meanXVelocity();
+    meanYVelocity();
+    peakXVelocity();
+    peakYVelocity();
+    xAcceleration();
+    yAcceleration();
