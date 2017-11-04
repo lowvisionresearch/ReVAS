@@ -2,16 +2,8 @@ function refinedFrame = FineRef(coarseRefFrame, filename, params)
 %FINE REF  Generate a better reference frame.
 %   The function alternates between StripAnalysis and MakeMontage,
 %   alternating between generating positions and generating the reference
-%   frames that result from those positions
+%   frames that result from those positions.
 %   
-%   params takes in the fields stripHeight, stripWidth, samplingRate,
-%   enableSubpixelInterpolation,subpixelInterpolationParameters.neighborhoodSize, 
-%   subpixelInterpolationParameters.subpixelDepth, adaptiveSearch,
-%   adaptiveSearchScalingFactor,searchWindowHeight, badFrames, minimumPeakRatio,
-%   minimumPeakThreshold, enableVerbosity, axesHandles, enableGPU,
-%   videoPath, numberOfIterations, roughEyePositionTraces (from framePositions
-%   file generated from CoarseRef), windowSize (for FindPeak).
-
 %% Allow for aborting if not parallel processing
 global abortTriggered;
 
@@ -21,8 +13,7 @@ if isempty(abortTriggered)
     abortTriggered = false;
 end
 
-%% First perform strip analysis on the coarseRefFrame to get a rough
-% estimate of the strip positions
+%% First perform strip analysis on the coarseRefFrame. 
 if params.numberOfIterations > 0
     [~, usefulEyePositionTraces, timeArray, ~] = ...
         StripAnalysis(filename, coarseRefFrame, params);
@@ -30,9 +21,6 @@ if params.numberOfIterations > 0
     if logical(abortTriggered)
         refinedFrame = [];
         return;
-    end
-    if isfield(params, 'roughEyePositionTraces')
-        params = rmfield(params, 'roughEyePositionTraces');
     end
 else
     newRefFrame = coarseRefFrame;
