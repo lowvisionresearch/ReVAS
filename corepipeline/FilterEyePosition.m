@@ -8,7 +8,7 @@ function [filteredEyePosition, outputFilePath, parametersStructure] = ...
 %   threshold duration, interpolation is kept.
 %
 %   if 'inputArgument' is a file path for the eye position data, then it
-%   has to have two arrays, 'eyePositionTraces' and 'time'. 
+%   has to have two arrays, 'eyePositionTraces' and 'timeArray'. 
 %
 %   if 'inputArgument' is not a file path then it must be a nxm double
 %   array, where m>=2 and n is the number of data points. The last column of 
@@ -135,13 +135,13 @@ if ischar(inputArgument) % inputArgument is a file path
     % load the data
     data = load(inputArgument);
     eyePositionTraces = data.eyePositionTraces;
-    time = data.time;
+    timeArray = data.timeArray;
 
 else % inputArgument is not a file path, but carries the eye position data.
     outputFilePath = [];
     
     eyePositionTraces = inputArgument(:,1:size(inputArgument,2)-1);
-    time = inputArgument(:,size(inputArgument,2)); % last column is always 'time'
+    timeArray = inputArgument(:,size(inputArgument,2)); % last column is always 'time'
     
 end
 
@@ -158,7 +158,7 @@ end
 nanIndices = isnan(sum(eyePositionTraces,2));
 
 for i=1:size(eyePositionTraces,2)
-    eyePositionTraces(:,i) = interp1(time(~nanIndices),eyePositionTraces(~nanIndices,i),time,'linear');
+    eyePositionTraces(:,i) = interp1(timeArray(~nanIndices),eyePositionTraces(~nanIndices,i),timeArray,'linear');
 end
 
 
@@ -196,7 +196,7 @@ end
 % is tiny, e.g., a few samples long, then we interpolate.. If longer than
 % that, we stitch different parts.
 
-maxNumberOfSamples = round(maxGapDurationMs/(1000*diff(time(1:2)))); % samples
+maxNumberOfSamples = round(maxGapDurationMs/(1000*diff(timeArray(1:2)))); % samples
 
 % find the interpolated regions
 diffInd = diff([0; nanIndices(1:end-1); 0]);
@@ -218,7 +218,7 @@ sd = nanstd(filteredEyePosition,[],1);
 d = 5; % times the standard deviation from median will be removed
 remove = (filteredEyePosition(:,1) > (md(1)+d*sd(1))) | (filteredEyePosition(:,1) < (md(1)-d*sd(1))) |...
          (filteredEyePosition(:,2) > (md(2)+d*sd(2))) | (filteredEyePosition(:,2) < (md(2)-d*sd(2)));
-beforeAfter = round(0.020/diff(time(1:2))); 
+beforeAfter = round(0.020/diff(timeArray(1:2))); 
 remove = conv(double(remove),ones(beforeAfter,1),'same')>0;
 
 % now remove absolutely unuseful parts
@@ -241,8 +241,8 @@ if verbosity
        cla;
        axes(gca);
    end
-   plot(time,eyePositionTraces); hold on;
-   plot(time,filteredEyePosition,'LineWidth',2);
+   plot(timeArray,eyePositionTraces); hold on;
+   plot(timeArray,filteredEyePosition,'LineWidth',2);
    set(gca,'Fontsize',14);
    xlabel('Time (sec)');
    ylabel('Eye position');
