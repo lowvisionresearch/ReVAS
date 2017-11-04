@@ -24,7 +24,7 @@ end
 %% Set input variables to defaults if not provided
 % This second method is the EK Algorithm (Engbert & Kliegl, 2003 Vision Research).
 if ~isfield(inputParametersStructure, 'lambda')
-    lambda = 10;
+    lambda = 6;
 else
     lambda = inputParametersStructure.thresholdValue;
 end
@@ -37,7 +37,7 @@ end
 
 % units are in milliseconds
 if ~isfield(inputParametersStructure, 'stitchCriteria')
-    stitchCriteria = 20;
+    stitchCriteria = 15;
 else
     stitchCriteria = inputParametersStructure.stitchCriteria;
 end
@@ -51,7 +51,7 @@ end
 
 % units are in milliseconds
 if ~isfield(inputParametersStructure, 'minDuration')
-    minDuration = 10;
+    minDuration = 8;
 else
     minDuration = inputParametersStructure.minDuration;
 end
