@@ -1,4 +1,4 @@
-function FindSaccadesAndDrifts(inputEyePositionsFilePath, ...
+function [outputFileName, saccades, drifts] = FindSaccadesAndDrifts(inputEyePositionsFilePath, ...
     originalVideoSizePixels, originalVideoSizeDegrees, ...
     inputParametersStructure)
 %FIND SACCADES AND DRIFTS Records in a mat file an array of structures
@@ -22,23 +22,22 @@ else
 end
 
 %% Set input variables to defaults if not provided
-
 % This second method is the EK Algorithm (Engbert & Kliegl, 2003 Vision Research).
 if ~isfield(inputParametersStructure, 'lambda')
-    lambda = 6;
+    lambda = 10;
 else
     lambda = inputParametersStructure.thresholdValue;
 end
 
 if ~isfield(inputParametersStructure, 'secondaryLambda')
-    secondaryLambda = 2;
+    secondaryLambda = 3;
 else
     secondaryLambda = inputParametersStructure.secondaryThresholdValue;
 end
 
 % units are in milliseconds
 if ~isfield(inputParametersStructure, 'stitchCriteria')
-    stitchCriteria = 15;
+    stitchCriteria = 20;
 else
     stitchCriteria = inputParametersStructure.stitchCriteria;
 end
@@ -48,6 +47,13 @@ if ~isfield(inputParametersStructure, 'minAmplitude')
     minAmplitude = 0.05;
 else
     minAmplitude = inputParametersStructure.minAmplitude;
+end
+
+% units are in milliseconds
+if ~isfield(inputParametersStructure, 'minDuration')
+    minDuration = 10;
+else
+    minDuration = inputParametersStructure.minDuration;
 end
 
 % units are in milliseconds
@@ -89,10 +95,25 @@ else
     velocityMethod = inputParametersStructure.velocityMethod;
 end
 
+
+% check verbosity field
+if ~isfield(inputParametersStructure, 'enableVerbosity')
+    enableVerbosity = 0;
+else
+    enableVerbosity = inputParametersStructure.enableVerbosity;
+end
+
+% check plot axis
+if ~isfield(inputParametersStructure, 'plotAxis')
+    figure('units','normalized','outerposition',[.4 .3 .3 .3]);
+    plotAxis = gca;
+else
+    plotAxis = inputParametersStructure.plotAxis;
+end
+
+
 %% Load mat file with output from |StripAnalysis|
-
 load(inputEyePositionsFilePath);
-
 % Variables that should be loaded now:
 % - eyePositionTraces
 % - parametersStructure
@@ -100,7 +121,6 @@ load(inputEyePositionsFilePath);
 % - timeArray
 
 %% Convert eye position traces from pixels to degrees
-
 degreesPerPixelVertical = ...
     originalVideoSizeDegrees(1) / originalVideoSizePixels(1);
 degreesPerPixelHorizontal = ...
@@ -109,21 +129,9 @@ degreesPerPixelHorizontal = ...
 eyePositionTraces(:,1) = eyePositionTraces(:,1) * degreesPerPixelVertical; %#ok<NODEF>
 eyePositionTraces(:,2) = eyePositionTraces(:,2) * degreesPerPixelHorizontal;
 
-% TODO pass in axes to GUI.
 
-% Verbosity
-if isfield(inputParametersStructure, 'enableVerbosity') && inputParametersStructure.enableVerbosity
-    close all;
-    figure(1);
-    plot(timeArray, eyePositionTraces(:,1), ...
-        timeArray, eyePositionTraces(:,2));
-    title('Eye Position Traces');
-    legend('show');
-    legend('Vertical Positions', 'Horizontal Positions');
-end
 
 %% Saccade detection algorithm
-
 % 2 methods to calculate velocity
 % (as selected by |inputParametersStructure.velocityMethod|)
 %   - Method 1: v_x(t) = [x(t + \Delta t) - x(t)] / [\Delta t]
@@ -142,11 +150,12 @@ else
     error('|inputParametersStructure.velocityMethod| must be 1 or 2');
 end
 
-vectorialVelocity = sqrt(sum(velocity.^2,2));
 
+%% find saccades
 % Use the differences in the velocity to identify saccades
-medianVelocity = median(vectorialVelocity);
-sdVelocity = sqrt(median(vectorialVelocity.^2) - medianVelocity.^2);
+vectorialVelocity = sqrt(sum(velocity.^2,2));
+medianVelocity = nanmedian(vectorialVelocity);
+sdVelocity = sqrt(nanmedian(vectorialVelocity.^2) - medianVelocity.^2);
 if detectionMethod == 1
     velocityThreshold = hardVelocityThreshold;
     secondaryVelocityThreshold = hardSecondaryVelocityThreshold;
@@ -155,452 +164,326 @@ else
         medianVelocity + lambda * sdVelocity;
     secondaryVelocityThreshold = medianVelocity + secondaryLambda * sdVelocity;
 end
-saccadeIndices = vectorialVelocity > velocityThreshold;
 
-% TODO add to GUI.
-% Verbosity
-if isfield(inputParametersStructure, 'enableVerbosity') && inputParametersStructure.enableVerbosity
-    figure(2);
-    plot(timeArray, vectorialVelocity, ...
-        timeArray, ones(size(vectorialVelocity,1),1)*velocityThreshold);
-    title('Vectorial Velocity Diffs');
+% it's enough to exceed the threshold in one dimension only
+saccadeIndices = velocity > velocityThreshold;
+saccadeIndices = saccadeIndices(:,1) | saccadeIndices(:,2);
+
+% compute saccade onset and offset indices
+[onsets, offsets] = GetEventOnsetsAndOffsets(saccadeIndices);
+
+% remove artifacts
+[onsets, offsets] = RemoveFakeSaccades(timeArray, ...
+    onsets, offsets, stitchCriteria, minDuration, maxDuration, velocity);
+
+% Get saccade properties
+saccades = GetSaccadeProperties(eyePositionTraces,timeArray,onsets,offsets,velocity,...
+    secondaryVelocityThreshold);
+
+% filter out really small saccades
+toRemove = [saccades.vectorAmplitude] < minAmplitude;
+saccades(toRemove) = [];
+onsets = [saccades.onsetIndex];
+offsets = [saccades.offsetIndex];
+
+%% find drifts 
+% Anything other than saccades and artifacts, will be drifts.
+driftIndices = true(size(timeArray));
+for i=1:length(onsets)
+    driftIndices(onsets(i):offsets(i)) = false;
 end
 
-% Now use the secondary velocity thresholds to capture entire peak of those
-% identified with the first velocity threshold.
+% artifacts, the regions that cannot be classified as saccades but still
+% exceeds the velocity thresholds.
+beforeAfter = round(0.010/diff(timeArray(1:2))); 
+remove = conv(double(saccadeIndices),ones(beforeAfter,1),'same')>0;
+driftIndices(remove) = false;
 
-i = 1;
-while i <= size(saccadeIndices, 2)
-    if ~saccadeIndices(i) % this time is not part of a saccade
-        if i > 1 && saccadeIndices(i-1) && ...
-                (vectorialVelocity(i) > secondaryVelocityThreshold)
-            % Mark this time if the time before this one is part of a
-            % saccade, if we won't cause an index out of bounds error by
-            % doing so, and if this time should be identified as
-            % a saccade since it meets one of the threshold requirements.
-            saccadeIndices(i) = 1;
-            % We now continue on since we already checked that the previous
-            % time is marked.
-            i = i + 1;
-        else
-            % Otherwise we continue without marking this time.
-            i = i + 1;
-        end
-    else % this time is part of a saccade
-        if i > 1 && ~saccadeIndices(i-1) && ...
-                (vectorialVelocity(i-1) > secondaryVelocityThreshold)
-            % Mark the time before this one if this time is part of a
-            % saccade, if we won't cause an index out of bounds error by
-            % doing so, if the time before has not been identified as a
-            % saccade yet, and if the time before should be identified as
-            % a saccade since it meets one of the threshold requirements.
-            saccadeIndices(i-1) = 1;
-            % We must now check the time before the one we just marked
-            % too.
-            i = i - 1;
-        else
-            i = i + 1;
-        end
-    end
-end
 
-% Additional Verbosity for debugging purposes
-%figure;
-%plot(1:size(verticalDiffs,1), verticalDiffs, ...
-%    1:size(verticalDiffs,1), ones(size(verticalDiffs,1),1)*secondaryVerticalThresholdLower, ...
-%    1:size(verticalDiffs,1), ones(size(verticalDiffs,1),1)*secondaryVerticalThresholdUpper)
-%title('Vertical Diffs Secondary Threshold');
+% compute drift onsets and offsets
+[driftOnsets, driftOffsets] = GetEventOnsetsAndOffsets(driftIndices);
 
-%figure;
-%plot(1:size(horizontalDiffs,1), horizontalDiffs, ...
-%    1:size(horizontalDiffs,1), ones(size(horizontalDiffs,1),1)*secondaryHorizontalThresholdLower, ...
-%    1:size(horizontalDiffs,1), ones(size(horizontalDiffs,1),1)*secondaryHorizontalThresholdUpper)
-%title('Horizontal Diffs Secondary Threshold');
+% get drift parameters
+drifts = GetDriftProperties(eyePositionTraces,timeArray,driftOnsets,driftOffsets,velocity); 
 
-%% Lump together blinks that are < |stitchCriteria| apart
-
-% If the difference between any two marked saccades is less than
-% |stitchCriteria|, then lump them together as one.
-saccadesIndices = find(saccadeIndices);
-saccadesDiffs = diff(saccadesIndices);
-for i = 1:size(saccadesDiffs, 2)
-    if saccadesDiffs(i) > 1 && saccadesDiffs(i) < stitchCriteria
-        for j = 1:saccadesDiffs(i)
-            saccadeIndices(saccadesIndices(i)+j) = 1;
-        end
-    end
-end
-
-%% Remove saccades that have amplitude < |minAmplitude| or are > |maxDuration| in length
-
-saccadesIndices = find(saccadeIndices);
-saccadesDiffs = diff(saccadesIndices);
-
-% Inspect each saccade
-i = 1;
-while i < size(saccadesIndices,2)
-    
-    % Find the end of this saccade
-    j = i;
-    while j <= size(saccadesDiffs,2) && saccadesDiffs(j) == 1
-        j = j + 1;
-    end
-    
-    startOfSaccade = saccadesIndices(i);
-    endOfSaccade = saccadesIndices(j);
-    
-    % Check if this saccade is > |maxDuration| in length
-    startTime = timeArray(startOfSaccade);
-    endTime = timeArray(endOfSaccade);
-    
-    if endTime - startTime > maxDuration/1000
-        % If it is, then remove this saccade
-        for k = startOfSaccade:endOfSaccade
-           saccadeIndices(k) = 0; 
-        end
-        
-        % Continue to next saccade
-        i = j + 1;
-        continue;
-    end
-    
-    % Check if this saccade has amplitude < |minAmplitude|
-    amplitude = ...
-        sqrt((eyePositionTraces(startOfSaccade,1) - eyePositionTraces(endOfSaccade,1))^2 + ...
-        (eyePositionTraces(startOfSaccade,2) - eyePositionTraces(endOfSaccade,2))^2);
-    
-    if amplitude < minAmplitude
-        % If it is, then remove this saccade
-        for k = startOfSaccade:endOfSaccade
-           saccadeIndices(k) = 0; 
-        end
-    end
-    
-    % Continue to next saccade in any case
-    i = j + 1;
-    continue;
-end
-
-%% Calculate acclerations
-% (we use the same method that we used for velocity to get second
-% derivative)
-if velocityMethod == 1
-    verticalAccelerationDiffs = diff(verticalVelocityDiffs) ./ diff(timeArray);
-    horizontalAccelerationDiffs = diff(horizontalVelocityDiffs) ./ diff(timeArray);
-
-    verticalAccelerationDiffs = [0; verticalAccelerationDiffs];
-    horizontalAccelerationDiffs = [0; horizontalAccelerationDiffs];
-elseif velocityMethod == 2
-    len = size(timeArray,1);
-    [verticalAccelerationDiffs, horizontalAccelerationDiffs] = ...
-        deal([0,0; (verticalVelocityDiffs(3:len,:)-horizontalVelocityDiffs(1:len-2,:)) ./ ...
-        repmat(timeArray(3:len)-timeArray(1:len-2),1,2); 0,0]);
-    
-    % Erasing temporary variable to avoid confusion
-    clear len;
-end
-
-%% Store results as an array of saccade structs and drift structs
-
-% Inspect each saccade
-saccadesIndices = find(saccadeIndices);
-saccadesDiffs = diff(saccadesIndices);
-i = 1;
-saccadeStructs = [];
-while i < size(saccadesIndices,2)
-    
-    % Find the end of this saccade
-    j = i;
-    while j <= size(saccadesDiffs,2) && saccadesDiffs(j) == 1
-        j = j + 1;
-    end
-    
-    startOfSaccade = saccadesIndices(i);
-    endOfSaccade = saccadesIndices(j);
-    
-    % Store information about this saccade in a new struct.
-    if isempty(saccadeStructs)
-        saccadeStructs = [saccadeStructs struct()];
-    else
-        % Must copy an existing struct since concatenated structs in an
-        % array must have the same set of fields. This copied struct will
-        % have its fields overwritten with correct values below.
-        saccadeStructs = [saccadeStructs saccadeStructs(1)];
-    end
-    
-    % Onset Time
-    % time stamp of the start of event
-    saccadeStructs(end).onsetTime = timeArray(startOfSaccade);
-    
-    % Offset Time
-    % time stamp of end of event
-    saccadeStructs(end).offsetTime = timeArray(endOfSaccade);
-    
-    % x Start
-    % x position at start of event
-    saccadeStructs(end).xStart = eyePositionTraces(startOfSaccade,1);
-    
-    % x End
-    % x position at end of event
-    saccadeStructs(end).xEnd = eyePositionTraces(endOfSaccade,1);
-
-    % y Start
-    % y position at start of event
-    saccadeStructs(end).yStart = eyePositionTraces(startOfSaccade,2);
-
-    % y End
-    % y position at end of event
-    saccadeStructs(end).yEnd = eyePositionTraces(endOfSaccade,2);
-    
-    % Duration
-    % (Offset Time) - (Onset Time)
-    saccadeStructs(end).duration = ...
-        saccadeStructs(end).offsetTime - saccadeStructs(end).onsetTime;
-    
-    % Amplitude x
-    % abs( (x Start) - (x End) )
-    saccadeStructs(end).amplitude.x = ...
-        abs(saccadeStructs(end).xStart - saccadeStructs(end).xEnd);
-
-    % Amplitude y
-    % abs( (y Start) - (y End) )
-    saccadeStructs(end).amplitude.y = ...
-        abs(saccadeStructs(end).yStart - saccadeStructs(end).yEnd);
-    
-    % Amplitude Vector
-    % pythagorean theorem applied to Amplitudes x and y
-    saccadeStructs(end).amplitude.vector = ...
-        sqrt(saccadeStructs(end).amplitude.x^2 + saccadeStructs(end).amplitude.y^2);
-    
-    % Direction
-    % apply |atand2d| to delta y / delta x
-    % (gives range [-180, 180] degrees)
-    saccadeStructs(end).direction = ...
-        atan2d(saccadeStructs(end).yEnd - saccadeStructs(end).yStart, ...
-        saccadeStructs(end).xEnd - saccadeStructs(end).xStart);
-    
-    % x Positions
-    % excerpt of eye traces containing x positions for this saccade
-    saccadeStructs(end).position.x = ...
-        eyePositionTraces(startOfSaccade:endOfSaccade,1);
-    
-    % y Positions
-    % excerpt of eye traces containing y positions for this saccade
-    saccadeStructs(end).position.y = ...
-        eyePositionTraces(startOfSaccade:endOfSaccade,2);
-    
-    % time
-    % excerpt of time array containing times for this saccade
-    saccadeStructs(end).time = timeArray(startOfSaccade:endOfSaccade);
-
-    % x Velocity
-    % excerpt of x velocities for this saccade
-    saccadeStructs(end).velocity.x = ...
-        verticalVelocityDiffs(startOfSaccade:endOfSaccade);
-    
-    % y Velocity
-    % excerpt of y velocities for this saccade
-    saccadeStructs(end).velocity.y = ...
-        horizontalVelocityDiffs(startOfSaccade:endOfSaccade);
-    
-    % Mean x Velocity
-    % mean of x velocities for this saccade
-    saccadeStructs(end).meanVelocity.x = ...
-        mean(saccadeStructs(end).velocity.x);
-    
-    % Mean y Velocity
-    % mean of y velocities for this saccade
-    saccadeStructs(end).meanVelocity.y = ...
-        mean(saccadeStructs(end).velocity.y);
-    
-    % Peak x Velocity
-    % highest x velocity for this saccade
-    saccadeStructs(end).peakVelocity.x = ...
-        max(saccadeStructs(end).velocity.x);
-    
-    % Peak y Velocity
-    % highest y velocity for this saccade
-    saccadeStructs(end).peakVelocity.y = ...
-        max(saccadeStructs(end).velocity.y);
-    
-    % x Acceleration
-    % excerpt of x accelerations for this saccade
-    saccadeStructs(end).acceleration.x = ...
-        verticalAccelerationDiffs(startOfSaccade:endOfSaccade);
-    
-    % y Acceleration
-    % excerpt of y accelerations for this saccade
-    saccadeStructs(end).acceleration.y = ...
-        horizontalAccelerationDiffs(startOfSaccade:endOfSaccade);
-    
-    % Continue to next saccade
-    i = j + 1;
-end
-
-% Inspect each drift
-% Anything that was not a saccade is a drift
-drifts = ~saccadeIndices;
-driftsIndices = find(drifts);
-driftsDiffs = diff(driftsIndices);
-i = 1;
-driftStructs = [];
-
-while i < size(driftsIndices,2)
-    
-    % Find the end of this drift
-    j = i;
-    while j <= size(driftsDiffs,2) && driftsDiffs(j) == 1
-        j = j + 1;
-    end
-    
-    startOfdrift = driftsIndices(i);
-    endOfdrift = driftsIndices(j);
-    
-    % Store information about this drift in a new struct.
-    if isempty(driftStructs)
-        driftStructs = [driftStructs struct()];
-    else
-        % Must copy an existing struct since concatenated structs in an
-        % array must have the same set of fields. This copied struct will
-        % have its fields overwritten with correct values below.
-        driftStructs = [driftStructs driftStructs(1)];
-    end
-    
-    % Onset Time
-    % time stamp of the start of event
-    driftStructs(end).onsetTime = timeArray(startOfdrift);
-    
-    % Offset Time
-    % time stamp of end of event
-    driftStructs(end).offsetTime = timeArray(endOfdrift);
-    
-    % x Start
-    % x position at start of event
-    driftStructs(end).xStart = eyePositionTraces(startOfdrift,1);
-    
-    % x End
-    % x position at end of event
-    driftStructs(end).xEnd = eyePositionTraces(endOfdrift,1);
-
-    % y Start
-    % y position at start of event
-    driftStructs(end).yStart = eyePositionTraces(startOfdrift,2);
-
-    % y End
-    % y position at end of event
-    driftStructs(end).yEnd = eyePositionTraces(endOfdrift,2);
-    
-    % Duration
-    % (Offset Time) - (Onset Time)
-    driftStructs(end).duration = ...
-        driftStructs(end).offsetTime - driftStructs(end).onsetTime;
-    
-    % Amplitude x
-    % abs( (x Start) - (x End) )
-    driftStructs(end).amplitude.x = ...
-        abs(driftStructs(end).xStart - driftStructs(end).xEnd);
-
-    % Amplitude y
-    % abs( (y Start) - (y End) )
-    driftStructs(end).amplitude.y = ...
-        abs(driftStructs(end).yStart - driftStructs(end).yEnd);
-    
-    % Amplitude Vector
-    % pythagorean theorem applied to Amplitudes x and y
-    driftStructs(end).amplitude.vector = ...
-        sqrt(driftStructs(end).amplitude.x^2 + driftStructs(end).amplitude.y^2);
-    
-    % Direction
-    % apply |atand2d| to delta y / delta x
-    % (gives range [-180, 180] degrees)
-    driftStructs(end).direction = ...
-        atan2d(driftStructs(end).yEnd - driftStructs(end).yStart, ...
-        driftStructs(end).xEnd - driftStructs(end).xStart);
-    
-    % x Positions
-    % excerpt of eye traces containing x positions for this drift
-    driftStructs(end).position.x = ...
-        eyePositionTraces(startOfdrift:endOfdrift,1);
-    
-    % y Positions
-    % excerpt of eye traces containing y positions for this drift
-    driftStructs(end).position.y = ...
-        eyePositionTraces(startOfdrift:endOfdrift,2);
-    
-    % time
-    % excerpt of time array containing times for this drift
-    driftStructs(end).time = timeArray(startOfdrift:endOfdrift);
-
-    % x Velocity
-    % excerpt of x velocities for this drift
-    driftStructs(end).velocity.x = ...
-        verticalVelocityDiffs(startOfdrift:endOfdrift);
-    
-    % y Velocity
-    % excerpt of y velocities for this drift
-    driftStructs(end).velocity.y = ...
-        horizontalVelocityDiffs(startOfdrift:endOfdrift);
-    
-    % Mean x Velocity
-    % mean of x velocities for this drift
-    driftStructs(end).meanVelocity.x = ...
-        mean(driftStructs(end).velocity.x);
-    
-    % Mean y Velocity
-    % mean of y velocities for this drift
-    driftStructs(end).meanVelocity.y = ...
-        mean(driftStructs(end).velocity.y);
-    
-    % Peak x Velocity
-    % highest x velocity for this drift
-    driftStructs(end).peakVelocity.x = ...
-        max(driftStructs(end).velocity.x);
-    
-    % Peak y Velocity
-    % highest y velocity for this drift
-    driftStructs(end).peakVelocity.y = ...
-        max(driftStructs(end).velocity.y);
-    
-    % x Acceleration
-    % excerpt of x accelerations for this drift
-    driftStructs(end).acceleration.x = ...
-        verticalAccelerationDiffs(startOfdrift:endOfdrift);
-    
-    % y Acceleration
-    % excerpt of y accelerations for this drift
-    driftStructs(end).acceleration.y = ...
-        horizontalAccelerationDiffs(startOfdrift:endOfdrift);
-    
-    % Continue to next drift
-    i = j + 1;
-end
 
 %% Save to output mat file
-save(outputFileName, 'saccadeStructs', 'driftStructs');
+save(outputFileName, 'saccades', 'drifts');
 
 %% Verbosity for Results
+if enableVerbosity
 
-% TODO add to GUI.
-
-% Verbosity
-if isfield(inputParametersStructure, 'enableVerbosity') && inputParametersStructure.enableVerbosity
-    for i = 1:size(saccadeStructs)
-        figure(2);
-        hold on;
-        plot(saccadeStructs(i).time, saccadeStructs(i).velocity.x, 'Color', 'green');
-        
-        figure(3);
-        hold on;
-        plot(saccadeStructs(i).time, saccadeStructs(i).velocity.y, 'Color', 'green');
-    end
-    figure(2);
-    legend('show');
-    legend('Vertical Drifts', 'Lower Threshold', 'Upper Threshold', 'Vertical Saccades');
     
-    figure(3);
-    legend('show');
-    legend('Horizontal Drifts', 'Lower Threshold', 'Upper Threshold', 'Horizontal Saccades');
+    plot(plotAxis,timeArray, eyePositionTraces(:,1),'-','Color',[1 .5 .5]); hold on;
+    plot(plotAxis,timeArray, eyePositionTraces(:,2),'-','Color',[.5 .5 1]); hold on;
+    plot(plotAxis,timeArray(driftIndices), eyePositionTraces(driftIndices,1),'.','Color',[1 0 0],'LineWidth',2); hold on;
+    plot(plotAxis,timeArray(driftIndices), eyePositionTraces(driftIndices,2),'.','Color',[0 0 1],'LineWidth',2); hold on;    
+    
+    % now highlight saccades
+    for i=1:length(onsets)
+        plot(plotAxis,timeArray(onsets(i):offsets(i)),eyePositionTraces(onsets(i):offsets(i),1),'or',...
+             timeArray(onsets(i):offsets(i)),eyePositionTraces(onsets(i):offsets(i),2),'ob');
+    end
+    title(plotAxis,'Eye position');
+    set(plotAxis,'Fontsize',13);
+    xlabel(plotAxis,'Time (sec)');
+    ylabel(plotAxis,'Eye position (deg)');
+    ylim([-3 3]);
+    
 end
+
+
+
 
 end
 
+
+function [newOnsets, newOffsets] = RemoveFakeSaccades(time, ...
+    onsets, offsets, stitchCriteria, minDuration, maxDuration, velocity)
+
+
+    samplingRate = 1/diff(time(1:2));
+    stitchCriteriaSamples = round(stitchCriteria * samplingRate / 1000);
+    minDurationSamples = round(minDuration * samplingRate / 1000);
+    maxDurationSamples = round(maxDuration * samplingRate / 1000);
+    
+    % if two consecutive saccades are closer than deltaStitch, merge them
+    tempOnsets = onsets;
+    tempOffsets = offsets;
+
+    % loop until there is no pair of consecutive saccades closer than
+    % stitchCriteria 
+    while true
+        for c=1:min(length(onsets),length(offsets))-1
+            if (onsets(c+1)-offsets(c))<(stitchCriteriaSamples)
+                tempOnsets(c+1) = -1;
+                tempOffsets(c) = -1;
+            end
+        end
+
+        s_on = tempOnsets(tempOnsets ~= -1);
+        s_off = tempOffsets(tempOffsets ~= -1);
+        if sum((s_on(2:end)-s_off(1:end-1)) < (stitchCriteriaSamples))==0
+            break;
+        end
+    end
+
+    newOnsets = tempOnsets(tempOnsets ~= -1);
+    newOffsets = tempOffsets(tempOffsets ~= -1);
+
+    if newOnsets(1)==1
+        newOnsets(1) = 2;
+    end
+
+    if newOffsets(end) == length(time)
+        newOffsets(end) = length(time)-1;
+    end
+
+    % remove too brief and too long saccades
+    tooBrief = (newOffsets - newOnsets) < minDurationSamples;
+    tooLong = (newOffsets - newOnsets) > maxDurationSamples;
+    nanNeighbors = isnan(sum(velocity(newOffsets+1,:),2)) | isnan(sum(velocity(newOnsets-1,:),2));
+    discardThis = tooBrief | tooLong | nanNeighbors;
+
+    newOnsets(discardThis) = [];
+    newOffsets(discardThis) = [];
+    
+
+end
+
+
+
+function saccades = GetSaccadeProperties(eyePosition,time,onsets,offsets,...
+    velocity,secondaryThreshold)
+
+    hor = eyePosition(:,1);
+    ver = eyePosition(:,2);
+
+    % preallocate memory
+    saccades = repmat(GetEmptySaccadeStruct, length(onsets),1);
+
+    for i=1:length(onsets)
+        [newOnset, newOffset, peakVelocity, meanVelocity] = ...
+            ReviseOnsetOffset(time,onsets(i),offsets(i),velocity,secondaryThreshold);
+
+        if ~(isempty(newOnset) || isempty(newOffset) || isempty(peakVelocity))
+            
+            % extract saccade parameters
+            saccades(i).onsetTime = time(newOnset);
+            saccades(i).offsetTime = time(newOffset);
+            saccades(i).onsetIndex = newOnset;
+            saccades(i).offsetIndex = newOffset;
+            saccades(i).duration = time(newOffset) - time(newOnset);
+            saccades(i).xStart = hor(newOnset);
+            saccades(i).xEnd = hor(newOffset);
+            saccades(i).yStart = ver(newOnset);
+            saccades(i).yEnd = ver(newOffset);
+            saccades(i).xAmplitude = hor(newOffset) - hor(newOnset);
+            saccades(i).yAmplitude = ver(newOffset) - ver(newOnset);
+            saccades(i).vectorAmplitude = sqrt((hor(newOffset) - hor(newOnset)).^2 +...
+                (ver(newOffset) - ver(newOnset)).^2);
+            saccades(i).direction = atan2d((ver(newOffset) - ver(newOnset)), ...
+                (hor(newOffset) - hor(newOnset)));
+            saccades(i).peakVelocity = peakVelocity;
+            saccades(i).meanVelocity = meanVelocity;
+            saccades(i).maximumExcursion = ...
+                max(sqrt((hor(newOnset:newOffset) - repmat(hor(newOnset),newOffset-newOnset+1,1)).^2 +...
+                (ver(newOnset:newOffset) - repmat(ver(newOnset),newOffset-newOnset+1,1)).^2));
+        end
+    end
+
+end
+
+
+function saccade = GetEmptySaccadeStruct
+
+    saccade.duration = [];
+    saccade.onsetIndex = [];
+    saccade.offsetIndex = [];
+    saccade.onsetTime = [];
+    saccade.offsetTime = [];
+    saccade.xStart = [];
+    saccade.xEnd = [];
+    saccade.yStart = [];
+    saccade.yEnd = [];
+    saccade.xAmplitude = [];
+    saccade.yAmplitude = [];
+    saccade.vectorAmplitude = [];
+    saccade.direction = [];
+    saccade.peakVelocity = [];
+    saccade.meanVelocity = [];
+    saccade.maximumExcursion = [];
+
+end
+
+
+function drift = GetEmptyDriftStruct
+
+    drift.duration = [];
+    drift.onsetIndex = [];
+    drift.offsetIndex = [];
+    drift.onsetTime = [];
+    drift.offsetTime = [];
+    drift.xStart = [];
+    drift.xEnd = [];
+    drift.yStart = [];
+    drift.yEnd = [];
+    drift.xAmplitude = [];
+    drift.yAmplitude = [];
+    drift.vectorAmplitude = [];
+    drift.direction = [];
+    drift.peakVelocity = [];
+    drift.meanVelocity = [];
+    drift.maximumExcursion = [];
+
+end
+
+
+
+
+function [newOnset, newOffset, peakVel, meanVel] = ...
+    ReviseOnsetOffset(time,onset,offset,velocity,secondaryThreshold)
+
+
+    d = 10;
+
+    if onset-d<1
+        onset = 1;
+    else
+        onset = onset - d;
+    end
+    
+    if offset+d>length(time)
+        offset = length(time);
+    else
+        offset = offset+d;
+    end
+
+    vectorialVelocity = sqrt(sum(velocity(onset:offset,:).^2,2));
+    [peakVel,peakDelta] = max(vectorialVelocity);
+    meanVel = nanmean(vectorialVelocity);
+
+    onsetDelta = find(vectorialVelocity(1:peakDelta)<secondaryThreshold,1,'last');
+    offsetDelta = find(vectorialVelocity(peakDelta:end)<secondaryThreshold,1,'first');
+
+    newOnset = onset + onsetDelta;
+    newOffset = onset + peakDelta + offsetDelta;
+
+
+    % handle error cases
+    if isempty(newOffset)
+        newOffset = offset;
+    end
+
+    if isempty(newOnset)
+        newOnset = onset;
+    end
+
+    if newOnset < 0
+        newOnset = 1;
+    end
+    if newOffset > length(time)
+        newOffset = length(time);
+    end
+
+end
+
+
+function [onsets, offsets] = GetEventOnsetsAndOffsets(eventIndices)
+
+    % take the difference of indices computed above to find the onset and
+    % offset of the movement
+    dabove = [0; diff(eventIndices)];
+    onsets = find(dabove == 1);
+    offsets = find(dabove == -1);
+
+    % make sure we have an offset for every onset.
+    if length(onsets) > length(offsets)
+        offsets = [offsets; length(eventIndices)];
+    elseif length(onsets) < length(offsets)
+        offsets = offsets(1:end-1);
+    end
+
+end
+
+function drifts = GetDriftProperties(eyePosition,time,onsets,offsets,velocity)
+
+    hor = eyePosition(:,1);
+    ver = eyePosition(:,2);
+    vectorialVelocity = sqrt(sum(velocity.^2,2));
+
+    % preallocate memory
+    drifts = repmat(GetEmptyDriftStruct, length(onsets),1);
+
+    for i=1:length(onsets)
+        currentOnset = onsets(i);
+        currentOffset = offsets(i);
+        
+        peakVelocity = max(vectorialVelocity(currentOnset:currentOffset));
+        meanVelocity = max(vectorialVelocity(currentOnset:currentOffset));
+            
+        % extract saccade parameters
+        drifts(i).onsetTime = time(currentOnset);
+        drifts(i).offsetTime = time(currentOffset);
+        drifts(i).onsetIndex = currentOnset;
+        drifts(i).offsetIndex = currentOffset;
+        drifts(i).duration = time(currentOffset) - time(currentOnset);
+        drifts(i).xStart = hor(currentOnset);
+        drifts(i).xEnd = hor(currentOffset);
+        drifts(i).yStart = ver(currentOnset);
+        drifts(i).yEnd = ver(currentOffset);
+        drifts(i).xAmplitude = hor(currentOffset) - hor(currentOnset);
+        drifts(i).yAmplitude = ver(currentOffset) - ver(currentOnset);
+        drifts(i).vectorAmplitude = sqrt((hor(currentOffset) - hor(currentOnset)).^2 +...
+            (ver(currentOffset) - ver(currentOnset)).^2);
+        drifts(i).direction = atan2d((ver(currentOffset) - ver(currentOnset)), ...
+            (hor(currentOffset) - hor(currentOnset)));
+        drifts(i).peakVelocity = peakVelocity;
+        drifts(i).meanVelocity = meanVelocity;
+        drifts(i).maximumExcursion = ...
+            max(sqrt((hor(currentOnset:currentOffset) - repmat(hor(currentOnset),currentOffset-currentOnset+1,1)).^2 +...
+            (ver(currentOnset:currentOffset) - repmat(ver(currentOnset),currentOffset-currentOnset+1,1)).^2));
+    end
+
+
+end

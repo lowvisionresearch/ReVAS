@@ -95,7 +95,7 @@ else
 end
 
 if ~isfield(parametersStructure,'filterParameters')
-    filterParameters = {[3 15]};  
+    filterParameters = {[3 25]};  
 else
     filterParameters = parametersStructure.filterParameters;
 end
