@@ -62,7 +62,7 @@ function [filteredEyePosition, outputFilePath, parametersStructure] = ...
 %
 %
 
-%% handle misusage 
+%% Handle misusage 
 if nargin<1
     error('FilterEyePosition needs at least two input arguments.')
 end
@@ -75,7 +75,7 @@ if ~isstruct(parametersStructure)
     error('''parametersStructure'' must be a struct.');
 end
 
-%% check parameterStructure
+%% Check |parameterStructure|
 if ~isfield(parametersStructure,'overwrite')
     overwrite = 0; 
 else
@@ -113,7 +113,7 @@ else
 end
 
 
-%% handle inputArgument scenarios.
+%% Handle |inputArgument| scenarios.
 if ischar(inputArgument) % inputArgument is a file path
     outputFilePath = [inputArgument(1:end-4) '_filtered.mat'];
     
@@ -151,7 +151,7 @@ if size(eyePositionTraces,2) >= size(eyePositionTraces,1)
 end
 
 
-%% prepare data for filtering
+%% Prepare data for filtering.
 % nan values will prevent most filters from working properly. So we
 % interpolate/extrapolate over them before filtering. After filtering, we
 % keep interpolated regions which are shorter than 'maxGapDurationMs'.
@@ -162,7 +162,7 @@ for i=1:size(eyePositionTraces,2)
 end
 
 
-%% do filtering
+%% Do filtering.
 % note: although some filters can be applied to 2D arrays directly (e.g., 
 % sgolayfilt), to preserve generality, we will filter each position
 % column separately.
@@ -191,7 +191,7 @@ for i=1:length(filterTypes)
 end
 
 
-%% now remove the interpolated regions
+%% Remove the interpolated regions.
 % the following interpolates/stitches gap region appropriately. If the gap
 % is tiny, e.g., a few samples long, then we interpolate.. If longer than
 % that, we stitch different parts.
@@ -210,7 +210,7 @@ for i=1:length(regionsToBeFixed)
     nanIndices(start(regionsToBeFixed(i)):stop(regionsToBeFixed(i))) = false;
 end
 
-%% now remove the rest
+%% Remove the rest.
 % while we are at it, also remove the parts where position is grossly off
 md = nanmedian(filteredEyePosition,1);
 sd = nanstd(filteredEyePosition,[],1);
@@ -225,14 +225,14 @@ remove = conv(double(remove),ones(beforeAfter,1),'same')>0;
 filteredEyePosition(nanIndices | remove,:) = NaN;
 
 
-%% save filtered data
+%% Save filtered data.
 if ~isempty(outputFilePath)
     data.filteredEyePosition = filteredEyePosition;
     data.filterParametersStructure = parametersStructure;
     save(outputFilePath,'-struct','data');
 end
 
-%% give feedback if user requested
+%% Give feedback if user requested.
 if verbosity
    if ishandle(plotAxis)
        axes(plotAxis);
@@ -246,7 +246,6 @@ if verbosity
    set(gca,'Fontsize',14);
    xlabel('Time (sec)');
    ylabel('Eye position');
-   
 end
 
 

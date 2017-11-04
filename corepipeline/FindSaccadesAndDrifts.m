@@ -23,16 +23,17 @@ end
 
 %% Set input variables to defaults if not provided
 
-if ~isfield(inputParametersStructure, 'thresholdValue')
-    thresholdValue = 6;
+% This second method is the EK Algorithm (Engbert & Kliegl, 2003 Vision Research).
+if ~isfield(inputParametersStructure, 'lambda')
+    lambda = 6;
 else
-    thresholdValue = inputParametersStructure.thresholdValue;
+    lambda = inputParametersStructure.thresholdValue;
 end
 
-if ~isfield(inputParametersStructure, 'secondaryThresholdValue')
-    secondaryThresholdValue = 2;
+if ~isfield(inputParametersStructure, 'secondaryLambda')
+    secondaryLambda = 2;
 else
-    secondaryThresholdValue = inputParametersStructure.secondaryThresholdValue;
+    secondaryLambda = inputParametersStructure.secondaryThresholdValue;
 end
 
 % units are in milliseconds
@@ -44,7 +45,7 @@ end
 
 % units are in degrees
 if ~isfield(inputParametersStructure, 'minAmplitude')
-    minAmplitude = 0.1;
+    minAmplitude = 0.05;
 else
     minAmplitude = inputParametersStructure.minAmplitude;
 end
@@ -67,14 +68,14 @@ end
 
 % units are in degrees/second
 if ~isfield(inputParametersStructure, 'hardVelocityThreshold')
-    hardVelocityThreshold = 35;
+    hardVelocityThreshold = 25;
 else
     hardVelocityThreshold = inputParametersStructure.hardVelocityThreshold;
 end
 
 % units are in degrees/second
 if ~isfield(inputParametersStructure, 'hardSecondaryVelocityThreshold')
-    hardSecondaryVelocityThreshold = 35; % TODO what's the default?
+    hardSecondaryVelocityThreshold = 15;
 else
     hardSecondaryVelocityThreshold = inputParametersStructure.hardVelocityThreshold;
 end
@@ -92,7 +93,7 @@ end
 
 load(inputEyePositionsFilePath);
 
-% Variables that should be Loaded now:
+% Variables that should be loaded now:
 % - eyePositionTraces
 % - parametersStructure
 % - referenceFramePath
@@ -105,16 +106,17 @@ degreesPerPixelVertical = ...
 degreesPerPixelHorizontal = ...
     originalVideoSizeDegrees(2) / originalVideoSizePixels(2);
 
-% TODO this step wasn't necessary for tester file
-%eyePositionTraces(:,1) = eyePositionTraces(:,1) * degreesPerPixelVertical; %#ok<NODEF>
-%eyePositionTraces(:,2) = eyePositionTraces(:,2) * degreesPerPixelHorizontal;
+eyePositionTraces(:,1) = eyePositionTraces(:,1) * degreesPerPixelVertical; %#ok<NODEF>
+eyePositionTraces(:,2) = eyePositionTraces(:,2) * degreesPerPixelHorizontal;
+
+% TODO pass in axes to GUI.
 
 % Verbosity
 if isfield(inputParametersStructure, 'enableVerbosity') && inputParametersStructure.enableVerbosity
     close all;
     figure(1);
     plot(timeArray, eyePositionTraces(:,1), ...
-        timeArray, eyePositionTraces(:,2)); %#ok<NODEF>
+        timeArray, eyePositionTraces(:,2));
     title('Eye Position Traces');
     legend('show');
     legend('Vertical Positions', 'Horizontal Positions');
@@ -127,113 +129,56 @@ end
 %   - Method 1: v_x(t) = [x(t + \Delta t) - x(t)] / [\Delta t]
 %   - Method 2: v_x(t) = [x(t + \Delta t) - x(t - \Delta t)] / [2 \Delta t]
 if velocityMethod == 1
-    verticalVelocityDiffs = diff(eyePositionTraces(:,1)) ./ diff(timeArray);
-    horizontalVelocityDiffs = diff(eyePositionTraces(:,2)) ./ diff(timeArray);
-elseif velocityMethod == 2
-    verticalDiffs = nan(size(eyePositionTraces,1)-2,1);
-    horizontalDiffs = nan(size(eyePositionTraces,1)-2,1);
-    timeDiffs = nan(size(eyePositionTraces,1)-2,1);
-    
-    for i = 1:size(eyePositionTraces,1)-2
-        verticalDiffs(i) = ...
-            eyePositionTraces(i+2,1) - eyePositionTraces(i,1);
-        horizontalDiffs(i) = ...
-            eyePositionTraces(i+2,2) - eyePositionTraces(i,2);
-        timeDiffs(i) = ...
-            timeArray(i+2) - timeArray(i);
-    end
-    
-    verticalVelocityDiffs = verticalDiffs ./ timeDiffs;
-    horizontalVelocityDiffs = horizontalDiffs ./ timeDiffs;
+    velocity = [0,0; diff(eyePositionTraces) ./ repmat(diff(timeArray),1,2)];
+elseif velocityMethod == 2    
+    len = size(timeArray,1);
+    velocity = ...
+        [0,0; (eyePositionTraces(3:len,:)-eyePositionTraces(1:len-2,:)) ./ ...
+        repmat(timeArray(3:len)-timeArray(1:len-2),1,2); 0,0];
     
     % Erasing temporary variable to avoid confusion
-    clear verticalDiffs;
-    clear horizontalDiffs;
+    clear len;
 else
     error('|inputParametersStructure.velocityMethod| must be 1 or 2');
 end
 
-% Use the differences in the vertical velocity to identify saccades
-medianOfVerticalVelocityDiffs = median(verticalVelocityDiffs);
-standardDeviationOfVerticalVelocityDiffs = ...
-    sqrt(median(verticalVelocityDiffs.^2) - medianOfVerticalVelocityDiffs^2);
-if detectionMethod == 1
-    verticalVelocityThresholdLower = -hardVelocityThreshold;
-    verticalVelocityThresholdUpper = hardVelocityThreshold;
-else
-    verticalVelocityThresholdLower = ...
-        medianOfVerticalVelocityDiffs - thresholdValue * standardDeviationOfVerticalVelocityDiffs;
-    verticalVelocityThresholdUpper = ...
-        medianOfVerticalVelocityDiffs + thresholdValue * standardDeviationOfVerticalVelocityDiffs;
-end
-if velocityMethod == 1
-    verticalVelocityDiffs = [0; verticalVelocityDiffs];
-elseif velocityMethod == 2
-    verticalVelocityDiffs = [0; verticalVelocityDiffs; 0];
-end
-verticalSaccades = or(verticalVelocityDiffs' < verticalVelocityThresholdLower, ...
-    verticalVelocityDiffs' > verticalVelocityThresholdUpper);
+vectorialVelocity = sqrt(sum(velocity.^2,2));
 
-% Use the differences in the horizontal velocity to identify saccades
-medianOfHorizontalVelocityDiffs = median(horizontalVelocityDiffs);
-standardDeviationOfHorizontalVelocityDiffs = ...
-    sqrt(median(horizontalVelocityDiffs.^2) - medianOfHorizontalVelocityDiffs^2);
+% Use the differences in the velocity to identify saccades
+medianVelocity = median(vectorialVelocity);
+sdVelocity = sqrt(median(vectorialVelocity.^2) - medianVelocity.^2);
 if detectionMethod == 1
-    horizontalVelocityThresholdLower = -hardVelocityThreshold;
-    horizontalVelocityThresholdUpper = hardVelocityThreshold;
+    velocityThreshold = hardVelocityThreshold;
+    secondaryVelocityThreshold = hardSecondaryVelocityThreshold;
 else
-    horizontalVelocityThresholdLower = ...
-        medianOfHorizontalVelocityDiffs - thresholdValue * standardDeviationOfHorizontalVelocityDiffs;
-    horizontalVelocityThresholdUpper = ...
-        medianOfHorizontalVelocityDiffs + thresholdValue * standardDeviationOfHorizontalVelocityDiffs;
+    velocityThreshold = ...
+        medianVelocity + lambda * sdVelocity;
+    secondaryVelocityThreshold = medianVelocity + secondaryLambda * sdVelocity;
 end
-if velocityMethod == 1
-    horizontalVelocityDiffs = [0; horizontalVelocityDiffs];
-elseif velocityMethod == 2
-    horizontalVelocityDiffs = [0; horizontalVelocityDiffs; 0];
-end
-horizontalSaccades = or(horizontalVelocityDiffs' < horizontalVelocityThresholdLower, ...
-    horizontalVelocityDiffs' > horizontalVelocityThresholdUpper);
+saccadeIndices = vectorialVelocity > velocityThreshold;
 
+% TODO add to GUI.
 % Verbosity
 if isfield(inputParametersStructure, 'enableVerbosity') && inputParametersStructure.enableVerbosity
     figure(2);
-    plot(timeArray, verticalVelocityDiffs, ...
-        timeArray, ones(size(verticalVelocityDiffs,1),1)*verticalVelocityThresholdLower, ...
-        timeArray, ones(size(verticalVelocityDiffs,1),1)*verticalVelocityThresholdUpper)
-    title('Vertical Velocity Diffs');
-
-    figure(3);
-    plot(timeArray, horizontalVelocityDiffs, ...
-        timeArray, ones(size(horizontalVelocityDiffs,1),1)*horizontalVelocityThresholdLower, ...
-        timeArray, ones(size(horizontalVelocityDiffs,1),1)*horizontalVelocityThresholdUpper)
-    title('Horizontal Velocity Diffs');
+    plot(timeArray, vectorialVelocity, ...
+        timeArray, ones(size(vectorialVelocity,1),1)*velocityThreshold);
+    title('Vectorial Velocity Diffs');
 end
 
 % Now use the secondary velocity thresholds to capture entire peak of those
-% identified with the first velocity thresholds.
+% identified with the first velocity threshold.
 
-% Doing this for verticalVelocitySaccades.
-if detectionMethod == 1
-    secondaryVerticalVelocityThresholdLower = -hardSecondaryVelocityThreshold;
-    secondaryVerticalVelocityThresholdUpper = hardSecondaryVelocityThreshold;
-else
-    secondaryVerticalVelocityThresholdLower = ...
-        medianOfVerticalVelocityDiffs - secondaryThresholdValue * standardDeviationOfVerticalVelocityDiffs;
-    secondaryVerticalVelocityThresholdUpper = ...
-        medianOfVerticalVelocityDiffs + secondaryThresholdValue * standardDeviationOfVerticalVelocityDiffs;
-end
 i = 1;
-while i <= size(verticalSaccades, 2)
-    if ~verticalSaccades(i) % this time is not part of a saccade
-        if i > 1 && verticalSaccades(i-1) && ...
-                (verticalVelocityDiffs(i) < secondaryVerticalVelocityThresholdLower || ...
-                verticalVelocityDiffs(i) > secondaryVerticalVelocityThresholdUpper)
+while i <= size(saccadeIndices, 2)
+    if ~saccadeIndices(i) % this time is not part of a saccade
+        if i > 1 && saccadeIndices(i-1) && ...
+                (vectorialVelocity(i) > secondaryVelocityThreshold)
             % Mark this time if the time before this one is part of a
             % saccade, if we won't cause an index out of bounds error by
             % doing so, and if this time should be identified as
             % a saccade since it meets one of the threshold requirements.
-            verticalSaccades(i) = 1;
+            saccadeIndices(i) = 1;
             % We now continue on since we already checked that the previous
             % time is marked.
             i = i + 1;
@@ -242,61 +187,14 @@ while i <= size(verticalSaccades, 2)
             i = i + 1;
         end
     else % this time is part of a saccade
-        if i > 1 && ~verticalSaccades(i-1) && ...
-                (verticalVelocityDiffs(i-1) < secondaryVerticalVelocityThresholdLower || ...
-                verticalVelocityDiffs(i-1) > secondaryVerticalVelocityThresholdUpper)
+        if i > 1 && ~saccadeIndices(i-1) && ...
+                (vectorialVelocity(i-1) > secondaryVelocityThreshold)
             % Mark the time before this one if this time is part of a
             % saccade, if we won't cause an index out of bounds error by
             % doing so, if the time before has not been identified as a
             % saccade yet, and if the time before should be identified as
             % a saccade since it meets one of the threshold requirements.
-            verticalSaccades(i-1) = 1;
-            % We must now check the time before the one we just marked
-            % too.
-            i = i - 1;
-        else
-            i = i + 1;
-        end
-    end
-end
-% Repeat same logic but for horizonalSaccades
-if detectionMethod == 1
-    secondaryHorizontalThresholdLower = -hardSecondaryVelocityThreshold;
-    secondaryHorizontalThresholdUpper = hardSecondaryVelocityThreshold;
-else
-    secondaryHorizontalThresholdLower = ...
-        medianOfHorizontalVelocityDiffs - secondaryThresholdValue * standardDeviationOfHorizontalVelocityDiffs;
-    secondaryHorizontalThresholdUpper = ...
-        medianOfHorizontalVelocityDiffs + secondaryThresholdValue * standardDeviationOfHorizontalVelocityDiffs;
-end
-i = 1;
-while i <= size(horizontalSaccades, 2)
-    if ~horizontalSaccades(i) % this time is not part of a saccade
-        if i > 1 && horizontalSaccades(i-1) && ...
-                (horizontalVelocityDiffs(i) < secondaryHorizontalThresholdLower || ...
-                horizontalVelocityDiffs(i) > secondaryHorizontalThresholdUpper)
-            % Mark this time if the time before this one is part of a
-            % saccade, if we won't cause an index out of bounds error by
-            % doing so, and if this time should be identified as
-            % a saccade since it meets one of the threshold requirements.
-            horizontalSaccades(i) = 1;
-            % We now continue on since we already checked that the previous
-            % time is marked.
-            i = i + 1;
-        else
-            % Otherwise we continue without marking this time.
-            i = i + 1;
-        end
-    else % this time is part of a saccade
-        if i > 1 && ~horizontalSaccades(i-1) && ...
-                (horizontalVelocityDiffs(i-1) < secondaryHorizontalThresholdLower || ...
-                horizontalVelocityDiffs(i-1) > secondaryHorizontalThresholdUpper)
-            % Mark the time before this one if this time is part of a
-            % saccade, if we won't cause an index out of bounds error by
-            % doing so, if the time before has not been identified as a
-            % saccade yet, and if the time before should be identified as
-            % a saccade since it meets one of the threshold requirements.
-            horizontalSaccades(i-1) = 1;
+            saccadeIndices(i-1) = 1;
             % We must now check the time before the one we just marked
             % too.
             i = i - 1;
@@ -319,26 +217,23 @@ end
 %    1:size(horizontalDiffs,1), ones(size(horizontalDiffs,1),1)*secondaryHorizontalThresholdUpper)
 %title('Horizontal Diffs Secondary Threshold');
 
-% Combine results from both vertical and horizontal approaches
-saccades = or(verticalSaccades, horizontalSaccades);
-
 %% Lump together blinks that are < |stitchCriteria| apart
 
 % If the difference between any two marked saccades is less than
 % |stitchCriteria|, then lump them together as one.
-saccadesIndices = find(saccades);
+saccadesIndices = find(saccadeIndices);
 saccadesDiffs = diff(saccadesIndices);
 for i = 1:size(saccadesDiffs, 2)
     if saccadesDiffs(i) > 1 && saccadesDiffs(i) < stitchCriteria
         for j = 1:saccadesDiffs(i)
-            saccades(saccadesIndices(i)+j) = 1;
+            saccadeIndices(saccadesIndices(i)+j) = 1;
         end
     end
 end
 
 %% Remove saccades that have amplitude < |minAmplitude| or are > |maxDuration| in length
 
-saccadesIndices = find(saccades);
+saccadesIndices = find(saccadeIndices);
 saccadesDiffs = diff(saccadesIndices);
 
 % Inspect each saccade
@@ -361,7 +256,7 @@ while i < size(saccadesIndices,2)
     if endTime - startTime > maxDuration/1000
         % If it is, then remove this saccade
         for k = startOfSaccade:endOfSaccade
-           saccades(k) = 0; 
+           saccadeIndices(k) = 0; 
         end
         
         % Continue to next saccade
@@ -377,7 +272,7 @@ while i < size(saccadesIndices,2)
     if amplitude < minAmplitude
         % If it is, then remove this saccade
         for k = startOfSaccade:endOfSaccade
-           saccades(k) = 0; 
+           saccadeIndices(k) = 0; 
         end
     end
     
@@ -396,33 +291,19 @@ if velocityMethod == 1
     verticalAccelerationDiffs = [0; verticalAccelerationDiffs];
     horizontalAccelerationDiffs = [0; horizontalAccelerationDiffs];
 elseif velocityMethod == 2
-    verticalDiffs = nan(size(verticalVelocityDiffs,1)-2,1);
-    horizontalDiffs = nan(size(horizontalVelocityDiffs,1)-2,1);
-    % timeDiffs are the same as before, do not need to recalculate
-
-    for i = 1:size(verticalVelocityDiffs,1)-2
-        % note that: size(verticalDiffs) == size(horizontalDiffs)
-        verticalDiffs(i) = ...
-            verticalVelocityDiffs(i+2) - verticalVelocityDiffs(i);
-        horizontalDiffs(i) = ...
-            horizontalVelocityDiffs(i+2) - horizontalVelocityDiffs(i);
-    end
-
-    verticalAccelerationDiffs = verticalDiffs ./ timeDiffs;
-    horizontalAccelerationDiffs = horizontalDiffs ./ timeDiffs;
-
-    verticalAccelerationDiffs = [0; verticalAccelerationDiffs; 0];
-    horizontalAccelerationDiffs = [0; horizontalAccelerationDiffs; 0];
-
-    % Erasing temporary variables to avoid confusion
-    clear verticalDiffs;
-    clear horizontalDiffs;
+    len = size(timeArray,1);
+    [verticalAccelerationDiffs, horizontalAccelerationDiffs] = ...
+        deal([0,0; (verticalVelocityDiffs(3:len,:)-horizontalVelocityDiffs(1:len-2,:)) ./ ...
+        repmat(timeArray(3:len)-timeArray(1:len-2),1,2); 0,0]);
+    
+    % Erasing temporary variable to avoid confusion
+    clear len;
 end
 
 %% Store results as an array of saccade structs and drift structs
 
 % Inspect each saccade
-saccadesIndices = find(saccades);
+saccadesIndices = find(saccadeIndices);
 saccadesDiffs = diff(saccadesIndices);
 i = 1;
 saccadeStructs = [];
@@ -558,7 +439,7 @@ end
 
 % Inspect each drift
 % Anything that was not a saccade is a drift
-drifts = ~saccades;
+drifts = ~saccadeIndices;
 driftsIndices = find(drifts);
 driftsDiffs = diff(driftsIndices);
 i = 1;
@@ -698,6 +579,8 @@ end
 save(outputFileName, 'saccadeStructs', 'driftStructs');
 
 %% Verbosity for Results
+
+% TODO add to GUI.
 
 % Verbosity
 if isfield(inputParametersStructure, 'enableVerbosity') && inputParametersStructure.enableVerbosity

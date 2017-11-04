@@ -890,9 +890,9 @@ function configFilt_Callback(hObject, eventdata, handles)
 % hObject    handle to configFilt (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+FilteringParameters;
 
-
-% --- Executes on button press in configFilt.
+% --- Executes on button press in configReRef.
 function configReRef_Callback(hObject, eventdata, handles)
 % hObject    handle to configFilt (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
