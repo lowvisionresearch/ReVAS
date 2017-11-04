@@ -244,6 +244,21 @@ handles.config.stripSearchWindowHeight = 79;
 handles.config.stripSubpixelInterp = true;
 handles.config.stripNeighborhoodSize = 7;
 handles.config.stripSubpixelDepth = 2;
+% Filtering
+handles.config.filtOverwrite = true;
+handles.config.filtVerbosity = true;
+handles.config.filtMaxGapDur = 10;
+handles.config.filtEnableMedian1 = true;
+handles.config.filtEnableSgo1 = false;
+handles.config.filtMedian1 = 11;
+handles.config.filtPoly1 = 3;
+handles.config.filtKernel1 = 15;
+handles.config.filtEnableMedian2 = false;
+handles.config.filtEnableSgo2 = true;
+handles.config.filtEnableNoFilt2 = false;
+handles.config.filtMedian2 = 11;
+handles.config.filtPoly2 = 3;
+handles.config.filtKernel2 = 15;
 % Sac
 handles.config.sacOverwrite = true;
 handles.config.sacVerbosity = true;
