@@ -38,11 +38,11 @@ catch
     badFrames = [];
 end
 
-%% Set up all variables
+%% Initialize variables
 stripIndices = params.positions;
 t1 = params.time;
 
-% grabbing info about the video and strips
+% Grabbing info about the video and strips
 videoInfo = VideoReader(fileName);
 frameHeight = videoInfo.Height;
 width = videoInfo.Width;
@@ -50,11 +50,11 @@ frameRate = videoInfo.Framerate;
 totalFrames = frameRate * videoInfo.Duration;
 stripsPerFrame = floor(frameHeight/params.newStripHeight);
 
-% setting up templates for reference frame and counter array
+% Set up templates for reference frame and counter array
 counterArray = zeros(frameHeight*3);
 refFrame = zeros(frameHeight*3);
 %% Set up the interpolation
-% scaling the time array to accomodate new strip height
+% Scale the time array to accomodate new strip height
 scalingFactor = ((params.stripHeight)/2)/(frameRate*frameHeight);
 t1 = t1 + scalingFactor;
 dt = params.newStripHeight / (frameRate * frameHeight);
@@ -67,7 +67,7 @@ end
 
 %% Remove NaNs in stripIndices
 
-% Then replace the rest of the NaNs with linear interpolation, done
+% Replace the rest of the NaNs with linear interpolation, done
 % manually in a helper function. NaNs at the end of stripIndices will be
 % deleted, along with their corresponding time points.
 [filteredStripIndices1, lengthCutOut1, numberOfNaNs1] = FilterStrips(stripIndices(:, 1));
