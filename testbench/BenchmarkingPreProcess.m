@@ -11,8 +11,8 @@ close all;
 addpath(genpath('..'));
 
 CONTAINS_STIM = true;
-IS_RODENSTOCK = true;
-ONLY_REGENERATE_BLINKS = true;
+IS_RODENSTOCK = false;
+ONLY_REGENERATE_BLINKS = false;
 
 filenames = uipickfiles;
 if ~iscell(filenames)
@@ -92,7 +92,7 @@ for i = 1:length(filenames)
         
     % Step 6: Detect blinks and bad frames
     % Default:
-    parametersStructure.thresholdValue = 1.2;
+    parametersStructure.thresholdValue = inf;
     parametersStructure.upperTail = false;
     %parametersStructure.removalAreaSize = [60, 100];
     %parametersStructure.stitchCriteria = 10;
