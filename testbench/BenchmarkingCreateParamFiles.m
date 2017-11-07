@@ -57,34 +57,34 @@ for i = 1:length(filenames)
     %coarseParameters.removalAreaSize = [60, 100];
     
     % Customized params (for TSLO AMD)
-    coarseParameters.minimumPeakThreshold = 0.25;
-    coarseParameters.maximumPeakRatio = 0.95;
-    coarseParameters.searchWindowPercentage = 0.66;
-    
-    fineParameters.maximumPeakRatio = 0.9;
-    fineParameters.minimumPeakThreshold = 0.25;
-    fineParameters.searchWindowPercentage = 0.66;
-    fineParameters.numberOfIterations = 2;
-    
-    stripParameters.minimumPeakThreshold = 0.25;
-    stripParameters.maximumPeakRatio = 0.9;
-    stripParameters.searchWindowPercentage = 0.66;
-    % End of TSLO AMD params
-    
-    % Customized params for TSLO normal
-%     coarseParameters.thresholdValue = inf;
-%     coarseParameters.minimumPeakThreshold = 0.2;
+%     coarseParameters.minimumPeakThreshold = 0.25;
 %     coarseParameters.maximumPeakRatio = 0.95;
 %     coarseParameters.searchWindowPercentage = 0.66;
 %     
-%     fineParameters.numberOfIterations = 2;
+%     fineParameters.maximumPeakRatio = 0.9;
 %     fineParameters.minimumPeakThreshold = 0.25;
-%     fineParameters.maximumPeakRatio = 0.85;
 %     fineParameters.searchWindowPercentage = 0.66;
+%     fineParameters.numberOfIterations = 2;
 %     
-%     stripParameters.minimumPeakValue = 0.25;
-%     stripParameters.maximumPeakRatio = 0.85;
+%     stripParameters.minimumPeakThreshold = 0.25;
+%     stripParameters.maximumPeakRatio = 0.9;
 %     stripParameters.searchWindowPercentage = 0.66;
+    % End of TSLO AMD params
+    
+    % Customized params for TSLO normal
+    coarseParameters.thresholdValue = inf;
+    coarseParameters.minimumPeakThreshold = 0.2;
+    coarseParameters.maximumPeakRatio = 0.95;
+    coarseParameters.searchWindowPercentage = 0.66;
+    
+    fineParameters.numberOfIterations = 2;
+    fineParameters.minimumPeakThreshold = 0.25;
+    fineParameters.maximumPeakRatio = 0.85;
+    fineParameters.searchWindowPercentage = 0.66;
+    
+    stripParameters.minimumPeakValue = 0.25;
+    stripParameters.maximumPeakRatio = 0.85;
+    stripParameters.searchWindowPercentage = 0.66;
  
     % End of TSLO normal params
     

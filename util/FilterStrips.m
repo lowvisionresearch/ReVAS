@@ -1,5 +1,5 @@
 function [filteredStripIndices, lengthCutOut, numberOfNaNs] = FilterStrips(stripIndices)
-% FilterStrips     Replace all NaNs in a column vector with interpolation
+% FilterStrips     Replace all NaNs in a column vector with linear interpolation
 %   FilterStrips(stripIndices) takes a column vector and interpolates
 %   between the values "bordering" each strip of consecutive NaNs. Then it
 %   returns the new vector.
@@ -23,7 +23,7 @@ if i >= 2
 end
 numberOfNaNs = i-1;
 
-% get indices of all NaN values
+% Get indices of all NaN values
 NaNIndices = find(isnan(stripIndices));
 NaNIndicesCopy = NaNIndices;
 NaNIndicesStorage = NaNIndices;
@@ -134,12 +134,6 @@ while ~isempty(startAndEndPairs)
                 end
             end
         end
-%         disp([start ending])
-%         interpolatedPositions = interp1([start ending], [start ending], start:dy:ending, 'pchip');
-%         for point = 2:size(interpolatedPositions,2)-1
-%             stripIndices(NaNIndices(1)) = interpolatedPositions(point);
-%             NaNIndices = NaNIndices(2:end);
-%         end
     end
     startAndEndPairs = startAndEndPairs(4:end);
 end
