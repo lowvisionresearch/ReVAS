@@ -39,7 +39,7 @@ if ~isfield(parametersStructure, 'smoothing')
 else
     smoothing = parametersStructure.smoothing;
     if ~IsNaturalNumber(smoothing)
-        error('smoothing should be a natural number');
+        error('smoothing must be a natural number');
     end
 end
 
@@ -48,7 +48,7 @@ if ~isfield(parametersStructure, 'lowSpatialFrequencyCutoff')
 else
     lowSpatialFrequencyCutoff = parametersStructure.lowSpatialFrequencyCutoff;
     if ~IsNonNegativeRealNumber(lowSpatialFrequencyCutoff)
-        error('lowSpatialFrequencyCutoff should be a non-negative real number');
+        error('lowSpatialFrequencyCutoff must be a non-negative real number');
     end
 end
 

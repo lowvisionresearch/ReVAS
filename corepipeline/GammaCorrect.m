@@ -18,12 +18,15 @@ else
     RevasWarning(['GammaCorrect() is proceeding and overwriting an existing file. (' outputVideoPath ')'], parametersStructure);
 end
 
-%% Set gammaExponent
+%% Set parameters to defaults if not specified.
 
 if ~isfield(parametersStructure, 'gammaExponent')
     gammaExponent = 0.6;
 else
     gammaExponent = parametersStructure.gammaExponent;
+    if ~IsRealNumber(gammaExponent)
+       error('gammaExponent must be a real number'); 
+    end
 end
 
 %% Gamma correct frame by frame
