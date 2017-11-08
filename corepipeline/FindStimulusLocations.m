@@ -9,16 +9,34 @@ function FindStimulusLocations(inputVideoPath, stimulus, parametersStructure, re
 %   |parametersStructure.overwrite| determines whether an existing output
 %   file should be overwritten and replaced if it already exists.
 
-outputFileName = [inputVideoPath(1:end-4) '_stimlocs'];
+matFileName = [inputVideoPath(1:end-4) '_stimlocs'];
 
 %% Handle overwrite scenarios.
-if ~exist([outputFileName '.mat'], 'file')
+if ~exist([matFileName '.mat'], 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
     warning('FindStimulusLocations() did not execute because it would overwrite existing file.');
     return;
 else
     warning('FindStimulusLocations() is proceeding and overwriting an existing file.');
+end
+
+%% Set parameters to defaults if not specified.
+
+% Validation on the input stimulus is performed as it is converted to a
+% matrix.
+
+if nargin == 3
+   stimulusSize = size(stimulus); 
+else
+   stimulusSize = removalAreaSize;
+   if size(size(stimulusSize)) == [1 2]
+       stimulusSize = stimulusSize';
+   elseif size(size(stimulusSize)) ~= [2 1]
+      error('stimulusSize must be a 2 by 1 size array'); 
+   elseif ~IsNaturalNumber(stimulusSize(1)) || ~IsNaturalNumber(stimulusSize(2))
+      error('values of stimulusSize must be natural numbers'); 
+   end
 end
 
 %% Convert stimulus to matrix
@@ -152,17 +170,14 @@ for i = 1:numberOfFrames
 end
 
 %% Save stimulus size
-% Set default for |removalAreaSize| if not specified as size of stimulus.
-if nargin == 3
-   stimulusSize = size(stimulus); 
-else
-   stimulusSize = removalAreaSize;
+% Adjust by stimulus size if necessary.
+if nargin ~= 3
    stimulusLocationInEachFrame(:,1) = stimulusLocationInEachFrame(:,1) + floor((removalAreaSize(2) - size(stimulus, 2)) / 2);
    stimulusLocationInEachFrame(:,2) = stimulusLocationInEachFrame(:,2) + floor((removalAreaSize(1) - size(stimulus, 1)) / 2);
 end
 
 %% Save to output mat file
-save(outputFileName, 'stimulusLocationInEachFrame', 'stimulusSize', ...
+save(matFileName, 'stimulusLocationInEachFrame', 'stimulusSize', ...
     'meanOfEachFrame', 'standardDeviationOfEachFrame');
 
 end

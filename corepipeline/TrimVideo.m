@@ -22,15 +22,21 @@ else
     RevasWarning(['TrimVideo() is proceeding and overwriting an existing file. (' outputVideoPath ')'], parametersStructure);  
 end
 
+%% Set parameters to defaults if not specified.
+
+if nargin == 1 || ~isfield(parametersStructure, 'borderTrimAmount')
+    borderTrimAmount = 24;
+else
+    borderTrimAmount = parametersStructure.borderTrimAmount;
+    if ~IsNaturalNumber(borderTrimAmount)
+        error('borderTrimAmount must be a natural number');
+    end
+end
+
 %% Trim the video frame by frame
 
 writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
 open(writer);
-
-% Sets the width of each trim to 24 pixels if no amount is specified.
-if nargin == 1
-    parametersStructure.borderTrimAmount = 24;
-end
 
 [videoInputArray, ~] = VideoPathToArray(inputVideoPath);
 
@@ -39,14 +45,14 @@ width = size(videoInputArray, 2);
 numberOfFrames = size(videoInputArray, 3);
 
 % Preallocate.
-trimmedFrames = zeros(height - parametersStructure.borderTrimAmount, ...
-    width - parametersStructure.borderTrimAmount, numberOfFrames, 'uint8');
+trimmedFrames = zeros(height - borderTrimAmount, ...
+    width - borderTrimAmount, numberOfFrames, 'uint8');
 
 for frameNumber = 1:numberOfFrames
     frame = videoInputArray(:,:,frameNumber);
     trimmedFrames(:,:,frameNumber) = ...
-        frame(parametersStructure.borderTrimAmount+1 : height, ...
-       1 : width-parametersStructure.borderTrimAmount);
+        frame(borderTrimAmount+1 : height, ...
+       1 : width-borderTrimAmount);
 end
 
 writeVideo(writer, trimmedFrames);
