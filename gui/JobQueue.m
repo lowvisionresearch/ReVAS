@@ -199,7 +199,7 @@ handles.config.stimSize = 11;
 handles.config.stimThick = 1;
 handles.config.stimRectangleX = 11;
 handles.config.stimRectangleY = 11;
-handles.config.stimUseRectangle = true;
+handles.config.stimUseRectangle = false;
 % Gamma
 handles.config.gammaExponent = 0.6;
 handles.config.gammaOverwrite = true;
