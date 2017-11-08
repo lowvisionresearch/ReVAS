@@ -32,26 +32,24 @@ else
     RevasWarning(['BandpassFilter() is proceeding and overwriting an existing file. (' outputVideoPath ')'], parametersStructure);  
 end
 
-%% Set smoothing and lowSpatialFrequencyCutoff
+%% Set parameters to defaults if not specified.
 
 if ~isfield(parametersStructure, 'smoothing')
     smoothing = 1; % standard deviation of the gaussian kernel, in pixels
 else
     smoothing = parametersStructure.smoothing;
+    if ~IsNaturalNumber(smoothing)
+        error('smoothing should be a natural number');
+    end
 end
 
 if ~isfield(parametersStructure, 'lowSpatialFrequencyCutoff')
     lowSpatialFrequencyCutoff = 3; % cycles per image
 else
     lowSpatialFrequencyCutoff = parametersStructure.lowSpatialFrequencyCutoff;
-end
-
-if smoothing < 0
-    error('smoothing should not be non-negative');
-end
-
-if lowSpatialFrequencyCutoff < 0
-    error('lowSpatialFrequencyCutoff should not be non-negative');
+    if ~IsNonNegativeRealNumber(lowSpatialFrequencyCutoff)
+        error('lowSpatialFrequencyCutoff should be a non-negative real number');
+    end
 end
 
 %% Bandpass filter frame by frame
