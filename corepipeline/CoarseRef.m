@@ -1,4 +1,4 @@
-function coarseRefFrame = CoarseRef(videoPath, parametersStructure)
+function coarseRefFrame = CoarseRef(inputVideoPath, parametersStructure)
 %CoarseRef    Generates a coarse reference frame.
 %   f = CoarseRef(filename, parametersStructure) is the coarse reference 
 %   frame of a video, generated using a scaled down version of each frame 
@@ -10,7 +10,7 @@ function coarseRefFrame = CoarseRef(videoPath, parametersStructure)
 %   scalingFactor to get the actual frame shifts. It then constructs the 
 %   coarse reference frame using those approximate frame shifts.
 %
-%   parametersStructure must have the fields: parametersStructure.scalingFactor,
+%   parametersStructure must have the fields: scalingFactor,
 %   parametersStructure.refFrameNumber, 
 %   an optional parameter that designates which frame to use as the initial 
 %   scaled down reference frame, parametersStructure.overwrite (optional), 
@@ -28,11 +28,11 @@ function coarseRefFrame = CoarseRef(videoPath, parametersStructure)
 %       parametersStructure.overwrite = true;
 %       parametersStructure.refFrameNumber = 15;
 %       parametersStructure.enableVerbosity = 2;
-%       parametersStructure.scalingFactor = 0.5;
-%       CoarseRef(parametersStructure, filename);
+%       scalingFactor = 0.5;
+%       CoarseRef(filename, parametersStructure);
 
-outputFileName = [videoPath(1:end-4) '_coarseref'];
-outputTracesPath = [videoPath(1:end-4) '_coarseframepositions'];
+outputFileName = [inputVideoPath(1:end-4) '_coarseref'];
+outputTracesName = [inputVideoPath(1:end-4) '_coarseframepositions'];
 
 %% Handle overwrite scenarios.
 if ~exist([outputFileName '.mat'], 'file')
@@ -45,8 +45,27 @@ else
     RevasWarning(['CoarseRef() is proceeding and overwriting an existing file. (' outputFileName ')'], parametersStructure);  
 end
 
+%% Set parameters to defaults if not specified.
+
+if ~isfield(parametersStructure, 'scalingFactor')
+    scalingFactor = 0.5; % standard deviation of the gaussian kernel, in pixels
+else
+    scalingFactor = parametersStructure.scalingFactor;
+    if ~IsPositiveRealNumber(scalingFactor)
+        error('scalingFactor must be a positive, real number');
+    end
+end
+
+% Validation or default assignment on reference frame number is done below
+% after the video is imported and the frames are shrunk.
+
+enableGPU = isfield(parametersStructure, 'enableGPU') && ...
+    islogical(parametersStructure.enableGPU) && ...
+    parametersStructure.enableGPU && ...
+    gpuDeviceCount > 0;
+
 %% Identify which frames are bad frames
-nameEnd = videoPath(1:end-4);
+nameEnd = inputVideoPath(1:end-4);
 blinkFramesPath = [nameEnd '_blinkframes.mat'];
 try
     load(blinkFramesPath, 'badFrames');
@@ -54,16 +73,12 @@ catch
     badFrames = [];
 end
 
-%% Check to see if operations can be performed on GPU and whether the
-% user wants to do so if there is a GPU
-enableGPU = parametersStructure.enableGPU & (gpuDeviceCount > 0);
-
 %% Shrink video, call strip analysis, and restore video's original scale.
 
 % Shrink each frame and write to a new video so that stripAnalysis can be
 % called, using each frame as one "strip"
-[videoInputArray, videoFrameRate] = VideoPathToArray(videoPath);
-shrunkFrames = imresize(videoInputArray, parametersStructure.scalingFactor);
+[videoInputArray, videoFrameRate] = VideoPathToArray(inputVideoPath);
+shrunkFrames = imresize(videoInputArray, scalingFactor);
 
 % if no frame number is designated as the original reference frame, then
 % the default frame should be the "middle" frame of the total frames (i.e.,
@@ -123,7 +138,7 @@ try
     beginningNaNs = max(beginningNaNs1, beginningNaNs2);
 
     framePositions = [filteredStripIndices1 filteredStripIndices2];
-    save(outputTracesPath, 'framePositions');
+    save(outputTracesName, 'framePositions');
 catch
     RevasError(outputFileName, 'There were no useful eye position traces. Lower the minimumPeakThreshold and/or raise the maximumPeakRatio.\n', parametersStructure);
     error('There were no useful eye position traces. Lower the minimumPeakThreshold and/or raise the maximumPeakRatio.\n');
@@ -131,7 +146,7 @@ end
 
 %% Scale the coordinates back up.
 framePositions = ...
-    framePositions * 1/parametersStructure.scalingFactor;
+    framePositions * 1/scalingFactor;
 
 %% Set up the counter array and the template for the coarse reference frame.
 totalFrames = size(videoInputArray, 3);
@@ -200,7 +215,8 @@ coarseRefFrame = Crop(coarseRefFrame);
 
 save(outputFileName, 'coarseRefFrame');
 
-if parametersStructure.enableVerbosity >= 1
+if isfield(parametersStructure, 'enableVerbosity') && ...
+        parametersStructure.enableVerbosity >= 1
     if isfield(parametersStructure, 'axesHandles')
         axes(parametersStructure.axesHandles(3));
         colormap(parametersStructure.axesHandles(3), 'gray');

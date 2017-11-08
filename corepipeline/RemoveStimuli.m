@@ -23,6 +23,10 @@ else
     RevasWarning(['RemoveStimuli() is proceeding and overwriting an existing file. (' outputVideoPath ')'], parametersStructure);
 end
 
+%% Set parameters to defaults if not specified.
+
+% There are no required parameters that need to be set to default values.
+
 %% Load mat file with output from |FindStimulusLocations|
 
 load(matFileName);
