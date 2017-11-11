@@ -51,16 +51,17 @@ if ~isfield(parametersStructure, 'badFrames')
     blinkFramesPath = [nameEnd '_blinkframes.mat'];
     try
         load(blinkFramesPath, 'badFrames');
-        parametersStructure.badFrames = badFrames;
     catch
-        parametersStructure.badFrames = [];
+        badFrames = [];
     end
+else
+   badFrames = parametersStructure.badFrames;
 end
 
 if ~isfield(parametersStructure, 'stripHeight')
     stripHeight = 15;
 else
-    stripHeight = parametersStructure.stripWidth;
+    stripHeight = parametersStructure.stripHeight;
     if ~IsNaturalNumber(stripHeight)
         error('stripHeight must be a natural number');
     end
@@ -195,6 +196,15 @@ if enableSubpixelInterpolation
            end
         end
     end
+end
+
+if ~isfield(parametersStructure, 'enableVerbosity')
+   enableVerbosity = false; 
+else
+   enableVerbosity = parametersStructure.enableVerbosity;
+   if ~islogical(enableVerbosity)
+        error('enableVerbosity must be a logical');
+   end
 end
 
 %% Handle overwrite scenarios.
