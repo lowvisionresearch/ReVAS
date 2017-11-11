@@ -11,11 +11,11 @@ function [eyePositionTraces_reRef, params, referenceFrame, timeArray, ...
 %   is the reference frame resulting from calling FineRef. filename
 %   is the output file from stripAnalysis. 
 
-%% First initialize relevant variables
+%% Set parameters to defaults if not specified.
 
 % If globalRef was passed in as a filepath, read the file.
 if ischar(globalRef)
-    % Leave this for now because the tiff file is not of the same type of
+    % Leave this for now because the tif file is not of the same type of
     % the localReferenceFrame 
     globalRef = imread(globalRef);
 end
@@ -27,7 +27,6 @@ end
 % Load eyePositionTraces and timeArray from the output of stripAnalysis
 load(finalFilename);
 
-%% Check that inputs are valid
 if size(globalRef, 1) < size(localRef, 1) || size(globalRef, 2)...
         < size(localRef, 2)
     
@@ -37,9 +36,10 @@ if size(globalRef, 1) < size(localRef, 1) || size(globalRef, 2)...
     globalRef = padArray(globalRef, [ceil(yDifference/2), ...
         ceil(xDifference/2)], 0, 'both');
 end
+
 %% Perform a cross-correlation on the global reference frame
 
-% This part is using the default method, which sucks
+% This part is using the default method, which was found to be ineffective.
 % c = normxcorr2(localRef,globalRef);
 % [ypeak, xpeak] = find(c==max(c(:)));
 % yoffSet = ypeak-size(localRef,1);
@@ -127,6 +127,7 @@ if exist('coordinatesAndDegrees', 'var')
         disp(coordinatesAndDegrees(1, :))
     end
 end
+
 %% Add the local reference shift to eyePositionTraces 
 eyePositionTraces(:, 1) = eyePositionTraces(:, 1) + columnCoordinate;
 eyePositionTraces(:, 2) = eyePositionTraces(:, 2) + rowCoordinate;
@@ -139,6 +140,7 @@ outputFileName((end-3):end) = [];
 outputFileName(end+1:end+6) = '_reref';
 save(outputFileName, 'eyePositionTraces_reRef', 'timeArray', ...
         'params', 'referenceFramePath', 'globalRef');
+    
 %% Display the results
 drawnow;  
 hFig = figure;
@@ -147,6 +149,5 @@ imshow(globalRef,'Parent', hAx);
 imrect(hAx, [columnCoordinate, rowCoordinate, size(localRef,2), size(localRef,1)]);
 figure('Name', 'ReferenceFrame')
 imshow(localRef)
-
 
 end
