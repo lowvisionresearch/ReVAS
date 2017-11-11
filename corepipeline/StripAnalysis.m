@@ -8,7 +8,6 @@ function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
 %% Set parameters to defaults if not specified.
 
 inputVideoPath = '';
-
 % If videoInput is a character array, then a path was passed in.
 % Attempt to convert it to a 3D array.
 if ischar(videoInput)
@@ -21,37 +20,29 @@ else
     warning('A raw matrix was provided; assuming that frame rate is 30 fps.');
     videoFrameRate = 30;
 end
+if ndims(videoInput) ~= 3 && ndims(videoInput) ~= 4
+    error('Invalid Input for videoInput (it was not a 3D or 4D array)');
+end
+% TODO not tested on color videos yet.
+% Change 4D arrays to 3D by making video grayscale. Assumes 4D arrays are
+% in format (x, y, time, color).
+if ndims(videoInput) == 4
+    numberOfFrames = size(videoInput, 3);
+    newVideoInput = squeeze(videoInput(:,:,:,1));
+    for frame = (1:numberOfFrames)
+        frame3D = squeeze(videoInput(:,:,frame,:));
+        newVideoInput(:,:,frame) = rgb2gray(frame3D);
+    end
+    videoInput = newVideoInput;
+end
 
 % If referenceFrame is a character array, then a path was passed in.
 if ischar(referenceFrame)
     referenceFrame = importdata(referenceFrame);
 end
-
-% Set strip width if not provided
-if ~isfield(parametersStructure, 'stripWidth')
-    stripWidth = size(videoInput, 2);
-else
-    stripWidth = parametersStructure.stripWidth;
-    if ~IsNaturalNumber(stripWidth)
-        error('stripWidth must be a natural number');
-    end
+if ~ismatrix(referenceFrame)
+    error('Invalid Input for referenceFrame (it was not a 2D array)');
 end
-
-ValidateVideoInput(videoInput);
-ValidateReferenceFrame(referenceFrame);
-ValidateParametersStructure(parametersStructure);
-
-% Set SDWindowSize if not provided
-if ~isfield(parametersStructure, 'SDWindowSize')
-    SDWindowSize = 25;
-else
-    SDWindowSize = parametersStructure.SDWindowSize;
-end
-
-ValidateVideoInput(videoInput);
-ValidateReferenceFrame(referenceFrame);
-ValidateParametersStructure(parametersStructure);
-
 
 % Identify which frames are bad frames
 % The filename may not exist if a raw array was passed in.
@@ -66,25 +57,152 @@ if ~isfield(parametersStructure, 'badFrames')
     end
 end
 
-% *** TODO: needs testing on color video ***
-% Change 4D arrays to 3D by making video grayscale. Assumes 4D arrays are
-% in format (x, y, time, color).
-if ndims(videoInput) == 4
-    numberOfFrames = size(videoInput, 3);
-    newVideoInput = squeeze(videoInput(:,:,:,1));
-    for frame = (1:numberOfFrames)
-        frame3D = squeeze(videoInput(:,:,frame,:));
-        newVideoInput(:,:,frame) = rgb2gray(frame3D);
+if ~isfield(parametersStructure, 'stripHeight')
+    stripHeight = 15;
+else
+    stripHeight = parametersStructure.stripWidth;
+    if ~IsNaturalNumber(stripHeight)
+        error('stripHeight must be a natural number');
     end
-    videoInput = newVideoInput;
+end
+
+if ~isfield(parametersStructure, 'stripWidth')
+    stripWidth = size(videoInput, 2);
+else
+    stripWidth = parametersStructure.stripWidth;
+    if ~IsNaturalNumber(stripWidth)
+        error('stripWidth must be a natural number');
+    end
+end
+
+if ~isfield(parametersStructure, 'samplingRate')
+    samplingRate = 540;
+else
+    samplingRate = parametersStructure.samplingRate;
+    if ~IsNaturalNumber(samplingRate)
+        error('samplingRate must be a natural number');
+    end
+end
+
+if ~isfield(parametersStructure, 'enableGaussianFiltering')
+    enableGaussianFiltering = true;
+else
+    enableGaussianFiltering = parametersStructure.enableGaussianFiltering;
+    if ~islogical(enableGaussianFiltering)
+        error('enableGaussianFiltering must be a logical');
+    end
+end
+
+if enableGaussianFiltering
+    if ~isfield(parametersStructure, 'maximumSD')
+        maximumSD = 10;
+    else
+        maximumSD = parametersStructure.maximumSD;
+        if ~IsPositiveRealNumber(maximumSD)
+            error('maximumSD must be a positive, real number');
+        end
+    end
+    if ~isfield(parametersStructure, 'SDWindowSize')
+        SDWindowSize = 25;
+    else
+        SDWindowSize = parametersStructure.SDWindowSize;
+        if ~IsNaturalNumber(SDWindowSize)
+            error('SDWindowSize must be a natural number');
+        end
+    end
+else
+    if ~isfield(parametersStructure, 'maximumPeakRatio')
+        maximumPeakRatio = 0.8;
+    else
+        maximumPeakRatio = parametersStructure.maximumPeakRatio;
+        if ~IsPositiveRealNumber(maximumPeakRatio)
+            error('maximumPeakRatio must be a positive, real number');
+        end
+    end
+end
+
+if ~isfield(parametersStructure, 'minimumPeakThreshold')
+    minimumPeakThreshold = 0;
+else
+    minimumPeakThreshold = parametersStructure.minimumPeakThreshold;
+    if ~IsPositiveRealNumber(minimumPeakThreshold)
+        error('minimumPeakThreshold must be a positive, real number');
+    end
+end
+
+if ~isfield(parametersStructure, 'adaptiveSearch')
+    adaptiveSearch = false;
+else
+    adaptiveSearch = parametersStructure.adaptiveSearch;
+    if ~islogical(adaptiveSearch)
+        error('adaptiveSearch must be a logical');
+    end
+end
+
+if adaptiveSearch
+    if ~isfield(parametersStructure, 'scalingFactor')
+        scalingFactor = 10;
+    else
+        scalingFactor = parametersStructure.scalingFactor;
+        if ~IsPositiveRealNumber(scalingFactor)
+            error('scalingFactor must be a positive, real number');
+        end
+    end
+    if ~isfield(parametersStructure, 'searchWindowHeight')
+        searchWindowHeight = 0.8;
+    else
+        searchWindowHeight = parametersStructure.searchWindowHeight;
+        if ~IsNaturalNumber(searchWindowHeight)
+            error('searchWindowHeight must be a natural number');
+        end
+    end
+end
+
+if ~isfield(parametersStructure, 'enableSubpixelInterpolation')
+    enableSubpixelInterpolation = false;
+else
+    enableSubpixelInterpolation = parametersStructure.enableSubpixelInterpolation;
+    if ~islogical(enableSubpixelInterpolation)
+        error('enableSubpixelInterpolation must be a logical');
+    end
+end
+
+if enableSubpixelInterpolation
+    if ~isfield(parametersStructure, 'subpixelInterpolationParameters')
+       subpixelInterpolationParameters = struct;
+       subpixelInterpolationParameters.neighborhoodSize = 7;
+       subpixelInterpolationParameters.subpixelDepth = 2;
+    else
+        if ~isstruct(parametersStructure.subpixelInterpolationParameters)
+           error('subpixelInterpolationParameters must be a struct');
+        else
+           subpixelInterpolationParameters = parametersStructure.subpixelInterpolationParameters;
+           if ~isfield(parametersStructure.subpixelInterpolationParameters, 'neighborhoodSize')
+               subpixelInterpolationParameters.neighborhoodSize = 7;
+           else
+               subpixelInterpolationParameters.neighborhoodSize = parametersStructure.subpixelInterpolationParameters.neighborhoodSize;
+               if ~IsNaturalNumber(subpixelInterpolationParameters.neighborhoodSize)
+                   error('subpixelInterpolationParameters.neighborhoodSize must be a natural number');
+               end
+           end
+           if ~isfield(parametersStructure.subpixelInterpolationParameters, 'subpixelDepth')
+               subpixelInterpolationParameters.subpixelDepth = 2;
+           else
+               subpixelInterpolationParameters.subpixelDepth = parametersStructure.subpixelInterpolationParameters.subpixelDepth;
+               if ~IsPositiveRealNumber(subpixelInterpolationParameters.subpixelDepth)
+                   error('subpixelInterpolationParameters.subpixelDepth must be a positive, real number');
+               end
+           end
+        end
+    end
 end
 
 %% Handle overwrite scenarios.
 
 rawOutputFileName = [inputVideoPath(1:end-4) '_' ...
-    int2str(parametersStructure.samplingRate) '_hz_raw'];
+    int2str(samplingRate) '_hz_raw'];
 outputFileName = [inputVideoPath(1:end-4) '_' ...
-    int2str(parametersStructure.samplingRate) '_hz_final'];
+    int2str(samplingRate) '_hz_final'];
 
 if ~exist([rawOutputFileName '.mat'], 'file')
     % left blank to continue without issuing warning in this case
@@ -131,7 +249,7 @@ estimatedStripYLocations = NaN(numberOfStrips, 1);
 searchWindowsArray = NaN(numberOfStrips, 2);
 
 %% Populate time array
-timeArray = (1:numberOfStrips)' / parametersStructure.samplingRate;
+timeArray = (1:numberOfStrips)' / samplingRate;
 
 %% GPU Preparation
 % *** TODO: need GPU device to confirm ***
@@ -145,19 +263,19 @@ end
 %% Adaptive Search
 % Estimate peak locations if adaptive search is enabled
 
-if parametersStructure.adaptiveSearch
+if adaptiveSearch
     % Scale down the reference frame to a smaller size
     scaledDownReferenceFrame = referenceFrame( ...
-        1:parametersStructure.adaptiveSearchScalingFactor:end, ...
-        1:parametersStructure.adaptiveSearchScalingFactor:end);
+        1:scalingFactor:end, ...
+        1:scalingFactor:end);
 
     for frameNumber = (1:size(videoInput, 3))
         frame = videoInput(:,:,frameNumber);
 
         % Scale down the current frame to a smaller size as well
         scaledDownFrame = frame( ...
-            1:parametersStructure.adaptiveSearchScalingFactor:end, ...
-            1:parametersStructure.adaptiveSearchScalingFactor:end);
+            1:scalingFactor:end, ...
+            1:scalingFactor:end);
 
         correlationMap = normxcorr2(scaledDownFrame, scaledDownReferenceFrame);
 
@@ -202,7 +320,7 @@ if parametersStructure.adaptiveSearch
 
     % Scale back up
     estimatedStripYLocations = (estimatedStripYLocations - 1) ...
-        * parametersStructure.adaptiveSearchScalingFactor + 1;
+        * scalingFactor + 1;
 
 end
 
@@ -232,25 +350,23 @@ for stripNumber = (1:numberOfStrips)
         % i.e. when processing multiple videos in parallel, only one should
         % use GPU.
         if enableGPU
-            localParametersStructure = gpuArray(parametersStructure);
             stripData = gpuArray(stripIndices(stripNumber,:));
         else
-            localParametersStructure = parametersStructure;
             stripData = stripIndices(stripNumber,:);
         end
 
         frame = stripData(1,3);
 
-        if ismember(frame, localParametersStructure.badFrames)
+        if ismember(frame, badFrames)
             rawEyePositionTraces(stripNumber,:) = [NaN NaN];
             peakValueArray(stripNumber) = NaN;
             secondPeakValueArray(stripNumber) = NaN;
-            continue
+            continue;
         end
 
         rowStart = stripData(1,1);
         columnStart = stripData(1,2);
-        rowEnd = rowStart + localParametersStructure.stripHeight - 1;
+        rowEnd = rowStart + stripHeight - 1;
         columnEnd = columnStart + stripWidth - 1;
         strip = videoInput(rowStart:rowEnd, columnStart:columnEnd, frame);
         
@@ -258,17 +374,17 @@ for stripNumber = (1:numberOfStrips)
         parametersStructure.stripNumber = stripNumber;  
         parametersStructure.stripsPerFrame = stripsPerFrame;
 
-        if parametersStructure.adaptiveSearch ...
+        if adaptiveSearch ...
                 && ~isnan(estimatedStripYLocations(stripNumber))
             % Cut out a smaller search window from correlation.
             upperBound = floor(min(max(1, ...
                 estimatedStripYLocations(stripNumber) ...
-                - ((parametersStructure.searchWindowHeight - parametersStructure.stripHeight)/2)), ...
+                - ((searchWindowHeight - stripHeight)/2)), ...
                 size(videoInput, 1)));
             lowerBound = floor(min(size(videoInput, 1), ...
                 estimatedStripYLocations(stripNumber) ...
-                + ((parametersStructure.searchWindowHeight - parametersStructure.stripHeight)/2) ...
-                + parametersStructure.stripHeight));
+                + ((searchWindowHeight - stripHeight)/2) ...
+                + stripHeight));
             adaptedCorrelation = correlationMap(upperBound:lowerBound,1:end);
             
             try
@@ -277,42 +393,42 @@ for stripNumber = (1:numberOfStrips)
                     FindPeak(adaptedCorrelation, parametersStructure);
   
                 % See if adapted result is acceptable or not.
-                if ~parametersStructure.enableGaussianFiltering && ...
+                if ~enableGaussianFiltering && ...
                         (peakValue <= 0 || secondPeakValue <= 0 ...
-                        || secondPeakValue / peakValue > parametersStructure.maximumPeakRatio ...
-                        || peakValue < parametersStructure.minimumPeakThreshold)
+                        || secondPeakValue / peakValue > maximumPeakRatio ...
+                        || peakValue < minimumPeakThreshold)
                     % Not acceptable, try again in the catch block with full correlation map.
                     error('Jumping to catch block immediately below.');
-                elseif parametersStructure.enableGaussianFiltering % TODO, need to test.
+                elseif enableGaussianFiltering % TODO, need to test.
                     % Middle row SDs in column 1, Middle column SDs in column 2.
                     middleRow = ...
                         adaptedCorrelation(max(ceil(yPeak-...
-                            parametersStructure.SDWindowSize/2/parametersStructure.adaptiveSearchScalingFactor),...
+                            SDWindowSize/2/scalingFactor),...
                             1): ...
                         min(floor(yPeak+...
-                            parametersStructure.SDWindowSize/2/parametersStructure.adaptiveSearchScalingFactor),...
+                            SDWindowSize/2/scalingFactor),...
                             size(adaptedCorrelation,1)), ...
                             floor(xPeak));
                     middleCol = ...
                         adaptedCorrelation(floor(yPeak), ...
                         max(ceil(xPeak-...
-                            parametersStructure.SDWindowSize/2/parametersStructure.adaptiveSearchScalingFactor),...
+                            SDWindowSize/2/scalingFactor),...
                             1): ...
-                        min(floor(xPeak+parametersStructure.SDWindowSize/2/parametersStructure.adaptiveSearchScalingFactor),...
+                        min(floor(xPeak+SDWindowSize/2/scalingFactor),...
                             size(adaptedCorrelation,2)))';
                     fitOutput = fit(((1:size(middleRow,1))-ceil(size(middleRow,1)/2))', middleRow, 'gauss1');
                     isAcceptable = true;
-                    if fitOutput.c1 > parametersStructure.maximumSD
+                    if fitOutput.c1 > maximumSD
                         isAcceptable = false;
                     end
                     fitOutput = fit(((1:size(middleCol,1))-ceil(size(middleCol,1)/2))', middleCol, 'gauss1');
-                    if fitOutput.c1 > parametersStructure.maximumSD
+                    if fitOutput.c1 > maximumSD
                         isAcceptable = false;
                     end
                     clear fitOutput;
                     if peakValue <= 0 ...
                         || ~isAcceptable ...
-                        || peakValue < parametersStructure.minimumPeakThreshold
+                        || peakValue < minimumPeakThreshold
                         % Not acceptable, try again in the catch block with full correlation map.
                         error('Jumping to catch block immediately below.'); 
                     end
@@ -334,10 +450,10 @@ for stripNumber = (1:numberOfStrips)
         end
 
         % 2D Interpolation if enabled
-        if localParametersStructure.enableSubpixelInterpolation
+        if enableSubpixelInterpolation
             [interpolatedPeakCoordinates, statisticsStructure.errorStructure] = ...
                 Interpolation2D(correlationMap, [yPeak, xPeak], ...
-                localParametersStructure.subpixelInterpolationParameters);
+                subpixelInterpolationParameters);
 
             xPeak = interpolatedPeakCoordinates(2);
             yPeak = interpolatedPeakCoordinates(1);      
@@ -351,7 +467,7 @@ for stripNumber = (1:numberOfStrips)
             secondPeakValue = gather(secondPeakValue, gpuTask.ID);
         end
 
-        if parametersStructure.enableGaussianFiltering
+        if enableGaussianFiltering
             % Fit a gaussian in a pixel window around the identified peak.
             % The pixel window is of size
             % |SDWindowSize| x
@@ -379,7 +495,7 @@ for stripNumber = (1:numberOfStrips)
         end
 
         % Show surface plot for this correlation if verbosity enabled
-        if localParametersStructure.enableVerbosity
+        if enableVerbosity
             if enableGPU
                 correlationMap = gather(correlationMap, gpuTask.ID);
             end
@@ -414,7 +530,7 @@ for stripNumber = (1:numberOfStrips)
 
         % If verbosity is enabled, also show eye trace plot with points
         % being plotted as they become available.
-        if localParametersStructure.enableVerbosity
+        if enableVerbosity
 
             % Adjust for padding offsets added by normxcorr2()
             % If we enable verbosity and demand that we plot the points as we
@@ -425,7 +541,7 @@ for stripNumber = (1:numberOfStrips)
             % performed here, namely, if verbosity is not enabled and this
             % if statement does not execute.
             rawEyePositionTraces(stripNumber,2) = ...
-                rawEyePositionTraces(stripNumber,2) - (parametersStructure.stripHeight - 1);
+                rawEyePositionTraces(stripNumber,2) - (stripHeight - 1);
             rawEyePositionTraces(stripNumber,1) = ...
                 rawEyePositionTraces(stripNumber,1) - (stripWidth - 1);
 
@@ -464,7 +580,7 @@ end
 % enabled, then we do it now in order to take advantage of vectorization.
 if ~parametersStructure.enableVerbosity
     rawEyePositionTraces(:,2) = ...
-        rawEyePositionTraces(:,2) - (parametersStructure.stripHeight - 1);
+        rawEyePositionTraces(:,2) - (stripHeight - 1);
     rawEyePositionTraces(:,1) = ...
         rawEyePositionTraces(:,1) - (stripWidth - 1);
 
@@ -487,7 +603,7 @@ statisticsStructure.standardDeviations = standardDeviationsArray;
 
 %% Populate usefulEyePositionTraces
 
-if parametersStructure.enableGaussianFiltering
+if enableGaussianFiltering
     % Criteria for gaussian filtering method is to ensure that:
     %   * the peak value is above a minimum threshold
     %   * after a guassian is fitted in a 25x25 pixel window around the
@@ -496,9 +612,9 @@ if parametersStructure.enableGaussianFiltering
     
     % Determine which eye traces to throw out
     % 1 = keep, 0 = toss
-    eyeTracesToKeep = (statisticsStructure.standardDeviations(:,1) <= parametersStructure.maximumSD)...
-        & (statisticsStructure.standardDeviations(:,2) <= parametersStructure.maximumSD)...
-        & (statisticsStructure.peakValues >= parametersStructure.minimumPeakThreshold);
+    eyeTracesToKeep = (statisticsStructure.standardDeviations(:,1) <= maximumSD)...
+        & (statisticsStructure.standardDeviations(:,2) <= maximumSD)...
+        & (statisticsStructure.peakValues >= minimumPeakThreshold);
 else
     % Criteria for peak ratio method is to ensure that:
     %   * the peak value is above a minimum threshold
@@ -507,8 +623,8 @@ else
     
     % Determine which eye traces to throw out
     % 1 = keep, 0 = toss
-    eyeTracesToKeep = (statisticsStructure.peakRatios <= parametersStructure.maximumPeakRatio)...
-        & (statisticsStructure.peakValues >= parametersStructure.minimumPeakThreshold);
+    eyeTracesToKeep = (statisticsStructure.peakRatios <= maximumPeakRatio)...
+        & (statisticsStructure.peakValues >= minimumPeakThreshold);
 end
 
 % multiply each component by 1 to keep eyePositionTraces or by NaN to toss.
