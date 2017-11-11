@@ -224,7 +224,7 @@ handles.config.fineMinPeakThreshold = 0.2;
 handles.config.fineAdaptiveSearch = false;
 handles.config.fineScalingFactor = 8;
 handles.config.fineSearchWindowHeight = 79;
-handles.config.fineSubpixelInterp = true;
+handles.config.fineSubpixelInterp = false;
 handles.config.fineNeighborhoodSize = 7;
 handles.config.fineSubpixelDepth = 2;
 % Strip

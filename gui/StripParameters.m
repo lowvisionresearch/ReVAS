@@ -79,11 +79,9 @@ handles.subpixelDepth.String = mainHandles.config.stripSubpixelDepth;
 if logical(handles.enableGaussFilt.Value)
     handles.gaussSD.Enable = 'on';
     handles.maxPeakRatio.Enable = 'off';
-    handles.minPeakThreshold.Enable = 'off';
 else
     handles.gaussSD.Enable = 'off';
     handles.maxPeakRatio.Enable = 'on';
-    handles.minPeakThreshold.Enable = 'on';
 end
 
 if logical(handles.adaptiveSearch.Value)
@@ -261,13 +259,13 @@ else
         errordlg('Minimum Peak Ratio must be a positive, real number.', 'Invalid Parameter');
         return;
     end
+end
 
-    % minPeakThreshold
-    minPeakThreshold = str2double(handles.minPeakThreshold.String);
-    if ~IsNonNegativeRealNumber(minPeakThreshold)
-        errordlg('Minimum Peak Threshold must be a non-negative, real number.', 'Invalid Parameter');
-        return;
-    end
+% minPeakThreshold
+minPeakThreshold = str2double(handles.minPeakThreshold.String);
+if ~IsNonNegativeRealNumber(minPeakThreshold)
+    errordlg('Minimum Peak Threshold must be a non-negative, real number.', 'Invalid Parameter');
+    return;
 end
 
 if logical(handles.adaptiveSearch.Value)
@@ -540,8 +538,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-
 function minPeakThreshold_Callback(hObject, eventdata, handles)
 % hObject    handle to minPeakThreshold (see GCBO)
 % eventdata  reserved - to be destripd in a future version of MATLAB
@@ -631,8 +627,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-
 function searchWindowHeight_Callback(hObject, eventdata, handles)
 % hObject    handle to searchWindowHeight (see GCBO)
 % eventdata  reserved - to be destripd in a future version of MATLAB
@@ -668,8 +662,6 @@ function searchWindowHeight_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
 
 function neighborhoodSize_Callback(hObject, eventdata, handles)
 % hObject    handle to neighborhoodSize (see GCBO)
@@ -707,8 +699,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-
 function subpixelDepth_Callback(hObject, eventdata, handles)
 % hObject    handle to subpixelDepth (see GCBO)
 % eventdata  reserved - to be destripd in a future version of MATLAB
@@ -744,7 +734,6 @@ function subpixelDepth_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 function gaussSD_Callback(hObject, eventdata, handles)
 % hObject    handle to gaussSD (see GCBO)
@@ -782,7 +771,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --- Executes on button press in enableGaussFilt.
 function enableGaussFilt_Callback(hObject, eventdata, handles)
 % hObject    handle to enableGaussFilt (see GCBO)
@@ -793,13 +781,10 @@ function enableGaussFilt_Callback(hObject, eventdata, handles)
 if get(hObject,'Value') == 1
     handles.gaussSD.Enable = 'on';
     handles.maxPeakRatio.Enable = 'off';
-    handles.minPeakThreshold.Enable = 'off';
 else
     handles.gaussSD.Enable = 'off';
     handles.maxPeakRatio.Enable = 'on';
-    handles.minPeakThreshold.Enable = 'on';
 end
-
 
 % --- Executes on button press in disableGaussFilt.
 function disableGaussFilt_Callback(hObject, eventdata, handles)
@@ -811,9 +796,7 @@ function disableGaussFilt_Callback(hObject, eventdata, handles)
 if get(hObject,'Value') == 0
     handles.gaussSD.Enable = 'on';
     handles.maxPeakRatio.Enable = 'off';
-    handles.minPeakThreshold.Enable = 'off';
 else
     handles.gaussSD.Enable = 'off';
     handles.maxPeakRatio.Enable = 'on';
-    handles.minPeakThreshold.Enable = 'on';
 end
