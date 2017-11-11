@@ -15,10 +15,10 @@ matFileName = [inputVideoPath(1:end-4) '_stimlocs'];
 if ~exist([matFileName '.mat'], 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-    warning('FindStimulusLocations() did not execute because it would overwrite existing file.');
+    RevasWarning('FindStimulusLocations() did not execute because it would overwrite existing file.', parametersStructure);
     return;
 else
-    warning('FindStimulusLocations() is proceeding and overwriting an existing file.');
+    RevasWarning('FindStimulusLocations() is proceeding and overwriting an existing file.', parametersStructure);
 end
 
 %% Set parameters to defaults if not specified.
@@ -27,12 +27,12 @@ end
 % matrix.
 
 if nargin == 3
-   stimulusSize = size(stimulus); 
+   stimulusSize = size(stimulus);
 else
    stimulusSize = removalAreaSize;
-   if size(size(stimulusSize)) == [1 2]
+   if size(stimulusSize) == [1 2]
        stimulusSize = stimulusSize';
-   elseif size(size(stimulusSize)) ~= [2 1]
+   elseif size(stimulusSize) ~= [2 1]
       error('stimulusSize must be a 2 by 1 size array'); 
    elseif ~IsNaturalNumber(stimulusSize(1)) || ~IsNaturalNumber(stimulusSize(2))
       error('values of stimulusSize must be natural numbers'); 
@@ -97,64 +97,68 @@ stimulusLocationInEachFrame = NaN(numberOfFrames, 2);
 % threshold will not be marked as a stimulus.
 stimulusThresholdValue = 0.8; % TODO hard-coded threshold.
 
+global abortTriggered;
+
 for frameNumber = (1:numberOfFrames)
     
-    frame = videoInputArray(:,:, frameNumber);
-        
-    correlationMap = normxcorr2(stimulus, frame);
-        
-    findPeakParametersStructure.enableGaussianFiltering = false;
-    findPeakParametersStructure.stripHeight = frameHeight;    
-    [xPeak, yPeak, peakValue, ~] = ...
-        FindPeak(correlationMap, findPeakParametersStructure);
-    clear findPeakParametersStructure;
-        
-    % Show surface plot for this correlation if verbosity enabled
-    if parametersStructure.enableVerbosity
-        if isfield(parametersStructure, 'axesHandles')
-            axes(parametersStructure.axesHandles(1));
-            colormap(parametersStructure.axesHandles(1), 'default');
-        else
-            figure(1);
-        end
-        [surfX,surfY] = meshgrid(1:size(correlationMap,2), 1:size(correlationMap,1));
-        surf(surfX, surfY, correlationMap,'linestyle','none');
-        title([num2str(frameNumber) ' out of ' num2str(numberOfFrames)]);
-        xlim([1 size(correlationMap,2)]);
-        ylim([1 size(correlationMap,1)]);
-        zlim([-1 1]);
-        
-        % Mark the identified peak on the plot with an arrow.
-        text(xPeak, yPeak, peakValue, '\downarrow', 'Color', 'red', ...
-            'FontSize', 20, 'HorizontalAlignment', 'center', ...
-            'VerticalAlignment', 'bottom', 'FontWeight', 'bold');
-        
-        drawnow;
-    end
-    
-    if peakValue < stimulusThresholdValue
-        continue;
-    end
+    if ~abortTriggered
+        frame = videoInputArray(:,:, frameNumber);
 
-    stimulusLocationInEachFrame(frameNumber,:) = [xPeak yPeak];
-    
-    % If verbosity is enabled, also show stimulus location plot with points
-    % being plotted as they become available.
-    if parametersStructure.enableVerbosity
-        
-        % Plotting bottom right corner of box surrounding stimulus.
-        if isfield(parametersStructure, 'axesHandles')
-            axes(parametersStructure.axesHandles(2));
-            colormap(parametersStructure.axesHandles(2), 'default');
-        else
-            figure(2);
+        correlationMap = normxcorr2(stimulus, frame);
+
+        findPeakParametersStructure.enableGaussianFiltering = false;
+        findPeakParametersStructure.stripHeight = frameHeight;    
+        [xPeak, yPeak, peakValue, ~] = ...
+            FindPeak(correlationMap, findPeakParametersStructure);
+        clear findPeakParametersStructure;
+
+        % Show surface plot for this correlation if verbosity enabled
+        if parametersStructure.enableVerbosity
+            if isfield(parametersStructure, 'axesHandles')
+                axes(parametersStructure.axesHandles(1));
+                colormap(parametersStructure.axesHandles(1), 'default');
+            else
+                figure(1);
+            end
+            [surfX,surfY] = meshgrid(1:size(correlationMap,2), 1:size(correlationMap,1));
+            surf(surfX, surfY, correlationMap,'linestyle','none');
+            title([num2str(frameNumber) ' out of ' num2str(numberOfFrames)]);
+            xlim([1 size(correlationMap,2)]);
+            ylim([1 size(correlationMap,1)]);
+            zlim([-1 1]);
+
+            % Mark the identified peak on the plot with an arrow.
+            text(xPeak, yPeak, peakValue, '\downarrow', 'Color', 'red', ...
+                'FontSize', 20, 'HorizontalAlignment', 'center', ...
+                'VerticalAlignment', 'bottom', 'FontWeight', 'bold');
+
+            drawnow;
         end
-        plot(timeArray, stimulusLocationInEachFrame);
-        title('Stimulus Locations');
-        xlabel('Time (sec)');
-        ylabel('Stimulus Locations (pixels)');
-        legend('show');
-        legend('Horizontal Location', 'Vertical Location');
+
+        if peakValue < stimulusThresholdValue
+            continue;
+        end
+
+        stimulusLocationInEachFrame(frameNumber,:) = [xPeak yPeak];
+
+        % If verbosity is enabled, also show stimulus location plot with points
+        % being plotted as they become available.
+        if parametersStructure.enableVerbosity
+
+            % Plotting bottom right corner of box surrounding stimulus.
+            if isfield(parametersStructure, 'axesHandles')
+                axes(parametersStructure.axesHandles(2));
+                colormap(parametersStructure.axesHandles(2), 'default');
+            else
+                figure(2);
+            end
+            plot(timeArray, stimulusLocationInEachFrame);
+            title('Stimulus Locations');
+            xlabel('Time (sec)');
+            ylabel('Stimulus Locations (pixels)');
+            legend('show');
+            legend('Horizontal Location', 'Vertical Location');
+        end
     end
 end
 

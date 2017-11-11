@@ -27,6 +27,7 @@ else
     parametersStructure.enableGPU = false;
 end
 
+%% Trim Module
 if logical(handles.togTrim.Value) && ~logical(abortTriggered)
     % Set the parameters
     parametersStructure.borderTrimAmount = handles.config.trimBorderTrimAmount;
@@ -39,6 +40,7 @@ if logical(handles.togTrim.Value) && ~logical(abortTriggered)
     inputVideoPath = [inputVideoPath(1:end-4) '_dwt' inputVideoPath(end-3:end)];
 end
 
+%% Remove Stimulus Module
 if logical(handles.togStim.Value) && ~logical(abortTriggered)
     % Set the parameters
     parametersStructure.enableVerbosity = handles.config.stimVerbosity;
@@ -67,6 +69,7 @@ if logical(handles.togStim.Value) && ~logical(abortTriggered)
     inputVideoPath = [inputVideoPath(1:end-4) '_nostim' inputVideoPath(end-3:end)];
 end
 
+%% Gamma Correction Module
 if logical(handles.togGamma.Value) && ~logical(abortTriggered)
     % Set the parameters
     parametersStructure.gammaExponent = handles.config.gammaExponent;
@@ -79,6 +82,7 @@ if logical(handles.togGamma.Value) && ~logical(abortTriggered)
     inputVideoPath = [inputVideoPath(1:end-4) '_gamscaled' inputVideoPath(end-3:end)];
 end
 
+%% Bandpass Filtering Module
 if logical(handles.togBandFilt.Value) && ~logical(abortTriggered)
     % Set the parameters
     parametersStructure.smoothing = handles.config.bandFiltSmoothing;
@@ -92,6 +96,7 @@ if logical(handles.togBandFilt.Value) && ~logical(abortTriggered)
     inputVideoPath = [inputVideoPath(1:end-4) '_bandfilt' inputVideoPath(end-3:end)];
 end
 
+%% Make Coarse Reference Frame Module
 if (logical(handles.togCoarse.Value) ...
         || logical(handles.togFine.Value) ...
         || logical(handles.togStrip.Value)) && ~logical(abortTriggered)
@@ -128,6 +133,7 @@ if logical(handles.togCoarse.Value) && ~logical(abortTriggered)
     %localinputVideoPath = [localinputVideoPath(1:end-4) '_dwt' localinputVideoPath(end-3:end)];
 end
 
+%% Make Fine Reference Frame Module
 if logical(handles.togFine.Value) && ~logical(abortTriggered)
     % Set the parameters
     parametersStructure.enableVerbosity = handles.config.fineVerbosity;
@@ -155,6 +161,7 @@ if logical(handles.togFine.Value) && ~logical(abortTriggered)
     %localinputVideoPath = [localinputVideoPath(1:end-4) '_dwt' localinputVideoPath(end-3:end)];
 end
 
+%% Strip Analysis Module
 if logical(handles.togStrip.Value) && ~logical(abortTriggered)
     % Set the parameters
     parametersStructure.overwrite = handles.config.stripOverwrite;
@@ -204,19 +211,7 @@ if logical(handles.togStrip.Value) && ~logical(abortTriggered)
     clear fineResult;
 end
 
-if false
-%if logical(localHandles.togFilt.Value) && ~logical(abortTriggered) % TODO
-    % Set the parameters
-    parametersStructure.borderTrimAmount = localHandles.config.trimBorderTrimAmount;
-    parametersStructure.overwrite = localHandles.config.trimOverwrite;
-
-    % Call the function(s)
-    TrimVideo(localinputVideoPath, parametersStructure);
-
-    % Update file name to output file name
-    localinputVideoPath = [localinputVideoPath(1:end-4) '_dwt' localinputVideoPath(end-3:end)];
-end
-
+%% Re-referencing Module
 if false
 %if logical(localHandles.togReRef.Value) && ~logical(abortTriggered) % TODO
     % Set the parameters
@@ -230,6 +225,21 @@ if false
     localinputVideoPath = [localinputVideoPath(1:end-4) '_dwt' localinputVideoPath(end-3:end)];
 end
 
+%% Filtering Module
+if false
+%if logical(localHandles.togFilt.Value) && ~logical(abortTriggered) % TODO
+    % Set the parameters
+    parametersStructure.borderTrimAmount = localHandles.config.trimBorderTrimAmount;
+    parametersStructure.overwrite = localHandles.config.trimOverwrite;
+
+    % Call the function(s)
+    TrimVideo(localinputVideoPath, parametersStructure);
+
+    % Update file name to output file name
+    localinputVideoPath = [localinputVideoPath(1:end-4) '_dwt' localinputVideoPath(end-3:end)];
+end
+
+%% Saccade Detection Module
 if logical(handles.togSacDrift.Value) && ~logical(abortTriggered)
     % Set the parameters
     parametersStructure.overwrite = handles.config.sacOverwrite;
