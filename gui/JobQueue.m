@@ -268,6 +268,7 @@ handles.config.sacSecThresholdVal = 2;
 handles.config.sacStitch = 15;
 handles.config.sacMinAmplitude = 0.1;
 handles.config.sacMaxDuration = 100;
+handles.config.sacMinDuration = 8;
 handles.config.sacDetectionMethod1 = false;
 handles.config.sacHardVelThreshold = 35;
 handles.config.sacHardSecondaryVelThreshold = 35;

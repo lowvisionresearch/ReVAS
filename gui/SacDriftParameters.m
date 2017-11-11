@@ -22,7 +22,7 @@ function varargout = SacDriftParameters(varargin)
 
 % Edit the above text to modify the response to help SacDriftParameters
 
-% Last Modified by GUIDE v2.5 17-Jul-2017 17:53:34
+% Last Modified by GUIDE v2.5 11-Nov-2017 13:25:51
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -66,6 +66,7 @@ handles.secThresholdVal.String = mainHandles.config.sacSecThresholdVal;
 handles.stitch.String = mainHandles.config.sacStitch;
 handles.minAmplitude.String = mainHandles.config.sacMinAmplitude;
 handles.maxDuration.String = mainHandles.config.sacMaxDuration;
+handles.minDuration.String = mainHandles.config.sacMinDuration;
 handles.detectionMethod1.Value = mainHandles.config.sacDetectionMethod1;
 handles.hardVelThreshold.String = mainHandles.config.sacHardVelThreshold;
 handles.hardSecondaryVelThreshold.String = mainHandles.config.sacHardSecondaryVelThreshold;
@@ -93,6 +94,7 @@ handles.secThresholdVal.BackgroundColor = mainHandles.colors{4,2};
 handles.stitch.BackgroundColor = mainHandles.colors{4,2};
 handles.minAmplitude.BackgroundColor = mainHandles.colors{4,2};
 handles.maxDuration.BackgroundColor = mainHandles.colors{4,2};
+handles.minDuration.BackgroundColor = mainHandles.colors{4,2};
 handles.hardVelThreshold.BackgroundColor = mainHandles.colors{4,2};
 handles.hardSecondaryVelThreshold.BackgroundColor = mainHandles.colors{4,2};
 % Box backgrounds
@@ -106,6 +108,7 @@ handles.verbosity.BackgroundColor = mainHandles.colors{4,3};
 handles.stitchText.BackgroundColor = mainHandles.colors{4,3};
 handles.ampText.BackgroundColor = mainHandles.colors{4,3};
 handles.durText.BackgroundColor = mainHandles.colors{4,3};
+handles.minDurText.BackgroundColor = mainHandles.colors{4,3};
 handles.detectionMethod1.BackgroundColor = mainHandles.colors{4,3};
 handles.hardThreshText.BackgroundColor = mainHandles.colors{4,3};
 handles.hardThreshTextSub.BackgroundColor = mainHandles.colors{4,3};
@@ -131,6 +134,7 @@ handles.verbosity.ForegroundColor = mainHandles.colors{4,5};
 handles.stitchText.ForegroundColor = mainHandles.colors{4,5};
 handles.ampText.ForegroundColor = mainHandles.colors{4,5};
 handles.durText.ForegroundColor = mainHandles.colors{4,5};
+handles.minDurText.ForegroundColor = mainHandles.colors{4,5};
 handles.detectionMethod1.ForegroundColor = mainHandles.colors{4,5};
 handles.hardThreshText.ForegroundColor = mainHandles.colors{4,5};
 handles.hardThreshTextSub.ForegroundColor = mainHandles.colors{4,5};
@@ -148,6 +152,7 @@ handles.secThresholdVal.ForegroundColor = mainHandles.colors{4,5};
 handles.stitch.ForegroundColor = mainHandles.colors{4,5};
 handles.minAmplitude.ForegroundColor = mainHandles.colors{4,5};
 handles.maxDuration.ForegroundColor = mainHandles.colors{4,5};
+handles.minDuration.ForegroundColor = mainHandles.colors{4,5};
 handles.hardVelThreshold.ForegroundColor = mainHandles.colors{4,5};
 handles.hardSecondaryVelThreshold.ForegroundColor = mainHandles.colors{4,5};
 % Save button
@@ -212,6 +217,13 @@ if ~IsPositiveRealNumber(maxDuration)
     return;
 end
 
+% minDuration
+minDuration = str2double(handles.minDuration.String);
+if ~IsPositiveRealNumber(minDuration)
+    errordlg('Minimum Duration must be a positive real number.', 'Invalid Parameter');
+    return;
+end
+
 if logical(handles.detectionMethod1.Value)
     % hardVelThreshold
     hardVelThreshold = str2double(handles.hardVelThreshold.String);
@@ -248,6 +260,7 @@ mainHandles.config.sacVerbosity = logical(handles.verbosity.Value);
 mainHandles.config.sacStitch = str2double(handles.stitch.String);
 mainHandles.config.sacMinAmplitude = str2double(handles.minAmplitude.String);
 mainHandles.config.sacMaxDuration = str2double(handles.maxDuration.String);
+mainHandles.config.sacMinDuration = str2double(handles.minDuration.String);
 mainHandles.config.sacVelMethod1 = logical(handles.velMethod1.Value);
 mainHandles.config.sacVelMethod2 = logical(handles.velMethod2.Value);
 mainHandles.config.sacDetectionMethod1 = logical(handles.detectionMethod1.Value);
@@ -572,7 +585,6 @@ function velMethod2_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of velMethod2
 
 
-
 function hardSecondaryVelThreshold_Callback(hObject, eventdata, handles)
 % hObject    handle to hardSecondaryVelThreshold (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -609,43 +621,33 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-
-function edit29_Callback(hObject, eventdata, handles)
-% hObject    handle to thresholdVal (see GCBO)
+function minDuration_Callback(hObject, eventdata, handles)
+% hObject    handle to minDuration (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of thresholdVal as text
-%        str2double(get(hObject,'String')) returns contents of thresholdVal as a double
+% Hints: get(hObject,'String') returns contents of minDuration as text
+%        str2double(get(hObject,'String')) returns contents of minDuration as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
 
-
-% --- Executes during object creation, after setting all properties.
-function edit29_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to thresholdVal (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
+if ~IsPositiveRealNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a positive, real number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
 end
 
-
-
-function edit30_Callback(hObject, eventdata, handles)
-% hObject    handle to secThresholdVal (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of secThresholdVal as text
-%        str2double(get(hObject,'String')) returns contents of secThresholdVal as a double
-
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
-function edit30_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to secThresholdVal (see GCBO)
+function minDuration_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to minDuration (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
