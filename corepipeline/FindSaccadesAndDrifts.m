@@ -21,7 +21,7 @@ else
     RevasWarning(['FindSaccadesAndDrifts() is proceeding and overwriting an existing file. (' outputFileName ')']);
 end
 
-%% Set input variables to defaults if not provided
+%% Set parameters to defaults if not specified.
 % This second method is the EK Algorithm (Engbert & Kliegl, 2003 Vision Research).
 if ~isfield(inputParametersStructure, 'lambda')
     lambda = 6;
@@ -111,7 +111,6 @@ else
     plotAxis = inputParametersStructure.plotAxis;
 end
 
-
 %% Load mat file with output from |StripAnalysis|
 load(inputEyePositionsFilePath);
 % Variables that should be loaded now:
@@ -128,8 +127,6 @@ degreesPerPixelHorizontal = ...
 
 eyePositionTraces(:,1) = eyePositionTraces(:,1) * degreesPerPixelVertical; %#ok<NODEF>
 eyePositionTraces(:,2) = eyePositionTraces(:,2) * degreesPerPixelHorizontal;
-
-
 
 %% Saccade detection algorithm
 % 2 methods to calculate velocity
@@ -150,8 +147,7 @@ else
     error('|inputParametersStructure.velocityMethod| must be 1 or 2');
 end
 
-
-%% find saccades
+%% Find saccades.
 % Use the differences in the velocity to identify saccades
 vectorialVelocity = sqrt(sum(velocity.^2,2));
 medianVelocity = nanmedian(vectorialVelocity);
@@ -186,7 +182,7 @@ saccades(toRemove) = [];
 onsets = [saccades.onsetIndex];
 offsets = [saccades.offsetIndex];
 
-%% find drifts 
+%% Find drifts.
 % Anything other than saccades and artifacts, will be drifts.
 driftIndices = true(size(timeArray));
 for i=1:length(onsets)
@@ -207,13 +203,11 @@ driftIndices(remove) = false;
 drifts = GetDriftProperties(eyePositionTraces,timeArray,driftOnsets,driftOffsets,velocity); 
 
 
-%% Save to output mat file
+%% Save to output mat file.
 save(outputFileName, 'saccades', 'drifts');
 
-%% Verbosity for Results
+%% Verbosity for Results.
 if enableVerbosity
-
-    
     plot(plotAxis,timeArray, eyePositionTraces(:,1),'-','Color',[1 .5 .5]); hold on;
     plot(plotAxis,timeArray, eyePositionTraces(:,2),'-','Color',[.5 .5 1]); hold on;
     plot(plotAxis,timeArray(driftIndices), eyePositionTraces(driftIndices,1),'.','Color',[1 0 0],'LineWidth',2); hold on;
@@ -229,18 +223,11 @@ if enableVerbosity
     xlabel(plotAxis,'Time (sec)');
     ylabel(plotAxis,'Eye position (deg)');
     ylim([-3 3]);
-    
 end
-
-
-
-
 end
-
 
 function [newOnsets, newOffsets] = RemoveFakeSaccades(time, ...
     onsets, offsets, stitchCriteria, minDuration, maxDuration, velocity)
-
 
     samplingRate = 1/diff(time(1:2));
     stitchCriteriaSamples = round(stitchCriteria * samplingRate / 1000);
@@ -287,11 +274,7 @@ function [newOnsets, newOffsets] = RemoveFakeSaccades(time, ...
 
     newOnsets(discardThis) = [];
     newOffsets(discardThis) = [];
-    
-
 end
-
-
 
 function saccades = GetSaccadeProperties(eyePosition,time,onsets,offsets,...
     velocity,secondaryThreshold)
@@ -331,12 +314,9 @@ function saccades = GetSaccadeProperties(eyePosition,time,onsets,offsets,...
                 (ver(newOnset:newOffset) - repmat(ver(newOnset),newOffset-newOnset+1,1)).^2));
         end
     end
-
 end
 
-
 function saccade = GetEmptySaccadeStruct
-
     saccade.duration = [];
     saccade.onsetIndex = [];
     saccade.offsetIndex = [];
@@ -353,12 +333,9 @@ function saccade = GetEmptySaccadeStruct
     saccade.peakVelocity = [];
     saccade.meanVelocity = [];
     saccade.maximumExcursion = [];
-
 end
 
-
 function drift = GetEmptyDriftStruct
-
     drift.duration = [];
     drift.onsetIndex = [];
     drift.offsetIndex = [];
@@ -375,15 +352,10 @@ function drift = GetEmptyDriftStruct
     drift.peakVelocity = [];
     drift.meanVelocity = [];
     drift.maximumExcursion = [];
-
 end
-
-
-
 
 function [newOnset, newOffset, peakVel, meanVel] = ...
     ReviseOnsetOffset(time,onset,offset,velocity,secondaryThreshold)
-
 
     d = 10;
 
@@ -409,7 +381,6 @@ function [newOnset, newOffset, peakVel, meanVel] = ...
     newOnset = onset + onsetDelta;
     newOffset = onset + peakDelta + offsetDelta;
 
-
     % handle error cases
     if isempty(newOffset)
         newOffset = offset;
@@ -425,9 +396,7 @@ function [newOnset, newOffset, peakVel, meanVel] = ...
     if newOffset > length(time)
         newOffset = length(time);
     end
-
 end
-
 
 function [onsets, offsets] = GetEventOnsetsAndOffsets(eventIndices)
 
@@ -443,7 +412,6 @@ function [onsets, offsets] = GetEventOnsetsAndOffsets(eventIndices)
     elseif length(onsets) < length(offsets)
         offsets = offsets(1:end-1);
     end
-
 end
 
 function drifts = GetDriftProperties(eyePosition,time,onsets,offsets,velocity)
@@ -484,6 +452,4 @@ function drifts = GetDriftProperties(eyePosition,time,onsets,offsets,velocity)
             max(sqrt((hor(currentOnset:currentOffset) - repmat(hor(currentOnset),currentOffset-currentOnset+1,1)).^2 +...
             (ver(currentOnset:currentOffset) - repmat(ver(currentOnset),currentOffset-currentOnset+1,1)).^2));
     end
-
-
 end

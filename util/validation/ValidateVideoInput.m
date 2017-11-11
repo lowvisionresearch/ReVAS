@@ -1,4 +1,4 @@
-function [] = validateVideoInput(videoInput)
+function [] = ValidateVideoInput(videoInput)
 %VALIDATE VIDEO INPUT Ensures user input for videos is valid.
 %   The function will take no action if the input is valid.
 %   An input is valid if it is either a 3D or 4D array.

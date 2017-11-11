@@ -5,14 +5,12 @@ function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
 %   Cross-correlation of horizontal strips with a pre-defined
 %   reference frame.
 
-%% Input Validation
+%% Set parameters to defaults if not specified.
 
 inputVideoPath = '';
-referenceFramePath = '';
 
 % If videoInput is a character array, then a path was passed in.
-% Attempt to convert it to a 3D or 4D array, depending on number of
-% color channels.
+% Attempt to convert it to a 3D array.
 if ischar(videoInput)
     inputVideoPath = videoInput;
     [videoInput, videoFrameRate] = VideoPathToArray(videoInput);
@@ -26,8 +24,7 @@ end
 
 % If referenceFrame is a character array, then a path was passed in.
 if ischar(referenceFrame)
-    referenceFramePath = referenceFrame;
-    referenceFrame = importdata(referenceFramePath);
+    referenceFrame = importdata(referenceFrame);
 end
 
 % Set strip width if not provided
@@ -35,6 +32,9 @@ if ~isfield(parametersStructure, 'stripWidth')
     stripWidth = size(videoInput, 2);
 else
     stripWidth = parametersStructure.stripWidth;
+    if ~IsNaturalNumber(stripWidth)
+        error('stripWidth must be a natural number');
+    end
 end
 
 ValidateVideoInput(videoInput);

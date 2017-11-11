@@ -75,7 +75,7 @@ if ~isstruct(parametersStructure)
     error('''parametersStructure'' must be a struct.');
 end
 
-%% Check |parameterStructure|
+%% Set parameters to defaults if not specified.
 if ~isfield(parametersStructure,'overwrite')
     overwrite = 0; 
 else

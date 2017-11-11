@@ -1,4 +1,4 @@
-function [] = validateReferenceFrame(referenceFrame)
+function [] = ValidateReferenceFrame(referenceFrame)
 %VALIDATE REFERENCE FRAME Ensures reference frame input is valid.
 %   Ensures reference frame input is valid.
 %   The function will take no action if the input is invalid.
