@@ -61,6 +61,11 @@ mainHandles = guidata(figureHandle);
 
 handles.enableMultiCore.Value = mainHandles.config.parMultiCore;
 handles.enableGPU.Value = mainHandles.config.parGPU;
+if ~mainHandles.config.parMultiCore && ~mainHandles.config.parGPU
+    handles.noRadio.Value = true;
+else
+    handles.noRadio.Value = false;
+end
 
 % Set colors
 % Main Background
@@ -70,11 +75,16 @@ handles.titleBox.BackgroundColor = mainHandles.colors{4,3};
 handles.parallelizationBox.BackgroundColor = mainHandles.colors{4,3};
 handles.enableMultiCore.BackgroundColor = mainHandles.colors{4,3};
 handles.enableGPU.BackgroundColor = mainHandles.colors{4,3};
+handles.noRadio.BackgroundColor = mainHandles.colors{4,3};
+handles.radioGroup.BackgroundColor = mainHandles.colors{4,3};
 % Box text
 handles.titleBox.ForegroundColor = mainHandles.colors{4,5};
 handles.parallelizationBox.ForegroundColor = mainHandles.colors{4,5};
 handles.enableMultiCore.ForegroundColor = mainHandles.colors{4,5};
 handles.enableGPU.ForegroundColor = mainHandles.colors{4,5};
+handles.noRadio.ForegroundColor = mainHandles.colors{4,5};
+handles.radioGroup.BackgroundColor = mainHandles.colors{4,3};
+
 % Save button
 handles.save.BackgroundColor = mainHandles.colors{3,4};
 handles.save.ForegroundColor = mainHandles.colors{3,2};
