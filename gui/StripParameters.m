@@ -22,7 +22,7 @@ function varargout = StripParameters(varargin)
 
 % Edit the above text to modify the response to help StripParameters
 
-% Last Modified by GUIDE v2.5 05-Aug-2017 16:45:00
+% Last Modified by GUIDE v2.5 11-Nov-2017 12:44:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -67,6 +67,7 @@ handles.samplingRate.String = mainHandles.config.stripSamplingRate;
 handles.enableGaussFilt.Value = mainHandles.config.stripEnableGaussFilt;
 handles.disableGaussFilt.Value = mainHandles.config.stripDisableGaussFilt;
 handles.gaussSD.String = mainHandles.config.stripGaussSD;
+handles.sdWindow.String = mainHandles.config.stripSDWindow;
 handles.maxPeakRatio.String = mainHandles.config.stripMaxPeakRatio;
 handles.minPeakThreshold.String = mainHandles.config.stripMinPeakThreshold;
 handles.adaptiveSearch.Value = mainHandles.config.stripAdaptiveSearch;
@@ -78,9 +79,11 @@ handles.subpixelDepth.String = mainHandles.config.stripSubpixelDepth;
 
 if logical(handles.enableGaussFilt.Value)
     handles.gaussSD.Enable = 'on';
+    handles.sdWindow.Enable = 'on';
     handles.maxPeakRatio.Enable = 'off';
 else
     handles.gaussSD.Enable = 'off';
+    handles.sdWindow.Enable = 'off';
     handles.maxPeakRatio.Enable = 'on';
 end
 
@@ -131,6 +134,8 @@ handles.sampleText.BackgroundColor = mainHandles.colors{4,3};
 handles.sampleTextSub.BackgroundColor = mainHandles.colors{4,3};
 handles.enableGaussFilt.BackgroundColor = mainHandles.colors{4,3};
 handles.sdText.BackgroundColor = mainHandles.colors{4,3};
+handles.sdWindowText.BackgroundColor = mainHandles.colors{4,3};
+handles.sdWindowSubText.BackgroundColor = mainHandles.colors{4,3};
 handles.disableGaussFilt.BackgroundColor = mainHandles.colors{4,3};
 handles.ratioText.BackgroundColor = mainHandles.colors{4,3};
 handles.threshText.BackgroundColor = mainHandles.colors{4,3};
@@ -159,6 +164,8 @@ handles.sampleText.ForegroundColor = mainHandles.colors{4,5};
 handles.sampleTextSub.ForegroundColor = mainHandles.colors{4,5};
 handles.enableGaussFilt.ForegroundColor = mainHandles.colors{4,5};
 handles.sdText.ForegroundColor = mainHandles.colors{4,5};
+handles.sdWindowText.ForegroundColor = mainHandles.colors{4,5};
+handles.sdWindowSubText.ForegroundColor = mainHandles.colors{4,5};
 handles.disableGaussFilt.ForegroundColor = mainHandles.colors{4,5};
 handles.ratioText.ForegroundColor = mainHandles.colors{4,5};
 handles.threshText.ForegroundColor = mainHandles.colors{4,5};
@@ -174,6 +181,7 @@ handles.stripHeight.ForegroundColor = mainHandles.colors{4,5};
 handles.stripWidth.ForegroundColor = mainHandles.colors{4,5};
 handles.samplingRate.ForegroundColor = mainHandles.colors{4,5};
 handles.gaussSD.ForegroundColor = mainHandles.colors{4,5};
+handles.sdWindow.ForegroundColor = mainHandles.colors{4,5};
 handles.maxPeakRatio.ForegroundColor = mainHandles.colors{4,5};
 handles.minPeakThreshold.ForegroundColor = mainHandles.colors{4,5};
 handles.scalingFactor.ForegroundColor = mainHandles.colors{4,5};
@@ -192,6 +200,7 @@ guidata(hObject, handles);
 
 % Check parameter validity and change colors if needed
 gaussSD_Callback(handles.gaussSD, eventdata, handles);
+sdWindow_Callback(handles.sdWindow, eventdata, handles);
 maxPeakRatio_Callback(handles.maxPeakRatio, eventdata, handles);
 minPeakThreshold_Callback(handles.minPeakThreshold, eventdata, handles);
 scalingFactor_Callback(handles.scalingFactor, eventdata, handles);
@@ -252,6 +261,13 @@ if logical(handles.enableGaussFilt.Value)
         errordlg('Gaussian Standard Deviation must be a positive, real number.', 'Invalid Parameter');
         return;
     end
+    
+    % sdWindow
+    sdWindow = str2double(handles.sdWindow.String);
+    if ~IsNaturalNumber(sdWindow)
+        errordlg('Gaussian Standard Deviation must be a natural number.', 'Invalid Parameter');
+        return;
+    end
 else
     % MaxPeakRatio
     maxPeakRatio = str2double(handles.maxPeakRatio.String);
@@ -309,6 +325,7 @@ mainHandles.config.stripSamplingRate = str2double(handles.samplingRate.String);
 mainHandles.config.stripEnableGaussFilt = logical(handles.enableGaussFilt.Value);
 mainHandles.config.stripDisableGaussFilt = logical(handles.disableGaussFilt.Value);
 mainHandles.config.stripGaussSD = str2double(handles.gaussSD.String);
+mainHandles.config.stripSDWindow = str2double(handles.sdWindow.String);
 mainHandles.config.stripMaxPeakRatio = str2double(handles.maxPeakRatio.String);
 mainHandles.config.stripMinPeakThreshold = str2double(handles.minPeakThreshold.String);
 mainHandles.config.stripAdaptiveSearch = logical(handles.adaptiveSearch.Value);
@@ -780,9 +797,11 @@ function enableGaussFilt_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of enableGaussFilt
 if get(hObject,'Value') == 1
     handles.gaussSD.Enable = 'on';
+    handles.sdWindow.Enable = 'on';
     handles.maxPeakRatio.Enable = 'off';
 else
     handles.gaussSD.Enable = 'off';
+    handles.sdWindow.Enable = 'off';
     handles.maxPeakRatio.Enable = 'on';
 end
 
@@ -795,8 +814,46 @@ function disableGaussFilt_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of disableGaussFilt
 if get(hObject,'Value') == 0
     handles.gaussSD.Enable = 'on';
+    handles.sdWindow.Enable = 'on';
     handles.maxPeakRatio.Enable = 'off';
 else
     handles.gaussSD.Enable = 'off';
+    handles.sdWindow.Enable = 'off';
     handles.maxPeakRatio.Enable = 'on';
+end
+
+function sdWindow_Callback(hObject, eventdata, handles)
+% hObject    handle to sdWindow (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of sdWindow as text
+%        str2double(get(hObject,'String')) returns contents of sdWindow as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
+
+if ~IsNaturalNumber(value)
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a natural number.';
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function sdWindow_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to sdWindow (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end
