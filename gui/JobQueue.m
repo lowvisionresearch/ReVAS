@@ -236,6 +236,7 @@ handles.config.stripSamplingRate = 540;
 handles.config.stripEnableGaussFilt = true;
 handles.config.stripDisableGaussFilt = false;
 handles.config.stripGaussSD = 10;
+handles.config.stripSDWindow = 25;
 handles.config.stripMaxPeakRatio = 0.8;
 handles.config.stripMinPeakThreshold = 0;
 handles.config.stripAdaptiveSearch = false;
