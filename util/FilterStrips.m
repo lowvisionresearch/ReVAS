@@ -16,7 +16,7 @@ function [filteredStripIndices, endNaNs, beginNaNs] = FilterStrips(stripIndices)
 %       ans = 
 %           1 2 3 4 5 6 7 8 9 10
 
-% Remove NaNs at the beginning of framePositions
+%% Remove NaNs at the beginning of framePositions
 i = 1;
 while i < size(stripIndices, 1) && isnan(stripIndices(i))
     i = i + 1;
@@ -26,12 +26,13 @@ if i >= 2
 end
 beginNaNs = i-1;
 
-% Get indices of all NaN values
+%% Get indices of all NaN values
 NaNIndices = find(isnan(stripIndices));
 NaNIndicesCopy = NaNIndices;
 NaNIndicesStorage = NaNIndices;
 cut = false;
 
+%% Begin processing--collect information about regions with consecutive NaNs
 % Every 3 items in startAndEndPairs will be, in this order: last number
 % before a strip of consecutive NaNs, first number after a strip of NaNs,
 % and number of NaNs in that strip (k). If there is no number after tha NaNs
@@ -91,6 +92,7 @@ while ~isempty(NaNIndicesCopy)
 
 end
 
+%% Replace regions with consecutive NaNs with linear interpolation
 % Now that the function has determined the values "bordering" the strips of
 % consecutive NaNs, reset the NaNIndices variable so we can insert
 % interpolated values into the original stripIndices.
