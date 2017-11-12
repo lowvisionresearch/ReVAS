@@ -1,32 +1,46 @@
-function [refFrame] = MakeMontage(params, fileName)
+function [refFrame] = MakeMontage(parametersStructure, fileName)
 % MakeMontage    Reference frame.
-%   MakeMontage(params, fileName) generates a reference frame by averaging
+%   MakeMontage(parametersStructure, fileName) generates a reference frame by averaging
 %   all the pixel values across all frames in a video.
 %   
-%   Note: The params variable should have the attributes params.stripHeight,
-%   params.positions, and params.time.
-%   params.newStripHeight is an optional parameter.
+%   Fields of the |parametersStructure| 
+%   -----------------------------------
+%  stripHeight         :   the height of each strip that was used in
+%                          StripAnalysis
+%  newStripHeight      :   optional--interpolate between strip positions 
+%                          with a finer time interval, using newStripHeight
+%                          as the new interval
+%  time                :   the time array that corresponds to the eye
+%                          position traces
+%  positions           :   the eye position traces
+%  lastIteration       :   optional--add this field to fill black regions
+%                          in the final reference frame with random noise. 
+%                          FineRef adds this field on the final iteration 
+%                          of a given run
 %
 %   Example: 
-%       params.stripHeight = 15;
-%       params.time = 1/540:1/540:1;
-%       params.positions = randn(540, 2);
-%       MakeMontage(params,'fileName');
+%       load('MyVid_final.mat')
+%       load('MyVid_params.mat')
+%       parametersStructure.positions = eyePositionTraces;
+%       parametersStructure.time = timeArray;
+%       parametersStructure.stripHeight = fineParameters.stripHeight;
+%       fileName = 'MyVid.avi';
+%       referenceFrame = MakeMontage(parametersStructure, fileName);
 
 %% Prepare a new field for newStripHeight
 % newStripHeight will give the requisite information for interpolation
 % between the spaced-out strips later.
-if isfield(params, 'newStripHeight')
-    % if params.newStripHeight is a field but no value is specified, then set
-    % params.newStripHeight equal to params.stripHeight
-    if isempty(params.newStripHeight)
-        params.newStripHeight = params.stripHeight;
+if isfield(parametersStructure, 'newStripHeight')
+    % if parametersStructure.newStripHeight is a field but no value is specified, then set
+    % parametersStructure.newStripHeight equal to parametersStructure.stripHeight
+    if isempty(parametersStructure.newStripHeight)
+        parametersStructure.newStripHeight = parametersStructure.stripHeight;
     end
     
-    % if params.newStripHeight is not a field, set params.newStripHeight
-    % equal to params.stripHeight anyway
+    % if parametersStructure.newStripHeight is not a field, set parametersStructure.newStripHeight
+    % equal to parametersStructure.stripHeight anyway
 else
-    params.newStripHeight = params.stripHeight;
+    parametersStructure.newStripHeight = parametersStructure.stripHeight;
 end
 
 %% Identify which frames are bad frames
@@ -39,8 +53,8 @@ catch
 end
 
 %% Initialize variables
-stripIndices = params.positions;
-t1 = params.time;
+stripIndices = parametersStructure.positions;
+t1 = parametersStructure.time;
 
 % Grabbing info about the video and strips
 videoInfo = VideoReader(fileName);
@@ -48,16 +62,16 @@ frameHeight = videoInfo.Height;
 width = videoInfo.Width;
 frameRate = videoInfo.Framerate;
 totalFrames = frameRate * videoInfo.Duration;
-stripsPerFrame = floor(frameHeight/params.newStripHeight);
+stripsPerFrame = floor(frameHeight/parametersStructure.newStripHeight);
 
 % Set up templates for reference frame and counter array
 counterArray = zeros(frameHeight*3);
 refFrame = zeros(frameHeight*3);
 %% Set up the interpolation
 % Scale the time array to accomodate new strip height
-scalingFactor = ((params.stripHeight)/2)/(frameRate*frameHeight);
+scalingFactor = ((parametersStructure.stripHeight)/2)/(frameRate*frameHeight);
 t1 = t1 + scalingFactor;
-dt = params.newStripHeight / (frameRate * frameHeight);
+dt = parametersStructure.newStripHeight / (frameRate * frameHeight);
 t2 = dt:dt:videoInfo.Duration + scalingFactor;
 
 % Make sure that both time arrays have the same dimensions
@@ -70,15 +84,23 @@ end
 % Replace the rest of the NaNs with linear interpolation, done
 % manually in a helper function. NaNs at the end of stripIndices will be
 % deleted, along with their corresponding time points.
-[filteredStripIndices1, lengthCutOut1, numberOfNaNs1] = FilterStrips(stripIndices(:, 1));
-[filteredStripIndices2, lengthCutOut2, numberOfNaNs2] = FilterStrips(stripIndices(:, 2));
-numberOfNaNs = max(numberOfNaNs1, numberOfNaNs2);
-lengthCutOut = max(lengthCutOut1, lengthCutOut2);
+[filteredStripIndices1, endNaNs1, beginNaNs1] = FilterStrips(stripIndices(:, 1));
+[filteredStripIndices2, endNaNs2, beginNaNs2] = FilterStrips(stripIndices(:, 2));
+beginNaNs = max(beginNaNs1, beginNaNs2);
+endNaNs = max(endNaNs1, endNaNs2);
 
-% Handle the case in which the two column vectors are different sizes
-difference1 = numberOfNaNs1 - numberOfNaNs2;
-difference2 = lengthCutOut1 - lengthCutOut2;
+% Handle the case in which the two column vectors are different sizes.
+difference1 = beginNaNs1 - beginNaNs2;
+difference2 = endNaNs1 - endNaNs2;
 
+% These next cases may seem counter-intuitive. This is because extra NaNs
+% have already been removed, so all that remains is to remove numbers from
+% the other column. For example, in this first case, difference1 < 0
+% indicates that beginNaNs2 > beginNaNs 1. It might seem like the next
+% action would be to remove numbers from filteredStripIndices2 because
+% beginNaNs2 > beginNaNs1. However, because beginNaNs2 > beginNaNs1,
+% actually all the NaNs in filteredStripIndices2 have already been removed.
+% What remains is to remove the non-NaN numbers from filteredStripIndices1.
 if difference1 < 0
     difference1 = -difference1;
     filteredStripIndices1(1:difference1, :) = [];
@@ -94,12 +116,12 @@ elseif difference2 > 0
 end
 
 filteredStripIndices = [filteredStripIndices1 filteredStripIndices2];
-if numberOfNaNs >= 1
-    t1(1:numberOfNaNs) = [];
+if beginNaNs >= 1
+    t1(1:beginNaNs) = [];
 end
 
-if lengthCutOut >= 1
-    t1(end-lengthCutOut+1:end) = [];
+if endNaNs >= 1
+    t1(end-endNaNs+1:end) = [];
 end
 
 %% Perform interpolation with finer time interval
@@ -114,12 +136,13 @@ interpolatedPositions = movmean(interpolatedPositions, 45);
 % because when I filter for NaNs, the strip number method I originally used
 % gets thrown off. Add numberOfNaNs because the number you remove from the
 % beginning will skew the rest of the data
-for stripNumber = numberOfNaNs + 1:size(interpolatedPositions, 1) + numberOfNaNs
-    interpolatedPositions(stripNumber-numberOfNaNs, 3) = stripNumber;
+for stripNumber = beginNaNs + 1:size(interpolatedPositions, 1) + beginNaNs
+    interpolatedPositions(stripNumber-beginNaNs, 3) = stripNumber;
 end
 
 % Remove leftover NaNs. Need to use while statement because the size of
-% interpolatedPositions changes each time I remove an NaN
+% interpolatedPositions changes each time I remove an NaN. Adding the
+% stripNumbers in the third column earlier will take care of offsets.
 k = 1;
 while k<=size(interpolatedPositions, 1)
     if isnan(interpolatedPositions(k, 2))
@@ -143,7 +166,8 @@ interpolatedPositions = round(interpolatedPositions);
 
 % Leftover and skips will be used to correct for rounding errors; see the 
 % for-loop below for details 
-leftover = (frameHeight/params.newStripHeight) - floor(frameHeight/params.newStripHeight);
+leftover = (frameHeight/parametersStructure.newStripHeight) - ...
+    floor(frameHeight/parametersStructure.newStripHeight);
 leftoverCopy = leftover;
 skips = 0;
 
@@ -267,18 +291,18 @@ for frameNumber = 1:totalFrames
             columnIndex = topLeft(1);
 
             % move strip to proper position
-            rowIndex = rowIndex + ((stripNumber-1) * params.newStripHeight);
+            rowIndex = rowIndex + ((stripNumber-1) * parametersStructure.newStripHeight);
 
             % get max row/column of the strip
-            maxRow = rowIndex + params.newStripHeight - 1;
+            maxRow = rowIndex + parametersStructure.newStripHeight - 1;
             maxColumn = columnIndex + width - 1;
 
             % transfer values of the strip pixels to the reference frame, and
             % increment the corresponding location on the counter array
             templateSelectRow = rowIndex:maxRow;
             templateSelectColumn = columnIndex:maxColumn;
-            vidStart = ((stripNumber-1)*params.newStripHeight)+1;
-            vidEnd = stripNumber * params.newStripHeight;
+            vidStart = ((stripNumber-1)*parametersStructure.newStripHeight)+1;
+            vidEnd = stripNumber * parametersStructure.newStripHeight;
 
             % If the strip extends beyond the frame (i.e., the frame has a
             % height of 512 pixels and strip of height 10 begins at row 511)
@@ -313,10 +337,18 @@ refFrame = refFrame./counterArray;
 refFrame = Crop(refFrame);
 
 %% Save and display the reference frame.
+% If this is the last iteration of FineRef, add random noise to the black
+% regions to avoid getting false peaks in the final StripAnalysis.
+if isfield(parametersStructure, 'addNoise') && parametersStructure.addNoise == true
+    % Replace remaining black regions with random noise
+    indices = refFrame == 0;
+    refFrame(indices) = mean(refFrame(~indices)) + (std(refFrame(~indices)) ...
+        * randn(sum(sum(indices)), 1));
+end
+
 fileName(end-3:end) = [];
 fileName(end+1:end+9) = '_refframe';
 save(fileName, 'refFrame');
 figure('Name', 'Reference Frame')
 imshow(refFrame);
-
 end

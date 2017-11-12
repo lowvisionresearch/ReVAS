@@ -1,9 +1,29 @@
-function refinedFrame = FineRef(coarseRefFrame, inputVideoPath, parametersStructure)
+function newRefFrame = FineRef(coarseRefFrame, inputVideoPath, parametersStructure)
 %FINE REF  Generate a better reference frame.
 %   The function alternates between StripAnalysis and MakeMontage,
-%   alternating between generating positions and generating the reference
-%   frames that result from those positions.
+%   alternating between generating eye traces and generating the reference
+%   frames that result from those traces.
 %   
+%   Fields of the |parametersStructure| 
+%   -----------------------------------
+%  numberOfIterations  :   number of strip-analysis-to-reference-frame
+%                          cycles to perform (i.e., when set to 1, one
+%                          StripAnalysis will be performed on the
+%                          coarseRefFrame, and a fine reference frame will 
+%                          be generated from those eye position traces. If 
+%                          set to 2, another strip analysis will be
+%                          performed on that fine reference frame, and
+%                          another fine reference frame will be generated
+%                          from the resulting eye position traces.)
+%   
+%   Note: FineRef also calls StripAnalysis and MakeMontage. Refer to those
+%   functions for additional parameters.
+%
+%   Example usage: 
+%       videoPath = 'MyVid.avi';
+%       coarseRefFrame = load('MyVid_coarseRef.mat');
+%       parametersStructure = load(MyVid_params.mat');
+%       newRefFrame = FineRef(coarseRefFrame, videoPath, parametersStructure);
 
 %% Handle overwrite scenarios.
 
@@ -50,8 +70,13 @@ while k < numberOfIterations
     parametersStructure.positions = usefulEyePositionTraces;
     parametersStructure.time = timeArray;
     
+    % If this is the final iteration, add a flag to the parametersStructure
+    % to add random noise to black regions of the final reference frame.
+    if k + 1 == numberOfIterations
+        parametersStructure.addNoise = true;
+    end
+    
     newRefFrame = MakeMontage(parametersStructure, inputVideoPath);
-
     % If this is not the last iteration, perform strip analysis using the new
     % reference frame. If this is the last iteration, do not execute this
     % suite because the reference frame has already been updated to its
@@ -68,12 +93,5 @@ while k < numberOfIterations
     
     k = k + 1;
 end
-
-% Replace remaining black regions with random noise
-indices = newRefFrame == 0;
-newRefFrame(indices) = mean(newRefFrame(~indices)) + (std(newRefFrame(~indices)) ...
-    * randn(sum(sum(indices)), 1));
-
-refinedFrame = newRefFrame;
 
 end
