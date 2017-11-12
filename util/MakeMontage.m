@@ -13,7 +13,7 @@ function [refFrame] = MakeMontage(parametersStructure, fileName)
 %  time                :   the time array that corresponds to the eye
 %                          position traces
 %  positions           :   the eye position traces
-%  lastIteration       :   optional--add this field to fill black regions
+%  addNoise            :   optional--add this field to fill black regions
 %                          in the final reference frame with random noise. 
 %                          FineRef adds this field on the final iteration 
 %                          of a given run
