@@ -12,5 +12,4 @@ if isfield(parametersStructure, 'commandWindowHandle')
         message; ...
         parametersStructure.commandWindowHandle.String];
 end
-    
 end

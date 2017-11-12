@@ -29,6 +29,7 @@ end
 
 %% Trim Module
 if logical(handles.togTrim.Value) && ~logical(abortTriggered)
+    RevasMessage(['Trimming ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.borderTrimAmount = handles.config.trimBorderTrimAmount;
     parametersStructure.overwrite = handles.config.trimOverwrite;
@@ -42,6 +43,7 @@ end
 
 %% Remove Stimulus Module
 if logical(handles.togStim.Value) && ~logical(abortTriggered)
+    RevasMessage(['Removing Stimulus ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.enableVerbosity = handles.config.stimVerbosity;
     parametersStructure.overwrite = handles.config.stimOverwrite;
@@ -71,6 +73,7 @@ end
 
 %% Gamma Correction Module
 if logical(handles.togGamma.Value) && ~logical(abortTriggered)
+    RevasMessage(['Gamma Correcting ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.gammaExponent = handles.config.gammaExponent;
     parametersStructure.overwrite = handles.config.gammaOverwrite;
@@ -84,6 +87,7 @@ end
 
 %% Bandpass Filtering Module
 if logical(handles.togBandFilt.Value) && ~logical(abortTriggered)
+    RevasMessage(['Bandpass Filtering ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.smoothing = handles.config.bandFiltSmoothing;
     parametersStructure.lowSpatialFrequencyCutoff = handles.config.bandFiltFreqCut;
@@ -110,6 +114,7 @@ if (logical(handles.togCoarse.Value) ...
 end
 
 if logical(handles.togCoarse.Value) && ~logical(abortTriggered)
+    RevasMessage(['Making Coarse Reference Frame ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.refFrameNumber = handles.config.coarseRefFrameNum;
     parametersStructure.scalingFactor = handles.config.coarseScalingFactor;
@@ -135,6 +140,7 @@ end
 
 %% Make Fine Reference Frame Module
 if logical(handles.togFine.Value) && ~logical(abortTriggered)
+    RevasMessage(['Making Fine Reference Frame ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.enableVerbosity = handles.config.fineVerbosity;
     parametersStructure.numberOfIterations = handles.config.fineNumIterations;
@@ -163,6 +169,7 @@ end
 
 %% Strip Analysis Module
 if logical(handles.togStrip.Value) && ~logical(abortTriggered)
+    RevasMessage(['Strip Analyzing ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.overwrite = handles.config.stripOverwrite;
     parametersStructure.enableVerbosity = handles.config.stripVerbosity;
@@ -212,35 +219,36 @@ if logical(handles.togStrip.Value) && ~logical(abortTriggered)
 end
 
 %% Re-referencing Module
-if false
-%if logical(localHandles.togReRef.Value) && ~logical(abortTriggered) % TODO
+if logical(localHandles.togReRef.Value) && ~logical(abortTriggered)
+    RevasMessage(['Re-referencing ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.borderTrimAmount = localHandles.config.trimBorderTrimAmount;
     parametersStructure.overwrite = localHandles.config.trimOverwrite;
 
     % Call the function(s)
-    TrimVideo(localinputVideoPath, parametersStructure);
+    TrimVideo(inputVideoPath, parametersStructure);
 
     % Update file name to output file name
-    localinputVideoPath = [localinputVideoPath(1:end-4) '_dwt' localinputVideoPath(end-3:end)];
+    inputVideoPath = [inputVideoPath(1:end-4) '_dwt' inputVideoPath(end-3:end)];
 end
 
 %% Filtering Module
-if false
-%if logical(localHandles.togFilt.Value) && ~logical(abortTriggered) % TODO
+if logical(localHandles.togFilt.Value) && ~logical(abortTriggered)
+    RevasMessage(['Filtering ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.borderTrimAmount = localHandles.config.trimBorderTrimAmount;
     parametersStructure.overwrite = localHandles.config.trimOverwrite;
 
     % Call the function(s)
-    TrimVideo(localinputVideoPath, parametersStructure);
+    TrimVideo(inputVideoPath, parametersStructure);
 
     % Update file name to output file name
-    localinputVideoPath = [localinputVideoPath(1:end-4) '_dwt' localinputVideoPath(end-3:end)];
+    inputVideoPath = [inputVideoPath(1:end-4) '_dwt' inputVideoPath(end-3:end)];
 end
 
 %% Saccade Detection Module
 if logical(handles.togSacDrift.Value) && ~logical(abortTriggered)
+    RevasMessage(['Saccade Detecting ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.overwrite = handles.config.sacOverwrite;
     parametersStructure.enableVerbosity = handles.config.sacVerbosity;
