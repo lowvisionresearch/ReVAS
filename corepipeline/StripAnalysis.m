@@ -65,6 +65,7 @@ end
 
 if ~isfield(parametersStructure, 'stripHeight')
     stripHeight = 15;
+    RevasWarning('using default parameter for stripHeight', parametersStructure);
 else
     stripHeight = parametersStructure.stripHeight;
     if ~IsNaturalNumber(stripHeight)
@@ -74,6 +75,7 @@ end
 
 if ~isfield(parametersStructure, 'stripWidth')
     stripWidth = size(videoInput, 2);
+    RevasWarning('using default parameter for stripWidth', parametersStructure);
 else
     stripWidth = parametersStructure.stripWidth;
     if ~IsNaturalNumber(stripWidth)
@@ -83,6 +85,7 @@ end
 
 if ~isfield(parametersStructure, 'samplingRate')
     samplingRate = 540;
+    RevasWarning('using default parameter for samplingRate', parametersStructure);
 else
     samplingRate = parametersStructure.samplingRate;
     if ~IsNaturalNumber(samplingRate)
@@ -102,6 +105,7 @@ end
 if enableGaussianFiltering
     if ~isfield(parametersStructure, 'maximumSD')
         maximumSD = 10;
+        RevasWarning('using default parameter for maximumSD', parametersStructure);
     else
         maximumSD = parametersStructure.maximumSD;
         if ~IsPositiveRealNumber(maximumSD)
@@ -110,6 +114,7 @@ if enableGaussianFiltering
     end
     if ~isfield(parametersStructure, 'SDWindowSize')
         SDWindowSize = 25;
+        RevasWarning('using default parameter for SDWindowSize', parametersStructure);
     else
         SDWindowSize = parametersStructure.SDWindowSize;
         if ~IsNaturalNumber(SDWindowSize)
@@ -119,6 +124,7 @@ if enableGaussianFiltering
 else
     if ~isfield(parametersStructure, 'maximumPeakRatio')
         maximumPeakRatio = 0.8;
+        RevasWarning('using default parameter for maximumPeakRatio', parametersStructure);
     else
         maximumPeakRatio = parametersStructure.maximumPeakRatio;
         if ~IsPositiveRealNumber(maximumPeakRatio)
@@ -129,6 +135,7 @@ end
 
 if ~isfield(parametersStructure, 'minimumPeakThreshold')
     minimumPeakThreshold = 0;
+    RevasWarning('using default parameter for minimumPeakThreshold', parametersStructure);
 else
     minimumPeakThreshold = parametersStructure.minimumPeakThreshold;
     if ~IsNonNegativeRealNumber(minimumPeakThreshold)
@@ -148,6 +155,7 @@ end
 if adaptiveSearch
     if ~isfield(parametersStructure, 'scalingFactor')
         scalingFactor = 10;
+        RevasWarning('using default parameter for scalingFactor', parametersStructure);
     else
         scalingFactor = parametersStructure.scalingFactor;
         if ~IsPositiveRealNumber(scalingFactor)
@@ -156,6 +164,7 @@ if adaptiveSearch
     end
     if ~isfield(parametersStructure, 'searchWindowHeight')
         searchWindowHeight = 0.8;
+        RevasWarning('using default parameter for searchWindowHeight', parametersStructure);
     else
         searchWindowHeight = parametersStructure.searchWindowHeight;
         if ~IsNaturalNumber(searchWindowHeight)
@@ -178,6 +187,7 @@ if enableSubpixelInterpolation
        subpixelInterpolationParameters = struct;
        subpixelInterpolationParameters.neighborhoodSize = 7;
        subpixelInterpolationParameters.subpixelDepth = 2;
+        RevasWarning('using default parameter for subpixelInterpolationParameters', parametersStructure);
     else
         if ~isstruct(parametersStructure.subpixelInterpolationParameters)
            error('subpixelInterpolationParameters must be a struct');
@@ -185,6 +195,7 @@ if enableSubpixelInterpolation
            subpixelInterpolationParameters = parametersStructure.subpixelInterpolationParameters;
            if ~isfield(parametersStructure.subpixelInterpolationParameters, 'neighborhoodSize')
                subpixelInterpolationParameters.neighborhoodSize = 7;
+               RevasWarning('using default parameter for neighborhoodSize', parametersStructure);
            else
                subpixelInterpolationParameters.neighborhoodSize = parametersStructure.subpixelInterpolationParameters.neighborhoodSize;
                if ~IsNaturalNumber(subpixelInterpolationParameters.neighborhoodSize)
@@ -193,6 +204,7 @@ if enableSubpixelInterpolation
            end
            if ~isfield(parametersStructure.subpixelInterpolationParameters, 'subpixelDepth')
                subpixelInterpolationParameters.subpixelDepth = 2;
+               RevasWarning('using default parameter for subpixelDepth', parametersStructure);
            else
                subpixelInterpolationParameters.subpixelDepth = parametersStructure.subpixelInterpolationParameters.subpixelDepth;
                if ~IsPositiveRealNumber(subpixelInterpolationParameters.subpixelDepth)

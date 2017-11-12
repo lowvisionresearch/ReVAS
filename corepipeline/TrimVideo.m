@@ -26,6 +26,7 @@ end
 
 if nargin == 1 || ~isfield(parametersStructure, 'borderTrimAmount')
     borderTrimAmount = 24;
+    RevasWarning('using default parameter for borderTrimAmount', parametersStructure);
 else
     borderTrimAmount = parametersStructure.borderTrimAmount;
     if ~IsNaturalNumber(borderTrimAmount)

@@ -40,6 +40,7 @@ coordinatesAndDegrees = zeros(size(shrunkFrames, 3), 3);
 % matrix. To save time, skip the second frame, so just mark it as a bad
 % frame. Only the first frame has the frame of interest
 parametersStructure.badFrames = 2;
+
 %% Examine each frame
 for frameNumber = 1:size(shrunkFrames, 3)
     
@@ -179,7 +180,6 @@ for frameNumber = 1:size(shrunkFrames, 3)
     end
 end
 
-
 coarseRefFrame = rotateCorrectedCoarse./counterArray;
 coarseRefFrame = Crop(coarseRefFrame);
 coarseRefFrame = double(coarseRefFrame)/255;
@@ -194,5 +194,4 @@ if parametersStructure.enableVerbosity >= 1
     end
     imshow(coarseRefFrame);
 end
-
 end
