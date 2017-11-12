@@ -38,7 +38,12 @@ end
 
 % If referenceFrame is a character array, then a path was passed in.
 if ischar(referenceFrame)
+    % Reference Frame Path is needed because it is written to the file in
+    % the end.
+    referenceFramePath = referenceFrame;
     referenceFrame = importdata(referenceFrame);
+else
+   referenceFramePath = ''; 
 end
 if ~ismatrix(referenceFrame)
     error('Invalid Input for referenceFrame (it was not a 2D array)');
