@@ -349,6 +349,9 @@ end
 fileName(end-3:end) = [];
 fileName(end+1:end+9) = '_refframe';
 save(fileName, 'refFrame');
-figure('Name', 'Reference Frame')
-imshow(refFrame);
+if ~isfield(parametersStructure, 'axesHandles')
+    % Show only if not using GUI.
+    figure('Name', 'Reference Frame')
+    imshow(refFrame);
+end
 end
