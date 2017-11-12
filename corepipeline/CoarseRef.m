@@ -241,11 +241,11 @@ save(outputFileName, 'coarseRefFrame');
 if isfield(parametersStructure, 'enableVerbosity') && ...
         parametersStructure.enableVerbosity >= 1
     if isfield(parametersStructure, 'axesHandles')
-        axes(parametersStructure.axesHandles(3));
-        colormap(parametersStructure.axesHandles(3), 'gray');
+        % Do not show again to GUI since Strip Analysis already showed an
+        % uncropped version with yellow eye position traces.
     else
         figure('Name', 'Coarse Reference Frame');
+        imshow(coarseRefFrame);
     end
-    imshow(coarseRefFrame);
 end
 end
