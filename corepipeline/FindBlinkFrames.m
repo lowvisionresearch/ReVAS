@@ -20,10 +20,11 @@ else
     RevasWarning(['FindBadFrames() is proceeding and overwriting an existing file. (' badFramesMatFileName ')'], parametersStructure);
 end
 
-%% Set thresholdValue
+%% Set parameters to defaults if not specified.
 
 if ~isfield(parametersStructure, 'thresholdValue')
     thresholdValue = 0.8;
+    RevasWarning('using default parameter for thresholdValue', parametersStructure);
 else
     thresholdValue = parametersStructure.thresholdValue;
 end

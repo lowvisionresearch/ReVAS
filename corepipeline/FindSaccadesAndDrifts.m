@@ -25,12 +25,14 @@ end
 % This second method is the EK Algorithm (Engbert & Kliegl, 2003 Vision Research).
 if ~isfield(inputParametersStructure, 'lambda')
     lambda = 6;
+    RevasWarning('using default parameter for lambda', parametersStructure);
 else
     lambda = inputParametersStructure.thresholdValue;
 end
 
 if ~isfield(inputParametersStructure, 'secondaryLambda')
     secondaryLambda = 3;
+    RevasWarning('using default parameter for secondaryLambda', parametersStructure);
 else
     secondaryLambda = inputParametersStructure.secondaryThresholdValue;
 end
@@ -38,6 +40,7 @@ end
 % units are in milliseconds
 if ~isfield(inputParametersStructure, 'stitchCriteria')
     stitchCriteria = 15;
+    RevasWarning('using default parameter for stitchCriteria', parametersStructure);
 else
     stitchCriteria = inputParametersStructure.stitchCriteria;
 end
@@ -45,6 +48,7 @@ end
 % units are in degrees
 if ~isfield(inputParametersStructure, 'minAmplitude')
     minAmplitude = 0.05;
+    RevasWarning('using default parameter for minAmplitude', parametersStructure);
 else
     minAmplitude = inputParametersStructure.minAmplitude;
 end
@@ -52,6 +56,7 @@ end
 % units are in milliseconds
 if ~isfield(inputParametersStructure, 'minDuration')
     minDuration = 8;
+    RevasWarning('using default parameter for minDuration', parametersStructure);
 else
     minDuration = inputParametersStructure.minDuration;
 end
@@ -59,6 +64,7 @@ end
 % units are in milliseconds
 if ~isfield(inputParametersStructure, 'maxDuration')
     maxDuration = 100;
+    RevasWarning('using default parameter for maxDuration', parametersStructure);
 else
     maxDuration = inputParametersStructure.maxDuration;
 end
@@ -75,6 +81,9 @@ end
 % units are in degrees/second
 if ~isfield(inputParametersStructure, 'hardVelocityThreshold')
     hardVelocityThreshold = 25;
+    if detectionMethod == 1
+        RevasWarning('using default parameter for hardVelocityThreshold', parametersStructure);
+    end
 else
     hardVelocityThreshold = inputParametersStructure.hardVelocityThreshold;
 end
@@ -82,6 +91,9 @@ end
 % units are in degrees/second
 if ~isfield(inputParametersStructure, 'hardSecondaryVelocityThreshold')
     hardSecondaryVelocityThreshold = 15;
+    if detectionMethod == 1
+        RevasWarning('using default parameter for hardSecondaryVelocityThreshold', parametersStructure);
+    end
 else
     hardSecondaryVelocityThreshold = inputParametersStructure.hardVelocityThreshold;
 end
@@ -95,20 +107,19 @@ else
     velocityMethod = inputParametersStructure.velocityMethod;
 end
 
-
 % check verbosity field
 if ~isfield(inputParametersStructure, 'enableVerbosity')
-    enableVerbosity = 0;
+    enableVerbosity = false;
 else
     enableVerbosity = inputParametersStructure.enableVerbosity;
 end
 
 % check plot axis
-if ~isfield(inputParametersStructure, 'plotAxis')
+if ~isfield(inputParametersStructure, 'axesHandles')
     figure('units','normalized','outerposition',[.4 .3 .3 .3]);
-    plotAxis = gca;
+    axesHandles = gca;
 else
-    plotAxis = inputParametersStructure.plotAxis;
+    axesHandles = inputParametersStructure.axesHandles;
 end
 
 %% Load mat file with output from |StripAnalysis|
@@ -208,20 +219,20 @@ save(outputFileName, 'saccades', 'drifts');
 
 %% Verbosity for Results.
 if enableVerbosity
-    plot(plotAxis,timeArray, eyePositionTraces(:,1),'-','Color',[1 .5 .5]); hold on;
-    plot(plotAxis,timeArray, eyePositionTraces(:,2),'-','Color',[.5 .5 1]); hold on;
-    plot(plotAxis,timeArray(driftIndices), eyePositionTraces(driftIndices,1),'.','Color',[1 0 0],'LineWidth',2); hold on;
-    plot(plotAxis,timeArray(driftIndices), eyePositionTraces(driftIndices,2),'.','Color',[0 0 1],'LineWidth',2); hold on;    
+    plot(axesHandles,timeArray, eyePositionTraces(:,1),'-','Color',[1 .5 .5]); hold on;
+    plot(axesHandles,timeArray, eyePositionTraces(:,2),'-','Color',[.5 .5 1]); hold on;
+    plot(axesHandles,timeArray(driftIndices), eyePositionTraces(driftIndices,1),'.','Color',[1 0 0],'LineWidth',2); hold on;
+    plot(axesHandles,timeArray(driftIndices), eyePositionTraces(driftIndices,2),'.','Color',[0 0 1],'LineWidth',2); hold on;    
     
     % now highlight saccades
     for i=1:length(onsets)
-        plot(plotAxis,timeArray(onsets(i):offsets(i)),eyePositionTraces(onsets(i):offsets(i),1),'or',...
+        plot(axesHandles,timeArray(onsets(i):offsets(i)),eyePositionTraces(onsets(i):offsets(i),1),'or',...
              timeArray(onsets(i):offsets(i)),eyePositionTraces(onsets(i):offsets(i),2),'ob');
     end
-    title(plotAxis,'Eye position');
-    set(plotAxis,'Fontsize',13);
-    xlabel(plotAxis,'Time (sec)');
-    ylabel(plotAxis,'Eye position (deg)');
+    title(axesHandles,'Eye position');
+    set(axesHandles,'Fontsize',13);
+    xlabel(axesHandles,'Time (sec)');
+    ylabel(axesHandles,'Eye position (deg)');
     ylim([-3 3]);
 end
 end

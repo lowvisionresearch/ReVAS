@@ -43,7 +43,7 @@ function [filteredEyePosition, outputFilePath, parametersStructure] = ...
 %                           parameters.
 %   verbosity           :   set to 1 to see the filtered and original eye
 %                           position data. set to 0 for no feedback.
-%   plotAxis            :   axes handle for giving feedback. if not
+%   axesHandles            :   axes handle for giving feedback. if not
 %                           provided or empty, a new figure is created. 
 %
 %   Example usage: 
@@ -77,41 +77,43 @@ end
 
 %% Set parameters to defaults if not specified.
 if ~isfield(parametersStructure,'overwrite')
-    overwrite = 0; 
+    overwrite = false;
 else
     overwrite = parametersStructure.overwrite;
 end
 
 if ~isfield(parametersStructure,'maxGapDurationMs')
-    maxGapDurationMs = 10; 
+    maxGapDurationMs = 10;
+    RevasWarning('using default parameter for maxGapDurationMs', parametersStructure);
 else
     maxGapDurationMs = parametersStructure.maxGapDurationMs;
 end
 
 if ~isfield(parametersStructure,'filterTypes')
-    filterTypes = {@sgolayfilt}; 
+    filterTypes = {@sgolayfilt};
+    RevasWarning('using default parameter for filterTypes', parametersStructure);
 else
     filterTypes = parametersStructure.filterTypes;
 end
 
 if ~isfield(parametersStructure,'filterParameters')
-    filterParameters = {[3 15]};  
+    filterParameters = {[3 15]};
+    RevasWarning('using default parameter for filterParameters', parametersStructure);
 else
     filterParameters = parametersStructure.filterParameters;
 end
 
 if ~isfield(parametersStructure,'verbosity')
-    verbosity = 0;  
+    verbosity = false;
 else
     verbosity = parametersStructure.verbosity;
 end
 
-if ~isfield(parametersStructure,'plotAxis')
-    plotAxis = [];  
+if ~isfield(parametersStructure,'axesHandles')
+    axesHandles = [];
 else
-    plotAxis = parametersStructure.plotAxis;
+    axesHandles = parametersStructure.axesHandles;
 end
-
 
 %% Handle |inputArgument| scenarios.
 if ischar(inputArgument) % inputArgument is a file path
@@ -234,8 +236,8 @@ end
 
 %% Give feedback if user requested.
 if verbosity
-   if ishandle(plotAxis)
-       axes(plotAxis);
+   if ishandle(axesHandles)
+       axes(axesHandles);
    else
        figure(1453);
        cla;
