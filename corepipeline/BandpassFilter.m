@@ -36,6 +36,7 @@ end
 
 if ~isfield(parametersStructure, 'smoothing')
     smoothing = 1; % standard deviation of the gaussian kernel, in pixels
+    RevasWarning('using default parameter for smoothing', parametersStructure);
 else
     smoothing = parametersStructure.smoothing;
     if ~IsNaturalNumber(smoothing)
@@ -45,6 +46,7 @@ end
 
 if ~isfield(parametersStructure, 'lowSpatialFrequencyCutoff')
     lowSpatialFrequencyCutoff = 3; % cycles per image
+    RevasWarning('using default parameter for lowSpatialFrequencyCutoff', parametersStructure);
 else
     lowSpatialFrequencyCutoff = parametersStructure.lowSpatialFrequencyCutoff;
     if ~IsNonNegativeRealNumber(lowSpatialFrequencyCutoff)
