@@ -97,4 +97,3 @@ writeVideo(writer, videoInputArray);
 close(writer);
 
 end
-

@@ -249,8 +249,3 @@ if verbosity
    xlabel('Time (sec)');
    ylabel('Eye position');
 end
-
-
-
-
-

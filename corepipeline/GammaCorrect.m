@@ -22,6 +22,7 @@ end
 
 if ~isfield(parametersStructure, 'gammaExponent')
     gammaExponent = 0.6;
+    RevasWarning('using default parameter for gammaExponent', parametersStructure);
 else
     gammaExponent = parametersStructure.gammaExponent;
     if ~IsRealNumber(gammaExponent)

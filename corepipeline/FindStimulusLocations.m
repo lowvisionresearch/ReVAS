@@ -185,4 +185,3 @@ save(matFileName, 'stimulusLocationInEachFrame', 'stimulusSize', ...
     'meanOfEachFrame', 'standardDeviationOfEachFrame');
 
 end
-
