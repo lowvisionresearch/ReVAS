@@ -131,8 +131,8 @@ if ~isfield(parametersStructure, 'minimumPeakThreshold')
     minimumPeakThreshold = 0;
 else
     minimumPeakThreshold = parametersStructure.minimumPeakThreshold;
-    if ~IsPositiveRealNumber(minimumPeakThreshold)
-        error('minimumPeakThreshold must be a positive, real number');
+    if ~IsNonNegativeRealNumber(minimumPeakThreshold)
+        error('minimumPeakThreshold must be a non-negative, real number');
     end
 end
 
