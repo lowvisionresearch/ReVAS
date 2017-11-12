@@ -1,5 +1,5 @@
 function [result] = Crop(image)
-% Crop     Crop out 0 padding from an image
+%% Crop     Crop out 0 padding from an image
 %   Crop(image, width, height, margin) takes in a two-dimensional matrix, its 
 %   width, its height, and a margin size for which it tests for 0's. The
 %   function removes 0 padding, given that there is a region of size 'margin' that
@@ -15,13 +15,9 @@ function [result] = Crop(image)
 %           1 2 3 4 5
 %           1 2 3 4 5
 
-% Convert any NaN values in the reference frame to a 0. Otherwise, running
-% strip analysis on this new frame will not work
-NaNindices = find(isnan(image));
-for k = 1:size(NaNindices)
-    NaNindex = NaNindices(k);
-    image(NaNindex) = 0;
-end
+%% Convert any NaN values in the reference frame to a 0.
+indices = isnan(image);
+image(indices) = 0;
 
 % Crop out the leftover 0 padding from the original template. First check
 % for 0 columns

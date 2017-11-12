@@ -1,5 +1,5 @@
-function [filteredStripIndices, lengthCutOut, numberOfNaNs] = FilterStrips(stripIndices)
-% FilterStrips     Replace all NaNs in a column vector with linear interpolation
+function [filteredStripIndices, endNaNs, beginNaNs] = FilterStrips(stripIndices)
+%% FilterStrips     Replace all NaNs in a column vector with linear interpolation
 %   FilterStrips(stripIndices) takes a column vector and interpolates
 %   between the values "bordering" each strip of consecutive NaNs. Then it
 %   returns the new vector.
@@ -12,6 +12,9 @@ function [filteredStripIndices, lengthCutOut, numberOfNaNs] = FilterStrips(strip
 %       x(8)
 %       ans = 
 %            8
+%       x'
+%       ans = 
+%           1 2 3 4 5 6 7 8 9 10
 
 % Remove NaNs at the beginning of framePositions
 i = 1;
@@ -21,13 +24,13 @@ end
 if i >= 2
     stripIndices(1:i-1,:) = [];
 end
-numberOfNaNs = i-1;
+beginNaNs = i-1;
 
 % Get indices of all NaN values
 NaNIndices = find(isnan(stripIndices));
 NaNIndicesCopy = NaNIndices;
 NaNIndicesStorage = NaNIndices;
-lengthCut = 0;
+cut = false;
 
 % Every 3 items in startAndEndPairs will be, in this order: last number
 % before a strip of consecutive NaNs, first number after a strip of NaNs,
@@ -65,7 +68,7 @@ while ~isempty(NaNIndicesCopy)
     % strip) and move down NaNIndicesCopy to check the next two indices
     elseif NaNIndicesCopy(1) == NaNIndicesCopy(2) - 1 
         k = k + 1;
-        NaNIndicesCopy = NaNIndicesCopy(2:end);
+        NaNIndicesCopy(1) = [];
         
     % If the next index in NaNIndicesCopy is NOT one larger than the
     % current index, that means that those indices are NOT part of the same
@@ -84,7 +87,6 @@ while ~isempty(NaNIndicesCopy)
         NaNIndices = NaNIndices(k+1:end);
         k = 1;
         NaNIndicesCopy(1) = [];
-        %NaNIndicesCopy = NaNIndicesCopy(2:end);
     end
 
 end
@@ -102,8 +104,8 @@ while ~isempty(startAndEndPairs)
     % before NaNs begin and number of NaNs in the strip). In that case,
     % cut out the rest of the NaNs, since we have no way of interpolating.
     if dimensions(2) == 2
-        lengthCut = 1;
-        lengthCutOut = max(size(stripIndices(NaNIndices(1):end)));
+        cut = true;
+        endNaNs = max(size(stripIndices(NaNIndices(1):end)));
         stripIndices(NaNIndices(1):end) = [];
         startAndEndPairs = [];
         
@@ -138,8 +140,8 @@ while ~isempty(startAndEndPairs)
     startAndEndPairs = startAndEndPairs(4:end);
 end
 
-if lengthCut == 0
-    lengthCutOut = -1;
+if cut == false
+    endNaNs = 0;
 end
 
 [filteredStripIndices] = stripIndices;
