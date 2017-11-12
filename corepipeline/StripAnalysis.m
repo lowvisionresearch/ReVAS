@@ -678,6 +678,7 @@ if ~abortTriggered && parametersStructure.enableVerbosity
     positionsToBePlotted = repmat(center, length(usefulEyePositionTraces),1) + usefulEyePositionTraces;
     
     scatter(positionsToBePlotted(:,1), positionsToBePlotted(:,2), 'y', 'o' , 'filled');
+    hold off;
 end
 
 %% Save to output mat file
