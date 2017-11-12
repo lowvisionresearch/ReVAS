@@ -49,6 +49,7 @@ end
 
 if ~isfield(parametersStructure, 'scalingFactor')
     scalingFactor = 0.5; % standard deviation of the gaussian kernel, in pixels
+    RevasWarning('using default parameter for scalingFactor', parametersStructure);
 else
     scalingFactor = parametersStructure.scalingFactor;
     if ~IsPositiveRealNumber(scalingFactor)
@@ -86,6 +87,7 @@ shrunkFrames = imresize(videoInputArray, scalingFactor);
 % and the default frame should therefore be the 30th frame).
 if ~isfield(parametersStructure, 'refFrameNumber')
     refFrameNumber = floor(size(shrunkFrames,3)/2);
+    RevasWarning('using default parameter for refFrameNumber', parametersStructure);
 else
    refFrameNumber = parametersStructure.refFrameNumber; 
 end
