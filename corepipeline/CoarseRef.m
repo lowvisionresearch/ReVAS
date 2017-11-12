@@ -218,11 +218,11 @@ save(outputFileName, 'coarseRefFrame');
 if isfield(parametersStructure, 'enableVerbosity') && ...
         parametersStructure.enableVerbosity >= 1
     if isfield(parametersStructure, 'axesHandles')
-        axes(parametersStructure.axesHandles(3));
-        colormap(parametersStructure.axesHandles(3), 'gray');
+        % Not showing cropped version to GUI because Strip Analysis has
+        % already shown non-cropped version with yellow traces on top.
     else
         figure('Name', 'Coarse Reference Frame');
+        imshow(coarseRefFrame);
     end
-    imshow(coarseRefFrame);
 end
 end
