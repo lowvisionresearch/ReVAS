@@ -1,20 +1,24 @@
 function [filteredStripIndices, endNaNs, beginNaNs] = FilterStrips(stripIndices)
 %% FilterStrips     Replace all NaNs in a column vector with linear interpolation
 %   FilterStrips(stripIndices) takes a column vector and interpolates
-%   between the values "bordering" each strip of consecutive NaNs. Then it
-%   returns the new vector.
+%   linearly between the values bordering each strip of consecutive NaNs.
+%   Then it returns the new vector.
+%   If there is a strip of NaNs at the beginning or end of a vector, those
+%   NaNs are removed, and the number of NaNs in each beginning/end region
+%   are saved as endNaNs and beginNaNs. This is because there is no way to
+%   interpolate for terminal NaNs.
 %   
 %   stripIndices should should have dimensions Nx1.
 %
 %   Example: 
-%       A = [1; 2; 3; 4; 5; NaN; NaN; NaN; NaN; 10];
+%       A = [17; 16; 23; 77; 5; NaN; NaN; NaN; NaN; 10];
 %       x = FilterStrips(A);
 %       x(8)
 %       ans = 
 %            8
 %       x'
 %       ans = 
-%           1 2 3 4 5 6 7 8 9 10
+%           17 16 23 77 5 6 7 8 9 10
 
 %% Remove NaNs at the beginning of framePositions
 i = 1;

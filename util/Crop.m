@@ -1,16 +1,14 @@
 function [result] = Crop(image)
 %% Crop     Crop out 0 padding from an image
-%   Crop(image, width, height, margin) takes in a two-dimensional matrix, its 
-%   width, its height, and a margin size for which it tests for 0's. The
-%   function removes 0 padding, given that there is a region of size 'margin' that
-%   is made up entirely of 0's. 
+%   Crop takes a 2D array and removes all zero padding. Before doing so,
+%   all NaNs are converted to zeros.
 %
 %   Example: 
 %       A = [1 2 3 4 5 0 0; 
 %            1 2 3 4 5 0 0; 
-%            0 0 0 0 0 0 0; 
-%            0 0 0 0 0 0 0]
-%       x = Crop(A, 7, 4, 2)
+%            0 0 0 0 0 NaN 0; 
+%            0 0 0 0 0 0 NaN]
+%       x = Crop(A)
 %       x = 
 %           1 2 3 4 5
 %           1 2 3 4 5
