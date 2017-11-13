@@ -1,16 +1,56 @@
 function FindBlinkFrames(inputVideoPath, parametersStructure)
-%FIND BLINK FRAMES Records in a mat file the frames in which a blink
-%occurred.
+%FIND BLINK FRAMES  Records in a mat file the frames in which a blink
+%                   occurred. Blinks are considered to be frames in which
+%                   the frame's mean pixel value is above or below a 
+%                   specified number of standard deviations from the mean
+%                   of the mean pixel values of all frames. 
 %   The result is stored with '_blinkframes' appended to the input video file
 %   name.
 %
-%   |parametersStructure.overwrite| determines whether an existing output
-%   file should be overwritten and replaced if it already exists.
-
-stimLocsMatFileName = [inputVideoPath(1:end-4) '_stimlocs'];
-badFramesMatFileName = [inputVideoPath(1:end-4) '_blinkframes'];
+%
+%
+%   Fields of the |parametersStructure| 
+%   -----------------------------------
+%  overwrite           :   set to 1 to overwrite existing files resulting 
+%                          from calling FindBlinkFrames.
+%                          Set to 0 to abort the function call if the
+%                          files exist in the current directory.
+%  thresholdValue      :   the number of standard deviations from the mean
+%                          of the mean frame pixel values above or below
+%                          which a frame is designated a blink frame. This
+%                          can be a decimal number. Defaults to 1.0 if no 
+%                          value is specified.
+%  upperTail           :   set to true if blinks in the video show up as
+%                          brighter than non-blink frames. Set to false if 
+%                          blinks are black frames or darker than non-blink
+%                          frames (this is usually the case). This
+%                          parameter determines whether to flag bad frames
+%                          as those above or below the thresholdValue
+%                          (upperTail set to true flags frames above the
+%                          thresholdValue, upperTail set to false flags
+%                          frames below the thresoldValue).
+%  stitchCriteria      :   optional--specify the maximum distance (in frames)
+%                          between blinks, below which two blinks will be
+%                          marked as one. For example, if badFrames is 
+%                          [8, 9, 11, 12], this represents two blinks, one
+%                          at frames 8 and 9, and the other at frames 
+%                          11 and 12. If stitchCriteria is 2, then 
+%                          badFrames becomes [8, 9, 10, 11, 12] because the
+%                          distance between the blinks [8, 9] and [11, 12]
+%                          are separated by only one frame, which is less
+%                          than the specified stitch criteria.
+%                          
+%
+%   Example usage: 
+%       videoPath = 'MyVid.avi';
+%       parametersStructure.overwrite = true;
+%       parametersStructure.threhsoldValue = 1.5;
+%       parametersStructure.upperTail = false;
+%       FindBlinkFrames(videoPath, parametersStructure);
 
 %% Handle overwrite scenarios.
+stimLocsMatFileName = [inputVideoPath(1:end-4) '_stimlocs'];
+badFramesMatFileName = [inputVideoPath(1:end-4) '_blinkframes'];
 if ~exist([badFramesMatFileName '.mat'], 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
@@ -23,7 +63,7 @@ end
 %% Set parameters to defaults if not specified.
 
 if ~isfield(parametersStructure, 'thresholdValue')
-    thresholdValue = 0.8;
+    thresholdValue = 1.0;
     RevasWarning('using default parameter for thresholdValue', parametersStructure);
 else
     thresholdValue = parametersStructure.thresholdValue;

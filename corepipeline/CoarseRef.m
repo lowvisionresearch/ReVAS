@@ -55,6 +55,7 @@ function coarseRefFrame = CoarseRef(inputVideoPath, parametersStructure)
 %       parametersStructure.scalingFactor = 0.5;
 %       coarseReferenceFrame = CoarseRef(filename, parametersStructure);
 
+%% Initialize variables
 outputFileName = [inputVideoPath(1:end-4) '_coarseref'];
 outputTracesName = [inputVideoPath(1:end-4) '_coarseframepositions'];
 [videoInputArray, videoFrameRate] = VideoPathToArray(inputVideoPath);

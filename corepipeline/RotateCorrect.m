@@ -10,6 +10,7 @@ function [coarseRefFrame, coordinatesAndDegrees] = RotateCorrect(shrunkFrames, b
 %                    correction method, as well as a matrix containing
 %                    information regarding which degree rotation was used,
 %                    and what each frame's peak ratio was.
+%
 %   Fields of the |parametersStructure| 
 %   -----------------------------------
 %  degreeRange         :   specifies the degree range to test for each 
@@ -25,6 +26,9 @@ function [coarseRefFrame, coordinatesAndDegrees] = RotateCorrect(shrunkFrames, b
 %  rotateMaximumPeakRatio : specifies the peak ratio threshold below which 
 %                           a rotated frame will be considered a "good" 
 %                           frame. 
+%
+%   Example usage: 
+%       
 
 %% Initialize variables
 if ~isfield(parametersStructure, 'degreeRange')

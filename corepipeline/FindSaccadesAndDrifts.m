@@ -6,12 +6,31 @@ function [outputFileName, saccades, drifts] = FindSaccadesAndDrifts(inputEyePosi
 %   The result is stored with '_sacsdrifts' appended to the input video file
 %   name.
 %
-%   |parametersStructure.overwrite| determines whether an existing output
-%   file should be overwritten and replaced if it already exists.
-
-outputFileName = [inputEyePositionsFilePath(1:end-4) '_sacsdrifts'];
-
+%   Fields of the |inputParametersStructure| 
+%   -----------------------------------
+%  overwrite           :   set to 1 to overwrite existing files resulting 
+%                          from calling the function.
+%                          Set to 0 to abort the function call if the
+%                          files exist in the current directory.
+%  lambda              :  
+%  secondaryLambda     :
+%  stitchCriteria      :
+%  thresholdValue      :
+%  minAmplitude        :
+%  minDuration         :
+%  maxDuration         :
+%  detectionMethod     :
+%  velocityMethod      :
+%  enableVerbosity     :
+%  axesHandles         :
+%  hardVelocityThreshold : 
+%  secondaryThresholdValue : 
+%  hardSecondaryVelocityThreshold : 
+%
+%   Example usage: 
+%
 %% Handle overwrite scenarios.
+outputFileName = [inputEyePositionsFilePath(1:end-4) '_sacsdrifts'];
 if ~exist([outputFileName '.mat'], 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(inputParametersStructure, 'overwrite') || ~inputParametersStructure.overwrite
