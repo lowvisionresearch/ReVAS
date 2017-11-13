@@ -41,9 +41,9 @@ function [filteredEyePosition, outputFilePath, parametersStructure] = ...
 %                           corresponding filters in "filterTypes". Each
 %                           row of the cell array can contain an array of
 %                           parameters.
-%   verbosity           :   set to 1 to see the filtered and original eye
+%   enableVerbosity     :   set to 1 to see the filtered and original eye
 %                           position data. set to 0 for no feedback.
-%   axesHandles            :   axes handle for giving feedback. if not
+%   axesHandles         :   axes handle for giving feedback. if not
 %                           provided or empty, a new figure is created. 
 %
 %   Example usage: 
@@ -61,6 +61,14 @@ function [filteredEyePosition, outputFilePath, parametersStructure] = ...
 % filteredPosition = FilterEyePosition(inputArray,parameterStructure);
 %
 %
+%   Change history
+%   --------------
+%   MNA     11/04/2017      initial version.
+%   MNA     11/12/2017      modified 'verbosity' to 'enableVerbosity' to
+%                           make compatible with the rest of ReVAS.
+%
+
+
 
 %% Handle misusage 
 if nargin<1
@@ -103,10 +111,10 @@ else
     filterParameters = parametersStructure.filterParameters;
 end
 
-if ~isfield(parametersStructure,'verbosity')
+if ~isfield(parametersStructure,'enableVerbosity')
     verbosity = false;
 else
-    verbosity = parametersStructure.verbosity;
+    verbosity = parametersStructure.enableVerbosity;
 end
 
 if ~isfield(parametersStructure,'axesHandles')
@@ -212,7 +220,7 @@ for i=1:length(regionsToBeFixed)
     nanIndices(start(regionsToBeFixed(i)):stop(regionsToBeFixed(i))) = false;
 end
 
-%% Remove the rest.
+%% Remove the artifacts.
 % while we are at it, also remove the parts where position is grossly off
 md = nanmedian(filteredEyePosition,1);
 sd = nanstd(filteredEyePosition,[],1);
