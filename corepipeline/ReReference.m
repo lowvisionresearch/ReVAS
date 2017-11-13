@@ -1,153 +1,395 @@
-function [eyePositionTraces_reRef, params, referenceFrame, timeArray, ...
-    globalRef] = ReReference(globalRef, localRef, finalFilename, params)
-% ReReference    	Update eyePositionTraces when given a global reference.
-%   ReReference finds the position of a local reference frame relative to a
-%   global reference frame. The row/column coordinates of the local 
-%   reference frame are then added to the eyePositionTraces for the 
-%   video that generated that localReferenceFrame.
+function [newEyePositionTraces, outputFilePath, params] = ...
+    ReReference(positionArgument, localRefArgument, globalRefArgument, ...
+    parametersStructure)
+%REREFERENCE adds offsets to eye position traces so that all positions are
+%   based on a global reference frame. 
 %
+%   'positionArgument' can be either an Nx2 array of eyePositionTraces, or
+%   a full path to a file containing eyePositionTraces. 'localRefArgument'
+%   can be either a 2D array representing the local ref corresponding to
+%   'positionArgument', or a full path to a file containing 'localRef'.
+%   'globalRefArgument' can be either a 2D array representing the global
+%   ref, or a full path to a file containing 'globalRef'.
+%   'parametersStructure' is a structure specifying the parameters of the
+%   re-referencing process.
 %
-%   globalRef is either the filepath to the globalRef or an array. localRef
-%   is the reference frame resulting from calling FineRef. filename
-%   is the output file from stripAnalysis. 
+%   Fields of the 'parametersStructure' structure
+%   --------------------------------
+%   overwrite               : set to 1 if you want to overwrite the
+%                             existing output file. Relevant only when 
+%                             'positionArgument' is a filename. It is
+%                             ignored if 'positionArgument' is actual eye
+%                             position traces.
+%   fixTorsion              : set to 1 if you want to improve
+%                             cross-correlations by rotating the local ref
+%                             with a range of tilts.
+%   tilts                   : a 1D array with a set of tilt values. Default
+%                             values are -5:1:5;
+%   findPeakMethod          : set to 1 if you want to find the peak of raw
+%                             cross-correlation map to localize local ref
+%                             on global ref. set to 2 if you want to enable
+%                             subtraction of gaussian-filtered version of
+%                             the cross-correlation map from itself before
+%                             searching for the peak. Defaults to 2
+%                             (time-consuming).
+%   findPeakKernelSize      : size of the gaussian kernel for median
+%                             filtering. defaults to 21. ignored if
+%                             findPeakMethod is 1.
+%   searchZone              : size of the search zone for the peak, in
+%                             terms of fraction of the cross-correlation
+%                             map. e.g., a searchZone of 1 means, the
+%                             entire map will be searched. 0.2 means that
+%                             central (0.5-0.1=)0.4 to (0.5+0.1=)0.6 part
+%                             of the map will be searched. defaults to 0.5.
+%   enableVerbosity         : set to 1 to enable user
+%   feedback. axesHandles   : axis handle to give feedback. Relevant only
+%                             when 'enableVerbosity' is enabled. if this
+%                             field does not exist or empty AND
+%                             'enableVerbosity' is set to 1, a new figure
+%                             is generated and feedback is given via that
+%                             figure.
+%
+%   Change history
+%   --------------
+%   MNA     11/12/2017      initial version.
+%
+
+
+%% Handle misusage 
+if nargin<3
+    error('ReReference needs at least three four arguments.')
+end
+
+if nargin<4
+    error('parametersStructure is not provided, re-referencing cannot proceed.');
+end 
+
+if ~isstruct(parametersStructure)
+    error('''parametersStructure'' must be a struct.');
+end
 
 %% Set parameters to defaults if not specified.
-
-% If globalRef was passed in as a filepath, read the file.
-if ischar(globalRef)
-    % Leave this for now because the tif file is not of the same type of
-    % the localReferenceFrame 
-    globalRef = imread(globalRef);
+if ~isfield(parametersStructure,'overwrite')
+    overwrite = false;
+else
+    overwrite = parametersStructure.overwrite;
 end
 
-if ischar(localRef)
-    localRef = imread(localRef);
-end
-
-% Load eyePositionTraces and timeArray from the output of stripAnalysis
-load(finalFilename);
-
-if size(globalRef, 1) < size(localRef, 1) || size(globalRef, 2)...
-        < size(localRef, 2)
+if ~isfield(parametersStructure,'fixTorsion')
+    fixTorsion = false;
+    try
+        RevasWarning('using default parameter for fixTorsion', fixTorsion);
+    catch
+    end
     
-    yDifference = abs(size(globalRef, 1) - size(localRef, 1));
-    xDifference = abs(size(globalRef, 2) - size(localRef, 2));
+else
+    fixTorsion = parametersStructure.fixTorsion;
+end
+
+if ~isfield(parametersStructure,'tilts')
+    tilts = -5:1:5;
+    try
+        RevasWarning('using default parameter for tilts', parametersStructure);
+    catch
+    end
+else
+    tilts = parametersStructure.tilts;
+end
+
+if ~isfield(parametersStructure,'findPeakMethod')
+    findPeakMethod = 2;
+else
+    findPeakMethod = parametersStructure.findPeakMethod;
+end
+
+
+if ~isfield(parametersStructure,'findPeakKernelSize')
+    findPeakKernelSize = 21;
+else
+    findPeakKernelSize = parametersStructure.findPeakKernelSize;
+end
+
+if ~isfield(parametersStructure,'searchZone')
+    searchZone = 0.5;
+else
+    searchZone = parametersStructure.searchZone;
+end
+
+
+if ~isfield(parametersStructure,'enableVerbosity')
+    verbosity = false;
+else
+    verbosity = parametersStructure.enableVerbosity;
+end
+
+if ~isfield(parametersStructure,'axesHandles')
+    axesHandles = [];
+else
+    axesHandles = parametersStructure.axesHandles;
+end
+
+
+%% Handle |positionArgument| scenarios.
+if ischar(positionArgument) % positionArgument is a file path
+    outputFilePath = [positionArgument(1:end-4) '_reref.mat'];
     
-    globalRef = padArray(globalRef, [ceil(yDifference/2), ...
-        ceil(xDifference/2)], 0, 'both');
+    % Handle overwrite scenarios
+    if ~exist(outputFilePath, 'file')
+        % left blank to continue without issuing warning in this case
+    elseif ~overwrite && exist(outputFilePath, 'file')
+        try
+            RevasWarning(['ReReference() did not execute because it would overwrite existing file. (' outputFilePath ')'], parametersStructure);
+        catch
+        end
+        return;
+    else
+        try
+            RevasWarning(['ReReference() is proceeding and overwriting an existing file. (' outputFilePath ')'], parametersStructure);  
+        catch
+        end
+    end
+    
+    % check if input file exists
+    if ~exist(positionArgument,'file')
+        error('eye position file does not exist!');
+    end
+    
+    % load the data
+    data = load(positionArgument,'eyePositionTraces','timeArray');
+    eyePositionTraces = data.eyePositionTraces;
+
+else % inputArgument is not a file path, but carries the eye position data.
+    outputFilePath = [];
+    
+    eyePositionTraces = positionArgument;
+    
 end
 
-%% Perform a cross-correlation on the global reference frame
 
-% This part is using the default method, which was found to be ineffective.
-% c = normxcorr2(localRef,globalRef);
-% [ypeak, xpeak] = find(c==max(c(:)));
-% yoffSet = ypeak-size(localRef,1);
-% xoffSet = xpeak-size(localRef,2);
-% rowCoordinate = yoffSet;
-% columnCoordinate = xoffSet;
-% 
-% % Check for tilt/distortion errors
-% if yoffSet < 0 || xoffSet < 0 || xoffSet >= size(globalRef, 2) || ...
-%         yoffSet >= size(globalRef, 1)
-%     
-%     if ~isfield(params, 'degreeRange')
-%         params.degreeRange = -1:0.1:1;
-%     end
-%     disp('here')
-%     for k = 1:max(size(params.degreeRange))
-%         rotation = params.degreeRange(k);
-%         tempLocalRef = imrotate(localRef, rotation);
-%         
-%         c = normxcorr2(tempLocalRef,globalRef);
-%         [ypeak, xpeak] = find(c==max(c(:)));
-%         yoffSet = ypeak-size(localRef,1);
-%         xoffSet = xpeak-size(localRef,2);
-%         
-%         [surfX,surfY] = meshgrid(1:size(c,2), 1:size(c,1));
-%         surf(surfX, surfY, c, 'linestyle', 'none');
-%         xlim([1 size(c,2)]);
-%         ylim([1 size(c,1)]);
-%         zlim([-1 1]);
-%         
-%         % Mark the identified peak on the plot with an arrow.
-%         text(xpeak, ypeak, max(c(:)), '\downarrow', 'Color', 'red', ...
-%             'FontSize', 20, 'HorizontalAlignment', 'center', ...
-%             'VerticalAlignment', 'bottom', 'FontWeight', 'bold');
-%         
-%         drawnow;
-%         
-%         if yoffSet < 0 || xoffSet < 0 || xoffSet >= size(globalRef, 2) || ...
-%         yoffSet >= size(globalRef, 1)
-%             continue
-%         else
-%             rowCoordinate = yoffSet;
-%             columnCoordinate = xoffSet;
-%         end
-%     end
-% end
+%% Handle |localRefArgument| scenarios.
+if ischar(localRefArgument) % localRefArgument is a file path
 
-% StripAnalysis only accepts 3D video input, so create a dummy frame and
-% designate it as a bad frame.
-% PREVIOUS STUFF USING MATT"S FUNCTION GOES HERE dimensions = size(localRef);
-dimensions = size(localRef);
-threeDimensionalFrame = zeros(dimensions(1), dimensions(2), 2);
-threeDimensionalFrame(:, :, 1) = threeDimensionalFrame(:, :, 1) + double(localRef);
-params.badFrames = 2;
+    % check if input file exists
+    if ~exist(localRefArgument,'file')
+        error('local ref file does not exist!');
+    end
+    
+    try
+        % load the localRef
+        load(localRefArgument,'refFrame');
+        localRef = refFrame*255;
+    catch
+        try
+            % maybe this is a coarse ref file
+            load(localRefArgument,'coarseRefFrame');
+            localRef = coarseRefFrame*255;
+        catch
+            % maybe this is an image file
+            localRef = im2double(imread(localRefArgument))*255;
+        end
+        
+    end
 
-% Check that strip height/width are set to the height of the full frame
-params.stripHeight = dimensions(1);
-params.stripWidth = dimensions(2);
-
-params.enableVerbosity = 1;
-[~, usefulEyePositionTraces, ~, statisticsStructure] = ...
-    StripAnalysis(threeDimensionalFrame, globalRef, params);
-
-% Negate?
-%usefulEyePositionTraces = -usefulEyePositionTraces;
-
-columnCoordinate = usefulEyePositionTraces(1, 1);
-rowCoordinate = usefulEyePositionTraces(1, 2);
-peakRatio = statisticsStructure.peakRatios(1);
-
-% Check for bad peaks
-if peakRatio >= params.rotateMaximumPeakRatio
-    params.reRef = 1;
-    params.enableVerbosity = 1;
-    [~, coordinatesAndDegrees] = RotateCorrect(threeDimensionalFrame, ...
-        threeDimensionalFrame, globalRef, '.', params);
+else % localRefArgument is not a file path, but carries the localRef.
+    localRef = localRefArgument;
 end
 
-if exist('coordinatesAndDegrees', 'var') 
-    if coordinatesAndDegrees(1, 1) > 0 && coordinatesAndDegrees(1, 2) > 0 &&...
-            coordinatesAndDegrees(1, 1) < size(globalRef, 2) && ...
-            coordinatesAndDegrees(1, 2) < size(globalRef, 1)
-        columnCoordinate = coordinatesAndDegrees(1, 1);
-        rowCoordinate = coordinatesAndDegrees(1, 2);
-        disp(coordinatesAndDegrees(1, :))
+
+
+%% Handle |globalRefArgument| scenarios.
+if ischar(globalRefArgument) % globalRefArgument is a file path
+
+    % check if input file exists
+    if ~exist(globalRefArgument,'file')
+        error('global ref file does not exist!');
+    end
+    
+    try
+        % load the globalRef
+        load(globalRefArgument,'globalRef');
+    catch
+        % maybe this is an image file
+        globalRef = imread(globalRefArgument);
+    end
+
+else % localRefArgument is not a file path, but carries the localRef.
+    globalRef = globalRefArgument;
+end
+
+%% Re-referencing done here.
+% compute ref centers
+localCenter = size(localRef)/2;
+globalCenter = size(globalRef)/2;
+    
+% prepare structure for Localize sub-function
+params.findPeakMethod = findPeakMethod;
+params.findPeakKernelSize = findPeakKernelSize;
+params.searchZone = searchZone;
+params.tilts = tilts;
+
+% localize local ref on global ref
+if ~fixTorsion
+    [yOffset, xOffset, peakValue, c, yp, xp] = Localize(localRef,globalRef,params);
+else
+    [localRef, bestTilt, yOffset, xOffset, peakValue] = ...
+        SolveTiltIssue(localRef,globalRef,params);
+end
+
+% adjust eye position traces based on the estimated offsets
+offsetBetweenLocalAndGlobal = [xOffset yOffset ];
+newEyePositionTraces = eyePositionTraces...
+    + repmat(offsetBetweenLocalAndGlobal,length(eyePositionTraces),1);
+
+
+%% Save re-referenced data.
+if ~isempty(outputFilePath) && overwrite
+    data.eyePositionTraces = newEyePositionTraces;
+    data.offsetBetweenLocalAndGlobal = offsetBetweenLocalAndGlobal;
+    data.peakValue = peakValue;
+    data.parametersStructure = parametersStructure;
+    if exist('bestTilt','var')
+        data.bestTilt = bestTilt;
+    end
+    save(outputFilePath,'-struct','data');
+end
+
+
+%% Give feedback if user requested.
+if verbosity
+    
+    if ishandle(axesHandles)
+        axes(axesHandles)
+    else
+        figure;
+        axesHandles = gca;
+    end
+    
+    if xOffset < 1 || yOffset < 1
+        tempGlobal = padarray(globalRef,-[yOffset xOffset],'pre');
+        xOffset = 1;
+        yOffset = 1;
+    end
+    
+    if xOffset+size(localRef,2) > size(globalRef,2) || yOffset+size(localRef,1) > size(globalRef,1)
+        padX = xOffset+size(localRef,2) - size(globalRef,2) + 1;
+        padY = yOffset+size(localRef,1) - size(globalRef,1) + 1;
+        tempGlobal = padarray(globalRef,[padY padX],'post');
+    end
+    
+    tempGlobal = double(globalRef);
+    yind = yOffset:yOffset+size(localRef,1)-1;
+    xind = xOffset:xOffset+size(localRef,2)-1;
+    tempGlobal(yind,xind) = (tempGlobal(yind,xind) + double(localRef))/2;
+    imshow(uint8(tempGlobal));
+    
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%% localizer function
+function [yoffset, xoffset, maxVal, c, ypeak, xpeak] = Localize(inp,ref, params)
+% does the cross-correlation and locates the peak. Handles scenarios where
+% inp is larger than the ref.
+
+try
+    N = [0 0];
+    c = normxcorr2(inp,ref);
+catch err1 %#ok<*NASGU>
+    
+    % probably complaining about size, so zeropad the ref and see how it
+    % goes. don't forget to control for the additional offsets this causes.
+    N = size(inp)-size(ref);
+    N(N<0) = 0;
+    
+    tempRef = padarray(ref,N,'post');
+    try
+        c = normxcorr2(inp,tempRef);
+        
+    catch err2
+        % probably complaining about size
+        yoffset = 0; xoffset = 0; maxVal = 0;
+        return;
     end
 end
 
-%% Add the local reference shift to eyePositionTraces 
-eyePositionTraces(:, 1) = eyePositionTraces(:, 1) + columnCoordinate;
-eyePositionTraces(:, 2) = eyePositionTraces(:, 2) + rowCoordinate;
 
-%% Reassign variables and save.
-eyePositionTraces_reRef = eyePositionTraces;
-referenceFrame = localRef;
-outputFileName = finalFilename;
-outputFileName((end-3):end) = [];
-outputFileName(end+1:end+6) = '_reref';
-save(outputFileName, 'eyePositionTraces_reRef', 'timeArray', ...
-        'params', 'referenceFramePath', 'globalRef');
-    
-%% Display the results
-drawnow;  
-hFig = figure;
-hAx  = axes;
-imshow(globalRef,'Parent', hAx);
-imrect(hAx, [columnCoordinate, rowCoordinate, size(localRef,2), size(localRef,1)]);
-figure('Name', 'ReferenceFrame')
-imshow(localRef)
+[ypeak, xpeak, maxVal] = FindPeak(c, params);
+yoffset = ypeak-size(inp,1);
+xoffset = xpeak-size(inp,2);
 
+
+%% peakfinder.  
+function [ypeak, xpeak, maxVal] = FindPeak(c, params)
+
+if params.findPeakMethod == 2
+    tempC = c - imgaussfilt(c,params.findPeakKernelSize);
+else
+    tempC = c;
 end
+
+st = round(size(tempC)*(.5-params.searchZone/2));
+en = round(size(tempC)*(.5+params.searchZone/2));
+tempC = tempC(st(1):en(1),...
+          st(2):en(2));
+maxVal = max(tempC(:));
+[ypeak, xpeak] = find(tempC == maxVal);
+
+ypeak = ypeak + st(1) - 1;
+xpeak = xpeak + st(2) - 1;
+maxVal = c(ypeak,xpeak);
+
+
+%% tilt issue solver
+function [inp, bestTilt, bestYOffset, bestXOffset, peakVal, c, ypeak, xpeak] ...
+    = SolveTiltIssue(inp,ref,params)
+
+tilts = params.tilts;
+yOffset = nan(length(tilts),1);
+xOffset = nan(length(tilts),1);
+maxVal = nan(length(tilts),1);
+
+% rotate the input image, crosscorrelate with ref, and find the peak.
+% Across all tilts, find the best one which results in the max peak.
+% Also rotate the input image based on the bestTilt.
+for j=1:length(tilts)
+    rotated = imrotate(inp,tilts(j),'bilinear','crop');
+    rotated = PadNoise(rotated);
+    [yOffset(j), xOffset(j), maxVal(j)] = Localize(rotated,ref, params);
+end
+
+% now interpolate the peak values
+newTilts = (min(tilts):0.05:max(tilts));
+peaks = interp1(tilts,maxVal,newTilts,'pchip');
+
+% find best tilt
+bestTilt = newTilts(peaks == max(peaks));
+
+% rotate for the best tilt
+inp = imrotate(inp,bestTilt,'bilinear','crop');
+inp = uint8(PadNoise(inp));
+
+% localize
+[bestYOffset, bestXOffset, peakVal, c, ypeak, xpeak] = Localize(inp,ref, params);
+
+
+
+%% add noise to zero-padded regions due to tilt
+function output = PadNoise(input)
+
+input = double(input);
+padIndices = input < 1.5;
+noiseFrame = padIndices.*(rand(size(padIndices))*20 + mean(input(:)));
+output = double(input) + noiseFrame;
+
+    

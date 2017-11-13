@@ -742,13 +742,20 @@ end
 %% Save to output mat file
 
 if ~abortTriggered && ~isempty(inputVideoPath)
+    
+    try
+        parametersStructure = rmfield(parametersStructure,'axesHandles'); 
+        parametersStructure = rmfield(parametersStructure,'commandWindowHandle'); %#ok<NASGU>
+    catch
+    end
+    
     % Save a copy of the raw traces.
-    eyePositionTraces = rawEyePositionTraces;
+    eyePositionTraces = rawEyePositionTraces; %#ok<NASGU>
     save(rawOutputFileName, 'eyePositionTraces', 'timeArray', ...
         'parametersStructure', 'referenceFramePath');
     
     % Save a copy of the useful traces (under file labeled 'final').
-    eyePositionTraces = usefulEyePositionTraces;
+    eyePositionTraces = usefulEyePositionTraces; %#ok<NASGU>
     save(outputFileName, 'eyePositionTraces', 'timeArray', ...
         'parametersStructure', 'referenceFramePath');
 end
