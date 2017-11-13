@@ -4,9 +4,55 @@ function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
 %STRIP ANALYSIS Extract eye movements in units of pixels.
 %   Cross-correlation of horizontal strips with a pre-defined
 %   reference frame.
+%
+%   Fields of the |parametersStructure| 
+%   -----------------------------------
+%   badFrames                       : array containing the frame numbers of
+%                                     the blink frames
+%   stripHeight                     : strip height to be used for strip
+%                                     analysis
+%   stripWidth                      : strip width to be used for strip
+%                                     analysis. Should be set to the width 
+%                                     of each frame
+%   samplingRate                    : sampling rate of the video
+%   maximumSD                       : 
+%   SDWindowSize                    :
+%   maximumPeakRatio                : maximum peak ratio between the
+%                                     highest and second-highest peak in a 
+%                                     correlation map--a peak ratio >
+%                                     maximumPeakRatio will prompt the 
+%                                     program to throw out the position
+%                                     given by that particular strip
+%   adaptiveSearch                  :
+%   scalingFactor                   :
+%   searchWindowHeight              :
+%   enableVerbosity                 : set to 1 to view the progress of the
+%                                     program as it locates strip positions. 
+%                                     Set to 0 for no feedback.
+%   minimumPeakThreshold            : the minimum value above which a peak
+%                                     needs to be in order to be considered 
+%                                     a valid correlation
+%   enableGaussianFiltering         : set to 1 to enable Gaussian filtering. 
+%                                     Set to 0 to disable.
+%   enableSubpixelInterpolation     :
+%   subpixelInterpolationParameters :
+%   -----------------------------------
+%   Fields of the |subpixelInterpolationParameters|
+%   -----------------------------------
+%   neighborhoodSize                :
+%   subpixelDepth                   :
+%
+%   Note: StripAnalysis calls FindPeak. See FindPeak for additional 
+%   relevant parameters.
+%
+%   Example usage: 
+%       videoInput = 'MyVid.avi';
+%       load('MyVid_params.mat');
+%       load('MyVid_refFrame.mat');
+%       [rawEyePositionTraces, usefulEyePositionTraces, timeArray, statisticsStructure] = ...
+%       StripAnalysis(videoInput, referenceFrame, parametersStructure)
 
 %% Set parameters to defaults if not specified.
-
 inputVideoPath = '';
 % If videoInput is a character array, then a path was passed in.
 % Attempt to convert it to a 3D array.

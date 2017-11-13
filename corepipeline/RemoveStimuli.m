@@ -7,13 +7,21 @@ function RemoveStimuli(inputVideoPath, parametersStructure)
 %   The result is stored with '_nostim' appended to the input video file
 %   name.
 %
-%   |parametersStructure.overwrite| determines whether an existing output
-%   file should be overwritten and replaced if it already exists.
-
-outputVideoPath = [inputVideoPath(1:end-4) '_nostim' inputVideoPath(end-3:end)];
-matFileName = [inputVideoPath(1:end-4) '_stimlocs'];
+%   Fields of the |parametersStructure| 
+%   -----------------------------------
+%   overwrite          :        set to 1 to overwrite existing files resulting 
+%                               from calling the function.
+%                               Set to 0 to abort the function call if the
+%                               files exist in the current directory.
+%
+%   Example usage: 
+%       inputVideoPath = 'MyVid.avi';
+%       parametersStructure.overwrite = 1;
+%       RemoveStimuli(inputVideoPath, parametersStructure);
 
 %% Handle overwrite scenarios.
+outputVideoPath = [inputVideoPath(1:end-4) '_nostim' inputVideoPath(end-3:end)];
+matFileName = [inputVideoPath(1:end-4) '_stimlocs'];
 if ~exist(outputVideoPath, 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite

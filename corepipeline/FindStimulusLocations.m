@@ -5,13 +5,27 @@ function FindStimulusLocations(inputVideoPath, stimulus, parametersStructure, re
 %   name (and the file type is now .mat).
 %
 %   The mean and standard deviation of the pixels in each frame are also
-%   saved as two separate arrays in this output mat file. 
-%   |parametersStructure.overwrite| determines whether an existing output
-%   file should be overwritten and replaced if it already exists.
-
-matFileName = [inputVideoPath(1:end-4) '_stimlocs'];
+%   saved as two separate arrays in this output mat file.
+%
+%   Fields of the |parametersStructure| 
+%   -----------------------------------
+%   overwrite          :        set to 1 to overwrite existing files resulting 
+%                               from calling the function.
+%                               Set to 0 to abort the function call if the
+%                               files exist in the current directory.
+%   enableVerbosity    :        set to 1 to view the progress of the
+%                               program as it locates stimulus locations.
+%                               Set to 0 for no feedback.
+%   axesHandles        :
+%
+%   Note: FindStimulusLocations also calls FindPeak. See FindPeak for 
+%   additional relevant parameters.
+%
+%   Example usage: 
+%       
 
 %% Handle overwrite scenarios.
+matFileName = [inputVideoPath(1:end-4) '_stimlocs'];
 if ~exist([matFileName '.mat'], 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite

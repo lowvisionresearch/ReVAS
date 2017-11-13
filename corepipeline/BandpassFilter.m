@@ -20,9 +20,8 @@ function BandpassFilter(inputVideoPath, parametersStructure)
 %                               peripheral retina creates these low-freq.
 %                               fluctuations.(default 3 cycles/image)
 
-outputVideoPath = [inputVideoPath(1:end-4) '_bandfilt' inputVideoPath(end-3:end)];
-
 %% Handle overwrite scenarios.
+outputVideoPath = [inputVideoPath(1:end-4) '_bandfilt' inputVideoPath(end-3:end)];
 if ~exist(outputVideoPath, 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
