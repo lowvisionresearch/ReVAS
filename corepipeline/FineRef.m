@@ -55,7 +55,7 @@ if numberOfIterations > 0
         StripAnalysis(inputVideoPath, coarseRefFrame, parametersStructure);
 
     if logical(abortTriggered)
-        refinedFrame = [];
+        newRefFrame = [];
         return;
     end
 else
@@ -86,7 +86,7 @@ while k < numberOfIterations
             StripAnalysis(inputVideoPath, newRefFrame, parametersStructure);
         
         if logical(abortTriggered)
-            refinedFrame = [];
+            newRefFrame = [];
             return;
         end
     end
