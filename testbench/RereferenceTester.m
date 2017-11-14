@@ -3,9 +3,9 @@ clearvars;
 close all;
 clc;
 
-filename = 'C:\Users\spencer\Desktop\ReVAS\example\normal_dew_os_10_12_1_45_1_stabfix_10_18_41_907_dwt_nostim_gamscaled_bandfilt_540_hz_final.mat';
-localRefFile = 'C:\Users\spencer\Desktop\ReVAS\example\normal_dew_os_10_12_1_45_1_stabfix_10_18_41_907_dwt_nostim_gamscaled_bandfilt_coarseref.mat';
-globalRefFile = 'C:\Users\spencer\Desktop\ReVAS\example\dew_os_10deg.tif';
+filename = 'C:\Users\TSLO2-analysis\Desktop\ReVAS\testbench\ReReference\mna_os_10_12_1_45_1_stabfix_17_36_21_990_dwt_nostim_gamscaled_bandfilt_540_hz_final.mat';
+localRefFile = 'C:\Users\TSLO2-analysis\Desktop\ReVAS\testbench\ReReference\ReferenceFrame.mat';
+globalRefFile = 'C:\Users\TSLO2-analysis\Desktop\ReVAS\testbench\ReReference\mna_os_10deg_global.tif';
 
 disp('no torsion correction, simplest peak finder')
 tic;
@@ -23,7 +23,7 @@ toc;
 
 disp('no torsion correction, better peak finder')
 tic;
-params.enableVerbosity = 0;
+params.enableVerbosity = 1;
 params.overwrite = 1;
 params.fixTorsion = 1;
 params.findPeakMethod = 2;
@@ -50,7 +50,7 @@ toc;
 
 disp('torsion correction, better peak finder')
 tic;
-params.enableVerbosity = 0;
+params.enableVerbosity = 1;
 params.overwrite = 1;
 params.fixTorsion = 1;
 params.findPeakMethod = 2;

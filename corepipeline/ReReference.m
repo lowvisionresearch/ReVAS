@@ -392,4 +392,5 @@ padIndices = input < 1.5;
 noiseFrame = padIndices.*(rand(size(padIndices))*20 + mean(input(:)));
 output = double(input) + noiseFrame;
 
+
     
