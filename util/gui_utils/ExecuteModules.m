@@ -219,11 +219,11 @@ if logical(handles.togStrip.Value) && ~logical(abortTriggered)
 end
 
 %% Re-referencing Module
-if logical(localHandles.togReRef.Value) && ~logical(abortTriggered)
+if logical(handles.togReRef.Value) && ~logical(abortTriggered)
     RevasMessage(['Re-referencing ' inputVideoPath], parametersStructure);
     % Set the parameters
-    parametersStructure.borderTrimAmount = localHandles.config.trimBorderTrimAmount;
-    parametersStructure.overwrite = localHandles.config.trimOverwrite;
+    parametersStructure.borderTrimAmount = handles.config.trimBorderTrimAmount;
+    parametersStructure.overwrite = handles.config.trimOverwrite;
 
     % Call the function(s)
     TrimVideo(inputVideoPath, parametersStructure);
@@ -233,11 +233,11 @@ if logical(localHandles.togReRef.Value) && ~logical(abortTriggered)
 end
 
 %% Filtering Module
-if logical(localHandles.togFilt.Value) && ~logical(abortTriggered)
+if logical(handles.togFilt.Value) && ~logical(abortTriggered)
     RevasMessage(['Filtering ' inputVideoPath], parametersStructure);
     % Set the parameters
-    parametersStructure.borderTrimAmount = localHandles.config.trimBorderTrimAmount;
-    parametersStructure.overwrite = localHandles.config.trimOverwrite;
+    parametersStructure.borderTrimAmount = handles.config.trimBorderTrimAmount;
+    parametersStructure.overwrite = handles.config.trimOverwrite;
 
     % Call the function(s)
     TrimVideo(inputVideoPath, parametersStructure);
