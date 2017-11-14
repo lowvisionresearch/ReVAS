@@ -44,10 +44,10 @@ if nargin == 3
    stimulusSize = size(stimulus);
 else
    stimulusSize = removalAreaSize;
-   if size(stimulusSize) == [1 2]
+   if size(stimulusSize) == [2 1]
        stimulusSize = stimulusSize';
-   elseif size(stimulusSize) ~= [2 1]
-      error('stimulusSize must be a 2 by 1 size array'); 
+   elseif size(stimulusSize) ~= [1 2]
+     error('stimulusSize must be a 1 by 2 size array'); 
    elseif ~IsNaturalNumber(stimulusSize(1)) || ~IsNaturalNumber(stimulusSize(2))
       error('values of stimulusSize must be natural numbers'); 
    end
