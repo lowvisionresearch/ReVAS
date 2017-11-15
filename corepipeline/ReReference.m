@@ -73,53 +73,71 @@ if ~isfield(parametersStructure,'overwrite')
     overwrite = false;
 else
     overwrite = parametersStructure.overwrite;
+    if ~islogical(overwrite)
+        error('overwrite must be a logical');
+    end
 end
 
 if ~isfield(parametersStructure,'fixTorsion')
     fixTorsion = false;
-    try
-        RevasWarning('using default parameter for fixTorsion', fixTorsion);
-    catch
-    end
-    
+    RevasWarning('using default parameter for fixTorsion', fixTorsion);
 else
     fixTorsion = parametersStructure.fixTorsion;
-end
-
-if ~isfield(parametersStructure,'tilts')
-    tilts = -5:1:5;
-    try
-        RevasWarning('using default parameter for tilts', parametersStructure);
-    catch
+    if ~islogical(fixTorsion)
+        error('fixTorsion must be a logical');
     end
-else
-    tilts = parametersStructure.tilts;
+    if fixTorsion
+        if ~isfield(parametersStructure,'tilts')
+            tilts = -5:1:5;
+            RevasWarning('using default parameter for tilts', parametersStructure);
+        else
+            tilts = parametersStructure.tilts;
+            if size(tilts, 2) == 1
+                tilts = tilts';
+            end
+            if ~isnumeric(tilts) && size(tilts, 1) ~= 1
+               error('tilts must be a vector of numbers'); 
+            end
+        end
+    end
 end
 
 if ~isfield(parametersStructure,'findPeakMethod')
     findPeakMethod = 2;
 else
     findPeakMethod = parametersStructure.findPeakMethod;
-end
-
-
-if ~isfield(parametersStructure,'findPeakKernelSize')
-    findPeakKernelSize = 21;
-else
-    findPeakKernelSize = parametersStructure.findPeakKernelSize;
+    if findPeakMethod ~= 1 && findPeakMethod ~= 2
+        error('findPeakMethod must be 1 or 2');
+    end
+    if findPeakMethod == 2
+        if ~isfield(parametersStructure,'findPeakKernelSize')
+            findPeakKernelSize = 21;
+        else
+            findPeakKernelSize = parametersStructure.findPeakKernelSize;
+            if ~IsOddNaturalNumber(findPeakKernelSize)
+                error('findPeakKernelSize must be an odd, natural number');
+            end
+        end
+    end
 end
 
 if ~isfield(parametersStructure,'searchZone')
     searchZone = 0.5;
 else
     searchZone = parametersStructure.searchZone;
+    if ~IsRealNumber(searchZone) || searchZone < 0 || searchZone > 1
+       error('searchZone must be a real number between 0 and 1 (inclusive)');
+    end
 end
 
 
 if ~isfield(parametersStructure,'enableVerbosity')
-    verbosity = false;
+    enableVerbosity = false;
 else
-    verbosity = parametersStructure.enableVerbosity;
+    enableVerbosity = parametersStructure.enableVerbosity;
+    if ~islogical(enableVerbosity)
+        error('enableVerbosity must be a logical');
+    end
 end
 
 if ~isfield(parametersStructure,'axesHandles')
@@ -127,7 +145,6 @@ if ~isfield(parametersStructure,'axesHandles')
 else
     axesHandles = parametersStructure.axesHandles;
 end
-
 
 %% Handle |positionArgument| scenarios.
 if ischar(positionArgument) % positionArgument is a file path
@@ -255,7 +272,7 @@ end
 
 
 %% Give feedback if user requested.
-if verbosity
+if enableVerbosity
     
     if ishandle(axesHandles)
         axes(axesHandles)

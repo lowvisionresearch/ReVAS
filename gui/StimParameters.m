@@ -22,7 +22,7 @@ function varargout = StimParameters(varargin)
 
 % Edit the above text to modify the response to help StimParameters
 
-% Last Modified by GUIDE v2.5 20-Sep-2017 18:47:46
+% Last Modified by GUIDE v2.5 14-Nov-2017 17:43:28
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -522,3 +522,17 @@ else
     handles.length.Enable = 'off';
     handles.width.Enable = 'off';
 end
+
+
+% --- Executes on button press in save.
+function pushbutton9_Callback(hObject, eventdata, handles)
+% hObject    handle to save (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in cancel.
+function pushbutton10_Callback(hObject, eventdata, handles)
+% hObject    handle to cancel (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
