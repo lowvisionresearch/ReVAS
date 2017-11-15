@@ -1132,8 +1132,8 @@ if size(toggleButtonStates,1) == 1 && size(toggleButtonStates,2) == 10
     handles.togCoarse.Value = toggleButtonStates(5);
     handles.togFine.Value = toggleButtonStates(6);
     handles.togStrip.Value = toggleButtonStates(7);
-    handles.togFilt.Value = toggleButtonStates(8);
-    handles.togReRef.Value = toggleButtonStates(9);
+    handles.togReRef.Value = toggleButtonStates(8);
+    handles.togFilt.Value = toggleButtonStates(9);
     handles.togSacDrift.Value = toggleButtonStates(10);
     
     togTrim_Callback(handles.togTrim, eventdata, handles);
@@ -1143,8 +1143,8 @@ if size(toggleButtonStates,1) == 1 && size(toggleButtonStates,2) == 10
     togCoarse_Callback(handles.togCoarse, eventdata, handles);
     togFine_Callback(handles.togFine, eventdata, handles);
     togStrip_Callback(handles.togStrip, eventdata, handles);
-    togFilt_Callback(handles.togFilt, eventdata, handles);
     togReRef_Callback(handles.togReRef, eventdata, handles);
+    togFilt_Callback(handles.togFilt, eventdata, handles);
     togSacDrift_Callback(handles.togSacDrift, eventdata, handles);
 end
 
@@ -1162,15 +1162,16 @@ if fileName == 0
     return;
 end
 configurationsStruct = handles.config; %#ok<NASGU>
-toggleButtonStates = [handles.togTrim.Value ...
+toggleButtonStates = [
+    handles.togTrim.Value ...
     handles.togStim.Value ...
     handles.togGamma.Value ...
     handles.togBandFilt.Value ...
     handles.togCoarse.Value ...
     handles.togFine.Value ...
     handles.togStrip.Value ...
-    handles.togFilt.Value ...
     handles.togReRef.Value ...
+    handles.togFilt.Value ...
     handles.togSacDrift.Value];
 if strcmp(handles.togTrim.Enable, 'off')
     toggleButtonStates(1) = handles.config.preDisabledTogTrimValue;

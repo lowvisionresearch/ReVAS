@@ -29,7 +29,7 @@ end
 
 %% Trim Module
 if logical(handles.togTrim.Value) && ~logical(abortTriggered)
-    RevasMessage(['Trimming ' inputVideoPath], parametersStructure);
+    RevasMessage(['[[ Trimming ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.borderTrimAmount = handles.config.trimBorderTrimAmount;
     parametersStructure.overwrite = handles.config.trimOverwrite;
@@ -43,7 +43,7 @@ end
 
 %% Remove Stimulus Module
 if logical(handles.togStim.Value) && ~logical(abortTriggered)
-    RevasMessage(['Removing Stimulus ' inputVideoPath], parametersStructure);
+    RevasMessage(['[[ Removing Stimulus ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.enableVerbosity = handles.config.stimVerbosity;
     parametersStructure.overwrite = handles.config.stimOverwrite;
@@ -73,7 +73,7 @@ end
 
 %% Gamma Correction Module
 if logical(handles.togGamma.Value) && ~logical(abortTriggered)
-    RevasMessage(['Gamma Correcting ' inputVideoPath], parametersStructure);
+    RevasMessage(['[[ Gamma Correcting ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.gammaExponent = handles.config.gammaExponent;
     parametersStructure.overwrite = handles.config.gammaOverwrite;
@@ -87,7 +87,7 @@ end
 
 %% Bandpass Filtering Module
 if logical(handles.togBandFilt.Value) && ~logical(abortTriggered)
-    RevasMessage(['Bandpass Filtering ' inputVideoPath], parametersStructure);
+    RevasMessage(['[[ Bandpass Filtering ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.smoothing = handles.config.bandFiltSmoothing;
     parametersStructure.lowSpatialFrequencyCutoff = handles.config.bandFiltFreqCut;
@@ -104,8 +104,9 @@ end
 if (logical(handles.togCoarse.Value) ...
         || logical(handles.togFine.Value) ...
         || logical(handles.togStrip.Value)) && ~logical(abortTriggered)
-    parametersStructure.overwrite = handles.config.coarseOverwrite || ...
-        handles.config.fineOverwrite || ...
+    RevasMessage(['Identifying blink frames in ' originalInputVideoPath], parametersStructure);
+    parametersStructure.overwrite = handles.config.coarseOverwrite && ...
+        handles.config.fineOverwrite && ...
         handles.config.stripOverwrite;
     parametersStructure.thresholdValue = 4; % TODO (make changeable from GUI)
     parametersStructure.singleTail = true;
@@ -114,7 +115,7 @@ if (logical(handles.togCoarse.Value) ...
 end
 
 if logical(handles.togCoarse.Value) && ~logical(abortTriggered)
-    RevasMessage(['Making Coarse Reference Frame ' inputVideoPath], parametersStructure);
+    RevasMessage(['[[ Making Coarse Reference Frame ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.refFrameNumber = handles.config.coarseRefFrameNum;
     parametersStructure.scalingFactor = handles.config.coarseScalingFactor;
@@ -140,7 +141,7 @@ end
 
 %% Make Fine Reference Frame Module
 if logical(handles.togFine.Value) && ~logical(abortTriggered)
-    RevasMessage(['Making Fine Reference Frame ' inputVideoPath], parametersStructure);
+    RevasMessage(['[[ Making Fine Reference Frame ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.enableVerbosity = handles.config.fineVerbosity;
     parametersStructure.numberOfIterations = handles.config.fineNumIterations;
@@ -169,7 +170,7 @@ end
 
 %% Strip Analysis Module
 if logical(handles.togStrip.Value) && ~logical(abortTriggered)
-    RevasMessage(['Strip Analyzing ' inputVideoPath], parametersStructure);
+    RevasMessage(['[[ Strip Analyzing ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.overwrite = handles.config.stripOverwrite;
     parametersStructure.enableVerbosity = handles.config.stripVerbosity;
@@ -191,15 +192,28 @@ if logical(handles.togStrip.Value) && ~logical(abortTriggered)
         = handles.config.stripNeighborhoodSize;
     parametersStructure.subpixelInterpolationParameters.subpixelDepth ...
         = handles.config.stripSubpixelDepth;
+    parametersStructure.maximumSD = handles.config.stripGaussSD;
+    parametersStructure.SDWindowSize = handles.config.stripSDWindow;
 
     % Load a fine result if we didn't run the previous module in this
     % session.
     if ~exist('fineResult', 'var')
-        if exist([originalInputVideoPath '_refframe.mat'], 'file')
+        if logical(handles.togCoarse.Value)
+           % Use coarse ref frame if fine ref module disabled and if
+           % available.
+           fineResult = coarseResult;
+        elseif exist([originalInputVideoPath '_refframe.mat'], 'file')
+           % Load a saved fine ref if available.
+           RevasWarning(['Loading fine reference frame from: ' originalInputVideoPath '_refframe.mat'], parametersStructure);
+           load([originalInputVideoPath '_refframe.mat']);
+           fineResult = refFrame;
+        elseif exist([originalInputVideoPath '_coarseref.mat'], 'file')
+            % Load a saved coarse ref if available.
+           RevasWarning(['Loading coarse reference frame from: ' originalInputVideoPath '_coarseref.mat'], parametersStructure);
            load([originalInputVideoPath '_refframe.mat']);
            fineResult = refFrame;
         else
-            error('No reference frame available for strip analysis.');
+           RevasError('No reference frame available for strip analysis.', parametersStructure);
         end
     end
     
@@ -220,7 +234,7 @@ end
 
 %% Re-referencing Module
 if logical(handles.togReRef.Value) && ~logical(abortTriggered)
-    RevasMessage(['Re-referencing ' inputVideoPath], parametersStructure);
+    RevasMessage(['[[ Re-referencing ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.borderTrimAmount = handles.config.trimBorderTrimAmount;
     parametersStructure.overwrite = handles.config.trimOverwrite;
@@ -234,7 +248,7 @@ end
 
 %% Filtering Module
 if logical(handles.togFilt.Value) && ~logical(abortTriggered)
-    RevasMessage(['Filtering ' inputVideoPath], parametersStructure);
+    RevasMessage(['[[ Filtering ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.borderTrimAmount = handles.config.trimBorderTrimAmount;
     parametersStructure.overwrite = handles.config.trimOverwrite;
@@ -248,7 +262,7 @@ end
 
 %% Saccade Detection Module
 if logical(handles.togSacDrift.Value) && ~logical(abortTriggered)
-    RevasMessage(['Saccade Detecting ' inputVideoPath], parametersStructure);
+    RevasMessage(['[[ Saccade Detecting ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.overwrite = handles.config.sacOverwrite;
     parametersStructure.enableVerbosity = handles.config.sacVerbosity;
