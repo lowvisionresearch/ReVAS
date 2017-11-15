@@ -61,6 +61,14 @@ mainHandles = guidata(figureHandle);
 
 handles.verbosity.Value = mainHandles.config.rerefVerbosity;
 handles.overwrite.Value = mainHandles.config.rerefOverwrite;
+handles.search.String = mainHandles.config.rerefSearch;
+handles.peak1Radio.Value = mainHandles.config.rerefPeakMethod == 1;
+handles.peak2Radio.Value = mainHandles.config.rerefPeakMethod == 2;
+handles.kernel.String = mainHandles.config.rerefKernel;
+handles.fixTorsion.Value = mainHandles.config.rerefTorsion;
+handles.tiltLow.String = mainHandles.config.rerefTiltLow;
+handles.tiltUp.String = mainHandles.config.rerefTiltUp;
+handles.tiltStep.String = mainHandles.config.rerefTiltStep;
 
 % Set colors
 % Main Background
@@ -230,37 +238,52 @@ tiltStep = str2double(handles.tiltStep.String);
 
 % search
 if ~IsRealNumber(search) || search < 0 || search > 1
-    errordlg('Search must be a real number between 0 and 1 (inclusive).', 'Invalid Parameter');
+    errordlg('Search Zone must be a real number between 0 and 1 (inclusive).', 'Invalid Parameter');
     return;
 end
 
+if logical(handles.peak2Radio.Value)
+    % kernel
+    if ~IsOddNaturalNumber(kernel)
+        errordlg('Kernel Size must be an odd, natural number.', 'Invalid Parameter');
+        return;
+    end
+end
 
-if logical(handles.rectangle.Value)
-    % length
-    if ~IsOddNaturalNumber(length)
-        errordlg('Length must be an odd, natural number.', 'Invalid Parameter');
+if logical(handles.fixTorsion.Value)
+    % tiltLow
+    if ~IsRealNumber(tiltLow)
+        errordlg('Tilt Lower Bound must be a real number.', 'Invalid Parameter');
         return;
     end
     
-    % width
-    if ~IsOddNaturalNumber(width)
-        errordlg('Width must be an odd, natural number.', 'Invalid Parameter');
+    % tiltUp
+    if ~IsRealNumber(tiltUp)
+        errordlg('Tilt Upper Bound must be a real number.', 'Invalid Parameter');
+        return;
+    end
+    
+    % tiltStep
+    if ~IsRealNumber(tiltStep)
+        errordlg('Tilt Step Size must be a real number.', 'Invalid Parameter');
         return;
     end
 end
 
 % Save new configurations
-mainHandles.config.stimVerbosity = logical(handles.verbosity.Value);
-mainHandles.config.stimOverwrite = logical(handles.overwrite.Value);
-mainHandles.config.stimOption1 = logical(handles.upload.Value);
-mainHandles.config.stimOption2 = logical(handles.cross.Value);
-mainHandles.config.stimPath = handles.stimPath.String;
-mainHandles.config.stimFullPath = handles.stimFullPath;
-mainHandles.config.stimSize = size;
-mainHandles.config.stimThick = thick;
-mainHandles.config.stimRectangleX = length;
-mainHandles.config.stimRectangleY = width;
-mainHandles.config.stimUseRectangle = logical(handles.rectangle.Value);
+mainHandles.config.rerefVerbosity = logical(handles.verbosity.Value);
+mainHandles.config.rerefOverwrite = logical(handles.overwrite.Value);
+mainHandles.config.rerefSearch = search;
+if logical(handles.peak1Radio.Value)
+    mainHandles.config.rerefPeakMethod = 1;
+else
+    mainHandles.config.rerefPeakMethod = 2;
+end
+mainHandles.config.rerefKernel = kernel;
+mainHandles.config.rerefTorsion = logical(handles.fixTorsion.Value);
+mainHandles.config.rerefTiltLow = tiltLow;
+mainHandles.config.rerefTiltUp = tiltUp;
+mainHandles.config.rerefTiltStep = tiltStep;
 
 % Update handles structure
 guidata(figureHandle, mainHandles);
@@ -273,8 +296,6 @@ function cancel_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 close;
-
-
 
 function kernel_Callback(hObject, eventdata, handles)
 % hObject    handle to kernel (see GCBO)

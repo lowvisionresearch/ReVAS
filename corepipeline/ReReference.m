@@ -154,16 +154,10 @@ if ischar(positionArgument) % positionArgument is a file path
     if ~exist(outputFilePath, 'file')
         % left blank to continue without issuing warning in this case
     elseif ~overwrite && exist(outputFilePath, 'file')
-        try
-            RevasWarning(['ReReference() did not execute because it would overwrite existing file. (' outputFilePath ')'], parametersStructure);
-        catch
-        end
+        RevasWarning(['ReReference() did not execute because it would overwrite existing file. (' outputFilePath ')'], parametersStructure);
         return;
     else
-        try
-            RevasWarning(['ReReference() is proceeding and overwriting an existing file. (' outputFilePath ')'], parametersStructure);  
-        catch
-        end
+        RevasWarning(['ReReference() is proceeding and overwriting an existing file. (' outputFilePath ')'], parametersStructure);  
     end
     
     % check if input file exists
@@ -181,7 +175,6 @@ else % inputArgument is not a file path, but carries the eye position data.
     eyePositionTraces = positionArgument;
     
 end
-
 
 %% Handle |localRefArgument| scenarios.
 if ischar(localRefArgument) % localRefArgument is a file path
@@ -204,14 +197,11 @@ if ischar(localRefArgument) % localRefArgument is a file path
             % maybe this is an image file
             localRef = im2double(imread(localRefArgument))*255;
         end
-        
     end
 
 else % localRefArgument is not a file path, but carries the localRef.
     localRef = localRefArgument;
 end
-
-
 
 %% Handle |globalRefArgument| scenarios.
 if ischar(globalRefArgument) % globalRefArgument is a file path
@@ -246,7 +236,7 @@ params.tilts = tilts;
 
 % localize local ref on global ref
 if ~fixTorsion
-    [yOffset, xOffset, peakValue, c, yp, xp] = Localize(localRef,globalRef,params);
+    [yOffset, xOffset, peakValue, ~, ~, ~] = Localize(localRef,globalRef,params);
 else
     [localRef, bestTilt, yOffset, xOffset, peakValue] = ...
         SolveTiltIssue(localRef,globalRef,params);
@@ -256,7 +246,6 @@ end
 offsetBetweenLocalAndGlobal = [xOffset yOffset ];
 newEyePositionTraces = eyePositionTraces...
     + repmat(offsetBetweenLocalAndGlobal,length(eyePositionTraces),1);
-
 
 %% Save re-referenced data.
 if ~isempty(outputFilePath) && overwrite
@@ -269,7 +258,6 @@ if ~isempty(outputFilePath) && overwrite
     end
     save(outputFilePath,'-struct','data');
 end
-
 
 %% Give feedback if user requested.
 if enableVerbosity
@@ -301,19 +289,6 @@ if enableVerbosity
     
 end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 %% localizer function
 function [yoffset, xoffset, maxVal, c, ypeak, xpeak] = Localize(inp,ref, params)
 % does the cross-correlation and locates the peak. Handles scenarios where
@@ -340,11 +315,9 @@ catch err1 %#ok<*NASGU>
     end
 end
 
-
 [ypeak, xpeak, maxVal] = FindPeak(c, params);
 yoffset = ypeak-size(inp,1);
 xoffset = xpeak-size(inp,2);
-
 
 %% peakfinder.  
 function [ypeak, xpeak, maxVal] = FindPeak(c, params)
@@ -365,7 +338,6 @@ maxVal = max(tempC(:));
 ypeak = ypeak + st(1) - 1;
 xpeak = xpeak + st(2) - 1;
 maxVal = c(ypeak,xpeak);
-
 
 %% tilt issue solver
 function [inp, bestTilt, bestYOffset, bestXOffset, peakVal, c, ypeak, xpeak] ...
@@ -399,8 +371,6 @@ inp = uint8(PadNoise(inp));
 % localize
 [bestYOffset, bestXOffset, peakVal, c, ypeak, xpeak] = Localize(inp,ref, params);
 
-
-
 %% add noise to zero-padded regions due to tilt
 function output = PadNoise(input)
 
@@ -408,6 +378,3 @@ input = double(input);
 padIndices = input < 1.5;
 noiseFrame = padIndices.*(rand(size(padIndices))*20 + mean(input(:)));
 output = double(input) + noiseFrame;
-
-
-    

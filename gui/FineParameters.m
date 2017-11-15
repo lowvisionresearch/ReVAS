@@ -74,22 +74,6 @@ handles.subpixelInterp.Value = mainHandles.config.fineSubpixelInterp;
 handles.neighborhoodSize.String = mainHandles.config.fineNeighborhoodSize;
 handles.subpixelDepth.String = mainHandles.config.fineSubpixelDepth;
 
-if logical(handles.adaptiveSearch.Value)
-    handles.scalingFactor.Enable = 'on';
-    handles.searchWindowHeight.Enable = 'on';
-else
-    handles.scalingFactor.Enable = 'off';
-    handles.searchWindowHeight.Enable = 'off';
-end
-
-if logical(handles.subpixelInterp.Value)
-    handles.neighborhoodSize.Enable = 'on';
-    handles.subpixelDepth.Enable = 'on';
-else
-    handles.neighborhoodSize.Enable = 'off';
-    handles.subpixelDepth.Enable = 'off';
-end
-
 % Set colors
 % Main Background
 handles.fineParameters.Color = mainHandles.colors{4,2};
@@ -182,10 +166,11 @@ scalingFactor_Callback(handles.scalingFactor, eventdata, handles);
 searchWindowHeight_Callback(handles.searchWindowHeight, eventdata, handles);
 neighborhoodSize_Callback(handles.neighborhoodSize, eventdata, handles);
 subpixelDepth_Callback(handles.subpixelDepth, eventdata, handles);
+adaptiveSearch_Callback(handles.adaptiveSearch, eventdata, handles);
+subpixelInterp_Callback(handles.subpixelInterp, eventdata, handles);
 
 % UIWAIT makes FineParameters wait for user response (see UIRESUME)
 % uiwait(handles.fineParameters);
-
 
 % --- Outputs from this function are returned to the command line.
 function varargout = FineParameters_OutputFcn(hObject, eventdata, handles) 
