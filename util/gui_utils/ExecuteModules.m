@@ -28,7 +28,7 @@ else
 end
 
 %% Trim Module
-if logical(handles.togTrim.Value) && ~logical(abortTriggered)
+if logical(handles.togTrim) && ~logical(abortTriggered)
     RevasMessage(['[[ Trimming ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.borderTrimAmount = handles.config.trimBorderTrimAmount;
@@ -42,7 +42,7 @@ if logical(handles.togTrim.Value) && ~logical(abortTriggered)
 end
 
 %% Remove Stimulus Module
-if logical(handles.togStim.Value) && ~logical(abortTriggered)
+if logical(handles.togStim) && ~logical(abortTriggered)
     RevasMessage(['[[ Removing Stimulus ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.enableVerbosity = handles.config.stimVerbosity;
@@ -72,7 +72,7 @@ if logical(handles.togStim.Value) && ~logical(abortTriggered)
 end
 
 %% Gamma Correction Module
-if logical(handles.togGamma.Value) && ~logical(abortTriggered)
+if logical(handles.togGamma) && ~logical(abortTriggered)
     RevasMessage(['[[ Gamma Correcting ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.gammaExponent = handles.config.gammaExponent;
@@ -86,7 +86,7 @@ if logical(handles.togGamma.Value) && ~logical(abortTriggered)
 end
 
 %% Bandpass Filtering Module
-if logical(handles.togBandFilt.Value) && ~logical(abortTriggered)
+if logical(handles.togBandFilt) && ~logical(abortTriggered)
     RevasMessage(['[[ Bandpass Filtering ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.smoothing = handles.config.bandFiltSmoothing;
@@ -101,9 +101,9 @@ if logical(handles.togBandFilt.Value) && ~logical(abortTriggered)
 end
 
 %% Make Coarse Reference Frame Module
-if (logical(handles.togCoarse.Value) ...
-        || logical(handles.togFine.Value) ...
-        || logical(handles.togStrip.Value)) && ~logical(abortTriggered)
+if (logical(handles.togCoarse) ...
+        || logical(handles.togFine) ...
+        || logical(handles.togStrip)) && ~logical(abortTriggered)
     RevasMessage(['Identifying blink frames in ' originalInputVideoPath], parametersStructure);
     parametersStructure.overwrite = handles.config.coarseOverwrite && ...
         handles.config.fineOverwrite && ...
@@ -114,7 +114,7 @@ if (logical(handles.togCoarse.Value) ...
     FindBlinkFrames(inputVideoPath, parametersStructure);
 end
 
-if logical(handles.togCoarse.Value) && ~logical(abortTriggered)
+if logical(handles.togCoarse) && ~logical(abortTriggered)
     RevasMessage(['[[ Making Coarse Reference Frame ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.refFrameNumber = handles.config.coarseRefFrameNum;
@@ -133,14 +133,14 @@ if logical(handles.togCoarse.Value) && ~logical(abortTriggered)
     parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
 
     % Call the function(s)
-    coarseResult = CoarseRef(inputVideoPath, parametersStructure);
+    coarseRefFrame = CoarseRef(inputVideoPath, parametersStructure);
 
     % Update file name to output file name
     %localinputVideoPath = [localinputVideoPath(1:end-4) '_dwt' localinputVideoPath(end-3:end)];
 end
 
 %% Make Fine Reference Frame Module
-if logical(handles.togFine.Value) && ~logical(abortTriggered)
+if logical(handles.togFine) && ~logical(abortTriggered)
     RevasMessage(['[[ Making Fine Reference Frame ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.enableVerbosity = handles.config.fineVerbosity;
@@ -162,14 +162,11 @@ if logical(handles.togFine.Value) && ~logical(abortTriggered)
     parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
 
     % Call the function(s)
-    fineResult = FineRef(coarseResult, inputVideoPath, parametersStructure);
-
-    % Update file name to output file name
-    %localinputVideoPath = [localinputVideoPath(1:end-4) '_dwt' localinputVideoPath(end-3:end)];
+    fineRefFrame = FineRef(coarseRefFrame, inputVideoPath, parametersStructure);
 end
 
 %% Strip Analysis Module
-if logical(handles.togStrip.Value) && ~logical(abortTriggered)
+if logical(handles.togStrip) && ~logical(abortTriggered)
     RevasMessage(['[[ Strip Analyzing ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.overwrite = handles.config.stripOverwrite;
@@ -198,20 +195,20 @@ if logical(handles.togStrip.Value) && ~logical(abortTriggered)
     % Load a fine result if we didn't run the previous module in this
     % session.
     if ~exist('fineResult', 'var')
-        if logical(handles.togCoarse.Value)
+        if logical(handles.togCoarse)
            % Use coarse ref frame if fine ref module disabled and if
            % available.
-           fineResult = coarseResult;
+           fineRefFrame = coarseRefFrame;
         elseif exist([originalInputVideoPath '_refframe.mat'], 'file')
            % Load a saved fine ref if available.
            RevasWarning(['Loading fine reference frame from: ' originalInputVideoPath '_refframe.mat'], parametersStructure);
            load([originalInputVideoPath '_refframe.mat']);
-           fineResult = refFrame;
+           fineRefFrame = refFrame;
         elseif exist([originalInputVideoPath '_coarseref.mat'], 'file')
             % Load a saved coarse ref if available.
            RevasWarning(['Loading coarse reference frame from: ' originalInputVideoPath '_coarseref.mat'], parametersStructure);
            load([originalInputVideoPath '_refframe.mat']);
-           fineResult = refFrame;
+           fineRefFrame = refFrame;
         else
            RevasError('No reference frame available for strip analysis.', parametersStructure);
         end
@@ -220,41 +217,70 @@ if logical(handles.togStrip.Value) && ~logical(abortTriggered)
     % Call the function(s)
     [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
         statisticsStructure] ...
-        = StripAnalysis(inputVideoPath, fineResult, parametersStructure);
-    
-    clear fineResult;
+        = StripAnalysis(inputVideoPath, fineRefFrame, parametersStructure);
 end
 
 %% Re-referencing Module
-if logical(handles.togReRef.Value) && ~logical(abortTriggered)
+if logical(handles.togReRef) && ~logical(abortTriggered)
     RevasMessage(['[[ Re-referencing ]] ' inputVideoPath], parametersStructure);
-    % Set the parameters
-    parametersStructure.borderTrimAmount = handles.config.trimBorderTrimAmount;
-    parametersStructure.overwrite = handles.config.trimOverwrite;
-
+    % Set the parameters    
+    parametersStructure.verbosity = handles.config.rerefVerbosity;
+    parametersStructure.overwrite = handles.config.rerefOverwrite;
+    parametersStructure.searchZone = handles.config.rerefSearch;
+    parametersStructure.findPeakMethod = handles.config.rerefPeakMethod;
+    if handles.config.rerefPeakMethod == 2
+        parametersStructure.findPeakKernelSize = handles.config.rerefKernel;
+    end
+    parametersStructure.fixTorsion = handles.config.rerefTorsion;
+    if handles.config.rerefTorsion
+        parametersStructure.tilts = handles.config.rerefTiltLow: ...
+            handles.config.rerefTiltStep: ...
+            handles.config.rerefTiltUp;
+    end
+    parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
+    
     % Call the function(s)
-    %TrimVideo(inputVideoPath, parametersStructure);
-
-    % Update file name to output file name
-    %inputVideoPath = [inputVideoPath(1:end-4) '_dwt' inputVideoPath(end-3:end)];
+    % TODO where does the global ref frame come from?
+    ReReference(usefulEyePositionTraces, fineRefFrame, fineRefFrame, parametersStructure);
 end
 
 %% Filtering Module
-if logical(handles.togFilt.Value) && ~logical(abortTriggered)
+if logical(handles.togFilt) && ~logical(abortTriggered)
     RevasMessage(['[[ Filtering ]] ' inputVideoPath], parametersStructure);
-    % Set the parameters
-    parametersStructure.borderTrimAmount = handles.config.trimBorderTrimAmount;
-    parametersStructure.overwrite = handles.config.trimOverwrite;
+    % Set the parameters    
+    parametersStructure.overwrite = handles.config.filtOverwrite;
+    parametersStructure.verbosity = handles.config.filtVerbosity;
+    parametersStructure.maxGapDurationMs = handles.config.filtMaxGapDur;
+    parametersStructure.filterTypes = {};
+    parametersStructure.filterParameters = {};
+    if handles.config.filtEnableMedian1
+        % Median Filtering
+        parametersStructure.filterTypes{1} = @medfilt1;
+        parametersStructure.filterParameters{1} = handles.config.filtMedian1;
+    else
+        % SGO Lay Filtering
+        parametersStructure.filterTypes{1} = @sgolayfilt;
+        parametersStructure.filterParameters{1} = [handles.config.filtPoly1, ...
+            handles.config.filtKernel1];
+    end
+    if handles.config.filtEnableMedian2
+        % Median Filtering
+        parametersStructure.filterTypes{2} = @medfilt1;
+        parametersStructure.filterParameters{2} = handles.config.filtMedian2;
+    elseif handles.config.filtEnableSgo2
+        % SGO Lay Filtering
+        parametersStructure.filterTypes{2} = @sgolayfilt;
+        parametersStructure.filterParameters{2} = [handles.config.filtPoly2, ...
+            handles.config.filtKernel2];
+    end
+    parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
 
     % Call the function(s)
-    %TrimVideo(inputVideoPath, parametersStructure);
-
-    % Update file name to output file name
-    %inputVideoPath = [inputVideoPath(1:end-4) '_dwt' inputVideoPath(end-3:end)];
+    FilterEyePosition([usefulEyePositionTraces, timeArray], parametersStructure);
 end
 
 %% Saccade Detection Module
-if logical(handles.togSacDrift.Value) && ~logical(abortTriggered)
+if logical(handles.togSacDrift) && ~logical(abortTriggered)
     RevasMessage(['[[ Saccade Detecting ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.overwrite = handles.config.sacOverwrite;

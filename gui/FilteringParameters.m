@@ -43,7 +43,6 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-
 % --- Executes just before FilteringParameters is made visible.
 function FilteringParameters_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
@@ -73,30 +72,6 @@ handles.noFilt2Radio.Value = mainHandles.config.filtEnableNoFilt2;
 handles.median2.String = mainHandles.config.filtMedian2;
 handles.poly2.String = mainHandles.config.filtPoly2;
 handles.kernel2.String = mainHandles.config.filtKernel2;
-
-if logical(handles.median1Radio.Value)
-    handles.median1.Enable = 'on';
-    handles.poly1.Enable = 'off';
-    handles.kernel1.Enable = 'off';
-else
-    handles.median1.Enable = 'off';
-    handles.poly1.Enable = 'on';
-    handles.kernel1.Enable = 'on';
-end
-
-if logical(handles.median2Radio.Value)
-    handles.median2.Enable = 'on';
-    handles.poly2.Enable = 'off';
-    handles.kernel2.Enable = 'off';
-elseif logical(handles.sgo2Radio.Value)
-    handles.median2.Enable = 'off';
-    handles.poly2.Enable = 'on';
-    handles.kernel2.Enable = 'on';
-else
-    handles.median2.Enable = 'off';
-    handles.poly2.Enable = 'off';
-    handles.kernel2.Enable = 'off';
-end
 
 % Set colors
 % Main Background
@@ -180,10 +155,11 @@ kernel1_Callback(handles.kernel1, eventdata, handles);
 median2_Callback(handles.median2, eventdata, handles);
 poly2_Callback(handles.poly2, eventdata, handles);
 kernel2_Callback(handles.kernel2, eventdata, handles);
+median1Radio_Callback(handles.median1Radio, eventdata, handles);
+median2Radio_Callback(handles.median2Radio, eventdata, handles);
 
 % UIWAIT makes FilteringParameters wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
-
 
 % --- Outputs from this function are returned to the command line.
 function varargout = FilteringParameters_OutputFcn(hObject, eventdata, handles) 
@@ -279,7 +255,6 @@ guidata(figureHandle, mainHandles);
 
 close;
 
-
 % --- Executes on button press in overwrite.
 function overwrite_Callback(hObject, eventdata, handles)
 % hObject    handle to overwrite (see GCBO)
@@ -288,14 +263,12 @@ function overwrite_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of overwrite
 
-
 % --- Executes on button press in cancel.
 function cancel_Callback(hObject, eventdata, handles)
 % hObject    handle to cancel (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 close;
-
 
 % --- Executes on button press in verbosity.
 function verbosity_Callback(hObject, eventdata, handles)
@@ -304,8 +277,6 @@ function verbosity_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of verbosity
-
-
 
 function maxGapDur_Callback(hObject, eventdata, handles)
 % hObject    handle to maxGapDur (see GCBO)
@@ -381,8 +352,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-
 function median1_Callback(hObject, eventdata, handles)
 % hObject    handle to median1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -445,7 +414,6 @@ end
 % Update handles structure
 guidata(hObject, handles);
 
-
 % --- Executes during object creation, after setting all properties.
 function poly1_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to poly1 (see GCBO)
@@ -457,8 +425,6 @@ function poly1_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
 
 function kernel1_Callback(hObject, eventdata, handles)
 % hObject    handle to kernel1 (see GCBO)
@@ -484,7 +450,6 @@ end
 % Update handles structure
 guidata(hObject, handles);
 
-
 % --- Executes during object creation, after setting all properties.
 function kernel1_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to kernel1 (see GCBO)
@@ -496,8 +461,6 @@ function kernel1_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
 
 function median2_Callback(hObject, eventdata, handles)
 % hObject    handle to median2 (see GCBO)
@@ -523,7 +486,6 @@ end
 % Update handles structure
 guidata(hObject, handles);
 
-
 % --- Executes during object creation, after setting all properties.
 function median2_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to median2 (see GCBO)
@@ -535,8 +497,6 @@ function median2_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
 
 function poly2_Callback(hObject, eventdata, handles)
 % hObject    handle to poly2 (see GCBO)
@@ -574,8 +534,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-
 function kernel2_Callback(hObject, eventdata, handles)
 % hObject    handle to kernel2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -612,7 +570,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --- Executes on button press in median1Radio.
 function median1Radio_Callback(hObject, eventdata, handles)
 % hObject    handle to median1Radio (see GCBO)
@@ -648,7 +605,6 @@ else
     handles.kernel1.Enable = 'on';
 end
 
-
 % --- Executes on button press in median2Radio.
 function median2Radio_Callback(hObject, eventdata, handles)
 % hObject    handle to median2Radio (see GCBO)
@@ -669,7 +625,6 @@ else
     handles.poly2.Enable = 'off';
     handles.kernel2.Enable = 'off';
 end
-
 
 % --- Executes on button press in sgo2Radio.
 function sgo2Radio_Callback(hObject, eventdata, handles)

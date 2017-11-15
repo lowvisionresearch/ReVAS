@@ -245,7 +245,7 @@ handles.config.stripSearchWindowHeight = 79;
 handles.config.stripSubpixelInterp = true;
 handles.config.stripNeighborhoodSize = 7;
 handles.config.stripSubpixelDepth = 2;
-% Re-Referncing
+% Re-Referencing
 handles.config.rerefOverwrite = true;
 handles.config.rerefVerbosity = true;
 handles.config.rerefSearch = 0.5;

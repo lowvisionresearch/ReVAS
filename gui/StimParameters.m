@@ -71,28 +71,6 @@ handles.width.String = mainHandles.config.stimRectangleY;
 handles.rectangle.Value = mainHandles.config.stimUseRectangle;
 handles.stimFullPath = mainHandles.config.stimFullPath;
 
-if logical(handles.upload.Value)
-    handles.stimPath.Enable = 'on';
-    handles.stimPath.Style = 'text';
-    handles.select.Enable = 'on';
-    handles.size.Enable = 'off';
-    handles.thick.Enable = 'off';
-else
-    handles.stimPath.Enable = 'off';
-    handles.stimPath.Style = 'edit';
-    handles.select.Enable = 'off';
-    handles.size.Enable = 'on';
-    handles.thick.Enable = 'on';
-end
-
-if logical(handles.rectangle.Value)
-    handles.length.Enable = 'on';
-    handles.width.Enable = 'on';
-else
-    handles.length.Enable = 'off'; 
-    handles.width.Enable = 'off';
-end
-
 % Set colors
 % Main Background
 handles.stimParameters.Color = mainHandles.colors{4,2};
@@ -144,7 +122,8 @@ size_Callback(handles.size, eventdata, handles);
 thick_Callback(handles.thick, eventdata, handles);
 length_Callback(handles.length, eventdata, handles);
 width_Callback(handles.width, eventdata, handles);
-
+upload_Callback(handles.upload, eventdata, handles);
+rectangle_Callback(handles.rectangle, eventdata, handles);
 
 % UIWAIT makes StimParameters wait for user response (see UIRESUME)
 % uiwait(handles.stimParameters);

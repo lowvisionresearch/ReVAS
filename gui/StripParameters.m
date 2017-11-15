@@ -77,32 +77,6 @@ handles.subpixelInterp.Value = mainHandles.config.stripSubpixelInterp;
 handles.neighborhoodSize.String = mainHandles.config.stripNeighborhoodSize;
 handles.subpixelDepth.String = mainHandles.config.stripSubpixelDepth;
 
-if logical(handles.enableGaussFilt.Value)
-    handles.gaussSD.Enable = 'on';
-    handles.sdWindow.Enable = 'on';
-    handles.maxPeakRatio.Enable = 'off';
-else
-    handles.gaussSD.Enable = 'off';
-    handles.sdWindow.Enable = 'off';
-    handles.maxPeakRatio.Enable = 'on';
-end
-
-if logical(handles.adaptiveSearch.Value)
-    handles.scalingFactor.Enable = 'on';
-    handles.searchWindowHeight.Enable = 'on';
-else
-    handles.scalingFactor.Enable = 'off';
-    handles.searchWindowHeight.Enable = 'off';
-end
-
-if logical(handles.subpixelInterp.Value)
-    handles.neighborhoodSize.Enable = 'on';
-    handles.subpixelDepth.Enable = 'on';
-else
-    handles.neighborhoodSize.Enable = 'off';
-    handles.subpixelDepth.Enable = 'off';
-end
-
 % Set colors
 % Main Background
 handles.stripParameters.Color = mainHandles.colors{4,2};
@@ -207,6 +181,9 @@ scalingFactor_Callback(handles.scalingFactor, eventdata, handles);
 searchWindowHeight_Callback(handles.searchWindowHeight, eventdata, handles);
 neighborhoodSize_Callback(handles.neighborhoodSize, eventdata, handles);
 subpixelDepth_Callback(handles.subpixelDepth, eventdata, handles);
+enableGaussFilt_Callback(handles.enableGaussFilt, eventdata, handles);
+adaptiveSearch_Callback(handles.adaptiveSearch, eventdata, handles);
+subpixelInterp_Callback(handles.subpixelInterp, eventdata, handles);
 
 % UIWAIT makes StripParameters wait for user response (see UIRESUME)
 % uiwait(handles.stripParameters);
