@@ -255,6 +255,8 @@ handles.config.rerefTorsion = false;
 handles.config.rerefTiltLow = -5;
 handles.config.rerefTiltUp = 5;
 handles.config.rerefTiltStep = 1;
+handles.config.rerefGlobalPath = '';
+handles.config.rerefGlobalFullPath = '';
 % Filtering
 handles.config.filtOverwrite = true;
 handles.config.filtVerbosity = true;

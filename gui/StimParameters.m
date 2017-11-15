@@ -174,7 +174,7 @@ width = str2double(handles.width.String);
 if logical(handles.upload.Value)
     % full path
     if ~IsImageFile(handles.stimFullPath)
-        errordlg('Uploaded Stimulus Image must be an image file', 'Invalid Parameter');
+        errordlg('Uploaded Stimulus Image must be an image file.', 'Invalid Parameter');
         return;
     end
 else
@@ -320,7 +320,6 @@ handles.stimPath.String = [' ' fileName];
 
 figureHandle = findobj(0, 'tag', 'jobQueue');
 mainHandles = guidata(figureHandle);
-borderTrimAmount = str2double(hObject.String);
 
 if ~IsImageFile(fullfile(pathName, fileName))
     handles.stimPath.BackgroundColor = mainHandles.colors{2,4};
@@ -345,7 +344,7 @@ function stimPath_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of stimPath as a double
 figureHandle = findobj(0, 'tag', 'jobQueue');
 mainHandles = guidata(figureHandle);
-value = hObject.String;
+value = handles.stimFullPath;
 
 if ~isempty(value) && ~IsImageFile(value)
     hObject.BackgroundColor = mainHandles.colors{2,4};

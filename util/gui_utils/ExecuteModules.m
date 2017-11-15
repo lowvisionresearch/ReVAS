@@ -221,7 +221,10 @@ if logical(handles.togStrip) && ~logical(abortTriggered)
 end
 
 %% Re-referencing Module
-if logical(handles.togReRef) && ~logical(abortTriggered)
+if strcmp(handles.config.rerefGlobalFullPath, '')
+    RevasMessage(['[[ Re-referencing ]] ' inputVideoPath], parametersStructure);
+    RevasMessage('No valid global reference frame provided, skipping Re-Referencing', parametersStructure);
+elseif logical(handles.togReRef) && ~logical(abortTriggered)
     RevasMessage(['[[ Re-referencing ]] ' inputVideoPath], parametersStructure);
     % Set the parameters    
     parametersStructure.verbosity = handles.config.rerefVerbosity;
@@ -238,10 +241,10 @@ if logical(handles.togReRef) && ~logical(abortTriggered)
             handles.config.rerefTiltUp;
     end
     parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
+    globalRefFrame = handles.config.rerefGlobalFullPath;
     
     % Call the function(s)
-    % TODO where does the global ref frame come from?
-    ReReference(usefulEyePositionTraces, fineRefFrame, fineRefFrame, parametersStructure);
+    ReReference(usefulEyePositionTraces, fineRefFrame, globalRefFrame, parametersStructure);
 end
 
 %% Filtering Module
