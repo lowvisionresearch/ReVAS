@@ -218,17 +218,10 @@ if logical(handles.togStrip.Value) && ~logical(abortTriggered)
     end
     
     % Call the function(s)
-    if strcmp(handles.togFine.Enable, 'on') 
-        [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
-            statisticsStructure] ...
-            = StripAnalysis(inputVideoPath, fineResult, parametersStructure);
-    elseif strcmp(handles.togCoarse.Enable, 'on')
-        [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
-            statisticsStructure] ...
-            = StripAnalysis(inputVideoPath, coarseResult, parametersStructure);
-    else
-        % TODO use a specific frame of the video as reference
-    end
+    [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
+        statisticsStructure] ...
+        = StripAnalysis(inputVideoPath, fineResult, parametersStructure);
+    
     clear fineResult;
 end
 
@@ -240,10 +233,10 @@ if logical(handles.togReRef.Value) && ~logical(abortTriggered)
     parametersStructure.overwrite = handles.config.trimOverwrite;
 
     % Call the function(s)
-    TrimVideo(inputVideoPath, parametersStructure);
+    %TrimVideo(inputVideoPath, parametersStructure);
 
     % Update file name to output file name
-    inputVideoPath = [inputVideoPath(1:end-4) '_dwt' inputVideoPath(end-3:end)];
+    %inputVideoPath = [inputVideoPath(1:end-4) '_dwt' inputVideoPath(end-3:end)];
 end
 
 %% Filtering Module
@@ -254,10 +247,10 @@ if logical(handles.togFilt.Value) && ~logical(abortTriggered)
     parametersStructure.overwrite = handles.config.trimOverwrite;
 
     % Call the function(s)
-    TrimVideo(inputVideoPath, parametersStructure);
+    %TrimVideo(inputVideoPath, parametersStructure);
 
     % Update file name to output file name
-    inputVideoPath = [inputVideoPath(1:end-4) '_dwt' inputVideoPath(end-3:end)];
+    %inputVideoPath = [inputVideoPath(1:end-4) '_dwt' inputVideoPath(end-3:end)];
 end
 
 %% Saccade Detection Module

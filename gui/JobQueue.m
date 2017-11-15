@@ -245,6 +245,16 @@ handles.config.stripSearchWindowHeight = 79;
 handles.config.stripSubpixelInterp = true;
 handles.config.stripNeighborhoodSize = 7;
 handles.config.stripSubpixelDepth = 2;
+% Re-Referncing
+handles.config.rerefOverwrite = true;
+handles.config.rerefVerbosity = true;
+handles.config.rerefSearch = 0.5;
+handles.config.rerefPeakMethod = 2;
+handles.config.rerefKernel = 21;
+handles.config.rerefTorsion = false;
+handles.config.rerefTiltLow = -5;
+handles.config.rerefTiltUp = 5;
+handles.config.rerefTiltStep = 1;
 % Filtering
 handles.config.filtOverwrite = true;
 handles.config.filtVerbosity = true;
@@ -914,7 +924,7 @@ function configReRef_Callback(hObject, eventdata, handles)
 % hObject    handle to configFilt (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+ReRefParameters;
 
 % --- Executes on button press in configSacDrift.
 function configSacDrift_Callback(hObject, eventdata, handles)
