@@ -22,7 +22,7 @@ function varargout = ReRefParameters(varargin)
 
 % Edit the above text to modify the response to help ReRefParameters
 
-% Last Modified by GUIDE v2.5 14-Nov-2017 18:13:41
+% Last Modified by GUIDE v2.5 15-Nov-2017 11:34:17
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -42,7 +42,6 @@ else
     gui_mainfcn(gui_State, varargin{:});
 end
 % End initialization code - DO NOT EDIT
-
 
 % --- Executes just before ReRefParameters is made visible.
 function ReRefParameters_OpeningFcn(hObject, eventdata, handles, varargin)
@@ -69,10 +68,13 @@ handles.fixTorsion.Value = mainHandles.config.rerefTorsion;
 handles.tiltLow.String = mainHandles.config.rerefTiltLow;
 handles.tiltUp.String = mainHandles.config.rerefTiltUp;
 handles.tiltStep.String = mainHandles.config.rerefTiltStep;
+handles.globalFullPath = mainHandles.config.rerefGlobalFullPath;
+handles.globalPath.String = mainHandles.config.rerefGlobalPath;
 
 % Set colors
 % Main Background
 handles.rerefParameters.Color = mainHandles.colors{4,2};
+handles.globalPath.BackgroundColor = mainHandles.colors{4,2};
 % Box backgrounds
 handles.titleBox.BackgroundColor = mainHandles.colors{4,3};
 handles.usageBox.BackgroundColor = mainHandles.colors{4,3};
@@ -92,6 +94,7 @@ handles.searchText.BackgroundColor = mainHandles.colors{4,3};
 handles.peakBox.BackgroundColor = mainHandles.colors{4,3};
 handles.tiltStepText.BackgroundColor = mainHandles.colors{4,3};
 handles.peakGroup.BackgroundColor = mainHandles.colors{4,3};
+handles.globalText.BackgroundColor = mainHandles.colors{4,3};
 % Box text
 handles.titleBox.ForegroundColor = mainHandles.colors{4,5};
 handles.usageBox.ForegroundColor = mainHandles.colors{4,5};
@@ -111,6 +114,11 @@ handles.searchText.ForegroundColor = mainHandles.colors{4,5};
 handles.peakBox.ForegroundColor = mainHandles.colors{4,5};
 handles.tiltStepText.ForegroundColor = mainHandles.colors{4,5};
 handles.peakGroup.ForegroundColor = mainHandles.colors{4,5};
+handles.globalText.ForegroundColor = mainHandles.colors{4,5};
+handles.globalPath.ForegroundColor = mainHandles.colors{4,5};
+% Select button
+handles.select.BackgroundColor = mainHandles.colors{4,4};
+handles.select.ForegroundColor = mainHandles.colors{4,2};
 % Save button
 handles.save.BackgroundColor = mainHandles.colors{3,4};
 handles.save.ForegroundColor = mainHandles.colors{3,2};
@@ -130,10 +138,10 @@ tiltStep_Callback(handles.tiltStep, eventdata, handles);
 peak1Radio_Callback(handles.peak1Radio, eventdata, handles);
 peak2Radio_Callback(handles.peak2Radio, eventdata, handles);
 fixTorsion_Callback(handles.fixTorsion, eventdata, handles);
+globalPath_Callback(handles.globalPath, eventdata, handles);
 
 % UIWAIT makes ReRefParameters wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
-
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ReRefParameters_OutputFcn(hObject, eventdata, handles) 
@@ -144,8 +152,6 @@ function varargout = ReRefParameters_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
-
-
 
 function tiltStep_Callback(hObject, eventdata, handles)
 % hObject    handle to tiltStep (see GCBO)
@@ -207,7 +213,6 @@ end
 % Update handles structure
 guidata(hObject, handles);
 
-
 % --- Executes during object creation, after setting all properties.
 function search_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to search (see GCBO)
@@ -219,7 +224,6 @@ function search_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes on button press in save.
 function save_Callback(hObject, eventdata, handles)
@@ -235,6 +239,16 @@ kernel = str2double(handles.kernel.String);
 tiltLow = str2double(handles.tiltLow.String);
 tiltUp = str2double(handles.tiltUp.String);
 tiltStep = str2double(handles.tiltStep.String);
+
+% Global Reference Frame
+if ~IsImageFile(handles.globalFullPath) && ~strcmp(handles.globalFullPath(end-3:end), '.mat')
+    errordlg('Global Reference Frame must be a mat or image file.', 'Invalid Parameter');
+    return;
+elseif size(handles.globalFullPath, 2) > 3 && strcmp(handles.globalFullPath(end-3:end), '.mat') && ...
+        ismember('globalRef', who('-file', handles.globalFullPath))
+    errordlg('Global Reference Frame mat file must contain variable called globalRef.', 'Invalid Parameter');
+    return;
+end
 
 % search
 if ~IsRealNumber(search) || search < 0 || search > 1
@@ -271,6 +285,8 @@ if logical(handles.fixTorsion.Value)
 end
 
 % Save new configurations
+mainHandles.config.rerefGlobalFullPath = handles.globalFullPath;
+mainHandles.config.rerefGlobalPath = handles.globalPath.String;
 mainHandles.config.rerefVerbosity = logical(handles.verbosity.Value);
 mainHandles.config.rerefOverwrite = logical(handles.overwrite.Value);
 mainHandles.config.rerefSearch = search;
@@ -320,7 +336,6 @@ end
 
 % Update handles structure
 guidata(hObject, handles);
-
 
 
 function tiltLow_Callback(hObject, eventdata, handles)
@@ -414,4 +429,74 @@ if logical(hObject.Value)
     handles.kernel.Enable = 'off';
 else
     handles.kernel.Enable = 'on';
+end
+
+% --- Executes on button press in select.
+function select_Callback(hObject, eventdata, handles)
+% hObject    handle to select (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[fileName, pathName, ~] = uigetfile('*.*', 'Upload Global Reference Frame', '');
+if fileName == 0
+    % User canceled.
+    return;
+end
+handles.globalFullPath = fullfile(pathName, fileName);
+handles.globalPath.String = [' ' fileName];
+
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+
+if ~IsImageFile(fullfile(pathName, fileName)) && ~strcmp(fileName(end-3:end), '.mat')
+    handles.globalPath.BackgroundColor = mainHandles.colors{2,4};
+    handles.globalPath.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Must be a mat or image file.';
+elseif size(fileName, 2) > 3 && strcmp(fileName(end-3:end), '.mat') && ismember('globalRef', who('-file', fullfile(pathName, fileName)))
+    handles.globalPath.BackgroundColor = mainHandles.colors{2,4};
+    handles.globalPath.ForegroundColor = mainHandles.colors{2,2};
+    hObject.TooltipString = 'Mat file must contain variable called globalRef.';
+else
+    handles.globalPath.BackgroundColor = mainHandles.colors{4,2};
+    handles.globalPath.ForegroundColor = mainHandles.colors{4,5};
+    hObject.TooltipString = '';
+end
+
+% Update handles structure
+guidata(hObject, handles);
+
+function globalPath_Callback(hObject, eventdata, handles)
+% hObject    handle to globalPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of globalPath as text
+%        str2double(get(hObject,'String')) returns contents of globalPath as a double
+figureHandle = findobj(0, 'tag', 'jobQueue');
+mainHandles = guidata(figureHandle);
+value = handles.globalFullPath;
+
+if ~isempty(value) && ~IsImageFile(value) && ~strcmp(value, '.mat')
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+elseif size(value, 2) > 3 && strcmp(value(end-3:end), '.mat') && ismember('globalRef', who('-file', value))
+    hObject.BackgroundColor = mainHandles.colors{2,4};
+    hObject.ForegroundColor = mainHandles.colors{2,2};
+else
+    hObject.BackgroundColor = mainHandles.colors{4,2};
+    hObject.ForegroundColor = mainHandles.colors{4,5};
+end
+
+% Update handles structure
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function globalPath_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to globalPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end
