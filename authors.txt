@@ -1,0 +1,6 @@
+alex = Alex Yeo <alexsyeo@berkeley.edu>
+derek = Derek Wan <derek.wan11@berkeley.edu>
+jason = Jason Chen <jbchen120@berkeley.edu>
+matt = Matthew Sit <msit@berkeley.edu>
+mehmet = Mehmet Agaoglu <mna@berkeley.edu>
+spencer = lowvisionresearch <lowvisionresearch@gmail.com>
