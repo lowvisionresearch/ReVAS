@@ -29,6 +29,13 @@ function [coarseRefFrame, coordinatesAndDegrees] = RotateCorrect(shrunkFrames, b
 %
 %   Example usage: 
 %       
+%   Example usage: 
+%       videoPath = 'MyVid.avi';
+%       load('MyVid_params.mat')
+%       coarseParameters.degreeRange = 1;
+%       coarseParameters.peakDropWindow = 25;
+%       coarseParameters.rotateMaximumPeakRatio = 0.6;
+%       coarseReferenceFrame = RotateCorrect(filename, coarseParameters);
 
 %% Initialize variables
 if ~isfield(parametersStructure, 'degreeRange')

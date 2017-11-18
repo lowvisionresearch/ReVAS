@@ -48,12 +48,8 @@ function coarseRefFrame = CoarseRef(inputVideoPath, parametersStructure)
 %
 %   Example usage: 
 %       videoPath = 'MyVid.avi';
-%       parametersStructure.enableGPU = false;
-%       parametersStructure.overwrite = true;
-%       parametersStructure.refFrameNumber = 15;
-%       parametersStructure.enableVerbosity = 1;
-%       parametersStructure.scalingFactor = 0.5;
-%       coarseReferenceFrame = CoarseRef(filename, parametersStructure);
+%       load('MyVid_params.mat')
+%       coarseReferenceFrame = CoarseRef(filename, coarseParameters);
 
 %% Initialize variables
 outputFileName = [inputVideoPath(1:end-4) '_coarseref'];
