@@ -86,21 +86,22 @@ else
     if ~islogical(fixTorsion)
         error('fixTorsion must be a logical');
     end
-    if fixTorsion
-        if ~isfield(parametersStructure,'tilts')
-            tilts = -5:1:5;
-            RevasWarning('using default parameter for tilts', parametersStructure);
-        else
-            tilts = parametersStructure.tilts;
-            if size(tilts, 2) == 1
-                tilts = tilts';
-            end
-            if ~isnumeric(tilts) && size(tilts, 1) ~= 1
-               error('tilts must be a vector of numbers'); 
-            end
-        end
+end
+
+if ~isfield(parametersStructure,'tilts')
+    tilts = -5:1:5;
+    RevasWarning('using default parameter for tilts', parametersStructure);
+else
+    tilts = parametersStructure.tilts;
+    if size(tilts, 2) == 1
+        tilts = tilts';
+    end
+    if ~isnumeric(tilts) && size(tilts, 1) ~= 1
+       error('tilts must be a vector of numbers'); 
     end
 end
+
+
 
 if ~isfield(parametersStructure,'findPeakMethod')
     findPeakMethod = 2;
@@ -109,17 +110,19 @@ else
     if findPeakMethod ~= 1 && findPeakMethod ~= 2
         error('findPeakMethod must be 1 or 2');
     end
-    if findPeakMethod == 2
-        if ~isfield(parametersStructure,'findPeakKernelSize')
-            findPeakKernelSize = 21;
-        else
-            findPeakKernelSize = parametersStructure.findPeakKernelSize;
-            if ~IsOddNaturalNumber(findPeakKernelSize)
-                error('findPeakKernelSize must be an odd, natural number');
-            end
-        end
+end
+
+
+if ~isfield(parametersStructure,'findPeakKernelSize')
+    findPeakKernelSize = 21;
+else
+    findPeakKernelSize = parametersStructure.findPeakKernelSize;
+    if ~IsOddNaturalNumber(findPeakKernelSize)
+        error('findPeakKernelSize must be an odd, natural number');
     end
 end
+
+
 
 if ~isfield(parametersStructure,'searchZone')
     searchZone = 0.5;
@@ -227,6 +230,10 @@ end
 % compute ref centers
 localCenter = size(localRef)/2;
 globalCenter = size(globalRef)/2;
+
+% remove black edges around the refs, if any
+localRef = PadNoise(localRef);
+globalRef = PadNoise(globalRef);
     
 % prepare structure for Localize sub-function
 params.findPeakMethod = findPeakMethod;
@@ -236,11 +243,13 @@ params.tilts = tilts;
 
 % localize local ref on global ref
 if ~fixTorsion
-    [yOffset, xOffset, peakValue, ~, ~, ~] = Localize(localRef,globalRef,params);
+    [yOffset, xOffset, peakValue, c, ~, ~] = Localize(localRef,globalRef,params);
 else
-    [localRef, bestTilt, yOffset, xOffset, peakValue] = ...
+    [localRef, bestTilt, yOffset, xOffset, peakValue, c] = ...
         SolveTiltIssue(localRef,globalRef,params);
 end
+
+
 
 % adjust eye position traces based on the estimated offsets
 offsetBetweenLocalAndGlobal = [xOffset yOffset ];
@@ -269,19 +278,51 @@ if enableVerbosity
         axesHandles = gca;
     end
     
-    if xOffset < 1 || yOffset < 1
-        tempGlobal = padarray(globalRef,-[yOffset xOffset],'pre');
+    % the following hack is needed just for plotting!
+    
+    % pre-padding when offsets are negative
+    if xOffset < 1 
+        prepadX = abs(xOffset);
         xOffset = 1;
+    else
+        prepadX = 0;
+    end
+    
+    if yOffset < 1
+        prepadY = abs(yOffset);
         yOffset = 1;
+    else
+        prepadY = 0;
+    end
+    tempGlobal = padarray(globalRef,[prepadX prepadY],'pre');
+    
+    
+    % post-padding when the local ref is bigger than the pre-padded global
+    % ref
+    if abs(xOffset) + prepadX + size(localRef,2) > size(tempGlobal,2) 
+        padX = abs(xOffset) + prepadX + size(localRef,2) - size(tempGlobal,2) + 1;
+    else
+        padX = 0;
     end
     
-    if xOffset+size(localRef,2) > size(globalRef,2) || yOffset+size(localRef,1) > size(globalRef,1)
-        padX = xOffset+size(localRef,2) - size(globalRef,2) + 1;
-        padY = yOffset+size(localRef,1) - size(globalRef,1) + 1;
-        tempGlobal = padarray(globalRef,[padY padX],'post');
+    if abs(yOffset) + prepadY + size(localRef,1) > size(tempGlobal,1)
+        padY = abs(yOffset) + prepadY + size(localRef,1) - size(tempGlobal,1) + 1;
+    else
+        padY = 0;
     end
     
-    tempGlobal = double(globalRef);
+    if padX < 0 
+        padX = 0;
+    end
+    if padY < 0 
+        padY = 0;
+    end
+
+    tempGlobal = padarray(tempGlobal,[padY padX],'post');
+    % end hack
+    
+    
+    tempGlobal = double(tempGlobal);
     yind = yOffset:yOffset+size(localRef,1)-1;
     xind = xOffset:xOffset+size(localRef,2)-1;
     tempGlobal(yind,xind) = (tempGlobal(yind,xind) + double(localRef))/2;
