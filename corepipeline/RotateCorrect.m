@@ -42,9 +42,13 @@ if ~isfield(parametersStructure, 'degreeRange')
     parametersStructure.degreeRange = 5;
 end
 
+% Preallocate the rotate corrected coarse reference frame and counter array
+rotateCorrectedCoarse = zeros(size(bigFrames, 1)*2.5, size(bigFrames, 2)*2.5);
+counterArray = rotateCorrectedCoarse;
+
 % usefulEyePositionTraces contains: Columns 1 & 2 (coordinates) and Column
 % 3 (degree that returns the ideal rotation)
-rotations = -parametersStructure.degreeRange:0.5:parametersStructure.degreeRange;
+rotations = -parametersStructure.degreeRange:0.1:parametersStructure.degreeRange;
 coordinatesAndDegrees = zeros(size(shrunkFrames, 3), 3);
 
 % Each time StripAnalysis is called, we must pass in two frames in a 3D
