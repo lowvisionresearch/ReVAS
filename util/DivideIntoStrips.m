@@ -9,6 +9,11 @@ function [stripIndices, stripsPerFrame] = DivideIntoStrips(videoInputArray, vide
 %   have negligible impact on final analysis results.
 %
 %   Precondition: All inputs have already been validated.
+%
+%   Fields of the |parametersStructure| 
+%   -----------------------------------
+%  samplingRate        :   sampling rate of the video
+%  stripHeight         :   the size of each strip
 
 stripsPerFrame = round(parametersStructure.samplingRate / videoFrameRate);
 [frameHeight, frameWidth, numberOfFrames] = size(videoInputArray);

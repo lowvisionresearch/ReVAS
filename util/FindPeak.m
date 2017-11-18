@@ -9,10 +9,42 @@ function [xPeak, yPeak, peakValue, secondPeakValue] = ...
 %   estimated frame shifts from CoarseRef. Doing so will allow the function
 %   to find search windows around each strip according to the approximate
 %   shifts. It will then search for a peak in those windows.
+%
+%   Fields of the |parametersStructure| 
+%   -----------------------------------
+%  searchWindowPercentage   :   proportion of the correlation map in which
+%                               to seearch for a peak. Takes in a value 
+%                               0 < x <= 1. 
+%  peakDropWindow           :   area (in pixels) around the highest peak 
+%                               to ignore when searching for the second
+%                               highest peak (for calculating peak raitos)
+%  enableGaussianFiltering  :   set to 1 to apply Gaussian filtering to the
+%                               map. Then the function will subtract the
+%                               original map from the Gaussian filtered
+%                               map, and search for a peak in the map
+%                               generated from the difference between the
+%                               two.
+%  gaussianStandardDeviation:   the standard deviation to be used in the
+%                               Gaussian filter, if enabled.
+%  minimumPeakThreshold     :   the minimum value required for a
+%                               correlation peak to be considered valid
+%  maximumPeakRatio         :   the ratio (peak1 / peak2) above which a
+%                               given peak1 is considered not valid, where
+%                               peak1 is the correlation value of the 
+%                               highest peak and peak2 is the correlation 
+%                               value of the second highest peak 
+%  stripHeight              :   the strip height being used in
+%                               StripAnalysis. 
+%  SDWindowSize             :   the size of the pixel window around the 
+%                               identified peak in which a Gaussian will be 
+%                               fitted.
+%  maximumSD                :   ????
+
 
 % Cut out smaller correlation map to search in if applicable. Doing this
 % will essentially restrict searching to the center area and any false
 % peaks near the edges will be ignored.
+
 offset = 0;
 originalCorrelationMap = correlationMap;
 if isfield(parametersStructure, 'searchWindowPercentage')

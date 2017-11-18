@@ -3,7 +3,11 @@ function [interpolatedPixelCoordinates, errorStructure]...
 %2D INTERPOLATION Completes 2D Interpolation on a correlation map.
 %   Completes 2D Interpolation on a correlation map and returns the new
 %   interpolated peak coordinates. Uses the |spline| option in |interp2|.
-
+%
+%   Fields of the |parametersStructure| 
+%   -----------------------------------
+%  neighborhoodSize         :   ???              
+%  subpixelDepth            :   ???
 %% Input Validation
 
 if ~ismatrix(correlationMap2D)
