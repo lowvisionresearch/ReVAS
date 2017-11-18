@@ -28,7 +28,7 @@ else
 end
 
 %% Trim Module
-if logical(handles.togTrim) && ~logical(abortTriggered)
+if logical(handles.togTrim.Value) && ~logical(abortTriggered)
     RevasMessage(['[[ Trimming ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.borderTrimAmount = handles.config.trimBorderTrimAmount;
@@ -42,7 +42,7 @@ if logical(handles.togTrim) && ~logical(abortTriggered)
 end
 
 %% Remove Stimulus Module
-if logical(handles.togStim) && ~logical(abortTriggered)
+if logical(handles.togStim.Value) && ~logical(abortTriggered)
     RevasMessage(['[[ Removing Stimulus ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.enableVerbosity = handles.config.stimVerbosity;
@@ -72,7 +72,7 @@ if logical(handles.togStim) && ~logical(abortTriggered)
 end
 
 %% Gamma Correction Module
-if logical(handles.togGamma) && ~logical(abortTriggered)
+if logical(handles.togGamma.Value) && ~logical(abortTriggered)
     RevasMessage(['[[ Gamma Correcting ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.gammaExponent = handles.config.gammaExponent;
@@ -86,7 +86,7 @@ if logical(handles.togGamma) && ~logical(abortTriggered)
 end
 
 %% Bandpass Filtering Module
-if logical(handles.togBandFilt) && ~logical(abortTriggered)
+if logical(handles.togBandFilt.Value) && ~logical(abortTriggered)
     RevasMessage(['[[ Bandpass Filtering ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.smoothing = handles.config.bandFiltSmoothing;
@@ -101,9 +101,9 @@ if logical(handles.togBandFilt) && ~logical(abortTriggered)
 end
 
 %% Make Coarse Reference Frame Module
-if (logical(handles.togCoarse) ...
-        || logical(handles.togFine) ...
-        || logical(handles.togStrip)) && ~logical(abortTriggered)
+if (logical(handles.togCoarse.Value) ...
+        || logical(handles.togFine.Value) ...
+        || logical(handles.togStrip.Value)) && ~logical(abortTriggered)
     RevasMessage(['Identifying blink frames in ' originalInputVideoPath], parametersStructure);
     parametersStructure.overwrite = handles.config.coarseOverwrite && ...
         handles.config.fineOverwrite && ...
@@ -114,7 +114,7 @@ if (logical(handles.togCoarse) ...
     FindBlinkFrames(inputVideoPath, parametersStructure);
 end
 
-if logical(handles.togCoarse) && ~logical(abortTriggered)
+if logical(handles.togCoarse.Value) && ~logical(abortTriggered)
     RevasMessage(['[[ Making Coarse Reference Frame ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.refFrameNumber = handles.config.coarseRefFrameNum;
@@ -140,7 +140,7 @@ if logical(handles.togCoarse) && ~logical(abortTriggered)
 end
 
 %% Make Fine Reference Frame Module
-if logical(handles.togFine) && ~logical(abortTriggered)
+if logical(handles.togFine.Value) && ~logical(abortTriggered)
     RevasMessage(['[[ Making Fine Reference Frame ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.enableVerbosity = handles.config.fineVerbosity;
@@ -166,7 +166,7 @@ if logical(handles.togFine) && ~logical(abortTriggered)
 end
 
 %% Strip Analysis Module
-if logical(handles.togStrip) && ~logical(abortTriggered)
+if logical(handles.togStrip.Value) && ~logical(abortTriggered)
     RevasMessage(['[[ Strip Analyzing ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.overwrite = handles.config.stripOverwrite;
@@ -195,7 +195,7 @@ if logical(handles.togStrip) && ~logical(abortTriggered)
     % Load a fine result if we didn't run the previous module in this
     % session.
     if ~exist('fineResult', 'var')
-        if logical(handles.togCoarse)
+        if logical(handles.togCoarse.Value)
            % Use coarse ref frame if fine ref module disabled and if
            % available.
            fineRefFrame = coarseRefFrame;
@@ -224,7 +224,7 @@ end
 if strcmp(handles.config.rerefGlobalFullPath, '')
     RevasMessage(['[[ Re-referencing ]] ' inputVideoPath], parametersStructure);
     RevasMessage('No valid global reference frame provided, skipping Re-Referencing', parametersStructure);
-elseif logical(handles.togReRef) && ~logical(abortTriggered)
+elseif logical(handles.togReRef.Value) && ~logical(abortTriggered)
     RevasMessage(['[[ Re-referencing ]] ' inputVideoPath], parametersStructure);
     % Set the parameters    
     parametersStructure.verbosity = handles.config.rerefVerbosity;
@@ -248,7 +248,7 @@ elseif logical(handles.togReRef) && ~logical(abortTriggered)
 end
 
 %% Filtering Module
-if logical(handles.togFilt) && ~logical(abortTriggered)
+if logical(handles.togFilt.Value) && ~logical(abortTriggered)
     RevasMessage(['[[ Filtering ]] ' inputVideoPath], parametersStructure);
     % Set the parameters    
     parametersStructure.overwrite = handles.config.filtOverwrite;
@@ -283,7 +283,7 @@ if logical(handles.togFilt) && ~logical(abortTriggered)
 end
 
 %% Saccade Detection Module
-if logical(handles.togSacDrift) && ~logical(abortTriggered)
+if logical(handles.togSacDrift.Value) && ~logical(abortTriggered)
     RevasMessage(['[[ Saccade Detecting ]] ' inputVideoPath], parametersStructure);
     % Set the parameters
     parametersStructure.overwrite = handles.config.sacOverwrite;
