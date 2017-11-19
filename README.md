@@ -12,3 +12,4 @@ Requirements:
 1. MatLab 
 2. MatLab Computer Vision Toolbox
 
+We hope to eventually write custom functions that will obviate the need for MatLab's Computer Vision Toolbox.
