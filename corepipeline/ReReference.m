@@ -76,7 +76,7 @@ else
 end
 
 if ~isfield(parametersStructure,'fixTorsion')
-    fixTorsion = false;
+    fixTorsion = true;
     RevasWarning('using default parameter for fixTorsion', fixTorsion);
 else
     fixTorsion = parametersStructure.fixTorsion;
