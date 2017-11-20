@@ -1138,17 +1138,17 @@ for i = 1:length(configurationsStructFieldNames)
     handles.config.(configurationsStructFieldNames{i}) = ...
         configurationsStruct.(configurationsStructFieldNames{i});
 end
-if size(toggleButtonStates,1) == 1 && size(toggleButtonStates,2) == 10
-    handles.togTrim.Value = toggleButtonStates(1);
-    handles.togStim.Value = toggleButtonStates(2);
-    handles.togGamma.Value = toggleButtonStates(3);
-    handles.togBandFilt.Value = toggleButtonStates(4);
-    handles.togCoarse.Value = toggleButtonStates(5);
-    handles.togFine.Value = toggleButtonStates(6);
-    handles.togStrip.Value = toggleButtonStates(7);
-    handles.togReRef.Value = toggleButtonStates(8);
-    handles.togFilt.Value = toggleButtonStates(9);
-    handles.togSacDrift.Value = toggleButtonStates(10);
+try
+    handles.togTrim.Value = toggleButtonStates('togTrim');
+    handles.togStim.Value = toggleButtonStates('togStim');
+    handles.togGamma.Value = toggleButtonStates('togGamma');
+    handles.togBandFilt.Value = toggleButtonStates('togBandFilt');
+    handles.togCoarse.Value = toggleButtonStates('togCoarse');
+    handles.togFine.Value = toggleButtonStates('togFine');
+    handles.togStrip.Value = toggleButtonStates('togStrip');
+    handles.togReRef.Value = toggleButtonStates('togReRef');
+    handles.togFilt.Value = toggleButtonStates('togFilt');
+    handles.togSacDrift.Value = toggleButtonStates('togSacDrift');
     
     togTrim_Callback(handles.togTrim, eventdata, handles);
     togStim_Callback(handles.togStim, eventdata, handles);
@@ -1160,6 +1160,10 @@ if size(toggleButtonStates,1) == 1 && size(toggleButtonStates,2) == 10
     togReRef_Callback(handles.togReRef, eventdata, handles);
     togFilt_Callback(handles.togFilt, eventdata, handles);
     togSacDrift_Callback(handles.togSacDrift, eventdata, handles);
+catch
+    errordlg('Load configurations failed because the file is corrupted or incompatible with the current release.', ...
+        'Corrupt Configurations File');
+    return;
 end
 
 % Update handles structure
@@ -1176,28 +1180,28 @@ if fileName == 0
     return;
 end
 configurationsStruct = handles.config; %#ok<NASGU>
-toggleButtonStates = [
-    handles.togTrim.Value ...
-    handles.togStim.Value ...
-    handles.togGamma.Value ...
-    handles.togBandFilt.Value ...
-    handles.togCoarse.Value ...
-    handles.togFine.Value ...
-    handles.togStrip.Value ...
-    handles.togReRef.Value ...
-    handles.togFilt.Value ...
-    handles.togSacDrift.Value];
+toggleButtonStates = containers.Map;
+toggleButtonStates('togTrim') = handles.togTrim.Value;
+toggleButtonStates('togStim') = handles.togStim.Value;
+toggleButtonStates('togGamma') = handles.togGamma.Value;
+toggleButtonStates('togBandFilt') = handles.togBandFilt.Value;
+toggleButtonStates('togCoarse') = handles.togCoarse.Value;
+toggleButtonStates('togFine') = handles.togFine.Value;
+toggleButtonStates('togStrip') = handles.togStrip.Value;
+toggleButtonStates('togReRef') = handles.togReRef.Value;
+toggleButtonStates('togFilt') = handles.togFilt.Value;
+toggleButtonStates('togSacDrift') = handles.togSacDrift.Value;
 if strcmp(handles.togTrim.Enable, 'off')
-    toggleButtonStates(1) = handles.config.preDisabledTogTrimValue;
+    toggleButtonStates('togTrim') = handles.config.preDisabledTogTrimValue;
 end
 if strcmp(handles.togStim.Enable, 'off')
-    toggleButtonStates(2) = handles.config.preDisabledTogStimValue;
+    toggleButtonStates('togTrim') = handles.config.preDisabledTogStimValue;
 end
 if strcmp(handles.togGamma.Enable, 'off')
-    toggleButtonStates(3) = handles.config.preDisabledTogGammaValue;
+   toggleButtonStates('togGamma') = handles.config.preDisabledTogGammaValue;
 end
 if strcmp(handles.togBandFilt.Enable, 'off')
-    toggleButtonStates(4) = handles.config.preDisabledTogBandFiltValue; %#ok<NASGU>
+   toggleButtonStates('togBandFilt') = handles.config.preDisabledTogBandFiltValue; %#ok<NASGU>
 end
 save(fullfile(pathName, fileName), 'configurationsStruct', 'toggleButtonStates');
 
