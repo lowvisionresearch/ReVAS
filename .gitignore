@@ -1,1 +1,10 @@
 *.avi
+documentation/analysis_report/
+documentation/screenshots/
+pseudocode/
+testbench/
+example/
+log.txt
+ReRefTesting.m
+Test.m
+util/not_for_release
