@@ -140,7 +140,7 @@ else
 end
 
 if ~isfield(parametersStructure, 'enableGaussianFiltering')
-    enableGaussianFiltering = true;
+    enableGaussianFiltering = false;
 else
     enableGaussianFiltering = parametersStructure.enableGaussianFiltering;
     if ~islogical(enableGaussianFiltering)
