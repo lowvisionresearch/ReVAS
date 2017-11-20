@@ -49,10 +49,7 @@ function [newEyePositionTraces, outputFilePath, params] = ...
 %                             is generated and feedback is given via that
 %                             figure.
 %
-%   Change history
-%   --------------
-%   MNA     11/12/2017      initial version.
-%
+
 
 
 %% Handle misusage 
