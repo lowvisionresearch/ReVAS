@@ -268,23 +268,8 @@ end
 
 %% Handle overwrite scenarios.
 
-rawOutputFileName = [inputVideoPath(1:end-4) '_' ...
-    int2str(samplingRate) '_hz_raw'];
 outputFileName = [inputVideoPath(1:end-4) '_' ...
     int2str(samplingRate) '_hz_final'];
-
-if ~exist([rawOutputFileName '.mat'], 'file')
-    % left blank to continue without issuing warning in this case
-elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-    RevasWarning(['StripAnalysis() did not execute because it would overwrite existing file. (' rawOutputFileName ')'], parametersStructure);
-    rawEyePositionTraces = [];
-    usefulEyePositionTraces = [];
-    timeArray = [];
-    statisticsStructure = struct();
-    return;
-else
-    RevasWarning(['StripAnalysis() is proceeding and overwriting an existing file. (' rawOutputFileName ')'], parametersStructure);  
-end
 
 if ~exist([outputFileName '.mat'], 'file')
     % left blank to continue without issuing warning in this case
@@ -745,14 +730,11 @@ if ~abortTriggered && ~isempty(inputVideoPath)
     catch
     end
     
-    % Save a copy of the raw traces.
-    eyePositionTraces = rawEyePositionTraces; %#ok<NASGU>
-    save(rawOutputFileName, 'eyePositionTraces', 'timeArray', ...
-        'parametersStructure', 'referenceFramePath');
-    
-    % Save a copy of the useful traces (under file labeled 'final').
+    % Save under file labeled 'final'.
     eyePositionTraces = usefulEyePositionTraces; %#ok<NASGU>
-    save(outputFileName, 'eyePositionTraces', 'timeArray', ...
-        'parametersStructure', 'referenceFramePath');
+    peakRatios = statisticsStructure.peakRatios; %#ok<NASGU>
+    save(outputFileName, 'eyePositionTraces', 'rawEyePositionTraces', ...
+        'timeArray', 'parametersStructure', 'referenceFramePath', ...
+        'peakRatios');
 end
 end
