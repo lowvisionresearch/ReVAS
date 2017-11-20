@@ -85,7 +85,7 @@ if ~isfield(parametersStructure, 'rotateMaximumPeakRatio')
 end
 
 if ~isfield(parametersStructure, 'scalingFactor')
-    scalingFactor = 0.5;
+    scalingFactor = 1;
 else
     scalingFactor = parametersStructure.scalingFactor;
     if ~IsPositiveRealNumber(scalingFactor)
