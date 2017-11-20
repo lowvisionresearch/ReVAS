@@ -148,34 +148,33 @@ else
     end
 end
 
-if enableGaussianFiltering
-    if ~isfield(parametersStructure, 'maximumSD')
-        maximumSD = 10;
-        RevasWarning('using default parameter for maximumSD', parametersStructure);
-    else
-        maximumSD = parametersStructure.maximumSD;
-        if ~IsPositiveRealNumber(maximumSD)
-            error('maximumSD must be a positive, real number');
-        end
-    end
-    if ~isfield(parametersStructure, 'SDWindowSize')
-        SDWindowSize = 25;
-        RevasWarning('using default parameter for SDWindowSize', parametersStructure);
-    else
-        SDWindowSize = parametersStructure.SDWindowSize;
-        if ~IsNaturalNumber(SDWindowSize)
-            error('SDWindowSize must be a natural number');
-        end
-    end
+if ~isfield(parametersStructure, 'maximumSD')
+    maximumSD = 10;
+    RevasWarning('using default parameter for maximumSD', parametersStructure);
 else
-    if ~isfield(parametersStructure, 'maximumPeakRatio')
-        maximumPeakRatio = 0.8;
-        RevasWarning('using default parameter for maximumPeakRatio', parametersStructure);
-    else
-        maximumPeakRatio = parametersStructure.maximumPeakRatio;
-        if ~IsPositiveRealNumber(maximumPeakRatio)
-            error('maximumPeakRatio must be a positive, real number');
-        end
+    maximumSD = parametersStructure.maximumSD;
+    if ~IsPositiveRealNumber(maximumSD)
+        error('maximumSD must be a positive, real number');
+    end
+end
+
+if ~isfield(parametersStructure, 'SDWindowSize')
+    SDWindowSize = 25;
+    RevasWarning('using default parameter for SDWindowSize', parametersStructure);
+else
+    SDWindowSize = parametersStructure.SDWindowSize;
+    if ~IsNaturalNumber(SDWindowSize)
+        error('SDWindowSize must be a natural number');
+    end
+end
+
+if ~isfield(parametersStructure, 'maximumPeakRatio')
+    maximumPeakRatio = 0.8;
+    RevasWarning('using default parameter for maximumPeakRatio', parametersStructure);
+else
+    maximumPeakRatio = parametersStructure.maximumPeakRatio;
+    if ~IsPositiveRealNumber(maximumPeakRatio)
+        error('maximumPeakRatio must be a positive, real number');
     end
 end
 
@@ -198,24 +197,23 @@ else
     end
 end
 
-if adaptiveSearch
-    if ~isfield(parametersStructure, 'scalingFactor')
-        scalingFactor = 10;
-        RevasWarning('using default parameter for scalingFactor', parametersStructure);
-    else
-        scalingFactor = parametersStructure.scalingFactor;
-        if ~IsPositiveRealNumber(scalingFactor)
-            error('scalingFactor must be a positive, real number');
-        end
+if ~isfield(parametersStructure, 'scalingFactor')
+    scalingFactor = 10;
+    RevasWarning('using default parameter for scalingFactor', parametersStructure);
+else
+    scalingFactor = parametersStructure.scalingFactor;
+    if ~IsPositiveRealNumber(scalingFactor)
+        error('scalingFactor must be a positive, real number');
     end
-    if ~isfield(parametersStructure, 'searchWindowHeight')
-        searchWindowHeight = 0.8;
-        RevasWarning('using default parameter for searchWindowHeight', parametersStructure);
-    else
-        searchWindowHeight = parametersStructure.searchWindowHeight;
-        if ~IsNaturalNumber(searchWindowHeight)
-            error('searchWindowHeight must be a natural number');
-        end
+end
+
+if ~isfield(parametersStructure, 'searchWindowHeight')
+    searchWindowHeight = 0.8;
+    RevasWarning('using default parameter for searchWindowHeight', parametersStructure);
+else
+    searchWindowHeight = parametersStructure.searchWindowHeight;
+    if ~IsNaturalNumber(searchWindowHeight)
+        error('searchWindowHeight must be a natural number');
     end
 end
 
@@ -228,36 +226,34 @@ else
     end
 end
 
-if enableSubpixelInterpolation
-    if ~isfield(parametersStructure, 'subpixelInterpolationParameters')
-       subpixelInterpolationParameters = struct;
-       subpixelInterpolationParameters.neighborhoodSize = 7;
-       subpixelInterpolationParameters.subpixelDepth = 2;
-        RevasWarning('using default parameter for subpixelInterpolationParameters', parametersStructure);
+if ~isfield(parametersStructure, 'subpixelInterpolationParameters')
+   subpixelInterpolationParameters = struct;
+   subpixelInterpolationParameters.neighborhoodSize = 7;
+   subpixelInterpolationParameters.subpixelDepth = 2;
+    RevasWarning('using default parameter for subpixelInterpolationParameters', parametersStructure);
+else
+    if ~isstruct(parametersStructure.subpixelInterpolationParameters)
+       error('subpixelInterpolationParameters must be a struct');
     else
-        if ~isstruct(parametersStructure.subpixelInterpolationParameters)
-           error('subpixelInterpolationParameters must be a struct');
-        else
-           subpixelInterpolationParameters = parametersStructure.subpixelInterpolationParameters;
-           if ~isfield(parametersStructure.subpixelInterpolationParameters, 'neighborhoodSize')
-               subpixelInterpolationParameters.neighborhoodSize = 7;
-               RevasWarning('using default parameter for neighborhoodSize', parametersStructure);
-           else
-               subpixelInterpolationParameters.neighborhoodSize = parametersStructure.subpixelInterpolationParameters.neighborhoodSize;
-               if ~IsNaturalNumber(subpixelInterpolationParameters.neighborhoodSize)
-                   error('subpixelInterpolationParameters.neighborhoodSize must be a natural number');
-               end
+       subpixelInterpolationParameters = parametersStructure.subpixelInterpolationParameters;
+       if ~isfield(parametersStructure.subpixelInterpolationParameters, 'neighborhoodSize')
+           subpixelInterpolationParameters.neighborhoodSize = 7;
+           RevasWarning('using default parameter for neighborhoodSize', parametersStructure);
+       else
+           subpixelInterpolationParameters.neighborhoodSize = parametersStructure.subpixelInterpolationParameters.neighborhoodSize;
+           if ~IsNaturalNumber(subpixelInterpolationParameters.neighborhoodSize)
+               error('subpixelInterpolationParameters.neighborhoodSize must be a natural number');
            end
-           if ~isfield(parametersStructure.subpixelInterpolationParameters, 'subpixelDepth')
-               subpixelInterpolationParameters.subpixelDepth = 2;
-               RevasWarning('using default parameter for subpixelDepth', parametersStructure);
-           else
-               subpixelInterpolationParameters.subpixelDepth = parametersStructure.subpixelInterpolationParameters.subpixelDepth;
-               if ~IsPositiveRealNumber(subpixelInterpolationParameters.subpixelDepth)
-                   error('subpixelInterpolationParameters.subpixelDepth must be a positive, real number');
-               end
+       end
+       if ~isfield(parametersStructure.subpixelInterpolationParameters, 'subpixelDepth')
+           subpixelInterpolationParameters.subpixelDepth = 2;
+           RevasWarning('using default parameter for subpixelDepth', parametersStructure);
+       else
+           subpixelInterpolationParameters.subpixelDepth = parametersStructure.subpixelInterpolationParameters.subpixelDepth;
+           if ~IsPositiveRealNumber(subpixelInterpolationParameters.subpixelDepth)
+               error('subpixelInterpolationParameters.subpixelDepth must be a positive, real number');
            end
-        end
+       end
     end
 end
 

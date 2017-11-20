@@ -98,8 +98,6 @@ else
     end
 end
 
-
-
 if ~isfield(parametersStructure,'findPeakMethod')
     findPeakMethod = 2;
 else
@@ -108,7 +106,6 @@ else
         error('findPeakMethod must be 1 or 2');
     end
 end
-
 
 if ~isfield(parametersStructure,'findPeakKernelSize')
     findPeakKernelSize = 21;
@@ -119,8 +116,6 @@ else
     end
 end
 
-
-
 if ~isfield(parametersStructure,'searchZone')
     searchZone = 0.5;
 else
@@ -129,7 +124,6 @@ else
        error('searchZone must be a real number between 0 and 1 (inclusive)');
     end
 end
-
 
 if ~isfield(parametersStructure,'enableVerbosity')
     enableVerbosity = false;
@@ -171,9 +165,7 @@ if ischar(positionArgument) % positionArgument is a file path
 
 else % inputArgument is not a file path, but carries the eye position data.
     outputFilePath = [];
-    
     eyePositionTraces = positionArgument;
-    
 end
 
 %% Handle |localRefArgument| scenarios.
