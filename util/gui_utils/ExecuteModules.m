@@ -306,6 +306,7 @@ if logical(handles.togSacDrift.Value) && ~logical(abortTriggered)
     else
         parametersStructure.velocityMethod = 2;
     end
+    parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
 
     % Update file name to input file name
     inputFileName = [inputVideoPath(1:end-4) '_' ...
