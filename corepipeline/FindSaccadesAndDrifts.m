@@ -1,12 +1,12 @@
 function [outputFileName, saccades, drifts] = FindSaccadesAndDrifts(inputEyePositionsFilePath, ...
     originalVideoSizePixels, originalVideoSizeDegrees, ...
-    inputParametersStructure)
+    parametersStructure)
 %FIND SACCADES AND DRIFTS Records in a mat file an array of structures
 %representing saccades and an array of structures representing drifts.
 %   The result is stored with '_sacsdrifts' appended to the input video file
 %   name.
 %
-%   Fields of the |inputParametersStructure| 
+%   Fields of the |parametersStructure| 
 %   -----------------------------------
 %  overwrite           :   set to 1 to overwrite existing files resulting 
 %                          from calling the function.
@@ -33,7 +33,7 @@ function [outputFileName, saccades, drifts] = FindSaccadesAndDrifts(inputEyePosi
 outputFileName = [inputEyePositionsFilePath(1:end-4) '_sacsdrifts'];
 if ~exist([outputFileName '.mat'], 'file')
     % left blank to continue without issuing warning in this case
-elseif ~isfield(inputParametersStructure, 'overwrite') || ~inputParametersStructure.overwrite
+elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
     RevasWarning(['FindSaccadesAndDrifts() did not execute because it would overwrite existing file. (' outputFileName ')']);
     return;
 else
@@ -42,103 +42,103 @@ end
 
 %% Set parameters to defaults if not specified.
 % This second method is the EK Algorithm (Engbert & Kliegl, 2003 Vision Research).
-if ~isfield(inputParametersStructure, 'lambda')
+if ~isfield(parametersStructure, 'lambda')
     lambda = 6;
     RevasWarning('using default parameter for lambda', parametersStructure);
 else
-    lambda = inputParametersStructure.thresholdValue;
+    lambda = parametersStructure.thresholdValue;
 end
 
-if ~isfield(inputParametersStructure, 'secondaryLambda')
+if ~isfield(parametersStructure, 'secondaryLambda')
     secondaryLambda = 3;
     RevasWarning('using default parameter for secondaryLambda', parametersStructure);
 else
-    secondaryLambda = inputParametersStructure.secondaryThresholdValue;
+    secondaryLambda = parametersStructure.secondaryThresholdValue;
 end
 
 % units are in milliseconds
-if ~isfield(inputParametersStructure, 'stitchCriteria')
+if ~isfield(parametersStructure, 'stitchCriteria')
     stitchCriteria = 15;
     RevasWarning('using default parameter for stitchCriteria', parametersStructure);
 else
-    stitchCriteria = inputParametersStructure.stitchCriteria;
+    stitchCriteria = parametersStructure.stitchCriteria;
 end
 
 % units are in degrees
-if ~isfield(inputParametersStructure, 'minAmplitude')
+if ~isfield(parametersStructure, 'minAmplitude')
     minAmplitude = 0.05;
     RevasWarning('using default parameter for minAmplitude', parametersStructure);
 else
-    minAmplitude = inputParametersStructure.minAmplitude;
+    minAmplitude = parametersStructure.minAmplitude;
 end
 
 % units are in milliseconds
-if ~isfield(inputParametersStructure, 'minDuration')
+if ~isfield(parametersStructure, 'minDuration')
     minDuration = 8;
     RevasWarning('using default parameter for minDuration', parametersStructure);
 else
-    minDuration = inputParametersStructure.minDuration;
+    minDuration = parametersStructure.minDuration;
 end
 
 % units are in milliseconds
-if ~isfield(inputParametersStructure, 'maxDuration')
+if ~isfield(parametersStructure, 'maxDuration')
     maxDuration = 100;
     RevasWarning('using default parameter for maxDuration', parametersStructure);
 else
-    maxDuration = inputParametersStructure.maxDuration;
+    maxDuration = parametersStructure.maxDuration;
 end
 
 % Method to use for detection
 % 1 = Hard velocity threshold
 % 2 = Median-based (default)
-if ~isfield(inputParametersStructure, 'detectionMethod')
+if ~isfield(parametersStructure, 'detectionMethod')
     detectionMethod = 2;
 else
-    detectionMethod = inputParametersStructure.detectionMethod;
+    detectionMethod = parametersStructure.detectionMethod;
 end
 
 % units are in degrees/second
-if ~isfield(inputParametersStructure, 'hardVelocityThreshold')
+if ~isfield(parametersStructure, 'hardVelocityThreshold')
     hardVelocityThreshold = 25;
     if detectionMethod == 1
         RevasWarning('using default parameter for hardVelocityThreshold', parametersStructure);
     end
 else
-    hardVelocityThreshold = inputParametersStructure.hardVelocityThreshold;
+    hardVelocityThreshold = parametersStructure.hardVelocityThreshold;
 end
 
 % units are in degrees/second
-if ~isfield(inputParametersStructure, 'hardSecondaryVelocityThreshold')
+if ~isfield(parametersStructure, 'hardSecondaryVelocityThreshold')
     hardSecondaryVelocityThreshold = 15;
     if detectionMethod == 1
         RevasWarning('using default parameter for hardSecondaryVelocityThreshold', parametersStructure);
     end
 else
-    hardSecondaryVelocityThreshold = inputParametersStructure.hardVelocityThreshold;
+    hardSecondaryVelocityThreshold = parametersStructure.hardVelocityThreshold;
 end
 
 % Method to use to calculate velocity
 % 1 = using |diff|
 % 2 = (x_(n+1) - x_(n-1)) / 2 delta t)
-if ~isfield(inputParametersStructure, 'velocityMethod')
+if ~isfield(parametersStructure, 'velocityMethod')
     velocityMethod = 2;
 else
-    velocityMethod = inputParametersStructure.velocityMethod;
+    velocityMethod = parametersStructure.velocityMethod;
 end
 
 % check verbosity field
-if ~isfield(inputParametersStructure, 'enableVerbosity')
+if ~isfield(parametersStructure, 'enableVerbosity')
     enableVerbosity = false;
 else
-    enableVerbosity = inputParametersStructure.enableVerbosity;
+    enableVerbosity = parametersStructure.enableVerbosity;
 end
 
 % check plot axis
-if ~isfield(inputParametersStructure, 'axesHandles')
+if ~isfield(parametersStructure, 'axesHandles')
     figure('units','normalized','outerposition',[.4 .3 .3 .3]);
     axesHandles = gca;
 else
-    axesHandles = inputParametersStructure.axesHandles;
+    axesHandles = parametersStructure.axesHandles;
 end
 
 %% Load mat file with output from |StripAnalysis|
