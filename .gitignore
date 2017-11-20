@@ -1,4 +1,5 @@
 *.avi
+*.asv
 documentation/analysis_report/
 documentation/screenshots/
 pseudocode/
