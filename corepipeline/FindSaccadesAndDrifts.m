@@ -8,26 +8,35 @@ function [outputFileName, saccades, drifts] = FindSaccadesAndDrifts(inputEyePosi
 %
 %   Fields of the |parametersStructure| 
 %   -----------------------------------
-%  overwrite           :   set to 1 to overwrite existing files resulting 
-%                          from calling the function.
-%                          Set to 0 to abort the function call if the
-%                          files exist in the current directory.
-%  lambda              :  
-%  secondaryLambda     :
-%  stitchCriteria      :
-%  thresholdValue      :
-%  minAmplitude        :
-%  minDuration         :
-%  maxDuration         :
-%  detectionMethod     :
-%  velocityMethod      :
-%  enableVerbosity     :
-%  axesHandles         :
-%  hardVelocityThreshold : 
-%  secondaryThresholdValue : 
-%  hardSecondaryVelocityThreshold : 
+%  overwrite               : set to 1 to overwrite existing files resulting 
+%                            from calling the function.
+%                            Set to 0 to abort the function call if the
+%                            files exist in the current directory.
+%  thresholdValue          : multiplier specifying the median-based velocity
+%                            threshold. The most typically used value is 6.
+%  secondaryThresholdValue : multiplier specifying a secondary velocity
+%                            threshold for more accurate detection of onset
+%                            and offset of a saccade
+%  stitchCriteria          : if two consecutive saccades are closer in time
+%                            less than this value (in ms), then they are
+%                            stitched back to back.
+%  minAmplitude            : minimum (micro)saccade amplitude in deg
+%  minDuration             : minimum saccade duration in ms
+%  maxDuration             : maximum saccade duration in ms
+%  detectionMethod         : saccade detection method. set to 1 for using a
+%                            hard velocity threshold. set to 2 for using a
+%                            median-based velocity threshold. defaults to 2.
+%  velocityMethod          : set to 1 for regular differentiation. set to 2
+%                            for three-point differentiation.
+%  enableVerbosity         : set to 1 to see progress and/or output
+%  axesHandles             : axis handles to plot the output. 
+%  hardVelocityThreshold   : in deg/sec. relevant only when velocityMethod is
+%                            set to 1.
+%  hardSecondaryVelocityThreshold : in deg/sec. relevant only when
+%                           velocityMethod is 1.
 %
-%   Example usage: 
+%
+%
 %
 %% Handle overwrite scenarios.
 outputFileName = [inputEyePositionsFilePath(1:end-4) '_sacsdrifts'];
@@ -42,14 +51,14 @@ end
 
 %% Set parameters to defaults if not specified.
 % This second method is the EK Algorithm (Engbert & Kliegl, 2003 Vision Research).
-if ~isfield(parametersStructure, 'lambda')
+if ~isfield(parametersStructure, 'thresholdValue')
     lambda = 6;
     RevasWarning('using default parameter for lambda', parametersStructure);
 else
     lambda = parametersStructure.thresholdValue;
 end
 
-if ~isfield(parametersStructure, 'secondaryLambda')
+if ~isfield(parametersStructure, 'secondaryThresholdValue')
     secondaryLambda = 3;
     RevasWarning('using default parameter for secondaryLambda', parametersStructure);
 else
