@@ -11,3 +11,5 @@ Matlab, Image Processing Toolbox, Statistics and Machine Learning Toolbox, Compu
 
 Software requirements (to run as a standalone application):
 Matlab Run-time library (free to use and automatically downloaded by the installer). 
+
+[Here](/documentation/revastutorial.pdf) is a brief tutorial demonstrating the basic workflow.
