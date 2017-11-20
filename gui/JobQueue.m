@@ -296,6 +296,8 @@ handles.config.preDisabledTogTrimValue = 1;
 handles.config.preDisabledTogStimValue = 1;
 handles.config.preDisabledTogGammaValue = 1;
 handles.config.preDisabledTogBandFiltValue = 1;
+handles.togReRef.Value = 0;
+togReRef_Callback(handles.togReRef, eventdata, handles);
 
 % Pre-Disabled Execute Screen GUI Items
 handles.axes1.Visible = 'off';
@@ -802,7 +804,7 @@ else
     hObject.ForegroundColor = handles.colors{1,3};
 end
 
-% --- Executes on button press in togReRef.
+% --- Executes on button press in togFilt.
 function togFilt_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
     if handles.togStrip.Value == 0
