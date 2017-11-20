@@ -247,20 +247,26 @@ save(outputFileName, 'saccades', 'drifts');
 
 %% Verbosity for Results.
 if enableVerbosity
-    plot(axesHandles,timeArray, eyePositionTraces(:,1),'-','Color',[1 .5 .5]); hold on;
-    plot(axesHandles,timeArray, eyePositionTraces(:,2),'-','Color',[.5 .5 1]); hold on;
-    plot(axesHandles,timeArray(driftIndices), eyePositionTraces(driftIndices,1),'.','Color',[1 0 0],'LineWidth',2); hold on;
-    plot(axesHandles,timeArray(driftIndices), eyePositionTraces(driftIndices,2),'.','Color',[0 0 1],'LineWidth',2); hold on;    
+    if isfield(parametersStructure, 'axesHandles')
+        axes(parametersStructure.axesHandles(2));
+        colormap(parametersStructure.axesHandles(2), 'default');
+    else
+        figure();
+    end
+    plot(timeArray, eyePositionTraces(:,1),'-','Color',[1 .5 .5]); hold on;
+    plot(timeArray, eyePositionTraces(:,2),'-','Color',[.5 .5 1]); hold on;
+    plot(timeArray(driftIndices), eyePositionTraces(driftIndices,1),'.','Color',[1 0 0],'LineWidth',2); hold on;
+    plot(timeArray(driftIndices), eyePositionTraces(driftIndices,2),'.','Color',[0 0 1],'LineWidth',2); hold on;    
     
     % now highlight saccades
     for i=1:length(onsets)
-        plot(axesHandles,timeArray(onsets(i):offsets(i)),eyePositionTraces(onsets(i):offsets(i),1),'or',...
+        plot(timeArray(onsets(i):offsets(i)),eyePositionTraces(onsets(i):offsets(i),1),'or',...
              timeArray(onsets(i):offsets(i)),eyePositionTraces(onsets(i):offsets(i),2),'ob');
     end
-    title(axesHandles,'Eye position');
-    set(axesHandles,'Fontsize',13);
-    xlabel(axesHandles,'Time (sec)');
-    ylabel(axesHandles,'Eye position (deg)');
+    title('Eye position');
+    set('Fontsize',13);
+    xlabel('Time (sec)');
+    ylabel('Eye position (deg)');
     ylim([-3 3]);
 end
 end
