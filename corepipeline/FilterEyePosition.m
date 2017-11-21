@@ -61,12 +61,6 @@ function [filteredEyePosition, outputFilePath, parametersStructure] = ...
 % filteredPosition = FilterEyePosition(inputArray,parameterStructure);
 %
 %
-%   Change history
-%   --------------
-%   MNA     11/04/2017      initial version.
-%   MNA     11/12/2017      modified 'verbosity' to 'enableVerbosity' to
-%                           make compatible with the rest of ReVAS.
-%
 
 
 
@@ -237,23 +231,34 @@ filteredEyePosition(nanIndices | remove,:) = NaN;
 
 %% Save filtered data.
 if ~isempty(outputFilePath)
-    data.filteredEyePosition = filteredEyePosition;
-    data.filterParametersStructure = parametersStructure;
+    data.eyePositionTraces = filteredEyePosition;
+    
+    try
+        % remove pointers to graphics objects
+        parametersStructure = rmfield(parametersStructure,'commandWindowHandle');
+        parametersStructure = rmfield(parametersStructure,'axesHandles');
+    catch
+    end
+    
+    data.parametersStructure = parametersStructure;
     save(outputFilePath,'-struct','data');
 end
 
 %% Give feedback if user requested.
 if verbosity
    if ishandle(axesHandles)
-       axes(axesHandles);
+       axes(axesHandles(2));
    else
        figure(1453);
-       cla;
        axes(gca);
    end
+   cla;
+   ax = gca;
+   ax.ColorOrderIndex = 1;
    plot(timeArray,eyePositionTraces); hold on;
+   ax.ColorOrderIndex = 1;
    plot(timeArray,filteredEyePosition,'LineWidth',2);
-   set(gca,'Fontsize',14);
    xlabel('Time (sec)');
    ylabel('Eye position');
+   legend('Hor','Ver')
 end
