@@ -386,6 +386,7 @@ global abortTriggered;
 if isempty(abortTriggered)
     abortTriggered = false;
 end
+isSetView = true;
 
 %% Call normxcorr2() on each strip
 % Note that calculation for each array value does not end with this loop,
@@ -554,8 +555,13 @@ for stripNumber = (1:numberOfStrips)
                 correlationMap = gather(correlationMap, gpuTask.ID);
             end
             if isfield(parametersStructure, 'axesHandles')
-                axes(parametersStructure.axesHandles(1));
+                axes(parametersStructure.axesHandles(1)); %#ok<*LAXES>
+                cla;
                 colormap(parametersStructure.axesHandles(1), 'default');
+                if isSetView
+                    view(3)
+                    isSetView = false;
+                end
             else
                 figure(1);
             end
@@ -565,7 +571,8 @@ for stripNumber = (1:numberOfStrips)
             xlim([1 size(correlationMap,2)]);
             ylim([1 size(correlationMap,1)]);
             zlim([-1 1]);
-
+            legend('off');
+            
             % Mark the identified peak on the plot with an arrow.
             text(xPeak, yPeak, peakValue, '\downarrow', 'Color', 'red', ...
                 'FontSize', 20, 'HorizontalAlignment', 'center', ...
@@ -702,10 +709,11 @@ if ~abortTriggered && parametersStructure.enableVerbosity
     
     if isfield(parametersStructure, 'axesHandles')
         axes(parametersStructure.axesHandles(1));
-        cla;
     else
         figure(11);
     end
+    cla;
+    view(2);
     plot(timeArray, statisticsStructure.peakRatios); hold on;
     plot(timeArray, statisticsStructure.peakValues);
     title('Sample quality');
