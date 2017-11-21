@@ -699,6 +699,19 @@ if ~abortTriggered && parametersStructure.enableVerbosity
     ylabel('Eye Position Traces (pixels)');
     legend('show');
     legend('Horizontal Traces', 'Vertical Traces');
+    
+    if isfield(parametersStructure, 'axesHandles')
+        axes(parametersStructure.axesHandles(1));
+        cla;
+    else
+        figure(11);
+    end
+    plot(timeArray, statisticsStructure.peakRatios); hold on;
+    plot(timeArray, statisticsStructure.peakValues);
+    title('Sample quality');
+    xlabel('Time (sec)');
+    legend('show');
+    legend('Peak ratio', 'Peak value');
 end
 
 %% Plot stimuli on reference frame
