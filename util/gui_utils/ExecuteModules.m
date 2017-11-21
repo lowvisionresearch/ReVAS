@@ -218,6 +218,10 @@ if logical(handles.togStrip.Value) && ~logical(abortTriggered)
     [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
         statisticsStructure] ...
         = StripAnalysis(inputVideoPath, fineRefFrame, parametersStructure);
+    
+    % Update file name to input file name
+    inputVideoPath = [inputVideoPath(1:end-4) '_' ...
+        int2str(parametersStructure.samplingRate) '_hz_final.mat'];
 end
 
 %% Re-referencing Module
@@ -244,7 +248,7 @@ elseif logical(handles.togReRef.Value) && ~logical(abortTriggered)
     globalRefFrame = handles.config.rerefGlobalFullPath;
     
     % Call the function(s)
-    ReReference(usefulEyePositionTraces, fineRefFrame, globalRefFrame, parametersStructure);
+    [~,inputVideoPath] = ReReference(inputVideoPath, fineRefFrame, globalRefFrame, parametersStructure);
 end
 
 %% Filtering Module
@@ -277,9 +281,10 @@ if logical(handles.togFilt.Value) && ~logical(abortTriggered)
             handles.config.filtKernel2];
     end
     parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
+    
 
     % Call the function(s)
-    FilterEyePosition([usefulEyePositionTraces, timeArray], parametersStructure);
+    [~,inputVideoPath] = FilterEyePosition(inputVideoPath, parametersStructure);
 end
 
 %% Saccade Detection Module
@@ -309,13 +314,9 @@ if logical(handles.togSacDrift.Value) && ~logical(abortTriggered)
     end
     parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
 
-    % Update file name to input file name
-    inputFileName = [inputVideoPath(1:end-4) '_' ...
-        int2str(parametersStructure.samplingRate) '_hz_final.mat'];
-
     % Call the function(s)
     % TODO
-    FindSaccadesAndDrifts(inputFileName, [512 512], [10 10], ...
+    FindSaccadesAndDrifts(inputVideoPath, [512 512], [10 10], ...
         parametersStructure);
 end
 end
