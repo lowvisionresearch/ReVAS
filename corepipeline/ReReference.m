@@ -192,7 +192,11 @@ if ischar(localRefArgument) % localRefArgument is a file path
     end
 
 else % localRefArgument is not a file path, but carries the localRef.
-    localRef = localRefArgument;
+    if max(localRefArgument(:)) < 1
+        localRef = localRefArgument*255;
+    else
+        localRef = localRefArgument;
+    end
 end
 
 %% Handle |globalRefArgument| scenarios.
@@ -250,6 +254,14 @@ if ~isempty(outputFilePath) && overwrite
     data.eyePositionTraces = newEyePositionTraces;
     data.offsetBetweenLocalAndGlobal = offsetBetweenLocalAndGlobal;
     data.peakValue = peakValue;
+    
+    try
+        % remove pointers to graphics objects
+        parametersStructure = rmfield(parametersStructure,'commandWindowHandle');
+        parametersStructure = rmfield(parametersStructure,'axesHandles');
+    catch
+    end
+    
     data.parametersStructure = parametersStructure;
     if exist('bestTilt','var')
         data.bestTilt = bestTilt;
@@ -261,14 +273,13 @@ end
 if enableVerbosity
     
     if ishandle(axesHandles)
-        axes(axesHandles)
+        axes(axesHandles(3))
     else
-        figure;
-        axesHandles = gca;
+        figure(234);
     end
+    cla;
     
-    % the following hack is needed just for plotting!
-    
+    %% the following hack is needed just for plotting!
     % pre-padding when offsets are negative
     if xOffset < 1 
         prepadX = abs(xOffset);
@@ -308,7 +319,7 @@ if enableVerbosity
     end
 
     tempGlobal = padarray(tempGlobal,[padY padX],'post');
-    % end hack
+    %% end hack
     
     
     tempGlobal = double(tempGlobal);
