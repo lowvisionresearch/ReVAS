@@ -157,13 +157,14 @@ load(inputEyePositionsFilePath);
 % - referenceFramePath
 % - timeArray
 
+
 %% Convert eye position traces from pixels to degrees
 degreesPerPixelVertical = ...
     originalVideoSizeDegrees(1) / originalVideoSizePixels(1);
 degreesPerPixelHorizontal = ...
     originalVideoSizeDegrees(2) / originalVideoSizePixels(2);
 
-eyePositionTraces(:,1) = eyePositionTraces(:,1) * degreesPerPixelVertical; %#ok<NODEF>
+eyePositionTraces(:,1) = eyePositionTraces(:,1) * degreesPerPixelVertical; 
 eyePositionTraces(:,2) = eyePositionTraces(:,2) * degreesPerPixelHorizontal;
 
 %% Saccade detection algorithm
@@ -227,15 +228,22 @@ for i=1:length(onsets)
     driftIndices(onsets(i):offsets(i)) = false;
 end
 
-% artifacts, the regions that cannot be classified as saccades but still
-% exceeds the velocity thresholds.
-beforeAfter = round(0.010/diff(timeArray(1:2))); 
-remove = conv(double(saccadeIndices),ones(beforeAfter,1),'same')>0;
-driftIndices(remove) = false;
-
+% try
+%     % artifacts, the regions that cannot be classified as saccades but still
+%     % exceeds the velocity thresholds.
+%     beforeAfter = round(0.005/diff(timeArray(1:2))); 
+%     remove = conv(double(saccadeIndices),ones(beforeAfter,1),'same')>0;
+%     driftIndices(remove) = false;
+% catch
+%    % ignore 
+% end
 
 % compute drift onsets and offsets
-[driftOnsets, driftOffsets] = GetEventOnsetsAndOffsets(driftIndices);
+[driftOnsets, driftOffsets] = GetDriftOnsetsAndOffsets(driftIndices);
+
+% if the temporal gap between two consecutive drifts is less than minimum
+% saccade duration, then stitch.
+[driftOnsets, driftOffsets] = MergeDrifts(driftOnsets,driftOffsets,minDuration,timeArray);
 
 % get drift parameters
 drifts = GetDriftProperties(eyePositionTraces,timeArray,driftOnsets,driftOffsets,velocity); 
@@ -250,24 +258,28 @@ if enableVerbosity
         axes(axesHandles(2));
         colormap(axesHandles(2), 'default');
     else
-        figure();
+        figure(1543);
     end
-    plot(timeArray, eyePositionTraces(:,2),'-','Color',[1 .5 .5]); hold on;
-    plot(timeArray, eyePositionTraces(:,1),'-','Color',[.5 .5 1]); hold on;
-    plot(timeArray(driftIndices), eyePositionTraces(driftIndices,2),'.','Color',[1 0 0],'LineWidth',2); hold on;
-    plot(timeArray(driftIndices), eyePositionTraces(driftIndices,1),'.','Color',[0 0 1],'LineWidth',2); hold on;
+    cla;
+    ax = gca;
+    ax.ColorOrderIndex = 1;
+    plot(timeArray, eyePositionTraces(:,1),'-'); hold on;
+    plot(timeArray, eyePositionTraces(:,2),'-'); hold on;
+    ax.ColorOrderIndex = 1;
+    plot(timeArray(driftIndices), eyePositionTraces(driftIndices,1),'.','LineWidth',2); hold on;
+    plot(timeArray(driftIndices), eyePositionTraces(driftIndices,2),'.','LineWidth',2); hold on;
     
     % now highlight saccades
     for i=1:length(onsets)
-        plot(timeArray(onsets(i):offsets(i)),eyePositionTraces(onsets(i):offsets(i),1),'or',...
-             timeArray(onsets(i):offsets(i)),eyePositionTraces(onsets(i):offsets(i),2),'ob'); hold on;
+        ax.ColorOrderIndex = 1;
+        plot(timeArray(onsets(i):offsets(i)),eyePositionTraces(onsets(i):offsets(i),1),'o',...
+             timeArray(onsets(i):offsets(i)),eyePositionTraces(onsets(i):offsets(i),2),'o'); hold on;
     end
     title('Eye position');
     xlabel('Time (sec)');
     ylabel('Eye position (deg)');
     legend('show');
-    legend('Vertical Traces', 'Horizontal Traces');
-    ylim([-3 3]);
+    legend('Hor', 'Ver');
     hold off;
 end
 end
@@ -460,6 +472,22 @@ function [onsets, offsets] = GetEventOnsetsAndOffsets(eventIndices)
     end
 end
 
+function [onsets, offsets] = GetDriftOnsetsAndOffsets(eventIndices)
+
+    % take the difference of indices computed above to find the onset and
+    % offset of the movement
+    dabove = [1; diff(eventIndices)];
+    onsets = find(dabove == 1);
+    offsets = find(dabove == -1);
+
+    % make sure we have an offset for every onset.
+    if length(onsets) > length(offsets)
+        offsets = [offsets; length(eventIndices)];
+    elseif length(onsets) < length(offsets)
+        offsets = offsets(1:end-1);
+    end
+end
+
 function drifts = GetDriftProperties(eyePosition,time,onsets,offsets,velocity)
 
     hor = eyePosition(:,1);
@@ -498,4 +526,24 @@ function drifts = GetDriftProperties(eyePosition,time,onsets,offsets,velocity)
             max(sqrt((hor(currentOnset:currentOffset) - repmat(hor(currentOnset),currentOffset-currentOnset+1,1)).^2 +...
             (ver(currentOnset:currentOffset) - repmat(ver(currentOnset),currentOffset-currentOnset+1,1)).^2));
     end
+end
+
+
+function [driftOnsets, driftOffsets] = MergeDrifts(driftOnsets,driftOffsets,stitchCriteria,time)
+
+    samplingRate = 1/diff(time(1:2));
+    stitchCriteriaSamples = round(stitchCriteria * samplingRate / 1000);
+
+    gaps = driftOnsets(2:end) - driftOffsets(1:end-1);
+    
+    
+    for i=1:length(gaps)
+        if gaps(i) < stitchCriteriaSamples
+            driftOnsets(i+1) = NaN;
+            driftOffsets(i) = NaN;
+        end
+    end
+    
+    driftOnsets(isnan(driftOnsets)) = [];
+    driftOffsets(isnan(driftOffsets)) = [];
 end
