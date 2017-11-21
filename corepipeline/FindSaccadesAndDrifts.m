@@ -43,10 +43,10 @@ outputFileName = [inputEyePositionsFilePath(1:end-4) '_sacsdrifts'];
 if ~exist([outputFileName '.mat'], 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-    RevasWarning(['FindSaccadesAndDrifts() did not execute because it would overwrite existing file. (' outputFileName ')']);
+    RevasWarning(['FindSaccadesAndDrifts() did not execute because it would overwrite existing file. (' outputFileName ')'], parametersStructure);
     return;
 else
-    RevasWarning(['FindSaccadesAndDrifts() is proceeding and overwriting an existing file. (' outputFileName ')']);
+    RevasWarning(['FindSaccadesAndDrifts() is proceeding and overwriting an existing file. (' outputFileName ')'], parametersStructure);
 end
 
 %% Set parameters to defaults if not specified.
@@ -142,11 +142,10 @@ else
     enableVerbosity = parametersStructure.enableVerbosity;
 end
 
-% check plot axis
-if ~isfield(parametersStructure, 'axesHandles')
-    figure('units','normalized','outerposition',[.4 .3 .3 .3]);
-    axesHandles = gca;
-else
+% save parameters structure in the environment before loading a different
+% parameters structure
+axesHandlesFlag = isfield(parametersStructure, 'axesHandles');
+if axesHandlesFlag
     axesHandles = parametersStructure.axesHandles;
 end
 
@@ -247,27 +246,29 @@ save(outputFileName, 'saccades', 'drifts');
 
 %% Verbosity for Results.
 if enableVerbosity
-    if isfield(parametersStructure, 'axesHandles')
-        axes(parametersStructure.axesHandles(2));
-        colormap(parametersStructure.axesHandles(2), 'default');
+    if axesHandlesFlag
+        axes(axesHandles(2));
+        colormap(axesHandles(2), 'default');
     else
         figure();
     end
-    plot(timeArray, eyePositionTraces(:,1),'-','Color',[1 .5 .5]); hold on;
-    plot(timeArray, eyePositionTraces(:,2),'-','Color',[.5 .5 1]); hold on;
-    plot(timeArray(driftIndices), eyePositionTraces(driftIndices,1),'.','Color',[1 0 0],'LineWidth',2); hold on;
-    plot(timeArray(driftIndices), eyePositionTraces(driftIndices,2),'.','Color',[0 0 1],'LineWidth',2); hold on;    
+    plot(timeArray, eyePositionTraces(:,2),'-','Color',[1 .5 .5]); hold on;
+    plot(timeArray, eyePositionTraces(:,1),'-','Color',[.5 .5 1]); hold on;
+    plot(timeArray(driftIndices), eyePositionTraces(driftIndices,2),'.','Color',[1 0 0],'LineWidth',2); hold on;
+    plot(timeArray(driftIndices), eyePositionTraces(driftIndices,1),'.','Color',[0 0 1],'LineWidth',2); hold on;
     
     % now highlight saccades
     for i=1:length(onsets)
         plot(timeArray(onsets(i):offsets(i)),eyePositionTraces(onsets(i):offsets(i),1),'or',...
-             timeArray(onsets(i):offsets(i)),eyePositionTraces(onsets(i):offsets(i),2),'ob');
+             timeArray(onsets(i):offsets(i)),eyePositionTraces(onsets(i):offsets(i),2),'ob'); hold on;
     end
     title('Eye position');
-    set('Fontsize',13);
     xlabel('Time (sec)');
     ylabel('Eye position (deg)');
+    legend('show');
+    legend('Vertical Traces', 'Horizontal Traces');
     ylim([-3 3]);
+    hold off;
 end
 end
 
