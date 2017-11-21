@@ -293,6 +293,7 @@ if logical(handles.togSacDrift.Value) && ~logical(abortTriggered)
     parametersStructure.stitchCriteria = handles.config.sacStitch;
     parametersStructure.minAmplitude = handles.config.sacMinAmplitude;
     parametersStructure.maxDuration = handles.config.sacMaxDuration;
+    parametersStructure.minDuration = handles.config.sacMinDuration;
     if handles.config.sacDetectionMethod1
         parametersStructure.detectionMethod = 1;
     else
