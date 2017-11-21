@@ -307,6 +307,7 @@ handles.abort.Visible = 'off';
 handles.saveLog.Visible = 'off';
 handles.reconfig.Visible = 'off';
 handles.commandWindow.Visible = 'off';
+handles.myToolbar.Visible = 'off';
 
 % Variable initialization
 global abortTriggered;
@@ -413,6 +414,7 @@ handles.parallelization.Visible = 'off';
 handles.execute.Visible = 'off';
 handles.reconfig.Visible = 'on';
 handles.reconfig.Enable = 'off';
+handles.myToolbar.Visible = 'on';
 
 if handles.config.parMultiCore || handles.config.parGPU
     handles.axes1.Visible = 'off';
@@ -1292,6 +1294,8 @@ handles.commandWindow.Visible = 'off';
 
 handles.menuLoad.Enable = 'on';
 handles.menuSave.Enable = 'on';
+
+handles.myToolbar.Visible = 'off';
 
 drawnow;
 
