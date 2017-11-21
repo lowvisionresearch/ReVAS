@@ -732,14 +732,6 @@ if hObject.Value == 1
     hObject.BackgroundColor = handles.colors{1,4};
     hObject.ForegroundColor = handles.colors{1,2};
 else
-    if handles.togFilt.Value == 1 || ...
-            handles.togReRef.Value == 1 || ...
-            handles.togSacDrift.Value == 1
-        errordlg(...
-            'Strip Analysis must be enabled if Filtering, Re-Referencing, or Saccade Detection is enabled.', 'Invalid Selection');
-        hObject.Value = 1;
-        return;
-    end
     hObject.String = 'DISABLED';
     hObject.BackgroundColor = handles.colors{1,1};
     hObject.ForegroundColor = handles.colors{1,3};
@@ -790,11 +782,6 @@ end
 % --- Executes on button press in togReRef.
 function togReRef_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
-    if handles.togStrip.Value == 0
-        warndlg('Strip Analysis has been enabled since it must be if Re-Referencing is enabled.', 'Input Warning');
-        handles.togStrip.Value = 1;
-        togStrip_Callback(handles.togStrip, eventdata, handles);
-    end
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
     hObject.ForegroundColor = handles.colors{1,2};
@@ -807,11 +794,6 @@ end
 % --- Executes on button press in togFilt.
 function togFilt_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
-    if handles.togStrip.Value == 0
-        warndlg('Strip Analysis has been enabled since it must be if Filtering is enabled.', 'Input Warning');
-        handles.togStrip.Value = 1;
-        togStrip_Callback(handles.togStrip, eventdata, handles);
-    end
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
     hObject.ForegroundColor = handles.colors{1,2};
@@ -824,11 +806,6 @@ end
 % --- Executes on button press in togSacDrift.
 function togSacDrift_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
-    if handles.togStrip.Value == 0
-        warndlg('Strip Analysis has been enabled since it must be if Filtering is enabled.', 'Input Warning');
-        handles.togStrip.Value = 1;
-        togStrip_Callback(handles.togStrip, eventdata, handles);
-    end
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
     hObject.ForegroundColor = handles.colors{1,2};
