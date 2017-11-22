@@ -22,7 +22,7 @@ function varargout = JobQueue(varargin)
 
 % Edit the above text to modify the response to help JobQueue
 
-% Last Modified by GUIDE v2.5 28-Oct-2017 15:58:21
+% Last Modified by GUIDE v2.5 21-Nov-2017 16:35:21
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -90,6 +90,7 @@ handles.radioTrim.BackgroundColor = handles.colors{1,3};
 handles.radioNoStim.BackgroundColor = handles.colors{1,3};
 handles.radioGamma.BackgroundColor = handles.colors{1,3};
 handles.radioBandFilt.BackgroundColor = handles.colors{1,3};
+handles.radioStrip.BackgroundColor = handles.colors{1,3};
 handles.modulesBox.BackgroundColor = handles.colors{1,3};
 handles.textTrim.BackgroundColor = handles.colors{1,3};
 handles.textStim.BackgroundColor = handles.colors{1,3};
@@ -109,6 +110,7 @@ handles.radioTrim.ForegroundColor = handles.colors{1,5};
 handles.radioNoStim.ForegroundColor = handles.colors{1,5};
 handles.radioGamma.ForegroundColor = handles.colors{1,5};
 handles.radioBandFilt.ForegroundColor = handles.colors{1,5};
+handles.radioStrip.ForegroundColor = handles.colors{1,5};
 handles.modulesBox.ForegroundColor = handles.colors{1,5};
 handles.textTrim.ForegroundColor = handles.colors{1,5};
 handles.textStim.ForegroundColor = handles.colors{1,5};
@@ -296,6 +298,9 @@ handles.config.preDisabledTogTrimValue = 1;
 handles.config.preDisabledTogStimValue = 1;
 handles.config.preDisabledTogGammaValue = 1;
 handles.config.preDisabledTogBandFiltValue = 1;
+handles.config.preDisabledTogCoarseValue = 1;
+handles.config.preDisabledTogFineValue = 1;
+handles.config.preDisabledTogStripValue = 1;
 handles.togReRef.Value = 0;
 togReRef_Callback(handles.togReRef, eventdata, handles);
 
@@ -551,6 +556,27 @@ if strcmp(handles.togBandFilt.Enable, 'off')
     togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
 end
 
+if strcmp(handles.togFine.Enable, 'off')
+    handles.togFine.Value = handles.config.preDisabledTogFineValue;
+    handles.togFine.Enable = 'on';
+    handles.configFine.Enable = 'on';
+    togFine_Callback(handles.togFine, eventdata, handles);
+end
+
+if strcmp(handles.togStrip.Enable, 'off')
+    handles.togStrip.Value = handles.config.preDisabledTogStripValue;
+    handles.togStrip.Enable = 'on';
+    handles.configStrip.Enable = 'on';
+    togStrip_Callback(handles.togStrip, eventdata, handles);
+end
+
+if strcmp(handles.togCoarse.Enable, 'off')
+    handles.togCoarse.Value = handles.config.preDisabledTogCoarseValue;
+    handles.togCoarse.Enable = 'on';
+    handles.configCoarse.Enable = 'on';
+    togCoarse_Callback(handles.togCoarse, eventdata, handles);
+end
+
 if handles.lastRadio ~= 1
     handles.lastRadio = 1;
     handles.inputList.String = cell(0);
@@ -576,11 +602,13 @@ elseif get(handles.radioGamma, 'Value')
     suffix = '_gamscaled.avi';    
 elseif get(handles.radioBandFilt, 'Value')
     suffix = '_bandfilt.avi'; 
+elseif get(handles.radioStrip, 'Value')
+    suffix = '_hz_final.mat'; 
 else
     suffix = '';
 end
 
-handles.files = uipickfiles('FilterSpec', '*.avi');
+handles.files = uipickfiles();
 
 % Go through list of selected items and filter
 i = 1;
@@ -598,16 +626,10 @@ while i <= size(handles.files, 2)
         % Append files to our list of files if they match the suffix
         folderFiles = dir(folder);
         for j = i:size(folderFiles, 1)
-            if ~isempty(findstr(folderFiles(j).name, suffix)) && ...
-                    (~strcmp('.avi', suffix) || ...
-                    isempty(findstr('_dwt', folderFiles(j).name)) && ...
-                    isempty(findstr('_nostim', folderFiles(j).name)) && ...
-                    isempty(findstr('_gamscaled', folderFiles(j).name)) && ...
-                    isempty(findstr('_bandfilt', folderFiles(j).name))) && ...
-                    ~strcmp(folderFiles(j).name,'.') && ...
-                    ~strcmp(folderFiles(j).name,'..')
+            if ~isempty(findstr(folderFiles(j).name, suffix)) || ...
+                    isdir(fullfile(folder, folderFiles(j).name))
                 handles.files = ...
-                    [handles.files, {fullfile(folderFiles(j).folder, folderFiles(j).name)}];
+                    [handles.files, {fullfile(folder, folderFiles(j).name)}];
             end
         end
     elseif isempty(findstr(handles.files{i}, suffix)) || ...
@@ -630,7 +652,11 @@ handles.files = sort(handles.files);
 displayFileList = handles.files;
 for i = 1:size(handles.files, 2)
     [~,displayFileList{i},~] = fileparts(handles.files{i});
-    displayFileList{i} = [displayFileList{i} '.avi'];
+    if get(handles.radioStrip, 'Value')
+        displayFileList{i} = [displayFileList{i} '.mat'];
+    else
+        displayFileList{i} = [displayFileList{i} '.avi'];
+    end
 end
 handles.inputList.String = displayFileList;
 
@@ -676,8 +702,102 @@ handles.togBandFilt.Enable = 'off';
 handles.configBandFilt.Enable = 'off';
 togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
 
+if strcmp(handles.togFine.Enable, 'off')
+    handles.togFine.Value = handles.config.preDisabledTogFineValue;
+    handles.togFine.Enable = 'on';
+    handles.configFine.Enable = 'on';
+    togFine_Callback(handles.togFine, eventdata, handles);
+end
+
+if strcmp(handles.togStrip.Enable, 'off')
+    handles.togStrip.Value = handles.config.preDisabledTogStripValue;
+    handles.togStrip.Enable = 'on';
+    handles.configStrip.Enable = 'on';
+    togStrip_Callback(handles.togStrip, eventdata, handles);
+end
+
+if strcmp(handles.togCoarse.Enable, 'off')
+    handles.togCoarse.Value = handles.config.preDisabledTogCoarseValue;
+    handles.togCoarse.Enable = 'on';
+    handles.configCoarse.Enable = 'on';
+    togCoarse_Callback(handles.togCoarse, eventdata, handles);
+end
+
 if handles.lastRadio ~= 5
     handles.lastRadio = 5;
+    handles.inputList.String = cell(0);
+    handles.files = cell(0);
+end
+
+% Update handles structure
+guidata(hObject, handles);
+
+
+% --- Executes on button press in radioStrip.
+function radioStrip_Callback(hObject, eventdata, handles)
+% hObject    handle to radioStrip (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radioStrip
+if strcmp(handles.togTrim.Enable, 'on')
+    handles.config.preDisabledTogTrimValue = handles.togTrim.Value;
+end
+handles.togTrim.Value = 0;
+handles.togTrim.Enable = 'off';
+handles.configTrim.Enable = 'off';
+togTrim_Callback(handles.togTrim, eventdata, handles);
+
+if strcmp(handles.togStim.Enable, 'on')
+    handles.config.preDisabledTogStimValue = handles.togStim.Value;
+end
+handles.togStim.Value = 0;
+handles.togStim.Enable = 'off';
+handles.configStim.Enable = 'off';
+togStim_Callback(handles.togStim, eventdata, handles);
+
+if strcmp(handles.togGamma.Enable, 'on')
+    handles.config.preDisabledTogGammaValue = handles.togGamma.Value;
+end
+handles.togGamma.Value = 0;
+handles.togGamma.Enable = 'off';
+handles.configGamma.Enable = 'off';
+togGamma_Callback(handles.togGamma, eventdata, handles);
+
+if strcmp(handles.togBandFilt.Enable, 'on')
+    handles.config.preDisabledTogBandFiltValue = handles.togBandFilt.Value;
+end
+handles.togBandFilt.Value = 0;
+handles.togBandFilt.Enable = 'off';
+handles.configBandFilt.Enable = 'off';
+togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
+
+if strcmp(handles.togCoarse.Enable, 'on')
+    handles.config.preDisabledTogCoarseValue = handles.togCoarse.Value;
+end
+handles.togCoarse.Value = 0;
+handles.togCoarse.Enable = 'off';
+handles.configCoarse.Enable = 'off';
+togCoarse_Callback(handles.togCoarse, eventdata, handles);
+
+if strcmp(handles.togFine.Enable, 'on')
+    handles.config.preDisabledTogFineValue = handles.togFine.Value;
+end
+handles.togFine.Value = 0;
+handles.togFine.Enable = 'off';
+handles.configFine.Enable = 'off';
+togFine_Callback(handles.togFine, eventdata, handles);
+
+if strcmp(handles.togStrip.Enable, 'on')
+    handles.config.preDisabledTogStripValue = handles.togStrip.Value;
+end
+handles.togStrip.Value = 0;
+handles.togStrip.Enable = 'off';
+handles.configStrip.Enable = 'off';
+togStrip_Callback(handles.togStrip, eventdata, handles);
+
+if handles.lastRadio ~= 6
+    handles.lastRadio = 6;
     handles.inputList.String = cell(0);
     handles.files = cell(0);
 end
@@ -770,7 +890,7 @@ if hObject.Value == 1
     hObject.BackgroundColor = handles.colors{1,4};
     hObject.ForegroundColor = handles.colors{1,2};
 else
-    if handles.togFine.Value == 1
+    if handles.togFine.Value == 1 && handles.radioStrip.Value ~= 1
         errordlg(...
             'Make Coarse Reference Frame must be enabled if Make Fine Reference Frame is enabled.', 'Invalid Selection');
         hObject.Value = 1;
@@ -820,7 +940,7 @@ end
 % --- Executes on button press in togFine.
 function togFine_Callback(hObject, eventdata, handles)
 if hObject.Value == 1
-    if handles.togCoarse.Value == 0
+    if handles.togCoarse.Value == 0 && handles.lastRadio ~= 6
         warndlg('Make Coarse Reference Frame has been enabled since it must be if Make Fine Reference Frame is enabled.', 'Input Warning');
         handles.togCoarse.Value = 1;
         togCoarse_Callback(handles.togCoarse, eventdata, handles);
@@ -953,6 +1073,27 @@ if strcmp(handles.togBandFilt.Enable, 'off')
     togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
 end
 
+if strcmp(handles.togFine.Enable, 'off')
+    handles.togFine.Value = handles.config.preDisabledTogFineValue;
+    handles.togFine.Enable = 'on';
+    handles.configFine.Enable = 'on';
+    togFine_Callback(handles.togFine, eventdata, handles);
+end
+
+if strcmp(handles.togStrip.Enable, 'off')
+    handles.togStrip.Value = handles.config.preDisabledTogStripValue;
+    handles.togStrip.Enable = 'on';
+    handles.configStrip.Enable = 'on';
+    togStrip_Callback(handles.togStrip, eventdata, handles);
+end
+
+if strcmp(handles.togCoarse.Enable, 'off')
+    handles.togCoarse.Value = handles.config.preDisabledTogCoarseValue;
+    handles.togCoarse.Enable = 'on';
+    handles.configCoarse.Enable = 'on';
+    togCoarse_Callback(handles.togCoarse, eventdata, handles);
+end
+
 if handles.lastRadio ~= 2
     handles.lastRadio = 2;
     handles.inputList.String = cell(0);
@@ -1000,6 +1141,27 @@ if strcmp(handles.togBandFilt.Enable, 'off')
     togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
 end
 
+if strcmp(handles.togFine.Enable, 'off')
+    handles.togFine.Value = handles.config.preDisabledTogFineValue;
+    handles.togFine.Enable = 'on';
+    handles.configFine.Enable = 'on';
+    togFine_Callback(handles.togFine, eventdata, handles);
+end
+
+if strcmp(handles.togStrip.Enable, 'off')
+    handles.togStrip.Value = handles.config.preDisabledTogStripValue;
+    handles.togStrip.Enable = 'on';
+    handles.configStrip.Enable = 'on';
+    togStrip_Callback(handles.togStrip, eventdata, handles);
+end
+
+if strcmp(handles.togCoarse.Enable, 'off')
+    handles.togCoarse.Value = handles.config.preDisabledTogCoarseValue;
+    handles.togCoarse.Enable = 'on';
+    handles.configCoarse.Enable = 'on';
+    togCoarse_Callback(handles.togCoarse, eventdata, handles);
+end
+
 if handles.lastRadio ~= 3
     handles.lastRadio = 3;
     handles.inputList.String = cell(0);
@@ -1045,6 +1207,27 @@ if strcmp(handles.togBandFilt.Enable, 'off')
     handles.togBandFilt.Enable = 'on';
     handles.configBandFilt.Enable = 'on';
     togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
+end
+
+if strcmp(handles.togCoarse.Enable, 'off')
+    handles.togCoarse.Value = handles.config.preDisabledTogCoarseValue;
+    handles.togCoarse.Enable = 'on';
+    handles.configCoarse.Enable = 'on';
+    togCoarse_Callback(handles.togCoarse, eventdata, handles);
+end
+
+if strcmp(handles.togFine.Enable, 'off')
+    handles.togFine.Value = handles.config.preDisabledTogFineValue;
+    handles.togFine.Enable = 'on';
+    handles.configFine.Enable = 'on';
+    togFine_Callback(handles.togFine, eventdata, handles);
+end
+
+if strcmp(handles.togStrip.Enable, 'off')
+    handles.togStrip.Value = handles.config.preDisabledTogStripValue;
+    handles.togStrip.Enable = 'on';
+    handles.configStrip.Enable = 'on';
+    togStrip_Callback(handles.togStrip, eventdata, handles);
 end
 
 if handles.lastRadio ~= 4
@@ -1180,7 +1363,16 @@ if strcmp(handles.togGamma.Enable, 'off')
    toggleButtonStates('togGamma') = handles.config.preDisabledTogGammaValue;
 end
 if strcmp(handles.togBandFilt.Enable, 'off')
-   toggleButtonStates('togBandFilt') = handles.config.preDisabledTogBandFiltValue; %#ok<NASGU>
+   toggleButtonStates('togBandFilt') = handles.config.preDisabledTogBandFiltValue;
+end
+if strcmp(handles.togCoarse.Enable, 'off')
+   toggleButtonStates('togCoarse') = handles.config.preDisabledTogCoarseValue;
+end
+if strcmp(handles.togFine.Enable, 'off')
+   toggleButtonStates('togFine') = handles.config.preDisabledTogFineValue;
+end
+if strcmp(handles.togStrip.Enable, 'off')
+   toggleButtonStates('togStrip') = handles.config.preDisabledTogStripValue; %#ok<NASGU>
 end
 save(fullfile(pathName, fileName), 'configurationsStruct', 'toggleButtonStates');
 
