@@ -215,14 +215,15 @@ if logical(handles.togStrip.Value) && ~logical(abortTriggered)
     [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
         statisticsStructure] ...
         = StripAnalysis(inputPath, fineRefFrame, parametersStructure);
+    
+    % Update file name to input file name
+    inputPath = [inputPath(1:end-4) '_' ...
+        int2str(parametersStructure.samplingRate) '_hz_final.mat'];
 end
-% Update file name to input file name
-% (Update this to move on, regardless of whether strip analysis ran or not).
-inputPath = [inputPath(1:end-4) '_' ...
-    int2str(parametersStructure.samplingRate) '_hz_final.mat'];
+
 
 %% Re-referencing Module
-if strcmp(handles.config.rerefGlobalFullPath, '')
+if logical(handles.togReRef.Value) && strcmp(handles.config.rerefGlobalFullPath, '')
     RevasMessage(['[[ Re-referencing ]] ' inputPath], parametersStructure);
     RevasMessage('No valid global reference frame provided, skipping Re-Referencing', parametersStructure);
 elseif logical(handles.togReRef.Value) && ~logical(abortTriggered)
