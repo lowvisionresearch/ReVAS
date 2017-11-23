@@ -56,7 +56,7 @@ function SacDriftParameters_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 % Loading previously saved or default parameters
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 
 handles.overwrite.Value = mainHandles.config.sacOverwrite;
@@ -192,7 +192,7 @@ function save_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 
 % Validate new configurations
@@ -301,7 +301,7 @@ function hardVelThreshold_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of hardVelThreshold as text
 %        str2double(get(hObject,'String')) returns contents of hardVelThreshold as a double
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -347,7 +347,7 @@ function thresholdVal_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of thresholdVal as text
 %        str2double(get(hObject,'String')) returns contents of thresholdVal as a double
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -385,7 +385,7 @@ function secThresholdVal_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of secThresholdVal as text
 %        str2double(get(hObject,'String')) returns contents of secThresholdVal as a double
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -423,7 +423,7 @@ function stitch_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of stitch as text
 %        str2double(get(hObject,'String')) returns contents of stitch as a double
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -461,7 +461,7 @@ function minAmplitude_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of minAmplitude as text
 %        str2double(get(hObject,'String')) returns contents of minAmplitude as a double
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -499,7 +499,7 @@ function maxDuration_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of maxDuration as text
 %        str2double(get(hObject,'String')) returns contents of maxDuration as a double
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -592,7 +592,7 @@ function hardSecondaryVelThreshold_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of hardSecondaryVelThreshold as text
 %        str2double(get(hObject,'String')) returns contents of hardSecondaryVelThreshold as a double
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -628,7 +628,7 @@ function minDuration_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of minDuration as text
 %        str2double(get(hObject,'String')) returns contents of minDuration as a double
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
