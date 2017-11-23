@@ -56,7 +56,7 @@ function GammaParameters_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 % Loading previously saved or default parameters
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 
 handles.exponent.String = mainHandles.config.gammaExponent;
@@ -110,7 +110,7 @@ function save_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 
 % Validate new configurations
@@ -155,7 +155,7 @@ function exponent_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of exponent as text
 %        str2double(get(hObject,'String')) returns contents of exponent as a double
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
