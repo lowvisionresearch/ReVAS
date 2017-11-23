@@ -56,7 +56,7 @@ function Parallelization_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 % Loading previously saved or default parameters
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 
 handles.enableMultiCore.Value = mainHandles.config.parMultiCore;
@@ -133,7 +133,7 @@ function save_Callback(hObject, eventdata, handles)
 % hObject    handle to save (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 
 % Save new configurations

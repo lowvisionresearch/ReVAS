@@ -1,35 +1,35 @@
-function varargout = JobQueue(varargin)
-% JOBQUEUE MATLAB code for JobQueue.fig
-%      JOBQUEUE, by itself, creates a new JOBQUEUE or raises the existing
+function varargout = Main(varargin)
+% MAIN MATLAB code for Main.fig
+%      MAIN, by itself, creates a new MAIN or raises the existing
 %      singleton*.
 %
-%      H = JOBQUEUE returns the handle to a new JOBQUEUE or the handle to
+%      H = MAIN returns the handle to a new MAIN or the handle to
 %      the existing singleton*.
 %
-%      JOBQUEUE('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in JOBQUEUE.M with the given input arguments.
+%      MAIN('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in MAIN.M with the given input arguments.
 %
-%      JOBQUEUE('Property','Value',...) creates a new JOBQUEUE or raises
-%      the existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before JobQueue_OpeningFcn gets called.  An
+%      MAIN('Property','Value',...) creates a new MAIN or raises the
+%      existing singleton*.  Starting from the left, property value pairs are
+%      applied to the GUI before Main_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to JobQueue_OpeningFcn via varargin.
+%      stop.  All inputs are passed to Main_OpeningFcn via varargin.
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help JobQueue
+% Edit the above text to modify the response to help Main
 
-% Last Modified by GUIDE v2.5 21-Nov-2017 16:35:21
+% Last Modified by GUIDE v2.5 22-Nov-2017 15:50:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @JobQueue_OpeningFcn, ...
-                   'gui_OutputFcn',  @JobQueue_OutputFcn, ...
+                   'gui_OpeningFcn', @Main_OpeningFcn, ...
+                   'gui_OutputFcn',  @Main_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -43,15 +43,15 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-% --- Executes just before JobQueue is made visible.
-function JobQueue_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before Main is made visible.
+function Main_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to JobQueue (see VARARGIN)
+% varargin   command line arguments to Main (see VARARGIN)
 
-% Choose default command line output for JobQueue
+% Choose default command line output for Main
 handles.output = hObject;
 
 % Add util to path
@@ -73,7 +73,7 @@ end
  
 % Set colors
 % Main Background
-handles.jobQueue.Color = handles.colors{1,2};
+handles.main.Color = handles.colors{1,2};
 handles.inputList.BackgroundColor = handles.colors{1,2};
 handles.axes1.XColor = handles.colors{1,2};
 handles.axes1.YColor = handles.colors{1,2};
@@ -329,12 +329,12 @@ handles.commandWindow.String = cellstr('');
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes JobQueue wait for user response (see UIRESUME)
-% uiwait(handles.jobQueue);
+% UIWAIT makes Main wait for user response (see UIRESUME)
+% uiwait(handles.main);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = JobQueue_OutputFcn(hObject, eventdata, handles)
+function varargout = Main_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -1537,3 +1537,10 @@ function axes3_ButtonDownFcn(hObject, eventdata, handles)
 if isValid(hObject)
     figure(hObject);
 end
+
+
+% --- Executes during object creation, after setting all properties.
+function main_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to main (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called

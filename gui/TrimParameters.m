@@ -56,7 +56,7 @@ function TrimParameters_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 % Loading previously saved or default parameters
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 
 handles.borderTrimAmount.String = mainHandles.config.trimBorderTrimAmount;
@@ -110,7 +110,7 @@ function save_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 
 % Validate new configurations
@@ -147,7 +147,7 @@ function borderTrimAmount_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of borderTrimAmount as text
 %        str2double(get(hObject,'String')) returns contents of borderTrimAmount as a double
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 

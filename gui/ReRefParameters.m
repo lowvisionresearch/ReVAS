@@ -55,7 +55,7 @@ function ReRefParameters_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 % Loading previously saved or default parameters
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 
 handles.verbosity.Value = mainHandles.config.rerefVerbosity;
@@ -160,7 +160,7 @@ function tiltStep_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of tiltStep as text
 %        str2double(get(hObject,'String')) returns contents of tiltStep as a double
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -196,7 +196,7 @@ function search_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of search as text
 %        str2double(get(hObject,'String')) returns contents of search as a double
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -230,7 +230,7 @@ function save_Callback(hObject, eventdata, handles)
 % hObject    handle to save (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 
 % Validate new configurations
@@ -320,7 +320,7 @@ function kernel_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of kernel as text
 %        str2double(get(hObject,'String')) returns contents of kernel as a double
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -345,7 +345,7 @@ function tiltLow_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of tiltLow as text
 %        str2double(get(hObject,'String')) returns contents of tiltLow as a double
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -369,7 +369,7 @@ function tiltUp_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of tiltUp as text
 %        str2double(get(hObject,'String')) returns contents of tiltUp as a double
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -444,7 +444,7 @@ end
 handles.globalFullPath = fullfile(pathName, fileName);
 handles.globalPath.String = [' ' fileName];
 
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 
 if ~IsImageFile(fullfile(pathName, fileName)) && ~strcmp(fileName(end-3:end), '.mat')
@@ -471,7 +471,7 @@ function globalPath_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of globalPath as text
 %        str2double(get(hObject,'String')) returns contents of globalPath as a double
-figureHandle = findobj(0, 'tag', 'jobQueue');
+figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 value = handles.globalFullPath;
 
