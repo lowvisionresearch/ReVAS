@@ -220,9 +220,7 @@ for frameNumber = 1:totalFrames
     % Extract the strip positions that will be used from this frame. Some
     % strips may be missing because NaNs were removed earlier
     for k = 1:size(interpolatedPositions, 1)
-        if interpolatedPositions(k, 3) > endFrameStrips
-            break
-        elseif startFrameStrips <= interpolatedPositions(k, 3) && ...
+        if startFrameStrips <= interpolatedPositions(k, 3) && ...
                 interpolatedPositions(k, 3) <= endFrameStrips
             frameStripsWithoutNaN(k, :) = interpolatedPositions(k, :);
         end
@@ -351,31 +349,17 @@ for frameNumber = 1:totalFrames
             if isfield(parametersStructure, 'stabilizeVideo') && ...
                 parametersStructure.stabilizeVideo && endOfFrame
                 
-                stabilizedFrame = refFrame./counterArray;
-                stabilizedFrame = Crop(stabilizedFrame);
+            stabilizedFrame = refFrame./counterArray;
+            stabilizedFrame = Crop(stabilizedFrame);
             
-                % Fill black regions with random noise
-                indices = stabilizedFrame == 0;
-                stabilizedFrame(indices) = mean(stabilizedFrame(~indices)) + ...
-                    (std(stabilizedFrame(~indices)) * randn(sum(sum(indices)), 1));
-                
-                % Write to a video file
-                writeVideo(stabilizedVideo, stabilizedFrame);
-                
-                % Reset refFrame and counterArray for the next frame. 
-                refFrame = zeros(size(refFrame, 1), size(refFrame, 2));
-                counterArray = zeros(size(counterArray, 1), size(counterArray, 2));
-                break
+            refFrame = zeros(size(refFrame, 1), size(refFrame, 2));
+            counterArray = zeros(size(counterArray, 1), size(counterArray, 2));
+            
             end
         end
     end
 end
 
-% If a stabilized video was generated, stop the function here
-if isfield(parametersStructure, 'stabilizeVideo') && parametersStructure.stabilizeVideo 
-    close(stabilizedVideo)
-    return
-end
 
 % divide each pixel in refFrame by the number of strips that contain that pixel
 refFrame = refFrame./counterArray;
