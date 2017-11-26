@@ -357,12 +357,58 @@ for frameNumber = 1:totalFrames
                 
                 stabilizedFrame = refFrame./counterArray;
                 stabilizedFrame = Crop(stabilizedFrame);
-            
-                % Fill black regions with random noise
-                indices = stabilizedFrame == 0;
-                stabilizedFrame(indices) = mean(stabilizedFrame(~indices)) + ...
-                    (std(stabilizedFrame(~indices)) * randn(sum(sum(indices)), 1));
                 
+                % Make sure all frames are of the same dimensions. If the
+                % size difference is due to bad strips at the top or
+                % bottom, add those in without correcting their positions
+     
+                if frameHeight ~= size(stabilizedFrame, 1)
+                    if frameHeight < size(stabilizedFrame, 1)
+                        stabilizedFrame = imresize(stabilizedFrame, ...
+                            [frameHeight, width]);
+                    else
+                        difference = frameHeight - size(stabilizedFrame, 1);
+                        missingStrips = difference/parametersStructure.newStripHeight;
+                        % If missingStrips is an integer, then that
+                        % means the size difference is due to missing
+                        % strips
+                        if rem(missingStrips, 1) == 0
+                            if frameStripsWithoutNaN(1, 3) ~= 1
+                                missing = videoFrame(1:difference, :);
+                                endRow = size(stabilizedFrame, 1);
+                                endColumn = size(stabilizedFrame, 2);
+                                
+                                stabilizedFrame(difference+1:difference+endRow, ...
+                                   1:endColumn) = stabilizedFrame;
+                            
+                                stabilizedFrame(1:difference, :) = missing;
+                            else
+                                missing = videoFrame(end-difference+1:end, :);
+                                stabilizedFrame(end+1:end+difference, 1:size...
+                                    (stabilizedFrame, 2)) = missing;
+                            end
+                        else
+                            stabilizedFrame = imresize(stabilizedFrame, ...
+                                [frameHeight, width]);
+                        end
+                    end
+                end
+                    
+               if width ~= size(stabilizedFrame, 2)
+                    stabilizedFrame = imresize(stabilizedFrame, [frameHeight,...
+                        width]);
+               end
+               
+               % Resizing occasionally adds values less than 0
+               % or greater than 1
+               stabilizedFrame(stabilizedFrame<0) = 0;
+               stabilizedFrame(stabilizedFrame>1) = 1;
+               
+               % Fill black regions with random noise
+               indices = stabilizedFrame == 0;
+               stabilizedFrame(indices) = mean(stabilizedFrame(~indices)) + ...
+                   (std(stabilizedFrame(~indices)) * randn(sum(sum(indices)), 1));
+               
                 % Write to a video file
                 writeVideo(stabilizedVideo, stabilizedFrame);
                 
