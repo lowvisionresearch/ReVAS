@@ -335,7 +335,11 @@ for frameNumber = 1:totalFrames
                 templateSelectRow = rowIndex:(maxRow-difference);
                 endOfFrame = true;
             end
-
+            
+            if strip == size(frameStripsWithoutNaN, 1)
+                endOfFrame = true;
+            end
+            
             templateSelectRow = round(templateSelectRow);
             templateSelectColumn = round(templateSelectColumn);
             vidStart = round(vidStart);
