@@ -257,7 +257,12 @@ for frameNumber = 1:totalFrames
     % for-loop because the processing for interpolatedPositions and
     % leftOver was necessary for future frames
     if any(badFrames==frameNumber)
-        continue
+        if ~isfield(parametersStructure.stabilizeVideo)...
+            || ~parametersStructure.stabilizeVideo;
+            continue
+        else
+            writeVideo(stabilizedVideo, refFrame);
+        end
     else
         % Add a fourth column to hold the stripNumbers
         if size(frameStripsWithoutNaN, 1) >= 2
@@ -423,7 +428,12 @@ for frameNumber = 1:totalFrames
                     + (std(relevantPixels(~indices)) * randn(sum(sum(indices)), 1));
                 stabilizedFrame(minRow:maxRow, minColumn:maxColumn) = relevantPixels;
                 
+                % Sometimes random noise will add pixels not within 0 and 1
+                stabilizedFrame(stabilizedFrame<0) = 0;
+                stabilizedFrame(stabilizedFrame>1) = 1;
+                
                 % Write to a video file
+                disp(frameNumber/totalFrames)
                 writeVideo(stabilizedVideo, stabilizedFrame);
                 
                 % Reset refFrame and counterArray for the next frame.
