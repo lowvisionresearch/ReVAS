@@ -316,22 +316,26 @@ function [newOnsets, newOffsets] = RemoveFakeSaccades(time, ...
     newOnsets = tempOnsets(tempOnsets ~= -1);
     newOffsets = tempOffsets(tempOffsets ~= -1);
 
-    if newOnsets(1)==1
-        newOnsets(1) = 2;
+    if ~isempty(newOnsets) && ~isempty(newOffsets)
+        if newOnsets(1)==1
+            newOnsets(1) = 2;
+        end
+
+        if newOffsets(end) == length(time)
+            newOffsets(end) = length(time)-1;
+        end
+    
+    
+        % remove too brief and too long saccades
+        tooBrief = (newOffsets - newOnsets) < minDurationSamples;
+        tooLong = (newOffsets - newOnsets) > maxDurationSamples;
+        nanNeighbors = isnan(sum(velocity(newOffsets+1,:),2)) | isnan(sum(velocity(newOnsets-1,:),2));
+        discardThis = tooBrief | tooLong | nanNeighbors;
+        
+        newOnsets(discardThis) = [];
+        newOffsets(discardThis) = [];
     end
 
-    if newOffsets(end) == length(time)
-        newOffsets(end) = length(time)-1;
-    end
-
-    % remove too brief and too long saccades
-    tooBrief = (newOffsets - newOnsets) < minDurationSamples;
-    tooLong = (newOffsets - newOnsets) > maxDurationSamples;
-    nanNeighbors = isnan(sum(velocity(newOffsets+1,:),2)) | isnan(sum(velocity(newOnsets-1,:),2));
-    discardThis = tooBrief | tooLong | nanNeighbors;
-
-    newOnsets(discardThis) = [];
-    newOffsets(discardThis) = [];
 end
 
 function saccades = GetSaccadeProperties(eyePosition,time,onsets,offsets,...
