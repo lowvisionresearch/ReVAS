@@ -230,6 +230,7 @@ handles.config.fineSubpixelInterp = false;
 handles.config.fineNeighborhoodSize = 7;
 handles.config.fineSubpixelDepth = 2;
 % Strip
+handles.config.stripCreateStabilizedVideo = false;
 handles.config.stripOverwrite = true;
 handles.config.stripVerbosity = true;
 handles.config.stripStripHeight = 15;
