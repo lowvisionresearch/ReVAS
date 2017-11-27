@@ -55,7 +55,7 @@ function FilteringParameters_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 % Loading previously saved or default parameters
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 
 handles.overwrite.Value = mainHandles.config.filtOverwrite;
@@ -177,7 +177,7 @@ function save_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 
 % Validate new configurations
@@ -285,7 +285,7 @@ function maxGapDur_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of maxGapDur as text
 %        str2double(get(hObject,'String')) returns contents of maxGapDur as a double
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -323,7 +323,7 @@ function scalingFactor_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of scalingFactor as text
 %        str2double(get(hObject,'String')) returns contents of scalingFactor as a double
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -359,7 +359,7 @@ function median1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of median1 as text
 %        str2double(get(hObject,'String')) returns contents of median1 as a double
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -397,7 +397,7 @@ function poly1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of poly1 as text
 %        str2double(get(hObject,'String')) returns contents of poly1 as a double
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -433,7 +433,7 @@ function kernel1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of kernel1 as text
 %        str2double(get(hObject,'String')) returns contents of kernel1 as a double
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -469,7 +469,7 @@ function median2_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of median2 as text
 %        str2double(get(hObject,'String')) returns contents of median2 as a double
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -505,7 +505,7 @@ function poly2_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of poly2 as text
 %        str2double(get(hObject,'String')) returns contents of poly2 as a double
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -541,7 +541,7 @@ function kernel2_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of kernel2 as text
 %        str2double(get(hObject,'String')) returns contents of kernel2 as a double
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
