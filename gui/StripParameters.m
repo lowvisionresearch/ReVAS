@@ -22,7 +22,7 @@ function varargout = StripParameters(varargin)
 
 % Edit the above text to modify the response to help StripParameters
 
-% Last Modified by GUIDE v2.5 11-Nov-2017 12:44:26
+% Last Modified by GUIDE v2.5 26-Nov-2017 21:37:45
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,6 +59,7 @@ handles.output = hObject;
 figureHandle = findobj(0, 'tag', 'main');
 mainHandles = guidata(figureHandle);
 
+handles.createStabilizedVideo.Value = mainHandles.config.stripCreateStabilizedVideo;
 handles.overwrite.Value = mainHandles.config.stripOverwrite;
 handles.verbosity.Value = mainHandles.config.stripVerbosity;
 handles.stripHeight.String = mainHandles.config.stripStripHeight;
@@ -91,6 +92,8 @@ handles.searchWindowHeight.BackgroundColor = mainHandles.colors{4,2};
 handles.neighborhoodSize.BackgroundColor = mainHandles.colors{4,2};
 handles.subpixelDepth.BackgroundColor = mainHandles.colors{4,2};
 % Box backgrounds
+handles.createStabilizedVideo.BackgroundColor = mainHandles.colors{4,3};
+handles.outputOptionsPanel.BackgroundColor = mainHandles.colors{4,3};
 handles.titleBox.BackgroundColor = mainHandles.colors{4,3};
 handles.usageBox.BackgroundColor = mainHandles.colors{4,3};
 handles.stripBox.BackgroundColor = mainHandles.colors{4,3};
@@ -122,6 +125,8 @@ handles.neighborText.BackgroundColor = mainHandles.colors{4,3};
 handles.neighborTextSub.BackgroundColor = mainHandles.colors{4,3};
 handles.depthText.BackgroundColor = mainHandles.colors{4,3};
 % Box text
+handles.createStabilizedVideo.ForegroundColor = mainHandles.colors{4,5};
+handles.outputOptionsPanel.ForegroundColor = mainHandles.colors{4,5};
 handles.titleBox.ForegroundColor = mainHandles.colors{4,5};
 handles.usageBox.ForegroundColor = mainHandles.colors{4,5};
 handles.stripBox.ForegroundColor = mainHandles.colors{4,5};
@@ -294,6 +299,7 @@ if logical(handles.subpixelInterp.Value)
 end
 
 % Save new configurations
+mainHandles.config.stripCreateStabilizedVideo = logical(handles.createStabilizedVideo.Value);
 mainHandles.config.stripOverwrite = logical(handles.overwrite.Value);
 mainHandles.config.stripVerbosity = logical(handles.verbosity.Value);
 mainHandles.config.stripStripHeight = str2double(handles.stripHeight.String);
@@ -311,6 +317,7 @@ mainHandles.config.stripSearchWindowHeight = str2double(handles.searchWindowHeig
 mainHandles.config.stripSubpixelInterp = logical(handles.subpixelInterp.Value);
 mainHandles.config.stripNeighborhoodSize = str2double(handles.neighborhoodSize.String);
 mainHandles.config.stripSubpixelDepth = str2double(handles.subpixelDepth.String);
+
 
 % Update handles structure
 guidata(figureHandle, mainHandles);
@@ -834,3 +841,12 @@ function sdWindow_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in createStabilizedVideo.
+function createStabilizedVideo_Callback(hObject, eventdata, handles)
+% hObject    handle to createStabilizedVideo (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of createStabilizedVideo
