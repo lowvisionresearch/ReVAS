@@ -64,7 +64,11 @@ frameHeight = videoInfo.Height;
 width = videoInfo.Width;
 frameRate = videoInfo.Framerate;
 totalFrames = frameRate * videoInfo.Duration;
-stripsPerFrame = floor(frameHeight/parametersStructure.newStripHeight);
+if isfield(parametersStructure, 'stabilizeVideo') && parametersStructure.stabilizeVideo
+    stripsPerFrame = ceil(frameHeight/parametersStructure.newStripHeight);
+else
+    stripsPerFrame = floor(frameHeight/parametersStructure.newStripHeight);
+end
 
 % Set up templates for reference frame and counter array
 counterArray = zeros(frameHeight*3);
@@ -185,8 +189,11 @@ leftover = (frameHeight/parametersStructure.newStripHeight) - ...
 leftoverCopy = leftover;
 skips = 0;
 
+% Only grab center coordinates once (for generating stabilized videos)
+foundCenter = false;
 %% Use interpolatedPositions to generate the reference frame.
 for frameNumber = 1:totalFrames
+    
     % By default, the current frame is not one that needs the correction
     % factor for rounding
     correctionFrame = false;
@@ -198,7 +205,7 @@ for frameNumber = 1:totalFrames
     startFrameStrips = round(1 + ((frameNumber-1)*(stripsPerFrame))) + skips;
     endFrameStrips = round(frameNumber * stripsPerFrame) + skips;
     frameStripsWithoutNaN = zeros(size(startFrameStrips:endFrameStrips, 2), 3);
-
+    
     % However, keep in mind that there will be errors that accumulate
     % through rounding the start/end frame strip indices. For example, if
     % there are 4 frames of height 10 and a strip height of 3, then there
@@ -227,7 +234,7 @@ for frameNumber = 1:totalFrames
             frameStripsWithoutNaN(k, :) = interpolatedPositions(k, :);
         end
     end
-
+    
     % Remove extra 0's from frameStripsWithoutNaN, leftover from the
     % preallocation.
     k = 1;
@@ -287,7 +294,7 @@ for frameNumber = 1:totalFrames
                 end
             end
         end
-
+        
         if size(frameStripsWithoutNaN, 1) >= 1
             % In case the first stripNumber was 0, add one to the rest of the
             % column (should be only in the case when there is only one row)
@@ -295,7 +302,7 @@ for frameNumber = 1:totalFrames
                 frameStripsWithoutNaN(:, 4) = frameStripsWithoutNaN(:, 4) + 1;
             end
         end
-        
+
         for strip = 1 : size(frameStripsWithoutNaN, 1)
             
             % Reset this boolean--it is used to signal that a frame has
@@ -304,26 +311,39 @@ for frameNumber = 1:totalFrames
             
             % Keep track of the stripNumber so we can shift it accordingly
             stripNumber = frameStripsWithoutNaN(strip, 4);
-
+            
             % row and column "coordinates" of the top left pixel of each strip
             topLeft = [frameStripsWithoutNaN(strip, 1), frameStripsWithoutNaN(strip, 2)];
             rowIndex = topLeft(2);
             columnIndex = topLeft(1);
+            
+            % If generating a stabilized video, center all frames around
+            % the first strip
+           if isfield(parametersStructure, 'stabilizeVideo') && ...
+                    parametersStructure.stabilizeVideo && ~foundCenter
 
+                foundCenter = true;
+                rowDifference = round(size(refFrame, 1) / 2) - rowIndex ...
+                    - round(frameHeight/2);
+                columnDifference = round(size(refFrame, 2) / 2) - columnIndex...
+                    - round(width/2);
+           end
+            
             % move strip to proper position
             rowIndex = rowIndex + ((stripNumber-1) * parametersStructure.newStripHeight);
-
+            
             % get max row/column of the strip
             maxRow = rowIndex + parametersStructure.newStripHeight - 1;
             maxColumn = columnIndex + width - 1;
-
+            
             % transfer values of the strip pixels to the reference frame, and
             % increment the corresponding location on the counter array
             templateSelectRow = rowIndex:maxRow;
             templateSelectColumn = columnIndex:maxColumn;
             vidStart = ((stripNumber-1)*parametersStructure.newStripHeight)+1;
             vidEnd = stripNumber * parametersStructure.newStripHeight;
-
+            columnEnd = size(videoFrame, 2);
+            
             % If the strip extends beyond the frame (i.e., the frame has a
             % height of 512 pixels and strip of height 10 begins at row 511)
             % set the max row of that strip to be the last row of the frame.
@@ -336,7 +356,7 @@ for frameNumber = 1:totalFrames
                 endOfFrame = true;
             end
             
-            if strip == size(frameStripsWithoutNaN, 1)
+            if strip == size(frameStripsWithoutNaN, 1) 
                 endOfFrame = true;
             end
             
@@ -344,75 +364,69 @@ for frameNumber = 1:totalFrames
             templateSelectColumn = round(templateSelectColumn);
             vidStart = round(vidStart);
             vidEnd = round(vidEnd);
-
+            
+            % If stabilization is enabled, center the frames in the
+            % template frame
+           if isfield(parametersStructure, 'stabilizeVideo') && ...
+                    parametersStructure.stabilizeVideo
+               
+                templateSelectRow = templateSelectRow + rowDifference;
+                templateSelectColumn = templateSelectColumn + columnDifference;
+                
+                % Handle cases in which the stabilized frames exceed the
+                % dimensions of the template frame
+                if max(templateSelectRow) > size(refFrame, 1)
+                    stabilizeEnd = size(refFrame,1);
+                    difference = max(templateSelectRow) - stabilizeEnd;
+                    templateSelectRow = templateSelectRow(1):stabilizeEnd;
+                    vidEnd = vidEnd - difference;
+                end
+                
+                if max(templateSelectColumn) > size(refFrame, 2)
+                    stabilizeEnd = size(refFrame, 2);
+                    difference = max(templateSelectColumn) - stabilizeEnd;
+                    templateSelectColumn = templateSelectColumn(1):stabilizeEnd;
+                    columnEnd = columnEnd - difference;
+                end
+           end
+           
             refFrame(templateSelectRow, templateSelectColumn) = refFrame(...
                 templateSelectRow, templateSelectColumn) + videoFrame(...
-                vidStart:vidEnd, :);
+                vidStart:vidEnd, 1:columnEnd);
             counterArray(templateSelectRow, templateSelectColumn) = counterArray...
                 (templateSelectRow, templateSelectColumn) + 1;
-            
+
             % Generate a stabilized video if user enables this option
             if isfield(parametersStructure, 'stabilizeVideo') && ...
-                parametersStructure.stabilizeVideo && endOfFrame
+                    parametersStructure.stabilizeVideo && endOfFrame
                 
                 stabilizedFrame = refFrame./counterArray;
-                stabilizedFrame = Crop(stabilizedFrame);
                 
-                % Make sure all frames are of the same dimensions. If the
-                % size difference is due to bad strips at the top or
-                % bottom, add those in without correcting their positions
-     
-                if frameHeight ~= size(stabilizedFrame, 1)
-                    if frameHeight < size(stabilizedFrame, 1)
-                        stabilizedFrame = imresize(stabilizedFrame, ...
-                            [frameHeight, width]);
-                    else
-                        difference = frameHeight - size(stabilizedFrame, 1);
-                        missingStrips = difference/parametersStructure.newStripHeight;
-                        % If missingStrips is an integer, then that
-                        % means the size difference is due to missing
-                        % strips
-                        if rem(missingStrips, 1) == 0
-                            if frameStripsWithoutNaN(1, 3) ~= 1
-                                missing = videoFrame(1:difference, :);
-                                endRow = size(stabilizedFrame, 1);
-                                endColumn = size(stabilizedFrame, 2);
-                                
-                                stabilizedFrame(difference+1:difference+endRow, ...
-                                   1:endColumn) = stabilizedFrame;
-                            
-                                stabilizedFrame(1:difference, :) = missing;
-                            else
-                                missing = videoFrame(end-difference+1:end, :);
-                                stabilizedFrame(end+1:end+difference, 1:size...
-                                    (stabilizedFrame, 2)) = missing;
-                            end
-                        else
-                            stabilizedFrame = imresize(stabilizedFrame, ...
-                                [frameHeight, width]);
-                        end
-                    end
-                end
-                    
-               if width ~= size(stabilizedFrame, 2)
-                    stabilizedFrame = imresize(stabilizedFrame, [frameHeight,...
-                        width]);
-               end
-               
-               % Resizing occasionally adds values less than 0
-               % or greater than 1
-               stabilizedFrame(stabilizedFrame<0) = 0;
-               stabilizedFrame(stabilizedFrame>1) = 1;
-               
-               % Fill black regions with random noise
-               indices = stabilizedFrame == 0;
-               stabilizedFrame(indices) = mean(stabilizedFrame(~indices)) + ...
-                   (std(stabilizedFrame(~indices)) * randn(sum(sum(indices)), 1));
-               
+                % Convert all NaNs to zeros
+                stabilizedFrame(isnan(stabilizedFrame)) = 0;
+                
+                % Fill in empty strips in the video with random noise
+                columnSum = sum(stabilizedFrame);
+                rowSum = sum(stabilizedFrame, 2);
+                
+                minColumn = find(columnSum, 1, 'first');
+                maxColumn = find(columnSum, 1, 'last');
+                
+                minRow = find(rowSum, 1, 'first');
+                maxRow = find(rowSum, 1, 'last');
+                
+                % Replace black regions within the stabilized frames with
+                % random noise
+                relevantPixels = stabilizedFrame(minRow:maxRow, minColumn:maxColumn);
+                indices = relevantPixels == 0;
+                relevantPixels(indices) = mean(relevantPixels(~indices))...
+                    + (std(relevantPixels(~indices)) * randn(sum(sum(indices)), 1));
+                stabilizedFrame(minRow:maxRow, minColumn:maxColumn) = relevantPixels;
+                
                 % Write to a video file
                 writeVideo(stabilizedVideo, stabilizedFrame);
                 
-                % Reset refFrame and counterArray for the next frame. 
+                % Reset refFrame and counterArray for the next frame.
                 refFrame = zeros(size(refFrame, 1), size(refFrame, 2));
                 counterArray = zeros(size(counterArray, 1), size(counterArray, 2));
                 break
