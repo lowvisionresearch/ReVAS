@@ -1,15 +1,15 @@
-function varargout = Main(varargin)
-% MAIN MATLAB code for Main.fig
-%      MAIN, by itself, creates a new MAIN or raises the existing
+function varargout = ReVAS(varargin)
+% REVAS MATLAB code for ReVAS.fig
+%      REVAS, by itself, creates a new REVAS or raises the existing
 %      singleton*.
 %
-%      H = MAIN returns the handle to a new MAIN or the handle to
+%      H = REVAS returns the handle to a new REVAS or the handle to
 %      the existing singleton*.
 %
-%      MAIN('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in MAIN.M with the given input arguments.
+%      REVAS('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in REVAS.M with the given input arguments.
 %
-%      MAIN('Property','Value',...) creates a new MAIN or raises the
+%      REVAS('Property','Value',...) creates a new REVAS or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
 %      applied to the GUI before Main_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
@@ -20,9 +20,9 @@ function varargout = Main(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help Main
+% Edit the above text to modify the response to help ReVAS
 
-% Last Modified by GUIDE v2.5 22-Nov-2017 15:50:19
+% Last Modified by GUIDE v2.5 27-Nov-2017 00:25:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -43,15 +43,15 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-% --- Executes just before Main is made visible.
+% --- Executes just before ReVAS is made visible.
 function Main_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to Main (see VARARGIN)
+% varargin   command line arguments to ReVAS (see VARARGIN)
 
-% Choose default command line output for Main
+% Choose default command line output for ReVAS
 handles.output = hObject;
 
 % Add util to path
@@ -72,8 +72,8 @@ for i = 1:size(handles.colors,1)
 end
  
 % Set colors
-% Main Background
-handles.main.Color = handles.colors{1,2};
+% ReVAS Background
+handles.revas.Color = handles.colors{1,2};
 handles.inputList.BackgroundColor = handles.colors{1,2};
 handles.axes1.XColor = handles.colors{1,2};
 handles.axes1.YColor = handles.colors{1,2};
@@ -330,9 +330,8 @@ handles.commandWindow.String = cellstr('');
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes Main wait for user response (see UIRESUME)
-% uiwait(handles.main);
-
+% UIWAIT makes ReVAS wait for user response (see UIRESUME)
+% uiwait(handles.revas);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = Main_OutputFcn(hObject, eventdata, handles)
@@ -1539,9 +1538,8 @@ if isValid(hObject)
     figure(hObject);
 end
 
-
 % --- Executes during object creation, after setting all properties.
-function main_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to main (see GCBO)
+function revas_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to revas (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
