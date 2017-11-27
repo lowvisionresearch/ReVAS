@@ -96,7 +96,10 @@ if isfield(parametersStructure, 'stabilizeVideo') && ...
     stabilizedVideoFilename(end+1:end+11) = '_stabilized';
     stabilizedVideo = VideoWriter(stabilizedVideoFilename);
     open(stabilizedVideo)
+else
+    stabilizedVideo = false;
 end
+
 %% Set up the interpolation
 % Scale the time array to accomodate new strip height
 scalingFactor = ((parametersStructure.stripHeight)/2)/(frameRate*frameHeight);
