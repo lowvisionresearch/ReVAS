@@ -19,6 +19,8 @@ function [refFrame] = MakeMontage(parametersStructure, fileName)
 %                          of a given run
 %  stabilizeVideo      :   set to 1 to generate a stabilized video,
 %                          otherwise set to 0
+%  stabilizedVideoSizeMultiplier : a multiplier to determine the frame size
+%                          of the stabilized video. defaults to 1.25;
 %
 %   Example: 
 %       load('MyVid_final.mat')
@@ -44,6 +46,16 @@ if isfield(parametersStructure, 'newStripHeight')
 else
     parametersStructure.newStripHeight = parametersStructure.stripHeight;
 end
+
+
+% size of the stabilized video will be
+% stabilizedVideoSizeMultiplier*frameSize
+if ~isfield(parametersStructure,'stabilizedVideoSizeMultiplier') 
+    stabilizedVideoSizeMultiplier = 1.25;
+else
+    stabilizedVideoSizeMultiplier = parametersStructure.stabilizedVideoSizeMultiplier;
+end
+
 
 %% Identify which frames are bad frames
 nameEnd = fileName(1:size(fileName, 2)-4);
@@ -258,7 +270,7 @@ for frameNumber = 1:totalFrames
     % leftOver was necessary for future frames
     if any(badFrames==frameNumber)
         if ~isfield(parametersStructure.stabilizeVideo)...
-            || ~parametersStructure.stabilizeVideo;
+            || ~parametersStructure.stabilizeVideo
             continue
         else
             writeVideo(stabilizedVideo, refFrame);
@@ -432,8 +444,13 @@ for frameNumber = 1:totalFrames
                 stabilizedFrame(stabilizedFrame<0) = 0;
                 stabilizedFrame(stabilizedFrame>1) = 1;
                 
+                % crop the black boundaries 
+                hw = round([frameHeight width]*stabilizedVideoSizeMultiplier);
+                cropRect = [round((size(stabilizedFrame)-hw)/2) hw];
+                frameToWrite = imcrop(stabilizedFrame,cropRect);
+                
                 % Write to a video file
-                writeVideo(stabilizedVideo, stabilizedFrame);
+                writeVideo(stabilizedVideo, frameToWrite);
                 
                 % Reset refFrame and counterArray for the next frame.
                 refFrame = zeros(size(refFrame, 1), size(refFrame, 2));
