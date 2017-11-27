@@ -166,6 +166,7 @@ end
 if logical(handles.togStrip.Value) && ~logical(abortTriggered)
     RevasMessage(['[[ Strip Analyzing ]] ' inputPath], parametersStructure);
     % Set the parameters
+    parametersStructure.createStabilizedVideo = handles.config.stripCreateStabilizedVideo;
     parametersStructure.overwrite = handles.config.stripOverwrite;
     parametersStructure.enableVerbosity = handles.config.stripVerbosity;
     parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
@@ -219,6 +220,8 @@ if logical(handles.togStrip.Value) && ~logical(abortTriggered)
     % Update file name to input file name
     inputPath = [inputPath(1:end-4) '_' ...
         int2str(parametersStructure.samplingRate) '_hz_final.mat'];
+    
+    
 end
 
 
