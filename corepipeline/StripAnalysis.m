@@ -36,6 +36,7 @@ function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
 %                                     Set to 0 to disable.
 %   enableSubpixelInterpolation     :
 %   subpixelInterpolationParameters :
+%   createStabilizedVideo           : set to true for stabilized videos
 %   -----------------------------------
 %   Fields of the |subpixelInterpolationParameters|
 %   -----------------------------------
@@ -264,6 +265,15 @@ else
    if ~islogical(enableVerbosity)
         error('enableVerbosity must be a logical');
    end
+end
+
+if ~isfield(parametersStructure, 'createStabilizedVideo')
+    createStabilizedVideo = false;
+else
+    createStabilizedVideo = parametersStructure.createStabilizedVideo;
+    if ~islogical(createStabilizedVideo)
+        error('createStabilizedVideo must be a logical');
+    end
 end
 
 %% Handle overwrite scenarios.
@@ -760,4 +770,19 @@ if ~abortTriggered && ~isempty(inputVideoPath)
         'timeArray', 'parametersStructure', 'referenceFramePath', ...
         'peakRatios');
 end
+
+%% Create stabilized video if requested
+if ~abortTriggered && createStabilizedVideo
+    
+    ind = strfind(inputVideoPath,'_dwt');
+    if ~isempty(ind)
+        rawVideoPath = [inputVideoPath(1:ind-1) '.avi'];
+    else
+        rawVideoPath = inputVideoPath;
+    end
+    
+    parametersStructure.positions = eyePositionTraces;
+    parametersStructure.time = timeArray;
+    StabilizeVideo(rawVideoPath, parametersStructure);
+
 end
