@@ -713,13 +713,15 @@ if ~abortTriggered && parametersStructure.enableVerbosity
         figure(11);
     end
     cla;
-    view(2);
+    
     plot(timeArray, statisticsStructure.peakRatios); hold on;
     plot(timeArray, statisticsStructure.peakValues);
     title('Sample quality');
     xlabel('Time (sec)');
     legend('show');
     legend('Peak ratio', 'Peak value');
+    ylim([0 1])
+    view(2);
 end
 
 %% Plot stimuli on reference frame
