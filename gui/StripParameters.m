@@ -56,7 +56,7 @@ function StripParameters_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 % Loading previously saved or default parameters
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 
 handles.createStabilizedVideo.Value = mainHandles.config.stripCreateStabilizedVideo;
@@ -211,7 +211,7 @@ function save_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be destripd in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 
 % Validate new configurations
@@ -397,7 +397,7 @@ function stripHeight_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of stripHeight as text
 %        str2double(get(hObject,'String')) returns contents of stripHeight as a double
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -435,7 +435,7 @@ function stripWidth_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of stripWidth as text
 %        str2double(get(hObject,'String')) returns contents of stripWidth as a double
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -472,7 +472,7 @@ function samplingRate_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of samplingRate as text
 %        str2double(get(hObject,'String')) returns contents of samplingRate as a double
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -510,7 +510,7 @@ function maxPeakRatio_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of MaxPeakRatio as text
 %        str2double(get(hObject,'String')) returns contents of MaxPeakRatio as a double
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -546,7 +546,7 @@ function minPeakThreshold_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of minPeakThreshold as text
 %        str2double(get(hObject,'String')) returns contents of minPeakThreshold as a double
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -599,7 +599,7 @@ function scalingFactor_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of scalingFactor as text
 %        str2double(get(hObject,'String')) returns contents of scalingFactor as a double
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -635,7 +635,7 @@ function searchWindowHeight_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of searchWindowHeight as text
 %        str2double(get(hObject,'String')) returns contents of searchWindowHeight as a double
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -671,7 +671,7 @@ function neighborhoodSize_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of neighborhoodSize as text
 %        str2double(get(hObject,'String')) returns contents of neighborhoodSize as a double
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -707,7 +707,7 @@ function subpixelDepth_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of subpixelDepth as text
 %        str2double(get(hObject,'String')) returns contents of subpixelDepth as a double
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -743,7 +743,7 @@ function gaussSD_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of gaussSD as text
 %        str2double(get(hObject,'String')) returns contents of gaussSD as a double
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
@@ -813,7 +813,7 @@ function sdWindow_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of sdWindow as text
 %        str2double(get(hObject,'String')) returns contents of sdWindow as a double
-figureHandle = findobj(0, 'tag', 'main');
+figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
