@@ -31,7 +31,11 @@ end
 if logical(handles.togTrim.Value) && ~logical(abortTriggered)
     RevasMessage(['[[ Trimming ]] ' inputPath], parametersStructure);
     % Set the parameters
-    parametersStructure.borderTrimAmount = handles.config.trimBorderTrimAmount;
+    parametersStructure.borderTrimAmount = [
+        handles.config.trimLeft, ...
+        handles.config.trimRight, ...
+        handles.config.trimTop, ...
+        handles.config.trimBottom];
     parametersStructure.overwrite = handles.config.trimOverwrite;
 
     % Call the function

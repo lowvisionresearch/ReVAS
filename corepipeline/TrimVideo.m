@@ -13,13 +13,17 @@ function TrimVideo(inputVideoPath, parametersStructure)
 %                           the function call if the files exist in the 
 %                           current directory.
 %   borderTrimAmount    :   specifies the number of rows and columns to be
-%                           removed. Default value is 24 pixels if no value 
-%                           is specified by the user.
-%
+%                           removed as a vector with the number of
+%                           rows/columns to be removed from each edge
+%                           specified in the following order:
+%                           [left right top bottom]. The default is
+%                           removing 24 from the right and top. If a scalar
+%                           is provided instead, then that amount will be
+%                           removed from the right and top only.%
 %   Example usage: 
 %       inputVideoPath = 'MyVid.avi';
 %       parametersStructure.overwrite = 1;
-%       parametersStructure.borderTrimAmount = 24;
+%       parametersStructure.borderTrimAmount = [0 24 24 0];
 %       TrimVideo(inputVideoPath, parametersStructure);
 %% Handle overwrite scenarios.
 outputVideoPath = [inputVideoPath(1:end-4) '_dwt' inputVideoPath(end-3:end)];
@@ -35,16 +39,26 @@ end
 %% Set parameters to defaults if not specified.
 
 if nargin == 1 || ~isfield(parametersStructure, 'borderTrimAmount')
-    borderTrimAmount = 24;
+    borderTrimAmount = [0 24 24 0];
     RevasWarning('using default parameter for borderTrimAmount', parametersStructure);
+elseif isscalar(parametersStructure.borderTrimAmount)
+    borderTrimAmount = [0 parametersStructure.borderTrimAmount ...
+        parametersStructure.borderTrimAmount 0];
 else
     borderTrimAmount = parametersStructure.borderTrimAmount;
-    if ~IsNaturalNumber(borderTrimAmount)
-        error('borderTrimAmount must be a natural number');
+end
+for t = borderTrimAmount
+    if ~IsNaturalNumber(t)
+        error('borderTrimAmount must consist of natural numbers');
     end
 end
 
 %% Trim the video frame by frame
+
+left = borderTrimAmount(1);
+right = borderTrimAmount(2);
+top = borderTrimAmount(3);
+bottom = borderTrimAmount(4);
 
 writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
 open(writer);
@@ -56,14 +70,14 @@ width = size(videoInputArray, 2);
 numberOfFrames = size(videoInputArray, 3);
 
 % Preallocate.
-trimmedFrames = zeros(height - borderTrimAmount, ...
-    width - borderTrimAmount, numberOfFrames, 'uint8');
+trimmedFrames = zeros(height - top - bottom, ...
+    width - left - right, numberOfFrames, 'uint8');
 
 for frameNumber = 1:numberOfFrames
     frame = videoInputArray(:,:,frameNumber);
     trimmedFrames(:,:,frameNumber) = ...
-        frame(borderTrimAmount+1 : height, ...
-       1 : width-borderTrimAmount);
+        frame(top+1 : height-bottom, ...
+       left+1 : width-right);
 end
 
 writeVideo(writer, trimmedFrames);
