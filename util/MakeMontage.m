@@ -433,7 +433,6 @@ for frameNumber = 1:totalFrames
                 stabilizedFrame(stabilizedFrame>1) = 1;
                 
                 % Write to a video file
-                disp(frameNumber/totalFrames)
                 writeVideo(stabilizedVideo, stabilizedFrame);
                 
                 % Reset refFrame and counterArray for the next frame.
