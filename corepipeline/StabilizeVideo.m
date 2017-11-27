@@ -11,6 +11,11 @@ function StabilizeVideo(inputVideoPath, parametersStructure)
 %   See MakeMontage for all relevant parameters
 
 parametersStructure.stabilizeVideo = 1;
+
+if ~isfield(parametersStructure,'stripHeight')
+    parametersStructure.stripHeight = 3;
+end
+
 MakeMontage(parametersStructure, inputVideoPath);
 
 end
