@@ -188,7 +188,10 @@ handles.reconfig.ForegroundColor = handles.colors{4,2};
 
 % DEFAULT PARAMETERS
 % Trim
-handles.config.trimBorderTrimAmount = 24;
+handles.config.trimLeft = 0;
+handles.config.trimRight = 24;
+handles.config.trimTop = 24;
+handles.config.trimBottom = 0;
 handles.config.trimOverwrite = true;
 % Stim
 handles.config.stimVerbosity = true;
