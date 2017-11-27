@@ -3,7 +3,8 @@ function StabilizeVideo(inputVideoPath, parametersStructure)
 %   StabilizeVideo(parametersStructure, fileName) generates a stabilized
 %   video by calling MakeMontage. Each time enough strips have accumulated
 %   to generate one stabilized video, that frame is written to the video
-%   file.
+%   file. We recommend setting stripHeight to a number that divides
+%   evenly into the frame height for best results.
 %   
 %   Fields of the |parametersStructure| 
 %   -----------------------------------
