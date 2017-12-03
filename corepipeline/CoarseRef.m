@@ -130,7 +130,7 @@ enableGPU = isfield(parametersStructure, 'enableGPU') && ...
 
 % Get the current time of the video, so that the video "clock" can be reset
 % later
-timeToRemember = VideoObject.CurrentTime;
+timeToRemember = videoObject.CurrentTime;
 
 % Shrink the video
 shrunkFileName = [inputVideoPath(1:end-4) '_shrunk.avi'];
@@ -141,6 +141,16 @@ frameNumber = 1;
 while hasFrame(videoObject)
     frame = double(readFrame(videoObject))/255;
     shrunkFrame = imresize(frame, scalingFactor);
+    
+    % Sometimes resizing causes numbers to dip below 0 (but just barely)
+    if shrunkFrame(shrunkFrame<0)
+        shrunkFrame(shrunkFrame<0) = 0;
+    end
+    % Similarly, values occasionally exceed 1
+    if shrunkFrame(shrunkFrame>1)
+        shrunkFrame(shrunkFrame>1) = 1;
+    end
+    
     writeVideo(shrunkVideo, shrunkFrame);
     if frameNumber == refFrameNumber
         temporaryRefFrame = shrunkFrame;
@@ -157,7 +167,8 @@ params.stripHeight = videoObject.Height;
 params.stripWidth = videoObject.Width;
 params.samplingRate = videoFrameRate;
 params.badFrames = badFrames;
-
+params.originalVideoPath = shrunkFileName;
+params.enableVerbosity = true;
 % Check if user has rotateCorrection enabled.
 if isfield(params, 'rotateCorrection') && params.rotateCorrection == true
     [coarseRefFrame, ~] = RotateCorrect(shrunkFileName, inputVideoPath, ...
