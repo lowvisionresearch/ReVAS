@@ -6,6 +6,11 @@ function [videoInputArray, videoFrameRate] = VideoPathToArray(videoInputPath)
 %   Also returns the frame rate of the video.
 %   If the path input is invalid, an error will be raised.
 
+% Try to avoid using this function, since keeping an entire video in memory
+% could potential result in slow runtime. Instead, read frame by frame as
+% needed.
+warning('Use of this function, VideoPathToArray, is deprecated.');
+
 if ischar(videoInputPath)    
     % Determine dimensions needed for purposes of preallocation.
     reader = VideoReader(videoInputPath);
