@@ -51,6 +51,14 @@ function coarseRefFrame = CoarseRef(inputVideoPath, parametersStructure)
 %       load('MyVid_params.mat')
 %       coarseReferenceFrame = CoarseRef(filename, coarseParameters);
 
+%% Allow for aborting if not parallel processing
+global abortTriggered;
+
+% parfor does not support global variables.
+% cannot abort when run in parallel.
+if isempty(abortTriggered)
+    abortTriggered = false;
+end
 %% Initialize variables
 outputFileName = [inputVideoPath(1:end-4) '_coarseref'];
 outputTracesName = [inputVideoPath(1:end-4) '_coarseframepositions'];
@@ -162,13 +170,14 @@ videoObject.CurrentTime = timeToRemember;
 
 % Prepare parameters for calling StripAnalysis, using each shrunk frame as
 % a single "strip"
+shrunkObject = VideoReader(shrunkFileName);
 params = parametersStructure;
-params.stripHeight = videoObject.Height;
-params.stripWidth = videoObject.Width;
+params.stripHeight = shrunkObject.Height;
+params.stripWidth = shrunkObject.Width;
 params.samplingRate = videoFrameRate;
 params.badFrames = badFrames;
 params.originalVideoPath = shrunkFileName;
-params.enableVerbosity = true;
+
 % Check if user has rotateCorrection enabled.
 if isfield(params, 'rotateCorrection') && params.rotateCorrection == true
     [coarseRefFrame, ~] = RotateCorrect(shrunkFileName, inputVideoPath, ...

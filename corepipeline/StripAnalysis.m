@@ -413,7 +413,7 @@ isSetView = true;
 currFrameNumber = 0;
 reader = VideoReader(videoInputPath);
 for stripNumber = (1:numberOfStrips)
-    
+
     if ~abortTriggered
         
         gpuTask = getCurrentTask;
