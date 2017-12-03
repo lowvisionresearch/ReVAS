@@ -1,4 +1,4 @@
-function [coarseRefFrame, coordinatesAndDegrees] = RotateCorrect(shrunkFrames, bigFrames, ...
+function [coarseRefFrame, coordinatesAndDegrees] = RotateCorrect(shrunkVideoPath, bigVideoPath, ...
     referenceFrame, outputFileName, parametersStructure)
 %%ROTATE CORRECT     RotateCorrect takes in the 3D video array from
 %                    CoarseRef and checks each frame to see whether
@@ -49,14 +49,18 @@ if ~isfield(parametersStructure, 'degreeRange')
     parametersStructure.degreeRange = 5;
 end
 
+bigVideoObject = VideoReader(bigVideoPath);
+shrunkVideoObject = VideoReader(shrunkVideoPath);
+
 % Preallocate the rotate corrected coarse reference frame and counter array
-rotateCorrectedCoarse = zeros(size(bigFrames, 1)*2.5, size(bigFrames, 2)*2.5);
+rotateCorrectedCoarse = zeros(bigVideoObject.Height*2.5, bigVideoObject.Height*2.5);
 counterArray = rotateCorrectedCoarse;
 
 % usefulEyePositionTraces contains: Columns 1 & 2 (coordinates) and Column
 % 3 (degree that returns the ideal rotation)
 rotations = -parametersStructure.degreeRange:0.1:parametersStructure.degreeRange;
-coordinatesAndDegrees = zeros(size(shrunkFrames, 3), 3);
+totalFrames = shrunkVideoObject.Framerate * shrunkVideoObject.Duration;
+coordinatesAndDegrees = zeros(totalFrames, 3);
 
 % Each time StripAnalysis is called, we must pass in two frames in a 3D
 % matrix. To save time, skip the second frame, so just mark it as a bad
@@ -64,10 +68,10 @@ coordinatesAndDegrees = zeros(size(shrunkFrames, 3), 3);
 parametersStructure.badFrames = 2;
 
 %% Examine each frame
-for frameNumber = 1:size(shrunkFrames, 3)
+for frameNumber = 1:totalFrames
     
-    frame = shrunkFrames(:, :, frameNumber);
-    
+    smallFrame = double(readFrame(shrunkVideoObject))/255;
+    bigFrame = double(readFrame(bigVideoObject))/255;
     % First check if the frame has a peak ratio lower than the
     % designated threshold. If so, then update the reference frame
     % and move on to the next frame. Because StripAnalysis only accepts 3D
@@ -76,12 +80,8 @@ for frameNumber = 1:size(shrunkFrames, 3)
     % reason reReference would call this function is if the peakRatio was
     % not sufficient (i.e., we don't need to check 0 degrees anymore).
     
-    threeDimensionalFrame = zeros(size(frame, 1), size(frame, 2), 2);
-    threeDimensionalFrame(:, :, 1) = threeDimensionalFrame(:, :, 1) + ...
-        double(frame);
-    
     [~, usefulEyePositionTraces, ~, statisticsStructure] = StripAnalysis(...
-        threeDimensionalFrame, referenceFrame, parametersStructure);
+        smallFrame, referenceFrame, parametersStructure);
     
     peakRatio = statisticsStructure.peakRatios(1);
     usefulEyePositionTraces = usefulEyePositionTraces(1, :);
@@ -98,13 +98,11 @@ for frameNumber = 1:size(shrunkFrames, 3)
         
         minRow = coordinates(1, 2);
         minColumn = coordinates(1, 1);
-        maxRow = size(bigFrames, 1) + minRow - 1;
-        maxColumn = size(bigFrames, 2) + minColumn - 1;
+        maxRow = bigVideoObject.Height + minRow - 1;
+        maxColumn = bigVideoObject.Width + minColumn - 1;
         
         selectRow = round(minRow):round(maxRow);
         selectColumn = round(minColumn):round(maxColumn);
-        
-        bigFrame = double(bigFrames(:, :, frameNumber));
         
         rotateCorrectedCoarse(selectRow, selectColumn) = ...
             rotateCorrectedCoarse(selectRow, selectColumn) + bigFrame;
@@ -131,14 +129,10 @@ for frameNumber = 1:size(shrunkFrames, 3)
             continue
         end
         
-        tempFrame = imrotate(frame, rotation);
-        
-        threeDimensionalFrame = zeros(size(tempFrame, 1), size(tempFrame, 2), 2);
-        threeDimensionalFrame(:, :, 1) = threeDimensionalFrame(:, :, 1) + ...
-            double(tempFrame);
+        tempFrame = imrotate(smallFrame, rotation);
         
         [~, usefulEyePositionTraces, ~, statisticsStructure] = StripAnalysis(...
-            threeDimensionalFrame, referenceFrame, parametersStructure);
+            tempFrame, referenceFrame, parametersStructure);
         
         peakRatio = statisticsStructure.peakRatios(1);
         usefulEyePositionTraces = usefulEyePositionTraces(1, :);
@@ -161,10 +155,9 @@ for frameNumber = 1:size(shrunkFrames, 3)
             
             minRow = coordinates(1, 2);
             minColumn = coordinates(1, 1);
-            maxRow = size(bigFrames, 1) + minRow - 1;
-            maxColumn = size(bigFrames, 2) + minColumn - 1;
+            maxRow = bigVideoObject.Height + minRow - 1;
+            maxColumn = bigVideoObject.Width + minColumn - 1;
             
-            bigFrame = bigFrames(:, :, frameNumber);
             bigFrame = double(imrotate(bigFrame, rotation));
             
             % Because rotating changes the dimensions of the image
