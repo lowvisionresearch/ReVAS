@@ -71,7 +71,13 @@ parametersStructure.badFrames = 2;
 for frameNumber = 1:totalFrames
     
     smallFrame = double(readFrame(shrunkVideoObject))/255;
+    if ndims(smallFrame) == 3
+        smallFrame = rgb2gray(smallFrame);
+    end
     bigFrame = double(readFrame(bigVideoObject))/255;
+    if ndims(bigFrame) == 3
+        bigFrame = rgb2gray(bigFrame);
+    end
     % First check if the frame has a peak ratio lower than the
     % designated threshold. If so, then update the reference frame
     % and move on to the next frame. Because StripAnalysis only accepts 3D
@@ -140,7 +146,7 @@ for frameNumber = 1:totalFrames
         if isnan(usefulEyePositionTraces)
             continue
         end
-        
+
         % If the peakRatio for this rotation is lower than the threshold,
         % then move on to the next frame by breaking out of the
         % rotations for-loop. Otherwise, continue rotating
@@ -197,7 +203,7 @@ end
 
 coarseRefFrame = rotateCorrectedCoarse./counterArray;
 coarseRefFrame = Crop(coarseRefFrame);
-coarseRefFrame = double(coarseRefFrame)/255;
+
 save(outputFileName, 'coarseRefFrame');
 
 if parametersStructure.enableVerbosity >= 1
