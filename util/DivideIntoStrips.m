@@ -1,4 +1,4 @@
-function [stripIndices, stripsPerFrame] = DivideIntoStrips(videoInputArray, videoFrameRate, parametersStructure)
+function [stripIndices, stripsPerFrame] = DivideIntoStrips(videoInputPath, parametersStructure)
 %DIVIDE INTO STRIPS Returns coordinates of top left corner of strips.
 %   Takes the video input in array format and uses the given parameters
 %   to evenly divide the video into strips. It then will return the index
@@ -15,10 +15,16 @@ function [stripIndices, stripsPerFrame] = DivideIntoStrips(videoInputArray, vide
 %  samplingRate        :   sampling rate of the video
 %  stripHeight         :   the size of each strip
 
-stripsPerFrame = round(parametersStructure.samplingRate / videoFrameRate);
-[frameHeight, frameWidth, numberOfFrames] = size(videoInputArray);
+reader = VideoReader(videoInputPath);
+numberOfFrames = reader.NumberOfFrames;
+videoFrameRate = reader.FrameRate;
+reader = VideoReader(videoInputPath);
+frame = readFrame(reader);
+[frameHeight, ~] = size(frame);
 
-stripIndices = zeros(stripsPerFrame*numberOfFrames, ndims(videoInputArray));
+stripsPerFrame = round(parametersStructure.samplingRate / videoFrameRate);
+
+stripIndices = zeros(stripsPerFrame*numberOfFrames, 3);
 
 distanceBetweenStrips = (frameHeight - parametersStructure.stripHeight)...
     / (stripsPerFrame - 1);
@@ -42,11 +48,8 @@ for stripNumber = (1:stripsPerFrame*numberOfFrames)
     
     % Place calculated values into stripIndices
     stripIndices(stripNumber,:) = [rowNumber columnNumber frameNumber];
-
 end
 
 % floor all at once to take advantage of vectorization
 stripIndices = floor(stripIndices);
-
 end
-
