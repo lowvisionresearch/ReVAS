@@ -54,33 +54,28 @@ function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
 %       StripAnalysis(videoInput, referenceFrame, parametersStructure)
 
 %% Set parameters to defaults if not specified.
-inputVideoPath = '';
+videoInputPath = '';
 % If videoInput is a character array, then a path was passed in.
 % Attempt to convert it to a 3D array.
 if ischar(videoInput)
-    inputVideoPath = videoInput;
-    [videoInput, videoFrameRate] = VideoPathToArray(videoInput);
+    videoInputPath = videoInput;
+    usingTemp = false;
 else
     % ASSUMPTION
     % If only a raw matrix is provided, then we will take the frame rate to
     % be 30.
+    % If a raw array was passed in, write video to a temporary file so we
+    % don't have to keep the entire video in memory while we run Strip
+    % Analysis.
+    usingTemp = true;
+    videoInputPath = fullfile(pwd, '.temp.avi');
+    writer = VideoWriter(videoInputPath, 'Grayscale AVI');
+    open(writer);
+    writeVideo(writer, videoInput);
+    close(writer);
+    clear videoInput;
     warning('A raw matrix was provided; assuming that frame rate is 30 fps.');
     videoFrameRate = 30;
-end
-if ndims(videoInput) ~= 3 && ndims(videoInput) ~= 4
-    error('Invalid Input for videoInput (it was not a 3D or 4D array)');
-end
-% TODO not tested on color videos yet.
-% Change 4D arrays to 3D by making video grayscale. Assumes 4D arrays are
-% in format (x, y, time, color).
-if ndims(videoInput) == 4
-    numberOfFrames = size(videoInput, 3);
-    newVideoInput = squeeze(videoInput(:,:,:,1));
-    for frame = (1:numberOfFrames)
-        frame3D = squeeze(videoInput(:,:,frame,:));
-        newVideoInput(:,:,frame) = rgb2gray(frame3D);
-    end
-    videoInput = newVideoInput;
 end
 
 % If referenceFrame is a character array, then a path was passed in.
@@ -99,7 +94,7 @@ end
 % Identify which frames are bad frames
 % The filename may not exist if a raw array was passed in.
 if ~isfield(parametersStructure, 'badFrames')
-    nameEnd = inputVideoPath(1:size(inputVideoPath, 2)-4);
+    nameEnd = videoInputPath(1:size(videoInputPath, 2)-4);
     blinkFramesPath = [nameEnd '_blinkframes.mat'];
     try
         load(blinkFramesPath, 'badFrames');
@@ -121,7 +116,8 @@ else
 end
 
 if ~isfield(parametersStructure, 'stripWidth')
-    stripWidth = size(videoInput, 2);
+    reader = VideoReader(videoInputPath);
+    stripWidth = reader.Width;
     RevasWarning('using default parameter for stripWidth', parametersStructure);
 else
     stripWidth = parametersStructure.stripWidth;
@@ -278,7 +274,7 @@ end
 
 %% Handle overwrite scenarios.
 
-outputFileName = [inputVideoPath(1:end-4) '_' ...
+outputFileName = [videoInputPath(1:end-4) '_' ...
     int2str(samplingRate) '_hz_final'];
 
 if ~exist([outputFileName '.mat'], 'file')
@@ -295,7 +291,7 @@ else
 end
 
 %% Preallocation and variable setup
-[stripIndices, stripsPerFrame] = DivideIntoStrips(videoInput, videoFrameRate, parametersStructure);
+[stripIndices, stripsPerFrame] = DivideIntoStrips(videoInputPath, parametersStructure);
 numberOfStrips = size(stripIndices, 1);
 
 % two columns for horizontal and vertical movements
@@ -332,9 +328,17 @@ if adaptiveSearch
     scaledDownReferenceFrame = referenceFrame( ...
         1:scalingFactor:end, ...
         1:scalingFactor:end);
-
-    for frameNumber = (1:size(videoInput, 3))
-        frame = videoInput(:,:,frameNumber);
+    
+    reader = VideoReader(videoInputPath);
+    frameNumber = 0;
+    while hasFrame(reader)
+        
+        frameNumber = frameNumber + 1;
+  
+        frame = readFrame(reader);
+        if ndims(frame) == 3
+            frame = rgb2gray(frame);
+        end
 
         % Scale down the current frame to a smaller size as well
         scaledDownFrame = frame( ...
@@ -353,11 +357,13 @@ if adaptiveSearch
         % top strip of each frame
         estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + 1,:) = yPeak;
     end
+    
+    numberOfFrames = frameNumber;
 
     % Finish populating search window by taking the line between the top left
     % corner of the previous frame and the bottom left corner of the current
     % frame and dividing that line up by the number of strips per frame.
-    for frameNumber = (1:size(videoInput, 3)-1)
+    for frameNumber = (1:numberOfFrames-1)
         previousFrameYCoordinate = ...
             estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + 1);
         currentFrameYCoordinate = ...
@@ -385,7 +391,6 @@ if adaptiveSearch
     % Scale back up
     estimatedStripYLocations = (estimatedStripYLocations - 1) ...
         * scalingFactor + 1;
-
 end
 
 %% Allow for aborting if not parallel processing
@@ -405,6 +410,8 @@ isSetView = true;
 % vectorization (that is, if verbosity is not enabled since if it was, then
 % these operations must be computed immediately so that the correct eye
 % trace values can be plotted as early as possible).
+currFrameNumber = 0;
+reader = VideoReader(videoInputPath);
 for stripNumber = (1:numberOfStrips)
     
     if ~abortTriggered
@@ -420,9 +427,16 @@ for stripNumber = (1:numberOfStrips)
             stripData = stripIndices(stripNumber,:);
         end
 
-        frame = stripData(1,3);
+        frameNumber = stripData(1,3);
+        if frameNumber > currFrameNumber
+            currFrameNumber = currFrameNumber + 1;
+            frame = readFrame(reader);
+            if ndims(frame) == 3
+                frame = rgb2gray(frame);
+            end
+        end
 
-        if ismember(frame, badFrames)
+        if ismember(frameNumber, badFrames)
             rawEyePositionTraces(stripNumber,:) = [NaN NaN];
             peakValueArray(stripNumber) = NaN;
             secondPeakValueArray(stripNumber) = NaN;
@@ -433,7 +447,7 @@ for stripNumber = (1:numberOfStrips)
         columnStart = stripData(1,2);
         rowEnd = rowStart + stripHeight - 1;
         columnEnd = columnStart + stripWidth - 1;
-        strip = videoInput(rowStart:rowEnd, columnStart:columnEnd, frame);
+        strip = frame(rowStart:rowEnd, columnStart:columnEnd);
         
         correlationMap = normxcorr2(strip, referenceFrame);
         parametersStructure.stripNumber = stripNumber;  
@@ -581,6 +595,8 @@ for stripNumber = (1:numberOfStrips)
             xlim([1 size(correlationMap,2)]);
             ylim([1 size(correlationMap,1)]);
             zlim([-1 1]);
+            xlabel('');
+            ylabel('');
             legend('off');
             
             % Mark the identified peak on the plot with an arrow.
@@ -755,7 +771,7 @@ end
 
 %% Save to output mat file
 
-if ~abortTriggered && ~isempty(inputVideoPath)
+if ~abortTriggered && ~isempty(videoInputPath)
     
     try
         parametersStructure = rmfield(parametersStructure,'axesHandles'); 
@@ -764,21 +780,23 @@ if ~abortTriggered && ~isempty(inputVideoPath)
     end
     
     % Save under file labeled 'final'.
-    eyePositionTraces = usefulEyePositionTraces; %#ok<NASGU>
-    peakRatios = statisticsStructure.peakRatios; %#ok<NASGU>
-    save(outputFileName, 'eyePositionTraces', 'rawEyePositionTraces', ...
-        'timeArray', 'parametersStructure', 'referenceFramePath', ...
-        'peakRatios');
+    if ~usingTemp
+        eyePositionTraces = usefulEyePositionTraces; %#ok<NASGU>
+        peakRatios = statisticsStructure.peakRatios; %#ok<NASGU>
+        save(outputFileName, 'eyePositionTraces', 'rawEyePositionTraces', ...
+            'timeArray', 'parametersStructure', 'referenceFramePath', ...
+            'peakRatios');
+    end
 end
 
 %% Create stabilized video if requested
 if ~abortTriggered && createStabilizedVideo
     
-    ind = strfind(inputVideoPath,'_dwt');
+    ind = strfind(videoInputPath,'_dwt');
     if ~isempty(ind)
-        rawVideoPath = [inputVideoPath(1:ind-1) '.avi'];
+        rawVideoPath = [videoInputPath(1:ind-1) '.avi'];
     else
-        rawVideoPath = inputVideoPath;
+        rawVideoPath = videoInputPath;
     end
     
     parametersStructure.positions = eyePositionTraces;
