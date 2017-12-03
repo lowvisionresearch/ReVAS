@@ -62,11 +62,6 @@ rotations = -parametersStructure.degreeRange:0.1:parametersStructure.degreeRange
 totalFrames = shrunkVideoObject.Framerate * shrunkVideoObject.Duration;
 coordinatesAndDegrees = zeros(totalFrames, 3);
 
-% Each time StripAnalysis is called, we must pass in two frames in a 3D
-% matrix. To save time, skip the second frame, so just mark it as a bad
-% frame. Only the first frame has the frame of interest
-parametersStructure.badFrames = 2;
-
 %% Examine each frame
 for frameNumber = 1:totalFrames
     
@@ -80,12 +75,7 @@ for frameNumber = 1:totalFrames
     end
     % First check if the frame has a peak ratio lower than the
     % designated threshold. If so, then update the reference frame
-    % and move on to the next frame. Because StripAnalysis only accepts 3D
-    % matricies, convert frame into 3D matrix first. Skip this first
-    % iteration if this function call came from reRef because the only
-    % reason reReference would call this function is if the peakRatio was
-    % not sufficient (i.e., we don't need to check 0 degrees anymore).
-    
+    % and move on to the next frame. 
     [~, usefulEyePositionTraces, ~, statisticsStructure] = StripAnalysis(...
         smallFrame, referenceFrame, parametersStructure);
     
