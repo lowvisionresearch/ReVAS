@@ -1,4 +1,4 @@
-function trials = PreProcess(textFile, numTrials, patientID, numParams)
+function trials = PreProcess(textFile, numTrials, patientID)
 % Takes in a text file which contains the information from a patient's
 % corresponding .psy file and extracts the relevant parameters from this
 % file for each trial.
@@ -27,7 +27,7 @@ formatSpec = '%f';
 fileID = fopen(textFile, 'r');
 A = fscanf(fileID, formatSpec);
 for trialNumber = 0 : numTrials - 1
-    currentIndex = trialNumber * numParams + 1;
-    trial = A(currentIndex: currentIndex + numParams - 1);
+    currentIndex = trialNumber * 5 + 1;
+    trial = A(currentIndex: currentIndex + 5 - 1);
     trials(trialNumber + 1) = ExtractParameters(trial, patientID);
 end
