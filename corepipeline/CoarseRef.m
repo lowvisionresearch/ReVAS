@@ -111,7 +111,7 @@ end
 if ~isfield(parametersStructure, 'refFrameNumber')
     refFrameNumber = floor(totalFrames / 2);
 else
-   refFrameNumber = parametersStructure.refFrameNumber; 
+    refFrameNumber = parametersStructure.refFrameNumber;
 end
 
 if exist('badFrames', 'var')
@@ -122,9 +122,9 @@ if exist('badFrames', 'var')
             % If this case is ever reached, that means that half the video
             % has been marked as bad frames.
             error(['Parameters for finding blink frames are too strict.', ...
-               ' Try setting less stringent parameters, or check the video',...
-               ' quality. It may not be of sufficient quality for this',...
-               ' program to analyze meaningfully.']);
+                ' Try setting less stringent parameters, or check the video',...
+                ' quality. It may not be of sufficient quality for this',...
+                ' program to analyze meaningfully.']);
         end
     end
 end
@@ -142,35 +142,47 @@ timeToRemember = videoObject.CurrentTime;
 
 % Shrink the video
 shrunkFileName = [inputVideoPath(1:end-4) '_shrunk.avi'];
-shrunkVideo = VideoWriter(shrunkFileName);
-open(shrunkVideo);
 
-frameNumber = 1;
-while hasFrame(videoObject)
-    frame = double(readFrame(videoObject))/255;
-    shrunkFrame = imresize(frame, scalingFactor);
+% First check whether the shrunk video already exists
+try
+    shrunkObject = VideoReader(shrunkFileName);
+    % If it does exist, check that it's of correct dimensions. If the
+    % shrunk video is not scaled to the desired amount, throw an error and
+    % create a new shrunkVideo.
+    if shrunkObject.Height/videoObject.Height ~= parametersStructure.scalingFactor
+        error
+    end
+catch
+    shrunkVideo = VideoWriter(shrunkFileName);
+    open(shrunkVideo);
     
-    % Sometimes resizing causes numbers to dip below 0 (but just barely)
-    if shrunkFrame(shrunkFrame<0)
-        shrunkFrame(shrunkFrame<0) = 0;
+    frameNumber = 1;
+    while hasFrame(videoObject)
+        frame = double(readFrame(videoObject))/255;
+        shrunkFrame = imresize(frame, scalingFactor);
+        
+        % Sometimes resizing causes numbers to dip below 0 (but just barely)
+        if shrunkFrame(shrunkFrame<0)
+            shrunkFrame(shrunkFrame<0) = 0;
+        end
+        % Similarly, values occasionally exceed 1
+        if shrunkFrame(shrunkFrame>1)
+            shrunkFrame(shrunkFrame>1) = 1;
+        end
+        
+        writeVideo(shrunkVideo, shrunkFrame);
+        if frameNumber == refFrameNumber
+            temporaryRefFrame = shrunkFrame;
+        end
+        frameNumber = frameNumber + 1;
     end
-    % Similarly, values occasionally exceed 1
-    if shrunkFrame(shrunkFrame>1)
-        shrunkFrame(shrunkFrame>1) = 1;
-    end
-    
-    writeVideo(shrunkVideo, shrunkFrame);
-    if frameNumber == refFrameNumber
-        temporaryRefFrame = shrunkFrame;
-    end
-    frameNumber = frameNumber + 1;
+    close(shrunkVideo);
+    videoObject.CurrentTime = timeToRemember;
+    shrunkObject = VideoReader(shrunkFileName);
 end
-close(shrunkVideo);
-videoObject.CurrentTime = timeToRemember;
 
 % Prepare parameters for calling StripAnalysis, using each shrunk frame as
 % a single "strip"
-shrunkObject = VideoReader(shrunkFileName);
 params = parametersStructure;
 params.stripHeight = shrunkObject.Height;
 params.stripWidth = shrunkObject.Width;
