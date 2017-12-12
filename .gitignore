@@ -1,5 +1,6 @@
 *.avi
 *.asv
+*.DS_Store
 documentation/analysis_report/
 documentation/screenshots/
 pseudocode/
