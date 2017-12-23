@@ -3,7 +3,14 @@ function [result] = Crop(image)
 %   Crop takes a 2D array and removes all zero padding. Before doing so,
 %   all NaNs are converted to zeros.
 %
-%   Example: 
+%   -----------------------------------
+%   Input
+%   -----------------------------------
+%   |image| is a 2D array.
+%
+%   -----------------------------------
+%   Example usage
+%   -----------------------------------
 %       A = [1 2 3 4 5 0 0; 
 %            1 2 3 4 5 0 0; 
 %            0 0 0 0 0 NaN 0; 

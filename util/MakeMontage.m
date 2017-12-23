@@ -3,35 +3,50 @@ function [refFrame] = MakeMontage(parametersStructure, fileName)
 %   MakeMontage(parametersStructure, fileName) generates a reference frame by averaging
 %   all the pixel values across all frames in a video.
 %   
+%   -----------------------------------
+%   Input
+%   -----------------------------------
+%   |fileName| is the path to the video.
+%
+%   |parametersStructure| is a struct as specified below.
+%
+%   -----------------------------------
 %   Fields of the |parametersStructure| 
 %   -----------------------------------
 %  stripHeight         :   the height of each strip that was used in
-%                          StripAnalysis
+%                          StripAnalysis. Units are in pixels (default 15)
 %  newStripHeight      :   optional--interpolate between strip positions 
 %                          with a finer time interval, using newStripHeight
-%                          as the new interval
+%                          as the new interval (default stripHeight)
 %  time                :   the time array that corresponds to the eye
-%                          position traces
-%  positions           :   the eye position traces
+%                          position traces (no default--this must be specified)
+%  positions           :   the eye position traces (no default--this must be 
+%                          specified)
 %  addNoise            :   optional--add this field to fill black regions
 %                          in the final reference frame with random noise. 
 %                          FineRef adds this field on the final iteration 
-%                          of a given run
-%  stabilizeVideo      :   set to 1 to generate a stabilized video,
-%                          otherwise set to 0
+%                          of a given run (default false)
+%  stabilizeVideo      :   set to true to generate a stabilized video
+%                          (default false)
 %  stabilizedVideoSizeMultiplier : a multiplier to determine the frame size
-%                          of the stabilized video. defaults to 1.25;
+%                          of the stabilized video (default 1.25)
 %
-%   Example:
+%   -----------------------------------
+%   Example usage
+%   -----------------------------------
 %       inputVideoPath = 'MyVid.avi';
 %       load('MyVid_final.mat')
 %       load('MyVid_params.mat')
 %       parametersStructure.positions = eyePositionTraces;
 %       parametersStructure.time = timeArray;
-%       parametersStructure.stripHeight = fineParameters.stripHeight;
+%       parametersStructure.stripHeight = 15;
 %       referenceFrame = MakeMontage(parametersStructure, inputVideoPath);
 
-%% Prepare a new field for newStripHeight
+%% Set default values. 
+if ~isfield(parametersStructure, 'stripHeight')
+    parametersStructure.stripHeight = 15;
+end
+
 % newStripHeight will give the requisite information for interpolation
 % between the spaced-out strips later.
 if isfield(parametersStructure, 'newStripHeight')
@@ -48,8 +63,7 @@ else
 end
 
 
-% size of the stabilized video will be
-% stabilizedVideoSizeMultiplier*frameSize
+% Size of the stabilized video will be stabilizedVideoSizeMultiplier*frameSize
 if ~isfield(parametersStructure,'stabilizedVideoSizeMultiplier') 
     stabilizedVideoSizeMultiplier = 1.25;
 else
