@@ -224,10 +224,7 @@ if logical(handles.togStrip.Value) && ~logical(abortTriggered)
     % Update file name to input file name
     inputPath = [inputPath(1:end-4) '_' ...
         int2str(parametersStructure.samplingRate) '_hz_final.mat'];
-    
-    
 end
-
 
 %% Re-referencing Module
 if logical(handles.togReRef.Value) && strcmp(handles.config.rerefGlobalFullPath, '')

@@ -1,43 +1,74 @@
-function [outputFileName, saccades, drifts] = FindSaccadesAndDrifts(inputEyePositionsFilePath, ...
-    originalVideoSizePixels, originalVideoSizeDegrees, ...
-    parametersStructure)
+function [outputFileName, saccades, drifts] = ...
+    FindSaccadesAndDrifts(inputEyePositionsFilePath, originalVideoSizePixels, ...
+    originalVideoSizeDegrees, parametersStructure)
 %FIND SACCADES AND DRIFTS Records in a mat file an array of structures
 %representing saccades and an array of structures representing drifts.
-%   The result is stored with '_sacsdrifts' appended to the input video file
-%   name.
 %
+%   -----------------------------------
+%   Input
+%   -----------------------------------
+%   |inputEyePositionsFilePath| is the path to the eye positions. The
+%   result is stored with '_sacsdrifts' appended to the input video file name.
+%
+%   |originalVideoSizePixels| is the size of the raw original video in
+%   pixels. The format is [height width].
+%
+%   |originalVideoSizeDegrees| is the size of the raw original video in
+%   degrees. The format is [height width].
+%
+%   |parametersStructure| is a struct as specified below.
+%
+%   -----------------------------------
 %   Fields of the |parametersStructure| 
 %   -----------------------------------
-%  overwrite               : set to 1 to overwrite existing files resulting 
-%                            from calling the function.
-%                            Set to 0 to abort the function call if the
-%                            files exist in the current directory.
-%  thresholdValue          : multiplier specifying the median-based velocity
-%                            threshold. The most typically used value is 6.
-%  secondaryThresholdValue : multiplier specifying a secondary velocity
-%                            threshold for more accurate detection of onset
-%                            and offset of a saccade
-%  stitchCriteria          : if two consecutive saccades are closer in time
-%                            less than this value (in ms), then they are
-%                            stitched back to back.
-%  minAmplitude            : minimum (micro)saccade amplitude in deg
-%  minDuration             : minimum saccade duration in ms
-%  maxDuration             : maximum saccade duration in ms
-%  detectionMethod         : saccade detection method. set to 1 for using a
-%                            hard velocity threshold. set to 2 for using a
-%                            median-based velocity threshold. defaults to 2.
-%  velocityMethod          : set to 1 for regular differentiation. set to 2
-%                            for three-point differentiation.
-%  enableVerbosity         : set to 1 to see progress and/or output
-%  axesHandles             : axis handles to plot the output. 
-%  hardVelocityThreshold   : in deg/sec. relevant only when velocityMethod is
-%                            set to 1.
-%  hardSecondaryVelocityThreshold : in deg/sec. relevant only when
-%                           velocityMethod is 1.
-%
-%
-%
-%
+%   overwrite               : set to true to overwrite existing files.
+%                             Set to false to abort the function call if the
+%                             files already exist. (default false)
+%   enableVerbosity         : set to true to report back plots during execution.
+%                             (default false)
+%   stitchCriteria          : if two consecutive saccades are closer in time
+%                             less than this value (in ms), then they are
+%                             stitched back to back. (default 15)
+%   minAmplitude            : minimum (micro)saccade amplitude in deg (default 0.1)
+%   maxDuration             : maximum saccade duration in ms. (default 100)
+%   minDuration             : minimum saccade duration in ms. (default 8)
+%   velocityMethod          : set to 1 for regular differentiation. set to 2
+%                             for three-point differentiation. (default 2)
+%   detectionMethod         : saccade detection method. set to 1 for using a
+%                             hard velocity threshold. set to 2 for using a
+%                             median-based velocity threshold. (default 2)
+%   hardVelocityThreshold   : in deg/sec. (relevant only when detectionMethod is
+%                             1) (default 25)
+%   hardSecondaryVelocityThreshold : in deg/sec. (relevant only when
+%                            detectionMethod is 1) (default 15)
+%   thresholdValue          : multiplier specifying the median-based velocity
+%                             threshold. (relevant only when detectionMethod
+%                             is 2) (default 6)
+%   secondaryThresholdValue : multiplier specifying a secondary velocity
+%                             threshold for more accurate detection of onset
+%                             and offset of a saccade. (relevant only when
+%                             detectionMethod is 2) (default 3)
+%   axesHandles             : axes handle for giving feedback. if not
+%                             provided or empty, new figures are created.
+%                             (relevant only when enableVerbosity is true)%
+%   -----------------------------------
+%   Example usage
+%   -----------------------------------
+%       inputPath = 'MyFile.mat';
+%       originalVideoSizePixels = [512 512];
+%       originalVideoSizeDegrees = [10 10];
+%       parametersStructure.overwrite = true;
+%       parametersStructure.enableVerbosity = true;
+%       parametersStructure.thresholdValue = 6;
+%       parametersStructure.secondaryThresholdValue = 3;
+%       parametersStructure.stitchCriteria = 15;
+%       parametersStructure.minAmplitude = 0.05;
+%       parametersStructure.minDuration = 8;
+%       parametersStructure.maxDuration = 100;
+%       parametersStructure.detectionMethod = 2;
+%       FindSaccadesAndDrifts(inputPath, originalVideoSizePixels, ...
+%           originalVideoSizeDegrees, parametersStructure);
+
 %% Handle overwrite scenarios.
 outputFileName = [inputEyePositionsFilePath(1:end-4) '_sacsdrifts'];
 if ~exist([outputFileName '.mat'], 'file')
@@ -75,7 +106,7 @@ end
 
 % units are in degrees
 if ~isfield(parametersStructure, 'minAmplitude')
-    minAmplitude = 0.05;
+    minAmplitude = 0.1;
     RevasWarning('using default parameter for minAmplitude', parametersStructure);
 else
     minAmplitude = parametersStructure.minAmplitude;
@@ -157,7 +188,6 @@ load(inputEyePositionsFilePath);
 % - referenceFramePath
 % - timeArray
 
-
 %% Convert eye position traces from pixels to degrees
 degreesPerPixelVertical = ...
     originalVideoSizeDegrees(1) / originalVideoSizePixels(1);
@@ -228,16 +258,6 @@ for i=1:length(onsets)
     driftIndices(onsets(i):offsets(i)) = false;
 end
 
-% try
-%     % artifacts, the regions that cannot be classified as saccades but still
-%     % exceeds the velocity thresholds.
-%     beforeAfter = round(0.005/diff(timeArray(1:2))); 
-%     remove = conv(double(saccadeIndices),ones(beforeAfter,1),'same')>0;
-%     driftIndices(remove) = false;
-% catch
-%    % ignore 
-% end
-
 % compute drift onsets and offsets
 [driftOnsets, driftOffsets] = GetDriftOnsetsAndOffsets(driftIndices);
 
@@ -247,7 +267,6 @@ end
 
 % get drift parameters
 drifts = GetDriftProperties(eyePositionTraces,timeArray,driftOnsets,driftOffsets,velocity); 
-
 
 %% Save to output mat file.
 save(outputFileName, 'saccades', 'drifts');

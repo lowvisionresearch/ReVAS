@@ -1,24 +1,29 @@
 function GammaCorrect(inputVideoPath, parametersStructure)
-%GAMMA CORRECT Applies gamma correction to the video
-%   The result is stored with '_gamscaled' appended to the input video file
-%   name.
+%GAMMA CORRECT Applies gamma correction to the video.
+%
+%   -----------------------------------
+%   Input
+%   -----------------------------------
+%   |inputVideoPath| is the path to the video. The result is stored with 
+%   '_gamscaled' appended to the input video file name.
+%
+%   |parametersStructure| is a struct as specified below.
 %
 %   Fields of the |parametersStructure| 
 %   -----------------------------------
-%   overwrite          :        set to 1 to overwrite existing files resulting 
-%                               from calling the function.
-%                               Set to 0 to abort the function call if the
-%                               files exist in the current directory.
-%   gammaExponent      :        gamma specifies the shape of the curve 
-%                               describing the relationship between the 
-%                               values in I and J, where new intensity
-%                               values are being mapped from I (a frame) 
-%                               to J. gammaExponent is a scalar value.
-%                               Defaults to 0.6 if no value is specified.
-%                             
+%   overwrite          : set to true to overwrite existing files.
+%                        Set to false to abort the function call if the
+%                        files already exist. (default false)
+%   gammaExponent      : gamma specifies the shape of the curve 
+%                        describing the relationship between the 
+%                        values in I and J, where new intensity
+%                        values are being mapped from I (a frame) 
+%                        to J. gammaExponent is a scalar value.
+%                        (default 0.6)
+%
 %   Example usage: 
 %       inputVideoPath = 'MyVid.avi';
-%       parametersStructure.overwrite = 1;
+%       parametersStructure.overwrite = true;
 %       parametersStructure.gammaExponent = 0.6;
 %       GammaCorrect(inputVideoPath, parametersStructure);
 

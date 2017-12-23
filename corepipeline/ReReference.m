@@ -1,56 +1,71 @@
 function [newEyePositionTraces, outputFilePath, params] = ...
-    ReReference(positionArgument, localRefArgument, globalRefArgument, ...
-    parametersStructure)
+    ReReference(positionArgument, localRefArgument, globalRefArgument, parametersStructure)
 %REREFERENCE adds offsets to eye position traces so that all positions are
 %   based on a global reference frame. 
 %
-%   'positionArgument' can be either an Nx2 array of eyePositionTraces, or
-%   a full path to a file containing eyePositionTraces. 'localRefArgument'
-%   can be either a 2D array representing the local ref corresponding to
-%   'positionArgument', or a full path to a file containing 'localRef'.
-%   'globalRefArgument' can be either a 2D array representing the global
-%   ref, or a full path to a file containing 'globalRef'.
-%   'parametersStructure' is a structure specifying the parameters of the
-%   re-referencing process.
+%   -----------------------------------
+%   Input
+%   -----------------------------------
+%   |positionArgument| is an Nx2 array of eyePositionTraces or
+%   a full path to a file containing eyePositionTraces.
 %
+%   |localRefArgument| is a 2D array representing the local ref corresponding to
+%   |positionArgument| or a full path to a file containing |localRef|.
+%
+%   |globalRefArgument| is a 2D array representing the global
+%   ref or a full path to a file containing 'globalRef'.
+%
+%   |parametersStructure| is a struct as specified below.
+%
+%   -----------------------------------
 %   Fields of the 'parametersStructure' structure
 %   --------------------------------
-%   overwrite               : set to 1 if you want to overwrite the
-%                             existing output file. Relevant only when 
-%                             'positionArgument' is a filename. It is
-%                             ignored if 'positionArgument' is actual eye
-%                             position traces.
-%   fixTorsion              : set to 1 if you want to improve
-%                             cross-correlations by rotating the local ref
-%                             with a range of tilts.
-%   tilts                   : a 1D array with a set of tilt values. Default
-%                             values are -5:1:5;
-%   findPeakMethod          : set to 1 if you want to find the peak of raw
-%                             cross-correlation map to localize local ref
-%                             on global ref. set to 2 if you want to enable
-%                             subtraction of gaussian-filtered version of
-%                             the cross-correlation map from itself before
-%                             searching for the peak. Defaults to 2
-%                             (time-consuming).
-%   findPeakKernelSize      : size of the gaussian kernel for median
-%                             filtering. defaults to 21. ignored if
-%                             findPeakMethod is 1.
+%   overwrite               : set to true to overwrite existing files.
+%                             Set to false to abort the function call if the
+%                             files already exist. (default false)
+%   enableVerbosity         : set to true to report back plots during execution.
+%                             (default false)
 %   searchZone              : size of the search zone for the peak, in
 %                             terms of fraction of the cross-correlation
 %                             map. e.g., a searchZone of 1 means, the
 %                             entire map will be searched. 0.2 means that
 %                             central (0.5-0.1=)0.4 to (0.5+0.1=)0.6 part
-%                             of the map will be searched. defaults to 0.5.
-%   enableVerbosity         : set to 1 to enable user
-%   feedback. axesHandles   : axis handle to give feedback. Relevant only
-%                             when 'enableVerbosity' is enabled. if this
-%                             field does not exist or empty AND
-%                             'enableVerbosity' is set to 1, a new figure
-%                             is generated and feedback is given via that
-%                             figure.
+%                             of the map will be searched. (default 0.5)
+%   findPeakMethod          : set to 1 if you want to find the peak of raw
+%                             cross-correlation map to localize local ref
+%                             on global ref. set to 2 if you want to enable
+%                             subtraction of gaussian-filtered version of
+%                             the cross-correlation map from itself before
+%                             searching for the peak. (default 2)
+%                             (time-consuming).
+%   findPeakKernelSize      : size of the gaussian kernel for median
+%                             filtering. (relevant only when findPeakMethod
+%                             is 2) (default 21)
+%   fixTorsion              : set to true if you want to improve
+%                             cross-correlations by rotating the local ref
+%                             with a range of tilts. (default true)
+%   tilts                   : a 1D array with a set of tilt values.
+%                             (relevant only when fixTorsion is true)
+%                             (default -5:1:5)
+%   axesHandles             : axes handle for giving feedback. if not
+%                             provided or empty, new figures are created.
+%                             (relevant only when enableVerbosity is true)
 %
-
-
+%   -----------------------------------
+%   Example usage
+%   -----------------------------------
+%       inputPath = 'MyFile.mat';
+%       load('MyVid_refFrame.mat');
+%       load('MyVid_globalRefFrame.mat');
+%       parametersStructure.verbosity = true;
+%       parametersStructure.overwrite = true;
+%       parametersStructure.searchZone = 0.5;
+%       parametersStructure.findPeakMethod = 2;
+%       parametersStructure.findPeakKernelSize = 21;
+%       parametersStructure.fixTorsion = true;
+%       parametersStructure.tilts = -5:1:5;
+%       ReReference(inputPath, referenceFrame, ...
+%           globalReferenceFrame, parametersStructure);
 
 %% Handle misusage 
 if nargin<3
