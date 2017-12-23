@@ -1,24 +1,40 @@
 function BandpassFilter(inputVideoPath, parametersStructure)
-%BANDPASS FILTER Applies bandpass filtering to the video
-%   The result is stored with '_bandfilt' appended to the input video file
-%   name.
+%BANDPASS FILTER Applies bandpass filtering to the video.
 %
+%   -----------------------------------
+%   Input
+%   -----------------------------------
+%   |inputVideoPath| is the path to the video. The result is stored with 
+%   '_bandfilt' appended to the input video file name.
+%
+%   |parametersStructure| is a struct as specified below.
+%
+%   -----------------------------------
 %   Fields of the |parametersStructure| 
 %   -----------------------------------
-%   overwrite                   Determines whether an existing output file
-%                               should be overwritten and replaced if it
-%                               already exists.(default false)
-%   smoothing                   Used to remove high-frequency noise in the
+%   overwrite                 : set to true to overwrite existing files.
+%                               Set to false to abort the function call if the
+%                               files already exist. (default false)
+%   smoothing                 : Used to remove high-frequency noise in the
 %                               frames. Represents the standard deviation
-%                               of a Gaussian kernel, in pixels.(default 1)
-%   lowSpatialFrequencyCutoff   Used to remove low-frequency fluctuations
+%                               of a Gaussian kernel, in pixels. (default 1)
+%   lowSpatialFrequencyCutoff : Used to remove low-frequency fluctuations
 %                               in the frames which messes up strip
-%                               analysis. For instance, brightness
+%                               analysis in cycles/image. For instance, brightness
 %                               gradients due to the way observer's head is
 %                               positioned in the TSLO, or just the darker
 %                               nature of the foveal pit compared to the
 %                               peripheral retina creates these low-freq.
-%                               fluctuations.(default 3 cycles/image)
+%                               fluctuations. (default 3)
+%                             
+%   -----------------------------------
+%   Example usage
+%   -----------------------------------
+%       inputVideoPath = 'MyVid.avi';
+%       parametersStructure.overwrite = true;
+%       parametersStructure.smoothing = 1;
+%       parametersStructure.lowSpatialFrequencyCutoff = 3;
+%       BandpassFilter(inputVideoPath, parametersStructure);
 
 %% Handle overwrite scenarios.
 outputVideoPath = [inputVideoPath(1:end-4) '_bandfilt' inputVideoPath(end-3:end)];
