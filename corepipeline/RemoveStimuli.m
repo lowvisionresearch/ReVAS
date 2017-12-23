@@ -4,19 +4,26 @@ function RemoveStimuli(inputVideoPath, parametersStructure)
 %   given by |FindStimulusLocations|. Fills the space with noise of similar
 %   mean and standard deviation as the rest of the frame.
 %
-%   The result is stored with '_nostim' appended to the input video file
-%   name.
+%   -----------------------------------
+%   Input
+%   -----------------------------------
+%   |inputVideoPath| is the path to the video. The result is stored with 
+%   '_nostim' appended to the input video file name.
 %
+%   |parametersStructure| is a struct as specified below.
+%
+%   -----------------------------------
 %   Fields of the |parametersStructure| 
 %   -----------------------------------
-%   overwrite          :        set to 1 to overwrite existing files resulting 
-%                               from calling the function.
-%                               Set to 0 to abort the function call if the
-%                               files exist in the current directory.
+%   overwrite      : set to true to overwrite existing files.
+%                    Set to false to abort the function call if the
+%                    files already exist. (default false)
 %
-%   Example usage: 
+%   -----------------------------------
+%   Example usage
+%   -----------------------------------
 %       inputVideoPath = 'MyVid.avi';
-%       parametersStructure.overwrite = 1;
+%       parametersStructure.overwrite = true;
 %       RemoveStimuli(inputVideoPath, parametersStructure);
 
 %% Handle overwrite scenarios.

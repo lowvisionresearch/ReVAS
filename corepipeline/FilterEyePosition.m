@@ -7,62 +7,66 @@ function [filteredEyePosition, outputFilePath, parametersStructure] = ...
 %   not represent real data. However, if the gaps are smaller than a set
 %   threshold duration, interpolation is kept.
 %
-%   if 'inputArgument' is a file path for the eye position data, then it
-%   has to have two arrays, 'eyePositionTraces' and 'timeArray'. 
+%   -----------------------------------
+%   Input
+%   -----------------------------------
+%   |inputArgument| is a file path for the eye position data that has to
+%   have two arrays, |eyePositionTraces| and |timeArray|. Or, if it is not 
+%   a file path, then it must be a nxm double array, where m>=2 and n is
+%   the number of data points. The last column of |inputArgument| is always
+%   treated as the time signal. The other columns are treated as eye
+%   position signals, which will be subjected to filtering. Typically, 
+%   |inputArgument| would be an nx3 array, where the first two columns 
+%   represent the horizontal and vertical eye positions, respectively, and
+%   the last column has the time array.
+%   The result is that the filtered version of this file is stored with
+%   '_filtered' appended to the original file name. If |inputArgument| 
+%   is not a file name but actual eye position data, then the filtered 
+%   position data are not stored, and the second output argument is an empty array.
 %
-%   if 'inputArgument' is not a file path then it must be a nxm double
-%   array, where m>=2 and n is the number of data points. The last column of 
-%   'inputArgument' is always treated as the time signal. The other columns
-%   are treated as eye position signals, which will be subjected to
-%   filtering. Typically, 'inputArgument' would be an nx3 array, where the
-%   first two columns represent the horizontal and vertical eye positions,
-%   respectively, and the last column has the time array.
-%  
-%   The output of this process is stored with "_filtered" appended to the
-%   input file name. If 'inputArgument' is not a file name but actual
-%   eye position data, then the filtered position data are not stored, and
-%   the second output argument is an empty array.
+%   |parametersStructure| is a struct as specified below.
 %
+%   -----------------------------------
 %   Fields of the |parametersStructure| 
 %   -----------------------------------
-%   overwrite           :   determines whether an existing output
-%                           file should be overwritten and replaced if 
-%                           it already exists. if 'inputArgument'
-%                           is not a file name, overwrite is ignored.
-%   maxGapDurationMs    :   maximum allowable gap duration
-%                           in msec. Gaps shorter than this value
-%                           will be interpolated in the final
-%                           traces.
-%   filterTypes         :   an nx1 cell array of function pointers for
-%                           different types of filters. Any arbitrary
-%                           function can be used. Filtering will be applied
-%                           in the order indicated in this array.
-%   filterParameters    :   an nx1 cell array of parameters for
-%                           corresponding filters in "filterTypes". Each
-%                           row of the cell array can contain an array of
-%                           parameters.
-%   enableVerbosity     :   set to 1 to see the filtered and original eye
-%                           position data. set to 0 for no feedback.
-%   axesHandles         :   axes handle for giving feedback. if not
-%                           provided or empty, a new figure is created. 
+%   overwrite           : set to true to overwrite existing files.
+%                         Set to false to abort the function call if the
+%                         files already exist. (default false)
+%   enableVerbosity     : set to true to report back plots during execution.
+%                         (default false)
+%   maxGapDurationMs    : maximum allowable gap duration
+%                         in msec. Gaps shorter than this value
+%                         will be interpolated in the final
+%                         traces.
+%   filterTypes         : an nx1 cell array of function pointers for
+%                         different types of filters. Any arbitrary
+%                         function can be used. Filtering will be applied
+%                         in the order indicated in this array.
+%   filterParameters    : an nx1 cell array of parameters for
+%                         corresponding filters in "filterTypes". Each
+%                         row of the cell array can contain an array of
+%                         parameters.
+%   axesHandles         : axes handle for giving feedback. if not
+%                         provided or empty, new figures are created.
+%                         (relevant only when enableVerbosity is true)
 %
-%   Example usage: 
-%   
-% parameterStructure.overwrite = 0;
-% parameterStructure.maxGapDurationMs = 10; %ms
-% parameterStructure.filterTypes = {@medfilt1, @sgolayfilt};
-% parameterStructure.filterParameters = {11,[3 15]}; % 11 is for medfilt1, [3 15] 
-%                     is for sgolayfilt (3 is degree of poly, 15 size of kernel)
-% FilterEyePosition('myfile.mat',parameterStructure);
+%   -----------------------------------
+%   Example usage
+%   -----------------------------------
+%       inputPath = 'MyFile.mat';
+%       parameterStructure.overwrite = 0;
+%       parameterStructure.maxGapDurationMs = 10; %ms
+%       parameterStructure.filterTypes = {@medfilt1, @sgolayfilt};
+%       parameterStructure.filterParameters = {11,[3 15]}; 
+%                     % 11 is for medfilt1, [3 15] 
+%                     % is for sgolayfilt (3 is degree of poly, 15 size of kernel)
+%       FilterEyePosition(inputPath, parameterStructure);
 % 
-% OR
-%
-% inputArray = [eyePosition time];
-% filteredPosition = FilterEyePosition(inputArray,parameterStructure);
-%
-%
-
-
+%   -----------------------------------
+%   Example usage
+%   -----------------------------------
+%       inputArray = [eyePosition time];
+%       filteredPosition = FilterEyePosition(inputArray, parameterStructure);
 
 %% Handle misusage 
 if nargin<1

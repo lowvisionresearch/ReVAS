@@ -1,30 +1,40 @@
 function TrimVideo(inputVideoPath, parametersStructure)
-%TRIM VIDEO Removes upper and right edge of video
+%TRIM VIDEO Removes upper and right edge of video.
 %   Removes the upper few rows and right few columns. 
 %
+%   -----------------------------------
+%   Input
+%   -----------------------------------
 %   |inputVideoPath| is the path to the video. The result is that the
 %   trimmed version of this video is stored with '_dwt' appended to the
-%   original file name. 
+%   original file name.
 %
+%   |parametersStructure| is a struct as specified below.
+%
+%   -----------------------------------
 %   Fields of the |parametersStructure| 
 %   -----------------------------------
-%   overwrite           :   set to 1 to overwrite existing files resulting 
-%                           from calling the function. Set to 0 to abort 
-%                           the function call if the files exist in the 
-%                           current directory.
-%   borderTrimAmount    :   specifies the number of rows and columns to be
-%                           removed as a vector with the number of
-%                           rows/columns to be removed from each edge
-%                           specified in the following order:
-%                           [left right top bottom]. The default is
-%                           removing 24 from the right and top. If a scalar
-%                           is provided instead, then that amount will be
-%                           removed from the right and top only.%
-%   Example usage: 
+%   overwrite           : set to true to overwrite existing files.
+%                         Set to false to abort the function call if the
+%                         files already exist. (default false)
+%   borderTrimAmount    : specifies the number of rows and columns to be
+%                         removed as a vector with the number of
+%                         rows/columns to be removed from each edge
+%                         specified in the following order:
+%                         [left right top bottom]. The default is
+%                         removing 24 from the right and top. If a scalar
+%                         is provided instead, then that amount will be
+%                         removed from the right and top only.
+%                         (default [0 24 24 0])
+%
+%   -----------------------------------
+%   Example usage
+%   -----------------------------------
 %       inputVideoPath = 'MyVid.avi';
 %       parametersStructure.overwrite = 1;
 %       parametersStructure.borderTrimAmount = [0 24 24 0];
 %       TrimVideo(inputVideoPath, parametersStructure);
+
 %% Handle overwrite scenarios.
 outputVideoPath = [inputVideoPath(1:end-4) '_dwt' inputVideoPath(end-3:end)];
 if ~exist(outputVideoPath, 'file')
