@@ -1,28 +1,51 @@
 function FindStimulusLocations(inputVideoPath, stimulus, parametersStructure, removalAreaSize)
 %FIND STIMULUS LOCATIONS Records in a mat file the location of the stimulus
 %in each frame of the video.
-%   The result is stored with '_stimlocs' appended to the input video file
-%   name (and the file type is now .mat).
 %
-%   The mean and standard deviation of the pixels in each frame are also
-%   saved as two separate arrays in this output mat file.
+%   -----------------------------------
+%   Input
+%   -----------------------------------
+%   |inputVideoPath| is the path to the video. The result is stored with 
+%   '_stimlocs' appended to the input video file name (and the file type
+%   is now .mat). The mean and standard deviation of the pixels in each
+%   frame are also saved as two separate arrays in this output mat file.
 %
+%   |stimulus| is a path to a stimulus or a struct containing a |size|
+%   field which is the size of the stimulus in pixels (default 11), and a
+%   |thickness| field which is the thickness of the default cross shape in
+%   pixels (default 1). (default is dynamically generated stimulus with
+%   aforementioned defaults)
+%
+%   |parametersStructure| is a struct as specified below.
+%
+%   |removalAreaSize| is the size of the rectangle to remove from the
+%   video, centered around the identified stimulus location. The format is
+%   [width length], given in pixels. (default [11 11])
+%
+%   -----------------------------------
 %   Fields of the |parametersStructure| 
 %   -----------------------------------
-%   overwrite          :        set to 1 to overwrite existing files resulting 
-%                               from calling the function.
-%                               Set to 0 to abort the function call if the
-%                               files exist in the current directory.
-%   enableVerbosity    :        set to 1 to view the progress of the
-%                               program as it locates stimulus locations.
-%                               Set to 0 for no feedback.
-%   axesHandles        :
+%   overwrite          : set to true to overwrite existing files.
+%                        Set to false to abort the function call if the
+%                        files already exist. (default false)
+%   enableVerbosity    : set to true to report back plots during execution.
+%                        (default false)
+%   axesHandles        : axes handle for giving feedback. if not
+%                        provided or empty, new figures are created.
+%                        (relevant only when enableVerbosity is true)
 %
-%   Note: FindStimulusLocations also calls FindPeak. See FindPeak for 
-%   additional relevant parameters.
-%
-%   Example usage: 
-%       
+%   -----------------------------------
+%   Example usage
+%   -----------------------------------
+%       inputVideoPath = 'MyVid.avi';
+%       parametersStructure.enableVerbosity = true;
+%       parametersStructure.overwrite = true;
+%       stimulus = struct;
+%       stimulus.size = 11;
+%       stimulus.thickness = 1;
+%       removalAreaSize = [11 11];
+%       FindStimulusLocations(inputVideoPath, stimulus, parametersStructure, ...
+%                             removalAreaSize);
 
 %% Handle overwrite scenarios.
 matFileName = [inputVideoPath(1:end-4) '_stimlocs'];

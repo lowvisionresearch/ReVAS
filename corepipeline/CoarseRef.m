@@ -11,6 +11,7 @@ function coarseRefFrame = CoarseRef(inputVideoPath, parametersStructure)
 %   coarse reference frame using those approximate frame shifts.
 %
 %
+%   -----------------------------------
 %   Fields of the |parametersStructure| 
 %   -----------------------------------
 %  scalingFactor       :   the amount by which each frame is scaled down
@@ -46,10 +47,12 @@ function coarseRefFrame = CoarseRef(inputVideoPath, parametersStructure)
 %   Note: CoarseRef also calls StripAnalysis to generate coarse eye 
 %   eye position traces. See StripAnalysis for relevant parameters.
 %
-%   Example usage: 
-%       videoPath = 'MyVid.avi';
+%   -----------------------------------
+%   Example usage
+%   -----------------------------------
+%       inputVideoPath = 'MyVid.avi';
 %       load('MyVid_params.mat')
-%       coarseReferenceFrame = CoarseRef(filename, coarseParameters);
+%       coarseReferenceFrame = CoarseRef(inputVideoPath, coarseParameters);
 
 %% Allow for aborting if not parallel processing
 global abortTriggered;

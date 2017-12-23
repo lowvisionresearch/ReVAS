@@ -20,10 +20,10 @@ function newRefFrame = FineRef(coarseRefFrame, inputVideoPath, parametersStructu
 %   functions for additional parameters.
 %
 %   Example usage: 
-%       videoPath = 'MyVid.avi';
+%       inputVideoPath = 'MyVid.avi';
 %       coarseRefFrame = load('MyVid_coarseRef.mat');
 %       parametersStructure = load(MyVid_params.mat');
-%       newRefFrame = FineRef(coarseRefFrame, videoPath, parametersStructure);
+%       newRefFrame = FineRef(coarseRefFrame, inputVideoPath, parametersStructure);
 
 %% Handle overwrite scenarios.
 

@@ -22,14 +22,14 @@ function [refFrame] = MakeMontage(parametersStructure, fileName)
 %  stabilizedVideoSizeMultiplier : a multiplier to determine the frame size
 %                          of the stabilized video. defaults to 1.25;
 %
-%   Example: 
+%   Example:
+%       inputVideoPath = 'MyVid.avi';
 %       load('MyVid_final.mat')
 %       load('MyVid_params.mat')
 %       parametersStructure.positions = eyePositionTraces;
 %       parametersStructure.time = timeArray;
 %       parametersStructure.stripHeight = fineParameters.stripHeight;
-%       fileName = 'MyVid.avi';
-%       referenceFrame = MakeMontage(parametersStructure, fileName);
+%       referenceFrame = MakeMontage(parametersStructure, inputVideoPath);
 
 %% Prepare a new field for newStripHeight
 % newStripHeight will give the requisite information for interpolation

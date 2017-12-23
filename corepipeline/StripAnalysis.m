@@ -1,57 +1,121 @@
 function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
-    statisticsStructure]...
-    = StripAnalysis(videoInput, referenceFrame, parametersStructure)
+    statisticsStructure] = ...
+    StripAnalysis(videoInput, referenceFrame, parametersStructure)
 %STRIP ANALYSIS Extract eye movements in units of pixels.
 %   Cross-correlation of horizontal strips with a pre-defined
 %   reference frame.
 %
+%   -----------------------------------
+%   Input
+%   -----------------------------------
+%   |videoInput| is the path to the video or a matrix representation of the
+%   video that is already loaded into memory.
+%
+%   |referenceFrame| is the path to the reference frame or a matrix representation of the
+%   reference frame.
+%
+%   |parametersStructure| is a struct as specified below.
+%
+%   -----------------------------------
 %   Fields of the |parametersStructure| 
 %   -----------------------------------
-%   badFrames                       : array containing the frame numbers of
-%                                     the blink frames
+%   overwrite                       : set to true to overwrite existing files.
+%                                     Set to false to abort the function call if the
+%                                     files already exist. (default false)
+%   enableVerbosity                 : set to true to report back plots during execution.
+%                                     (default false)
+%   badFrames                       : vector containing the frame numbers of
+%                                     the blink frames. (default [])
 %   stripHeight                     : strip height to be used for strip
-%                                     analysis
+%                                     analysis in pixels. (default 15)
 %   stripWidth                      : strip width to be used for strip
-%                                     analysis. Should be set to the width 
-%                                     of each frame
-%   samplingRate                    : sampling rate of the video
-%   maximumSD                       : 
-%   SDWindowSize                    :
-%   maximumPeakRatio                : maximum peak ratio between the
+%                                     analysis in pixels. Should be set to
+%                                     the width of each frame. (default 488)
+%   samplingRate                    : sampling rate of the video in Hz.
+%                                     (default 540)
+%   enableGaussianFiltering         : set to true to enable Gaussian filtering. 
+%                                     Set to false to disable. (default
+%                                     false)
+%   maximumSD                       : maximum standard deviation allowed when
+%                                     a gaussian is fitted around the 
+%                                     identified peak--strips with positions
+%                                     that have a standard deviation >
+%                                     maximumSD will be discarded.
+%                                     (relevant only when
+%                                     enableGaussianFiltering is true)
+%                                     (default 10)
+%   SDWindowSize                    : the size of the window to use when
+%                                     fitting the gaussian for maximumSD
+%                                     in pixels. (relevant only when
+%                                     enableGaussianFiltering is true)
+%                                     (default 25)
+%   maximumPeakRatio                : maximum peak ratio allowed between the
 %                                     highest and second-highest peak in a 
-%                                     correlation map--a peak ratio >
-%                                     maximumPeakRatio will prompt the 
-%                                     program to throw out the position
-%                                     given by that particular strip
-%   adaptiveSearch                  :
-%   scalingFactor                   :
-%   searchWindowHeight              :
-%   enableVerbosity                 : set to 1 to view the progress of the
-%                                     program as it locates strip positions. 
-%                                     Set to 0 for no feedback.
+%                                     correlation map--strips with positions
+%                                     that have a peak ratio >
+%                                     maximumPeakRatio will be discarded.
+%                                     (relevant only when
+%                                     enableGaussianFiltering is false)
+%                                     (default 0.8)
 %   minimumPeakThreshold            : the minimum value above which a peak
 %                                     needs to be in order to be considered 
-%                                     a valid correlation
-%   enableGaussianFiltering         : set to 1 to enable Gaussian filtering. 
-%                                     Set to 0 to disable.
-%   enableSubpixelInterpolation     :
-%   subpixelInterpolationParameters :
-%   createStabilizedVideo           : set to true for stabilized videos
+%                                     a valid correlation. (this applies
+%                                     regardless of enableGaussianFiltering)
+%                                     (default 0)
+%   adaptiveSearch                  : set to true to perform search on
+%                                     scaled down versions first in order
+%                                     to potentially improve computation
+%                                     time. (default false)
+%   scalingFactor                   : the factor to scale down by.
+%                                     (relevant only when adaptiveSearch is
+%                                     true) (default 8)
+%   searchWindowHeight              : the height of the search window to be
+%                                     used for adaptive search in pixels.
+%                                     (relevant only when adaptiveSearch is
+%                                     true) (default 79)
+%   enableSubpixelInterpolation     : set to true to estimate peak
+%                                     coordinates to a subpixel precision
+%                                     through interpolation. (default true)
+%   subpixelInterpolationParameters : see below. (relevant only if
+%                                     enableSubpixelInterpolation is true)
+%   createStabilizedVideo           : set to true to create a stabilized
+%                                     videos. (default false)
+%   axesHandles                     : axes handle for giving feedback. if not
+%                                     provided or empty, new figures are created.
+%                                     (relevant only when enableVerbosity is true)
+%
 %   -----------------------------------
 %   Fields of the |subpixelInterpolationParameters|
 %   -----------------------------------
-%   neighborhoodSize                :
-%   subpixelDepth                   :
+%   neighborhoodSize                : the length of one of the sides of the
+%                                     neighborhood area over which
+%                                     interpolation is to be performed over
+%                                     in pixels. (default 7)
+%   subpixelDepth                   : the scaling of the desired level of
+%                                     subpixel depth. (default 2)
 %
-%   Note: StripAnalysis calls FindPeak. See FindPeak for additional 
-%   relevant parameters.
-%
-%   Example usage: 
+%   -----------------------------------
+%   Example usage
+%   -----------------------------------
 %       videoInput = 'MyVid.avi';
-%       load('MyVid_params.mat');
 %       load('MyVid_refFrame.mat');
+%       parametersStructure.overwrite = true;
+%       parametersStructure.enableVerbosity = true;
+%       parametersStructure.stripHeight = 15;
+%       parametersStructure.stripWidth = 488;
+%       parametersStructure.samplingRate = 540;
+%       parametersStructure.enableGaussianFiltering = false;
+%       parametersStructure.maximumPeakRatio = 0.8;
+%       parametersStructure.minimumPeakThreshold = 0;
+%       parametersStructure.adaptiveSearch = false;
+%       parametersStructure.enableSubpixelInterpolation = true;
+%       parametersStructure.subpixelInterpolationParameters.neighborhoodSize
+%           = 7;
+%       parametersStructure.subpixelInterpolationParameters.subpixelDepth ...
+%           = 2;
+%       parametersStructure.createStabilizedVideo = false;
 %       [rawEyePositionTraces, usefulEyePositionTraces, timeArray, statisticsStructure] = ...
-%       StripAnalysis(videoInput, referenceFrame, parametersStructure)
+%           StripAnalysis(videoInput, referenceFrame, parametersStructure);
 
 %% Set parameters to defaults if not specified.
 videoInputPath = '';
@@ -548,9 +612,7 @@ for stripNumber = (1:numberOfStrips)
 
         if enableGaussianFiltering
             % Fit a gaussian in a pixel window around the identified peak.
-            % The pixel window is of size
-            % |SDWindowSize| x
-            % |SDWindowSize/2|
+            % The pixel window is of size |SDWindowSize|
             %
             % Take the middle row and the middle column, and fit a one-dimensional
             % gaussian to both in order to get the standard deviations.
