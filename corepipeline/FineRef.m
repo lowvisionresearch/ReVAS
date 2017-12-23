@@ -4,22 +4,35 @@ function newRefFrame = FineRef(coarseRefFrame, inputVideoPath, parametersStructu
 %   alternating between generating eye traces and generating the reference
 %   frames that result from those traces.
 %   
+%   -----------------------------------
+%   Input
+%   -----------------------------------
+%   |coarseRefFrame| is the path to the coarse reference frame or a matrix 
+%   representation of the coarse reference frame
+%
+%   |inputVideoPath| is the path to the video.
+%
+%   |parametersStructure| is a struct as specified below.
+%
 %   Fields of the |parametersStructure| 
 %   -----------------------------------
 %  numberOfIterations  :   number of strip-analysis-to-reference-frame
-%                          cycles to perform (i.e., when set to 1, one
+%                          cycles to perform. For example, when set to 1, one
 %                          StripAnalysis will be performed on the
 %                          coarseRefFrame, and a fine reference frame will 
 %                          be generated from those eye position traces. If 
 %                          set to 2, another strip analysis will be
 %                          performed on that fine reference frame, and
 %                          another fine reference frame will be generated
-%                          from the resulting eye position traces.)
+%                          from the resulting eye position traces
+%                          (default 1)
 %   
 %   Note: FineRef also calls StripAnalysis and MakeMontage. Refer to those
 %   functions for additional parameters.
 %
-%   Example usage: 
+%   -----------------------------------
+%   Example usage
+%   -----------------------------------
 %       inputVideoPath = 'MyVid.avi';
 %       coarseRefFrame = load('MyVid_coarseRef.mat');
 %       parametersStructure = load(MyVid_params.mat');
@@ -59,7 +72,13 @@ if numberOfIterations > 0
         return;
     end
 else
+    % If user specifies 0 iterations, set the return value to the coarse
+    % reference frame that was passed in.
     newRefFrame = coarseRefFrame;
+    outputFileName = inputVideoPath;
+    ouputFileName(end-3:end) = [];
+    outputFileName(end+1:end+9) = '_refframe';
+    save(outputFileName, 'newRefFrame');
 end
 
 %% For a certain number of iterations specified by the user, pingpong back

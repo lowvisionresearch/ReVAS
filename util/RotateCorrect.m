@@ -1,7 +1,6 @@
 function [coarseRefFrame, coordinatesAndDegrees] = RotateCorrect(shrunkVideoPath, bigVideoPath, ...
     referenceFrame, outputFileName, parametersStructure)
-%%ROTATE CORRECT     RotateCorrect takes in the 3D video array from
-%                    CoarseRef and checks each frame to see whether
+%%ROTATE CORRECT     RotateCorrect checks each frame to see whether
 %                    rotation is necessary (using peak ratios as the
 %                    criterion). If the frame's peak ratio is above a
 %                    specified threshold, then the function rotates the
@@ -11,25 +10,43 @@ function [coarseRefFrame, coordinatesAndDegrees] = RotateCorrect(shrunkVideoPath
 %                    information regarding which degree rotation was used,
 %                    and what each frame's peak ratio was.
 %
+%   -----------------------------------
+%   Input
+%   -----------------------------------
+%   |shrunkVideoPath| is the path to the scaled-down video created in 
+%   CoarseRef (no default--must be specified)
+%
+%   |bigVideoPath| is the path to the original video (no default--must be
+%   specified)
+%
+%   |referenceFrame| is the matrix representation of the temporary 
+%   reference frame (no default--must be specified)
+%
+%   |outputFileName| is the filename of the output save file (no default--must 
+%   be specified)
+%
+%   |parametersStructure| is a struct as specified below.
+%
+%   -----------------------------------
 %   Fields of the |parametersStructure| 
 %   -----------------------------------
-%  degreeRange         :   specifies the degree range to test for each 
-%                          frame, passed in as a scalar (i.e., passing in 5
-%                          means that the function will test rotations from
-%                          -5 to +5 degrees).
-%  peakDropWindow      :   size of the correlation map to exclude when
+%   degreeRange         :   specifies the degree range to test for each 
+%                          frame, passed in as a scalar (i.e., the function 
+%                          will test rotations from -5 to +5 degrees if 
+%                          user specifies 5). (default 5)
+%   peakDropWindow      :   size of the correlation map to exclude when
 %                          finding the second peak, for calculating peak 
-%                          ratios. Units are in pixels. 
-%  scalingFactor       :   the amount by which each frame is scaled down
+%                          ratios. Units are in pixels. (default 25)
+%   scalingFactor       :   the amount by which each frame is scaled down
 %                          for the coarse cross-correlating
-%                          0 < scalingFactor <= 1
-%  rotateMaximumPeakRatio : specifies the peak ratio threshold below which 
+%                          0 < scalingFactor <= 1 (default 1)
+%   rotateMaximumPeakRatio : specifies the peak ratio threshold below which 
 %                           a rotated frame will be considered a "good" 
-%                           frame. 
+%                           frame (default 0.6)
 %
-%   Example usage: 
-%       
-%   Example usage: 
+%   -----------------------------------
+%   Example usage
+%   -----------------------------------
 %       videoPath = 'MyVid.avi';
 %       load('MyVid_params.mat')
 %
@@ -47,6 +64,10 @@ function [coarseRefFrame, coordinatesAndDegrees] = RotateCorrect(shrunkVideoPath
 %% Initialize variables
 if ~isfield(parametersStructure, 'degreeRange')
     parametersStructure.degreeRange = 5;
+end
+
+if ~isfield(parametersStructure, 'peakDropWindow')
+    parametersStructure.peakDropWindow = 25;
 end
 
 bigVideoObject = VideoReader(bigVideoPath);

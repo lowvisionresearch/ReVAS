@@ -10,39 +10,43 @@ function coarseRefFrame = CoarseRef(inputVideoPath, parametersStructure)
 %   scalingFactor to get the actual frame shifts. It then constructs the 
 %   coarse reference frame using those approximate frame shifts.
 %
+%   -----------------------------------
+%   Input
+%   -----------------------------------
+%   |inputVideoPath| is the path to the video.
+%
+%   |parametersStructure| is a struct as specified below.
 %
 %   -----------------------------------
 %   Fields of the |parametersStructure| 
 %   -----------------------------------
+%  enableVerbosity     :   set to true to see the coarseRefFrame, correlation
+%                          maps, raw and final eye position traces (default
+%                          false)
+%  overwrite           :   set to true to overwrite existing files.
+%                          Set to false to abort the function call if the
+%                          files already exist. (default false)
 %  scalingFactor       :   the amount by which each frame is scaled down
 %                          for the coarse cross-correlating
-%                          0 < scalingFactor <= 1
+%                          0 < scalingFactor <= 1 (default 1)
 %  refFrameNumber      :   specifies which frame is to be used as the 
 %                          initial reference frame for the coarse 
-%                          cross-correlating. By default, refFrameNumber 
-%                          is set to a frame in the middle of the video                        
-%  enableVerbosity     :   set to 1 to see the coarseRefFrame, correlation
-%                          maps, raw and final eye position traces. Set to 
-%                          0 for no feedback.
-%  overwrite           :   set to 1 to overwrite existing files resulting 
-%                          from calling coarseRefFrame.
-%                          Set to 0 to abort the function call if the
-%                          files exist in the current directory.
-%  enableGPU           :   optional--set to 1 to use the GPU, if 
-%                          available, to compute correlation maps. 
+%                          cross-correlating. (default totalFrames / 2)                        
+%  enableGPU           :   optional--set to true to use the GPU, if 
+%                          available, to compute correlation maps (default
+%                          false)
 %  peakDropWindow      :   size of the correlation map to exclude when
 %                          finding the second peak, for calculating peak 
-%                          ratios. Units are in pixels. Default value is 20
-%                          (20x20 pixel window will be dropped).
-%  rotateCorrection    :   optional--set to 1 to call RotateCorrect 
+%                          ratios. Units are in pixels. (default 20)
+%  rotateCorrection    :   optional--set to true to call RotateCorrect 
 %                          function, which rotates frames and uses rotated 
 %                          frames to generate the coarseRefFrame if those 
 %                          rotated frames return better peakRatios than the 
-%                          un-rotated franes.
+%                          un-rotated franes (default false)
 %  rotateMaximumPeakRatio : specifies the peak ratio threshold below which 
 %                           a rotated frame will be considered a "good" 
 %                           frame. This parameter is only necessary if 
-%                           rotateCorrection is enabled.
+%                           rotateCorrection is enabled (default 0.6)
 %   
 %   Note: CoarseRef also calls StripAnalysis to generate coarse eye 
 %   eye position traces. See StripAnalysis for relevant parameters.

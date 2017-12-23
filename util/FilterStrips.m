@@ -10,7 +10,14 @@ function [filteredStripIndices, endNaNs, beginNaNs] = FilterStrips(stripIndices)
 %   
 %   stripIndices should should have dimensions Nx1.
 %
-%   Example: 
+%   -----------------------------------
+%   Input
+%   -----------------------------------
+%   |stripIndices| is a column vector.
+%
+%   -----------------------------------
+%   Example usage
+%   -----------------------------------
 %       A = [17; 16; 23; 77; 5; NaN; NaN; NaN; NaN; 10];
 %       x = FilterStrips(A);
 %       x(8)

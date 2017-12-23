@@ -6,9 +6,20 @@ function StabilizeVideo(inputVideoPath, parametersStructure)
 %   file. We recommend setting stripHeight to a number that divides
 %   evenly into the frame height for best results.
 %   
-%   Fields of the |parametersStructure| 
 %   -----------------------------------
-%   See MakeMontage for all relevant parameters
+%   Input
+%   -----------------------------------
+%   |inputVideoInput| is the path to the video.
+%
+%   See MakeMontage for all relevant parameters of |parametersStructure|
+%
+%  -----------------------------------
+%   Example usage
+%   -----------------------------------
+%
+%   inputVideoPath = 'MyVid.avi';
+%   load('MyVid.avi_params.mat');
+%   StabilizeVideo(inputVideoPath, parametersStructure);
 
 parametersStructure.stabilizeVideo = 1;
 
