@@ -9,6 +9,7 @@ function FindBlinkFrames(inputVideoPath, parametersStructure)
 %
 %
 %
+%   -----------------------------------
 %   Fields of the |parametersStructure| 
 %   -----------------------------------
 %  overwrite           :   set to 1 to overwrite existing files resulting 
@@ -40,8 +41,9 @@ function FindBlinkFrames(inputVideoPath, parametersStructure)
 %                          are separated by only one frame, which is less
 %                          than the specified stitch criteria.
 %                          
-%
-%   Example usage: 
+%   -----------------------------------
+%   Example usage
+%   -----------------------------------
 %       videoPath = 'MyVid.avi';
 %       parametersStructure.overwrite = true;
 %       parametersStructure.threhsoldValue = 1.5;
