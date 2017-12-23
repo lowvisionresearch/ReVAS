@@ -2,7 +2,24 @@ function [newStripPositions] = ScaleCoordinates(stripPositions)
 %% ScaleCoordinates   Takes the raw eyePositionTrace output of 
 % StripAnalysis and converts it into a usable output for creating the 
 % reference frames.
-
+%
+%   -----------------------------------
+%   Input
+%   -----------------------------------
+%
+%   |stripPositions| is a 2-column matrix.
+%
+%   -----------------------------------
+%   Example usage
+%   -----------------------------------
+%
+%   stripPositions = randn(500, 2);
+%   [newStripPositions] = ScaleCoordinates(stripPositions);
+%   newStripPositions(newStripPositions<0)
+%
+%   ans =
+%
+%       0×1 empty double column vector
 %% Negate all frame positions. 
 % The output of StripAnalysis gives the posiion of each strip relative to
 % the reference frame. Therefore, in generating a new reference frame, one
