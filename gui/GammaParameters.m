@@ -22,7 +22,7 @@ function varargout = GammaParameters(varargin)
 
 % Edit the above text to modify the response to help GammaParameters
 
-% Last Modified by GUIDE v2.5 30-Jun-2017 23:02:14
+% Last Modified by GUIDE v2.5 22-Dec-2017 22:54:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -167,4 +167,17 @@ else
     hObject.BackgroundColor = mainHandles.colors{4,2};
     hObject.ForegroundColor = mainHandles.colors{4,5};
     hObject.TooltipString = '';
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function exponent_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to exponent (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end
