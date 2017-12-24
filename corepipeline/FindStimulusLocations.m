@@ -58,24 +58,6 @@ else
     RevasWarning('FindStimulusLocations() is proceeding and overwriting an existing file.', parametersStructure);
 end
 
-%% Set parameters to defaults if not specified.
-
-% Validation on the input stimulus is performed as it is converted to a
-% matrix.
-
-if nargin == 3
-   stimulusSize = size(stimulus);
-else
-   stimulusSize = removalAreaSize;
-   if size(stimulusSize) == [2 1]
-       stimulusSize = stimulusSize';
-   elseif size(stimulusSize) ~= [1 2]
-     error('stimulusSize must be a 1 by 2 size array'); 
-   elseif ~IsNaturalNumber(stimulusSize(1)) || ~IsNaturalNumber(stimulusSize(2))
-      error('values of stimulusSize must be natural numbers'); 
-   end
-end
-
 %% Convert stimulus to matrix
 % Two stimulus input types are acceptable:
 % - Path to an image of the stimulus
@@ -108,18 +90,43 @@ elseif isstruct(stimulus)
     stimulus = stimulusMatrix;
 end
 
+%% Set parameters to defaults if not specified.
+
+% Validation on the input stimulus was already performed as it was converted to a
+% matrix.
+
+if nargin == 3
+   stimulusSize = size(stimulus);
+else
+   stimulusSize = removalAreaSize;
+   if size(stimulusSize) == [2 1]
+       stimulusSize = stimulusSize';
+   elseif size(stimulusSize) ~= [1 2]
+     error('stimulusSize must be a 1 by 2 size array'); 
+   elseif ~IsNaturalNumber(stimulusSize(1)) || ~IsNaturalNumber(stimulusSize(2))
+      error('values of stimulusSize must be natural numbers'); 
+   end
+end
+
 %% Find stimulus location of each frame
 
-[videoInputArray, videoFrameRate] = VideoPathToArray(inputVideoPath);
+global abortTriggered;
 
-frameHeight = size(videoInputArray, 1);
-numberOfFrames = size(videoInputArray, 3);
-samplingRate = videoFrameRate;
+% Determine dimensions of video.
+reader = VideoReader(inputVideoPath);
+numberOfFrames = reader.NumberOfFrames;
+samplingRate = reader.FrameRate;
+width = reader.Width;
+height = reader.Height;
+
+% Remake this variable since readFrame() cannot be called after
+% NumberOfFrames property is accessed.
+reader = VideoReader(inputVideoPath);
 
 % Populate time array
-timeArray = (1:numberOfFrames)' / samplingRate;
+timeArray = (1:numberOfFrames)' / samplingRate;   
 
-% Call normxcorr2() to find stimulus on each frame
+% Read and call normxcorr2() to find stimulus frame by frame.
 % Note that calculation for each array value does not end with this loop,
 % the logic below the loop in this section perform remaining operations on
 % the values but are done outside of the loop in order to take advantage of
@@ -129,22 +136,22 @@ timeArray = (1:numberOfFrames)' / samplingRate;
 
 % preallocate two columns for horizontal and vertical movements
 stimulusLocationInEachFrame = NaN(numberOfFrames, 2);
+% preallocate mean and standarddeviation result vectors
+meanOfEachFrame = NaN(numberOfFrames, 1);
+standardDeviationOfEachFrame = NaN(numberOfFrames, 1);
 
 % Threshold value for detecting stimulus. Any peak value below this
 % threshold will not be marked as a stimulus.
 stimulusThresholdValue = 0.8; % TODO hard-coded threshold.
 
-global abortTriggered;
-
-for frameNumber = (1:numberOfFrames)
-    
+for frameNumber = 1:numberOfFrames
     if ~abortTriggered
-        frame = videoInputArray(:,:, frameNumber);
+        frame = readFrame(reader);
 
         correlationMap = normxcorr2(stimulus, frame);
 
         findPeakParametersStructure.enableGaussianFiltering = false;
-        findPeakParametersStructure.stripHeight = frameHeight;    
+        findPeakParametersStructure.stripHeight = height;    
         [xPeak, yPeak, peakValue, ~] = ...
             FindPeak(correlationMap, findPeakParametersStructure);
         clear findPeakParametersStructure;
@@ -196,18 +203,11 @@ for frameNumber = (1:numberOfFrames)
             legend('show');
             legend('Horizontal Location', 'Vertical Location');
         end
+        
+        % Find mean and standard deviation of each frame.
+        meanOfEachFrame(frameNumber) = mean2(frame);
+        standardDeviationOfEachFrame(frameNumber) = std2(frame);
     end
-end
-
-%% Find mean and standard deviation of each frame
-
-% Preallocate
-meanOfEachFrame = zeros(numberOfFrames, 1);
-standardDeviationOfEachFrame = zeros(numberOfFrames, 1);
-
-for i = 1:numberOfFrames
-    meanOfEachFrame(i) = mean2(videoInputArray(:,:,i));
-    standardDeviationOfEachFrame(i) = std2(videoInputArray(:,:,i));
 end
 
 %% Save stimulus size

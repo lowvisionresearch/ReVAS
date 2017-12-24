@@ -56,15 +56,23 @@ load(matFileName);
 
 writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
 open(writer);
-
-[videoInputArray, ~] = VideoPathToArray(inputVideoPath);
-
-numberOfFrames = size(videoInputArray, 3);
 global abortTriggered;
 
+% Determine dimensions of video.
+reader = VideoReader(inputVideoPath);
+numberOfFrames = reader.NumberOfFrames;
+width = reader.Width;
+height = reader.Height;
+
+% Remake this variable since readFrame() cannot be called after
+% NumberOfFrames property is accessed.
+reader = VideoReader(inputVideoPath);
+
+% Read, remove stimuli, and write frame by frame.
 for frameNumber = 1:numberOfFrames
-    
     if ~abortTriggered
+        frame = readFrame(reader);
+        
         % Generate noise
         % (this gives noise with mean = 0, sd = 1)
         noise = randn(stimulusSize);
@@ -90,25 +98,24 @@ for frameNumber = 1:numberOfFrames
 
         if xLow < 1
             xDiff = -xLow+1;
-        elseif xHigh > size(videoInputArray, 1)
-            xDiff = xHigh - size(videoInputArray, 1);
+        elseif xHigh > height
+            xDiff = xHigh - height;
         end
 
         if yLow < 1
             yDiff = -yLow+1;
-        elseif yHigh > size(videoInputArray, 2)
-            yDiff = yHigh - size(videoInputArray, 2);
+        elseif yHigh > width
+            yDiff = yHigh - width;
         end
-        videoInputArray(max(xLow, 1) : ...
-            min(xHigh, size(videoInputArray, 1)),...
+        frame(max(xLow, 1) : ...
+            min(xHigh, height),...
             max(yLow, 1) : ...
-            min(yHigh, size(videoInputArray, 2)), ...
-            frameNumber) = ...
+            min(yHigh, width)) = ...
             noise(1:end-xDiff, 1:end-yDiff);
+        writeVideo(writer, frame);
     end
 end
 
-writeVideo(writer, videoInputArray);
 close(writer);
 
 end

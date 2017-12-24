@@ -74,12 +74,17 @@ end
 % create a video writer object and open it.
 writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
 open(writer);
+global abortTriggered;
 
-% read all frames and store them in memory (very inefficient for big videos)
-[videoInputArray, ~] = VideoPathToArray(inputVideoPath);
+% Determine dimensions of video.
+reader = VideoReader(inputVideoPath);
+numberOfFrames = reader.NumberOfFrames;
+width = reader.Width;
+height = reader.Height;
 
-% get the number of frames and their sizes
-[height, width, numberOfFrames] = size(videoInputArray);
+% Remake this variable since readFrame() cannot be called after
+% NumberOfFrames property is accessed.
+reader = VideoReader(inputVideoPath);
 
 % create pixel position arrays. 
 xVector = (0:width - 1) - floor(width / 2); 
@@ -93,29 +98,26 @@ radiusMatrix = sqrt((repmat(xVector,height,1) .^ 2) + ...
 highPassFilter = double(radiusMatrix > lowSpatialFrequencyCutoff);
 highPassFilter(floor(height/2) + 1, floor(width/2) + 1) = 1;
 
-% apply filters to each frame
+% Read, apply filters, and write frame by frame.
 for frameNumber = 1:numberOfFrames
+    if ~abortTriggered
+        frame = readFrame(reader);
     
-    % get a single frame
-    I = videoInputArray(:,:,frameNumber);
-    
-    % apply smoothing
-    I1 = imgaussfilt(I, smoothing);
-    
-    % remove low spatial frequencies
-    I2 = abs(ifft2((fft2(I1)) .* ifftshift(highPassFilter)));
-    
-    % normalize to maximize contrast
-    maxMin = [max(I2(:))  min(I2(:))];
-    rangeOfValues = abs(diff(maxMin));
-    newFrame = uint8(255*(I2 - maxMin(2))/rangeOfValues);
-    
-    % update the video array 
-    videoInputArray(:,:,frameNumber) = newFrame;
-    
+        % apply smoothing
+        I1 = imgaussfilt(frame, smoothing);
+
+        % remove low spatial frequencies
+        I2 = abs(ifft2((fft2(I1)) .* ifftshift(highPassFilter)));
+
+        % normalize to maximize contrast
+        maxMin = [max(I2(:))  min(I2(:))];
+        rangeOfValues = abs(diff(maxMin));
+        frame = uint8(255*(I2 - maxMin(2))/rangeOfValues);
+
+        writeVideo(writer, frame);
+    end
 end
 
-writeVideo(writer, videoInputArray);
 close(writer);
 
 end
