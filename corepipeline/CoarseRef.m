@@ -66,12 +66,13 @@ global abortTriggered;
 if isempty(abortTriggered)
     abortTriggered = false;
 end
+
 %% Initialize variables
 outputFileName = [inputVideoPath(1:end-4) '_coarseref'];
 outputTracesName = [inputVideoPath(1:end-4) '_coarseframepositions'];
-videoObject = VideoReader(inputVideoPath);
-videoFrameRate = videoObject.Framerate;
-totalFrames = videoFrameRate * videoObject.Duration;
+reader = VideoReader(inputVideoPath);
+videoFrameRate = reader.Framerate;
+numberOfFrames = videoFrameRate * reader.Duration;
 
 %% Handle overwrite scenarios.
 if ~exist([outputFileName '.mat'], 'file')
@@ -92,6 +93,7 @@ try
 catch
     badFrames = [];
 end
+
 %% Set parameters to defaults if not specified.
 
 if ~isfield(parametersStructure, 'peakDropWindow')
@@ -116,7 +118,7 @@ end
 % if frameRate = 30 Hz and duration is 2 seconds, there are 60 total frames
 % and the default frame should therefore be the 30th frame).
 if ~isfield(parametersStructure, 'refFrameNumber')
-    refFrameNumber = floor(totalFrames / 2);
+    refFrameNumber = floor(numberOfFrames / 2);
 else
     refFrameNumber = parametersStructure.refFrameNumber;
 end
@@ -128,10 +130,10 @@ if exist('badFrames', 'var')
         else
             % If this case is ever reached, that means that half the video
             % has been marked as bad frames.
-            error(['Parameters for finding blink frames are too strict.', ...
+            RevasError(inputVideoPath, ['Parameters for finding blink frames are too strict.', ...
                 ' Try setting less stringent parameters, or check the video',...
                 ' quality. It may not be of sufficient quality for this',...
-                ' program to analyze meaningfully.']);
+                ' program to analyze meaningfully.'], parametersStructure);
         end
     end
 end
@@ -143,76 +145,65 @@ enableGPU = isfield(parametersStructure, 'enableGPU') && ...
 
 %% Shrink video, call strip analysis, and calculate estimated traces.
 
-% Get the current time of the video, so that the video "clock" can be reset
-% later
-timeToRemember = videoObject.CurrentTime;
-
-% Shrink the video
 shrunkFileName = [inputVideoPath(1:end-4) '_shrunk.avi'];
 
 % First check whether the shrunk video already exists
 try
-    shrunkObject = VideoReader(shrunkFileName);
+    shrunkReader = VideoReader(shrunkFileName);
     % If it does exist, check that it's of correct dimensions. If the
-    % shrunk video is not scaled to the desired amount, throw an error and
-    % create a new shrunkVideo.
-    if shrunkObject.Height/videoObject.Height ~= parametersStructure.scalingFactor
+    % shrunk video is not scaled to the desired amount, throw an error to
+    % create a new shrunkVideo in the subsequent catch block.
+    if shrunkReader.Height/reader.Height ~= parametersStructure.scalingFactor
         error
     else
         frameNumber = 1;
-        while hasFrame(shrunkObject)
-            frame = readFrame(shrunkObject);
+        while hasFrame(shrunkReader)
+            frame = readFrame(shrunkReader);
             if frameNumber == refFrameNumber
-                temporaryRefFrame = double(frame)/255;
-                shrunkObject.CurrentTime = timeToRemember;
-                break
+                temporaryRefFrame = frame;
+                break;
             end
             frameNumber = frameNumber + 1;
         end
     end
 catch
-    shrunkVideo = VideoWriter(shrunkFileName);
-    open(shrunkVideo);
+    writer = VideoWriter(shrunkFileName, 'Grayscale AVI');
+    open(writer);
     
     frameNumber = 1;
-    while hasFrame(videoObject)
-        frame = double(readFrame(videoObject))/255;
-        shrunkFrame = imresize(frame, scalingFactor);
+    while hasFrame(reader)
+        frame = readFrame(reader);
+        frame = imresize(frame, scalingFactor);
         
         % Sometimes resizing causes numbers to dip below 0 (but just barely)
-        if shrunkFrame(shrunkFrame<0)
-            shrunkFrame(shrunkFrame<0) = 0;
-        end
-        % Similarly, values occasionally exceed 1
-        if shrunkFrame(shrunkFrame>1)
-            shrunkFrame(shrunkFrame>1) = 1;
-        end
+        frame(frame<0) = 0;
+        % Similarly, values occasionally exceed 255
+        frame(frame>255) = 255;
         
-        writeVideo(shrunkVideo, shrunkFrame);
+        writeVideo(writer, frame);
         if frameNumber == refFrameNumber
-            temporaryRefFrame = shrunkFrame;
+            temporaryRefFrame = frame;
         end
         frameNumber = frameNumber + 1;
     end
-    close(shrunkVideo);
-    videoObject.CurrentTime = timeToRemember;
-    shrunkObject = VideoReader(shrunkFileName);
+    close(writer);
 end
 
 % Prepare parameters for calling StripAnalysis, using each shrunk frame as
 % a single "strip"
+shrunkReader = VideoReader(shrunkFileName);
 params = parametersStructure;
-params.stripHeight = shrunkObject.Height;
-params.stripWidth = shrunkObject.Width;
+params.stripHeight = shrunkReader.Height;
+params.stripWidth = shrunkReader.Width;
 params.samplingRate = videoFrameRate;
 params.badFrames = badFrames;
 params.originalVideoPath = shrunkFileName;
 
 % Check if user has rotateCorrection enabled.
-if isfield(params, 'rotateCorrection') && params.rotateCorrection == true
+if isfield(params, 'rotateCorrection') && params.rotateCorrection
     [coarseRefFrame, ~] = RotateCorrect(shrunkFileName, inputVideoPath, ...
         temporaryRefFrame, outputFileName, params);
-    return
+    return;
 else
     [~, usefulEyePositionTraces, ~, ~] = StripAnalysis(shrunkFileName, ...
         temporaryRefFrame, params);
@@ -231,22 +222,21 @@ try
     framePositions = [filteredStripIndices1 filteredStripIndices2];
     save(outputTracesName, 'framePositions');
 catch
-    RevasError(outputFileName, 'There were no useful eye position traces. Lower the minimumPeakThreshold and/or raise the maximumPeakRatio.\n', parametersStructure);
-    error('There were no useful eye position traces. Lower the minimumPeakThreshold and/or raise the maximumPeakRatio.\n');
+    RevasError(inputVideoPath, 'There were no useful eye position traces. Lower the minimumPeakThreshold and/or raise the maximumPeakRatio.\n', parametersStructure);
 end
 
 %% Scale the coordinates back up.
 framePositions = framePositions * 1/scalingFactor;
 
 %% Set up the counter array and the template for the coarse reference frame.
-height = videoObject.Height;
+height = reader.Height;
 counterArray = zeros(height*3);
 coarseRefFrame = zeros(height*3);
 
 framePositions = round(ScaleCoordinates(framePositions));
 
 if enableGPU
-    totalFrames = gpuArray(totalFrames);
+    numberOfFrames = gpuArray(numberOfFrames);
     framePositions = gpuArray(framePositions);
     counterArray = gpuArray(counterArray);
     coarseRefFrame = gpuArray(coarseRefFrame);
@@ -254,14 +244,15 @@ end
 
 ending = size(usefulEyePositionTraces, 1);
 frameNumber = 1;
+reader = VideoReader(inputVideoPath);
 
-while hasFrame(videoObject)
-    frame = double(readFrame(videoObject))/255;
+while hasFrame(reader)
+    frame = readFrame(reader);
     if frameNumber < (1 + beginNaNs) || any(badFrames == frameNumber)
         frameNumber = frameNumber + 1;
-        continue
+        continue;
     elseif frameNumber > ending-endNaNs 
-        break
+        break;
     end
     framePositionIndex = frameNumber - beginNaNs;
     
@@ -288,7 +279,7 @@ while hasFrame(videoObject)
     selectColumn = round(minColumn):round(maxColumn);
     
     coarseRefFrame(selectRow, selectColumn) = coarseRefFrame(selectRow, ...
-        selectColumn) + frame;
+        selectColumn) + double(frame);
     counterArray(selectRow, selectColumn) = counterArray(selectRow, selectColumn) + 1;
     frameNumber = frameNumber + 1;
 end
