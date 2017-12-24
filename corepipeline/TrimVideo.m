@@ -63,6 +63,15 @@ for t = borderTrimAmount
     end
 end
 
+%% Allow for aborting if not parallel processing
+global abortTriggered;
+
+% parfor does not support global variables.
+% cannot abort when run in parallel.
+if isempty(abortTriggered)
+    abortTriggered = false;
+end
+
 %% Trim the video frame by frame
 
 left = borderTrimAmount(1);
@@ -72,7 +81,6 @@ bottom = borderTrimAmount(4);
 
 writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
 open(writer);
-global abortTriggered;
 
 % Determine dimensions of video.
 reader = VideoReader(inputVideoPath);
