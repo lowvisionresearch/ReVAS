@@ -199,6 +199,9 @@ params.samplingRate = videoFrameRate;
 params.badFrames = badFrames;
 params.originalVideoPath = shrunkFileName;
 
+if ndims(temporaryRefFrame) == 3
+    temporaryRefFrame = rgb2gray(temporaryRefFrame);
+end
 % Check if user has rotateCorrection enabled.
 if isfield(params, 'rotateCorrection') && params.rotateCorrection
     [coarseRefFrame, ~] = RotateCorrect(shrunkFileName, inputVideoPath, ...
@@ -279,7 +282,7 @@ while hasFrame(reader)
     selectColumn = round(minColumn):round(maxColumn);
     
     coarseRefFrame(selectRow, selectColumn) = coarseRefFrame(selectRow, ...
-        selectColumn) + double(frame);
+        selectColumn) + double(frame)/255;
     counterArray(selectRow, selectColumn) = counterArray(selectRow, selectColumn) + 1;
     frameNumber = frameNumber + 1;
 end
