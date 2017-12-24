@@ -72,25 +72,28 @@ bottom = borderTrimAmount(4);
 
 writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
 open(writer);
+global abortTriggered;
 
-[videoInputArray, ~] = VideoPathToArray(inputVideoPath);
+% Determine dimensions of video.
+reader = VideoReader(inputVideoPath);
+numberOfFrames = reader.NumberOfFrames;
+width = reader.Width;
+height = reader.Height;
 
-height = size(videoInputArray, 1);
-width = size(videoInputArray, 2);
-numberOfFrames = size(videoInputArray, 3);
+% Remake this variable since readFrame() cannot be called after
+% NumberOfFrames property is accessed.
+reader = VideoReader(inputVideoPath);
 
-% Preallocate.
-trimmedFrames = zeros(height - top - bottom, ...
-    width - left - right, numberOfFrames, 'uint8');
-
+% Read, trim, and write frame by frame.
 for frameNumber = 1:numberOfFrames
-    frame = videoInputArray(:,:,frameNumber);
-    trimmedFrames(:,:,frameNumber) = ...
-        frame(top+1 : height-bottom, ...
-       left+1 : width-right);
+    if ~abortTriggered
+        frame = readFrame(reader);
+        frame = frame(top+1 : height-bottom, ...
+           left+1 : width-right);
+       writeVideo(writer, frame);
+    end
 end
 
-writeVideo(writer, trimmedFrames);
 close(writer);
 
 end

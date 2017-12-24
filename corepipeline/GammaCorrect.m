@@ -54,19 +54,25 @@ end
 
 writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
 open(writer);
+global abortTriggered;
 
-[videoInputArray, ~] = VideoPathToArray(inputVideoPath);
+% Determine dimensions of video.
+reader = VideoReader(inputVideoPath);
+numberOfFrames = reader.NumberOfFrames;
 
-numberOfFrames = size(videoInputArray, 3);
+% Remake this variable since readFrame() cannot be called after
+% NumberOfFrames property is accessed.
+reader = VideoReader(inputVideoPath);
 
+% Read, gamma correct, and write frame by frame.
 for frameNumber = 1:numberOfFrames
-    
-    videoInputArray(:,:,frameNumber) = ...
-        imadjust(videoInputArray(:,:,frameNumber), [], [], gammaExponent);
-    
+    if ~abortTriggered
+        frame = readFrame(reader);
+        frame = imadjust(frame, [], [], gammaExponent);
+       writeVideo(writer, frame);
+    end
 end
 
-writeVideo(writer, videoInputArray);
 close(writer);
 
 end
