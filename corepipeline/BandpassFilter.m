@@ -69,12 +69,20 @@ else
     end
 end
 
+%% Allow for aborting if not parallel processing
+global abortTriggered;
+
+% parfor does not support global variables.
+% cannot abort when run in parallel.
+if isempty(abortTriggered)
+    abortTriggered = false;
+end
+
 %% Bandpass filter frame by frame
 
 % create a video writer object and open it.
 writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
 open(writer);
-global abortTriggered;
 
 % Determine dimensions of video.
 reader = VideoReader(inputVideoPath);
