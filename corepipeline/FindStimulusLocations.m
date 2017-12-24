@@ -108,9 +108,16 @@ else
    end
 end
 
-%% Find stimulus location of each frame
-
+%% Allow for aborting if not parallel processing
 global abortTriggered;
+
+% parfor does not support global variables.
+% cannot abort when run in parallel.
+if isempty(abortTriggered)
+    abortTriggered = false;
+end
+
+%% Find stimulus location of each frame
 
 % Determine dimensions of video.
 reader = VideoReader(inputVideoPath);
