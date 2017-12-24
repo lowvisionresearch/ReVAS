@@ -84,13 +84,9 @@ open(writer);
 
 % Determine dimensions of video.
 reader = VideoReader(inputVideoPath);
-numberOfFrames = reader.NumberOfFrames;
 width = reader.Width;
 height = reader.Height;
-
-% Remake this variable since readFrame() cannot be called after
-% NumberOfFrames property is accessed.
-reader = VideoReader(inputVideoPath);
+numberOfFrames = reader.Framerate * reader.Duration;
 
 % Read, trim, and write frame by frame.
 for frameNumber = 1:numberOfFrames
