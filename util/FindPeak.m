@@ -38,8 +38,14 @@ function [xPeak, yPeak, peakValue, secondPeakValue] = ...
 %  SDWindowSize             :   the size of the pixel window around the 
 %                               identified peak in which a Gaussian will be 
 %                               fitted.
-%  maximumSD                :   ????
-
+%   maximumSD               :   maximum standard deviation allowed when
+%                               a gaussian is fitted around the 
+%                               identified peak--strips with positions
+%                               that have a standard deviation >
+%                               maximumSD will be discarded.
+%                               (relevant only when
+%                               enableGaussianFiltering is true)
+%                               (default 10)
 
 % Cut out smaller correlation map to search in if applicable. Doing this
 % will essentially restrict searching to the center area and any false
