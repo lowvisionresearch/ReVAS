@@ -86,13 +86,9 @@ open(writer);
 
 % Determine dimensions of video.
 reader = VideoReader(inputVideoPath);
-numberOfFrames = reader.NumberOfFrames;
 width = reader.Width;
 height = reader.Height;
-
-% Remake this variable since readFrame() cannot be called after
-% NumberOfFrames property is accessed.
-reader = VideoReader(inputVideoPath);
+numberOfFrames = reader.Framerate * reader.Duration;
 
 % create pixel position arrays. 
 xVector = (0:width - 1) - floor(width / 2); 
