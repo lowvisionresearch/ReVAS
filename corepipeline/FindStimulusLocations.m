@@ -121,14 +121,10 @@ end
 
 % Determine dimensions of video.
 reader = VideoReader(inputVideoPath);
-numberOfFrames = reader.NumberOfFrames;
 samplingRate = reader.FrameRate;
 width = reader.Width;
 height = reader.Height;
-
-% Remake this variable since readFrame() cannot be called after
-% NumberOfFrames property is accessed.
-reader = VideoReader(inputVideoPath);
+numberOfFrames = reader.Framerate * reader.Duration;
 
 % Populate time array
 timeArray = (1:numberOfFrames)' / samplingRate;   
