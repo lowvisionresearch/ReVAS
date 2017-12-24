@@ -158,6 +158,17 @@ try
     % create a new shrunkVideo.
     if shrunkObject.Height/videoObject.Height ~= parametersStructure.scalingFactor
         error
+    else
+        frameNumber = 1;
+        while hasFrame(shrunkObject)
+            frame = readFrame(shrunkObject);
+            if frameNumber == refFrameNumber
+                temporaryRefFrame = double(frame)/255;
+                shrunkObject.CurrentTime = timeToRemember;
+                break
+            end
+            frameNumber = frameNumber + 1;
+        end
     end
 catch
     shrunkVideo = VideoWriter(shrunkFileName);
