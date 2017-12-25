@@ -106,6 +106,9 @@ highPassFilter(floor(height/2) + 1, floor(width/2) + 1) = 1;
 for frameNumber = 1:numberOfFrames
     if ~abortTriggered
         frame = readFrame(reader);
+        if ndims(frame) == 3
+            frame = rgb2gray(frame);
+        end
     
         % apply smoothing
         I1 = imgaussfilt(frame, smoothing);
