@@ -159,6 +159,9 @@ try
         frameNumber = 1;
         while hasFrame(shrunkReader)
             frame = readFrame(shrunkReader);
+            if ndims(frame) == 3
+                frame = rgb2gray(frame);
+            end
             if frameNumber == refFrameNumber
                 temporaryRefFrame = frame;
                 break;
@@ -173,6 +176,9 @@ catch
     frameNumber = 1;
     while hasFrame(reader)
         frame = readFrame(reader);
+        if ndims(frame) == 3
+            frame = rgb2gray(frame);
+        end
         frame = imresize(frame, scalingFactor);
         
         % Sometimes resizing causes numbers to dip below 0 (but just barely)
@@ -251,6 +257,9 @@ reader = VideoReader(inputVideoPath);
 
 while hasFrame(reader)
     frame = readFrame(reader);
+    if ndims(frame) == 3
+        frame = rgb2gray(frame);
+    end
     if frameNumber < (1 + beginNaNs) || any(badFrames == frameNumber)
         frameNumber = frameNumber + 1;
         continue;
@@ -280,9 +289,9 @@ while hasFrame(reader)
     % to each pixel.
     selectRow = round(minRow):round(maxRow);
     selectColumn = round(minColumn):round(maxColumn);
-    
+            
     coarseRefFrame(selectRow, selectColumn) = coarseRefFrame(selectRow, ...
-        selectColumn) + double(frame)/255;
+        selectColumn) + double(frame);
     counterArray(selectRow, selectColumn) = counterArray(selectRow, selectColumn) + 1;
     frameNumber = frameNumber + 1;
 end
@@ -294,6 +303,8 @@ coarseRefFrame = coarseRefFrame./counterArray;
 if enableGPU
     coarseRefFrame = gather(coarseRefFrame);
 end
+
+coarseRefFrame = uint8(coarseRefFrame);
 
 %% Remove extra padding from the coarse reference frame
 coarseRefFrame = Crop(coarseRefFrame);

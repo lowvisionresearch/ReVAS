@@ -150,6 +150,9 @@ stimulusThresholdValue = 0.8; % TODO hard-coded threshold.
 for frameNumber = 1:numberOfFrames
     if ~abortTriggered
         frame = readFrame(reader);
+        if ndims(frame) == 3
+            frame = rgb2gray(frame);
+        end
 
         correlationMap = normxcorr2(stimulus, frame);
 
