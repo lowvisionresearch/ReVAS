@@ -76,6 +76,9 @@ numberOfFrames = reader.Framerate * reader.Duration;
 for frameNumber = 1:numberOfFrames
     if ~abortTriggered
         frame = readFrame(reader);
+        if ndims(frame) == 3
+            frame = rgb2gray(frame);
+        end
         
         % Generate noise
         % (this gives noise with mean = 0, sd = 1)
