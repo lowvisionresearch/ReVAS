@@ -4,8 +4,7 @@ function RevasError(filename, message, parametersStructure)
 %   Execution will continue after the error message is printed if using the GUI.
 
 if isfield(parametersStructure, 'commandWindowHandle')
-    dateAndTime = datestr(datetime('now'));
-    time = dateAndTime(13:20);
+    time = strtrim(datestr(datetime('now'), 'HH:MM:SS PM'));
     parametersStructure.commandWindowHandle.String = ...
         ['(' time ') ERROR: ' ...
         '(Error while processing ' filename '. Proceeding to next video.) ' ...

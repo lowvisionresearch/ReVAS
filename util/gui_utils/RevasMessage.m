@@ -3,8 +3,7 @@ function RevasMessage(message, parametersStructure)
 %   Issues a message to the GUI's command window text box if possible.
 
 if isfield(parametersStructure, 'commandWindowHandle')
-    dateAndTime = datestr(datetime('now'));
-    time = dateAndTime(13:20);
+    time = strtrim(datestr(datetime('now'), 'HH:MM:SS PM'));
     parametersStructure.commandWindowHandle.String = ...
         ['(' time ') ' ...
         message; ...
