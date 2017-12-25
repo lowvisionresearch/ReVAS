@@ -62,14 +62,12 @@ else
     parametersStructure.newStripHeight = parametersStructure.stripHeight;
 end
 
-
 % Size of the stabilized video will be stabilizedVideoSizeMultiplier*frameSize
 if ~isfield(parametersStructure,'stabilizedVideoSizeMultiplier') 
     stabilizedVideoSizeMultiplier = 1.25;
 else
     stabilizedVideoSizeMultiplier = parametersStructure.stabilizedVideoSizeMultiplier;
 end
-
 
 %% Identify which frames are bad frames
 nameEnd = fileName(1:size(fileName, 2)-4);
@@ -220,6 +218,7 @@ skips = 0;
 
 % Only grab center coordinates once (for generating stabilized videos)
 foundCenter = false;
+
 %% Use interpolatedPositions to generate the reference frame.
 for frameNumber = 1:totalFrames
     
@@ -227,8 +226,8 @@ for frameNumber = 1:totalFrames
     % factor for rounding
     correctionFrame = false;
     
-    % Read frame and convert pixel values to signed integers
-    videoFrame = double(readFrame(videoInfo))/255;
+    % Read frame.
+    videoFrame = readFrame(videoInfo);
     
     % get the appropriate strips from stripIndices for each frame
     startFrameStrips = round(1 + ((frameNumber-1)*(stripsPerFrame))) + skips;
@@ -425,8 +424,8 @@ for frameNumber = 1:totalFrames
            end
            
             refFrame(templateSelectRow, templateSelectColumn) = refFrame(...
-                templateSelectRow, templateSelectColumn) + videoFrame(...
-                vidStart:vidEnd, 1:columnEnd);
+                templateSelectRow, templateSelectColumn) + double(videoFrame(...
+                vidStart:vidEnd, 1:columnEnd));
             counterArray(templateSelectRow, templateSelectColumn) = counterArray...
                 (templateSelectRow, templateSelectColumn) + 1;
 
@@ -489,6 +488,7 @@ refFrame = refFrame./counterArray;
 
 %% Take care of miscellaneous issues from preallocation and division by 0.
 refFrame = Crop(refFrame);
+refFrame = uint8(refFrame);
 
 %% Save and display the reference frame.
 % If this is the last iteration of FineRef, add random noise to the black
@@ -496,7 +496,7 @@ refFrame = Crop(refFrame);
 if isfield(parametersStructure, 'addNoise') && parametersStructure.addNoise == true
     % Replace remaining black regions with random noise
     indices = refFrame == 0;
-    refFrame(indices) = mean(refFrame(~indices)) + (std(refFrame(~indices)) ...
+    refFrame(indices) = mean(refFrame(~indices)) + (std(double(refFrame(~indices))) ...
         * randn(sum(sum(indices)), 1));
 end
 
