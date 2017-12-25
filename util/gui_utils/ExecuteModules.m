@@ -217,9 +217,7 @@ if logical(handles.togStrip.Value) && ~logical(abortTriggered)
     end
     
     % Call the function
-    [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
-        statisticsStructure] ...
-        = StripAnalysis(inputPath, fineRefFrame, parametersStructure);
+    StripAnalysis(inputPath, fineRefFrame, parametersStructure);
     
     % Update file name to input file name
     inputPath = [inputPath(1:end-4) '_' ...
