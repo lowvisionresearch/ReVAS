@@ -118,7 +118,7 @@ function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
 %           StripAnalysis(videoInput, referenceFrame, parametersStructure);
 
 %% Set parameters to defaults if not specified.
-videoInputPath = '';
+
 % If videoInput is a character array, then a path was passed in.
 % Attempt to convert it to a 3D array.
 if ischar(videoInput)
@@ -336,6 +336,16 @@ else
     end
 end
 
+if ~isfield(parametersStructure, 'enableGPU')
+    enableGPU = false;
+else
+    enableGPU = parametersStructure.enableGPU;
+    if ~islogical(enableGPU)
+        error('enableGPU must be a logical');
+    end
+end
+enableGPU = (gpuDeviceCount > 0) & enableGPU;
+
 %% Handle overwrite scenarios.
 
 outputFileName = [videoInputPath(1:end-4) '_' ...
@@ -379,7 +389,6 @@ timeArray = (1:numberOfStrips)' / samplingRate;
 % *** TODO: need GPU device to confirm ***
 % Check if a GPU device is connected. If so, run calculations on the GPU
 % (if enabled by the user).
-enableGPU = (gpuDeviceCount > 0) & parametersStructure.enableGPU;
 if enableGPU
     referenceFrame = gpuArray(referenceFrame);
 end
@@ -727,7 +736,7 @@ end
 % enabled, then these operations were already performed for each point
 % before it was plotted to the eye traces graph. If verbosity was not
 % enabled, then we do it now in order to take advantage of vectorization.
-if ~parametersStructure.enableVerbosity
+if ~enableVerbosity
     rawEyePositionTraces(:,2) = ...
         rawEyePositionTraces(:,2) - (stripHeight - 1);
     rawEyePositionTraces(:,1) = ...
@@ -781,7 +790,7 @@ usefulEyePositionTraces = rawEyePositionTraces; % duplicate vector first
 usefulEyePositionTraces(~eyeTracesToKeep,:) = NaN;
 
 %% Plot Useful Eye Traces
-if ~abortTriggered && parametersStructure.enableVerbosity
+if ~abortTriggered && enableVerbosity
     if isfield(parametersStructure, 'axesHandles')
         axes(parametersStructure.axesHandles(2));
         colormap(parametersStructure.axesHandles(2), 'gray');
@@ -813,7 +822,7 @@ if ~abortTriggered && parametersStructure.enableVerbosity
 end
 
 %% Plot stimuli on reference frame
-if ~abortTriggered && parametersStructure.enableVerbosity
+if ~abortTriggered && enableVerbosity
     if isfield(parametersStructure, 'axesHandles')
         axes(parametersStructure.axesHandles(3));
         colormap(parametersStructure.axesHandles(3), 'gray');

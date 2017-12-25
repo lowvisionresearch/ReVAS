@@ -15,18 +15,40 @@ function [stripIndices, stripsPerFrame] = DivideIntoStrips(videoInputPath, param
 %  samplingRate        :   sampling rate of the video
 %  stripHeight         :   the size of each strip
 
-reader = VideoReader(videoInputPath);
-numberOfFrames = reader.NumberOfFrames;
-videoFrameRate = reader.FrameRate;
-reader = VideoReader(videoInputPath);
-frame = readFrame(reader);
-[frameHeight, ~] = size(frame);
+%% Set parameters to defaults if not specified.
+if ~isfield(parametersStructure, 'samplingRate')
+    samplingRate = 540;
+    warning('using default parameter for samplingRate');
+else
+    samplingRate = parametersStructure.samplingRate;
+    if ~IsNaturalNumber(samplingRate)
+        error('samplingRate must be a natural number');
+    end
+end
 
-stripsPerFrame = round(parametersStructure.samplingRate / videoFrameRate);
+if ~isfield(parametersStructure, 'stripHeight')
+    stripHeight = 15;
+    warning('using default parameter for stripHeight');
+else
+    stripHeight = parametersStructure.stripHeight;
+    if ~IsNaturalNumber(stripHeight)
+        error('stripHeight must be a natural number');
+    end
+end
+
+%% Divide into strips.
+
+reader = VideoReader(videoInputPath);
+numberOfFrames = reader.Framerate * reader.Duration;
+videoFrameRate = reader.FrameRate;
+frame = readFrame(reader);
+frameHeight = reader.Height;
+
+stripsPerFrame = round(samplingRate / videoFrameRate);
 
 stripIndices = zeros(stripsPerFrame*numberOfFrames, 3);
 
-distanceBetweenStrips = (frameHeight - parametersStructure.stripHeight)...
+distanceBetweenStrips = (frameHeight - stripHeight)...
     / (stripsPerFrame - 1);
 
 % compute the rows of stripIndices
