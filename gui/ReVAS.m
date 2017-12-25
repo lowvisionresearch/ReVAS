@@ -447,8 +447,7 @@ end
 handles.menuLoad.Enable = 'off';
 handles.menuSave.Enable = 'off';
 
-dateAndTime = datestr(datetime('now'));
-time = dateAndTime(13:20);
+time = strtrim(datestr(datetime('now'), 'HH:MM:SS PM'));
 handles.commandWindow.String = cellstr(['(' time ') Execution in Progress...']);
 clc;
 drawnow;
@@ -505,8 +504,7 @@ else
     end
 end
 
-dateAndTime = datestr(datetime('now'));
-time = dateAndTime(13:20);
+time = strtrim(datestr(datetime('now'), 'HH:MM:SS PM'));
     
 if logical(abortTriggered)
     handles.commandWindow.String = ['(' time ') Process aborted by user.'; ...
