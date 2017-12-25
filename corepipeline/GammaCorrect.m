@@ -72,6 +72,9 @@ numberOfFrames = reader.Framerate * reader.Duration;
 for frameNumber = 1:numberOfFrames
     if ~abortTriggered
         frame = readFrame(reader);
+        if ndims(frame) == 3
+            frame = rgb2gray(frame);
+        end
         frame = imadjust(frame, [], [], gammaExponent);
        writeVideo(writer, frame);
     end

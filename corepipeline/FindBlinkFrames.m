@@ -82,9 +82,8 @@ frameNumber = 1;
 % those values are the most updated.
 while hasFrame(v)
     frame = readFrame(v);
-    try 
+    if ndims(frame) == 3
         frame = rgb2gray(frame);
-    catch
     end
     mean = sum(sum(frame))/(v.Height*v.Width);
     means(1, frameNumber) = mean;
