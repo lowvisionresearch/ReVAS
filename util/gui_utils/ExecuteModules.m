@@ -28,7 +28,7 @@ else
 end
 
 %% Trim Module
-if logical(handles.togTrim.Value) && ~logical(abortTriggered)
+if logical(handles.config.togTrimValue) && ~logical(abortTriggered)
     RevasMessage(['[[ Trimming ]] ' inputPath], parametersStructure);
     % Set the parameters
     parametersStructure.borderTrimAmount = [
@@ -46,7 +46,7 @@ if logical(handles.togTrim.Value) && ~logical(abortTriggered)
 end
 
 %% Remove Stimulus Module
-if logical(handles.togStim.Value) && ~logical(abortTriggered)
+if logical(handles.config.togStimValue) && ~logical(abortTriggered)
     RevasMessage(['[[ Removing Stimulus ]] ' inputPath], parametersStructure);
     % Set the parameters
     parametersStructure.enableVerbosity = handles.config.stimVerbosity;
@@ -76,7 +76,7 @@ if logical(handles.togStim.Value) && ~logical(abortTriggered)
 end
 
 %% Gamma Correction Module
-if logical(handles.togGamma.Value) && ~logical(abortTriggered)
+if logical(handles.config.togGammaValue) && ~logical(abortTriggered)
     RevasMessage(['[[ Gamma Correcting ]] ' inputPath], parametersStructure);
     % Set the parameters
     parametersStructure.gammaExponent = handles.config.gammaExponent;
@@ -90,7 +90,7 @@ if logical(handles.togGamma.Value) && ~logical(abortTriggered)
 end
 
 %% Bandpass Filtering Module
-if logical(handles.togBandFilt.Value) && ~logical(abortTriggered)
+if logical(handles.config.togBandFiltValue) && ~logical(abortTriggered)
     RevasMessage(['[[ Bandpass Filtering ]] ' inputPath], parametersStructure);
     % Set the parameters
     parametersStructure.smoothing = handles.config.bandFiltSmoothing;
@@ -105,9 +105,9 @@ if logical(handles.togBandFilt.Value) && ~logical(abortTriggered)
 end
 
 %% Make Coarse Reference Frame Module
-if (logical(handles.togCoarse.Value) ...
-        || logical(handles.togFine.Value) ...
-        || logical(handles.togStrip.Value)) && ~logical(abortTriggered)
+if (logical(handles.config.togCoarseValue) ...
+        || logical(handles.config.togFineValue) ...
+        || logical(handles.config.togStripValue)) && ~logical(abortTriggered)
     RevasMessage(['Identifying blink frames in ' originalInputVideoPath], parametersStructure);
     parametersStructure.overwrite = handles.config.coarseOverwrite && ...
         handles.config.fineOverwrite && ...
@@ -118,7 +118,7 @@ if (logical(handles.togCoarse.Value) ...
     FindBlinkFrames(inputPath, parametersStructure);
 end
 
-if logical(handles.togCoarse.Value) && ~logical(abortTriggered)
+if logical(handles.config.togCoarseValue) && ~logical(abortTriggered)
     RevasMessage(['[[ Making Coarse Reference Frame ]] ' inputPath], parametersStructure);
     % Set the parameters
     parametersStructure.refFrameNumber = handles.config.coarseRefFrameNum;
@@ -141,7 +141,7 @@ if logical(handles.togCoarse.Value) && ~logical(abortTriggered)
 end
 
 %% Make Fine Reference Frame Module
-if logical(handles.togFine.Value) && ~logical(abortTriggered)
+if logical(handles.config.togFineValue) && ~logical(abortTriggered)
     RevasMessage(['[[ Making Fine Reference Frame ]] ' inputPath], parametersStructure);
     % Set the parameters
     parametersStructure.enableVerbosity = handles.config.fineVerbosity;
@@ -167,7 +167,7 @@ if logical(handles.togFine.Value) && ~logical(abortTriggered)
 end
 
 %% Strip Analysis Module
-if logical(handles.togStrip.Value) && ~logical(abortTriggered)
+if logical(handles.config.togStripValue) && ~logical(abortTriggered)
     RevasMessage(['[[ Strip Analyzing ]] ' inputPath], parametersStructure);
     % Set the parameters
     parametersStructure.createStabilizedVideo = handles.config.stripCreateStabilizedVideo;
@@ -197,7 +197,7 @@ if logical(handles.togStrip.Value) && ~logical(abortTriggered)
     % Load a fine ref frame if we didn't run the previous module in this
     % session.
     if ~exist('fineRefFrame', 'var')
-        if logical(handles.togCoarse.Value)
+        if logical(handles.config.togCoarseValue)
            % Use coarse ref frame if fine ref module disabled and if
            % available.
            fineRefFrame = coarseRefFrame;
@@ -225,10 +225,10 @@ if logical(handles.togStrip.Value) && ~logical(abortTriggered)
 end
 
 %% Re-referencing Module
-if logical(handles.togReRef.Value) && strcmp(handles.config.rerefGlobalFullPath, '')
+if logical(handles.config.togReRefValue) && strcmp(handles.config.rerefGlobalFullPath, '')
     RevasMessage(['[[ Re-referencing ]] ' inputPath], parametersStructure);
     RevasMessage('No valid global reference frame provided, skipping Re-Referencing', parametersStructure);
-elseif logical(handles.togReRef.Value) && ~logical(abortTriggered)
+elseif logical(handles.config.togReRefValue) && ~logical(abortTriggered)
     RevasMessage(['[[ Re-referencing ]] ' inputPath], parametersStructure);
     % Set the parameters    
     parametersStructure.verbosity = handles.config.rerefVerbosity;
@@ -250,7 +250,7 @@ elseif logical(handles.togReRef.Value) && ~logical(abortTriggered)
     % Load a fine ref if we didn't run the previous module in this
     % session.
     if ~exist('fineRefFrame', 'var')
-        if logical(handles.togCoarse.Value)
+        if logical(handles.config.togCoarseValue)
            % Use coarse ref frame if fine ref module disabled and if
            % available.
            fineRefFrame = coarseRefFrame;
@@ -274,7 +274,7 @@ elseif logical(handles.togReRef.Value) && ~logical(abortTriggered)
 end
 
 %% Filtering Module
-if logical(handles.togFilt.Value) && ~logical(abortTriggered)
+if logical(handles.config.togFiltValue) && ~logical(abortTriggered)
     RevasMessage(['[[ Filtering ]] ' inputPath], parametersStructure);
     % Set the parameters    
     parametersStructure.overwrite = handles.config.filtOverwrite;
@@ -309,7 +309,7 @@ if logical(handles.togFilt.Value) && ~logical(abortTriggered)
 end
 
 %% Saccade Detection Module
-if logical(handles.togSacDrift.Value) && ~logical(abortTriggered)
+if logical(handles.config.togSacDriftValue) && ~logical(abortTriggered)
     RevasMessage(['[[ Saccade Detecting ]] ' inputPath], parametersStructure);
     % Set the parameters
     parametersStructure.overwrite = handles.config.sacOverwrite;
