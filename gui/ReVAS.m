@@ -297,26 +297,77 @@ handles.config.sacVelMethod2 = true;
 handles.config.parMultiCore = false;
 handles.config.parGPU = false;
 
-% Starting Toggle Values
-handles.config.preDisabledTogTrimValue = 1;
-handles.config.preDisabledTogStimValue = 1;
-handles.config.preDisabledTogGammaValue = 1;
-handles.config.preDisabledTogBandFiltValue = 1;
-handles.config.preDisabledTogCoarseValue = 1;
-handles.config.preDisabledTogFineValue = 1;
-handles.config.preDisabledTogStripValue = 1;
-handles.config.togTrimValue = 1;
-handles.config.togStimValue = 1;
-handles.config.togGammaValue = 1;
-handles.config.togBandFiltValue = 1;
-handles.config.togCoarseValue = 1;
-handles.config.togFineValue = 1;
-handles.config.togStripValue = 1;
-handles.config.togReRefValue = 1;
-handles.config.togFiltValue = 1;
-handles.config.togSacDriftValue = 1;
+handles.moduleNames = {
+    'trim', ...
+    'stim', ...
+    'gamma', ...
+    'bandfilt', ...
+    'coarse', ...
+    'fine', ...
+    'strip', ...
+    'reref', ...
+    'filt', ...
+    'sacdrift'};
+
+% For toggle buttons
+% Local lists of references, to be converted to maps below.
+togHandleRefs = {
+    handles.togTrim, ...
+    handles.togStim, ...
+    handles.togGamma, ...
+    handles.togBandFilt, ...
+    handles.togCoarse, ...
+    handles.togFine, ...
+    handles.togStrip, ...
+    handles.togReRef, ...
+    handles.togFilt, ...
+    handles.togSacDrift};
+configHandleRefs = {
+    handles.configTrim, ...
+    handles.configStim, ...
+    handles.configGamma, ...
+    handles.configBandFilt, ...
+    handles.configCoarse, ...
+    handles.configFine, ...
+    handles.configStrip, ...
+    handles.configReRef, ...
+    handles.configFilt, ...
+    handles.configSacDrift};
+togCallbackRefs = {
+    @togTrim_Callback, ...
+    @togStim_Callback, ...
+    @togGamma_Callback, ...
+    @togBandFilt_Callback, ...
+    @togCoarse_Callback, ...
+    @togFine_Callback, ...
+    @togStrip_Callback, ...
+    @togReRef_Callback, ...
+    @togFilt_Callback, ...
+    @togSacDrift_Callback};
+% Used when push buttons are to be disabled by the radio buttons, in
+% which case the should temporarily show as disabled.
+handles.config.preDisabledTogValues = ...
+    containers.Map(handles.moduleNames(1:7), num2cell(zeros(1,7)));
+% Handles to each toggle button.
+handles.togHandles = ...
+    containers.Map(handles.moduleNames, togHandleRefs);
+% Handles to each config button.
+handles.configHandles = ...
+    containers.Map(handles.moduleNames, configHandleRefs);
+% Handles to each toggle button's callback function.
+handles.togCallbacks = ...
+    containers.Map(handles.moduleNames, togCallbackRefs);
+% Tracks the toggle state of each toggle button (must do this manually
+% since we use push buttons instead; toggle buttons have uncontrollable
+% color problems on Mac due to its default Java stylings).
+handles.config.togValues = ...
+    containers.Map(handles.moduleNames, ...
+    num2cell(ones(1, size(handles.moduleNames, 2))));
+
+% Set ReRef to be disabled by default.
 togReRef_Callback(handles.togReRef, eventdata, handles);
-handles.config.togReRefValue = 0;
+% Update the value after the callback on reref.
+handles.config.togValues('reref') = 0;
 
 % Pre-Disabled Execute Screen GUI Items
 handles.axes1.Visible = 'off';
@@ -531,6 +582,39 @@ else
     handles.saveLog.Enable = 'on';
 end
 
+% Helper function called by radio button callback functions. Restores
+% specified toggle and config button to state before they were disabled.
+function handles = reEnable(index, eventdata, handles)
+module = handles.moduleNames{index};
+if strcmp(handles.togHandles(module).Enable, 'off')
+    handles.config.togValues(module) = ...
+        1 - handles.config.preDisabledTogValues(module);
+    currHandle = handles.togHandles(module);
+    currHandle.Enable = 'on';
+    currHandle = handles.configHandles(module);
+    currHandle.Enable = 'on';
+    currCallback = handles.togCallbacks(module);
+    currCallback(handles.togHandles(module), eventdata, handles);
+    handles.config.togValues(module) = ...
+        handles.config.preDisabledTogValues(module);
+end
+
+% Helper function called by radio button callback functions. Temporarily
+% disables specified toggle and config button.
+function handles = tempDisable(index, eventdata, handles)
+module = handles.moduleNames{index};
+if strcmp(handles.togHandles(module).Enable, 'on')
+    handles.config.preDisabledTogValues(module) = ...
+        handles.config.togValues(module);
+    handles.config.togValues(module) = 1;
+    currHandle = handles.togHandles(module);
+    currHandle.Enable = 'off';
+    currHandle = handles.configHandles(module);
+    currHandle.Enable = 'off';
+    currCallback = handles.togCallbacks(module);
+    currCallback(handles.togHandles(module), eventdata, handles);
+    handles.config.togValues(module) = 0;
+end
 
 % --- Executes on button press in radioRaw.
 function radioRaw_Callback(hObject, eventdata, handles)
@@ -539,60 +623,9 @@ function radioRaw_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of radioRaw
-if strcmp(handles.togTrim.Enable, 'off')
-    handles.config.togTrimValue = 1 - handles.config.preDisabledTogTrimValue;
-    handles.togTrim.Enable = 'on';
-    handles.configTrim.Enable = 'on';
-    togTrim_Callback(handles.togTrim, eventdata, handles);
-    handles.config.togTrimValue = handles.config.preDisabledTogTrimValue;
-end
-
-if strcmp(handles.togStim.Enable, 'off')
-    handles.config.togStimValue = 1 - handles.config.preDisabledTogStimValue;
-    handles.togStim.Enable = 'on';
-    handles.configStim.Enable = 'on';
-    togStim_Callback(handles.togStim, eventdata, handles);
-    handles.config.togStimValue = handles.config.preDisabledTogStimValue;
-end
-
-if strcmp(handles.togGamma.Enable, 'off')
-    handles.config.togGammaValue = 1 - handles.config.preDisabledTogGammaValue;
-    handles.togGamma.Enable = 'on';
-    handles.configGamma.Enable = 'on';
-    togGamma_Callback(handles.togGamma, eventdata, handles);
-    handles.config.togGammaValue = handles.config.preDisabledTogGammaValue;
-end
-
-if strcmp(handles.togBandFilt.Enable, 'off')
-    handles.config.togBandFiltValue = 1 - handles.config.preDisabledTogBandFiltValue;
-    handles.togBandFilt.Enable = 'on';
-    handles.configBandFilt.Enable = 'on';
-    togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
-    handles.config.togBandFiltValue = handles.config.preDisabledTogBandFiltValue;
-end
-
-if strcmp(handles.togFine.Enable, 'off')
-    handles.config.togFineValue = 1 - handles.config.preDisabledTogFineValue;
-    handles.togFine.Enable = 'on';
-    handles.configFine.Enable = 'on';
-    togFine_Callback(handles.togFine, eventdata, handles);
-    handles.config.togFineValue = handles.config.preDisabledTogFineValue;
-end
-
-if strcmp(handles.togStrip.Enable, 'off')
-    handles.config.togStripValue = 1 - handles.config.preDisabledTogStripValue;
-    handles.togStrip.Enable = 'on';
-    handles.configStrip.Enable = 'on';
-    togStrip_Callback(handles.togStrip, eventdata, handles);
-    handles.config.togStripValue = handles.config.preDisabledTogStripValue;
-end
-
-if strcmp(handles.togCoarse.Enable, 'off')
-    handles.config.togCoarseValue = 1 - handles.config.preDisabledTogCoarseValue;
-    handles.togCoarse.Enable = 'on';
-    handles.configCoarse.Enable = 'on';
-    togCoarse_Callback(handles.togCoarse, eventdata, handles);
-    handles.config.togCoarseValue = handles.config.preDisabledTogCoarseValue;
+% We update coarse after fine and strip to avoid warning dialogues.
+for i = [1, 2, 3, 4, 6, 7, 5]
+    handles = reEnable(i, eventdata, handles);
 end
 
 if handles.lastRadio ~= 1
@@ -690,64 +723,13 @@ function radioBandFilt_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of radioBandFilt
-if strcmp(handles.togTrim.Enable, 'on')
-    handles.config.preDisabledTogTrimValue = handles.config.togTrimValue;
-    handles.config.togTrimValue = 1;
-    handles.togTrim.Enable = 'off';
-    handles.configTrim.Enable = 'off';
-    togTrim_Callback(handles.togTrim, eventdata, handles);
-    handles.config.togTrimValue = 0;
-end
 
-if strcmp(handles.togStim.Enable, 'on')
-    handles.config.preDisabledTogStimValue = handles.config.togStimValue;
-    handles.config.togStimValue = 1;
-    handles.togStim.Enable = 'off';
-    handles.configStim.Enable = 'off';
-    togStim_Callback(handles.togStim, eventdata, handles);
-    handles.config.togStimValue = 0;
+% We update coarse after fine and strip to avoid warning dialogues.
+for i = [1, 2, 3, 4]
+    handles = tempDisable(i, eventdata, handles);
 end
-
-if strcmp(handles.togGamma.Enable, 'on')
-    handles.config.preDisabledTogGammaValue = handles.config.togGammaValue;
-    handles.config.togGammaValue = 1;
-    handles.togGamma.Enable = 'off';
-    handles.configGamma.Enable = 'off';
-    togGamma_Callback(handles.togGamma, eventdata, handles);
-    handles.config.togGammaValue = 0;
-end
-
-if strcmp(handles.togBandFilt.Enable, 'on')
-    handles.config.preDisabledTogBandFiltValue = handles.config.togBandFiltValue;
-    handles.config.togBandFiltValue = 1;
-    handles.togBandFilt.Enable = 'off';
-    handles.configBandFilt.Enable = 'off';
-    togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
-    handles.config.togBandFiltValue = 0;
-end
-
-if strcmp(handles.togFine.Enable, 'off')
-    handles.config.togFineValue = 1 - handles.config.preDisabledTogFineValue;
-    handles.togFine.Enable = 'on';
-    handles.configFine.Enable = 'on';
-    togFine_Callback(handles.togFine, eventdata, handles);
-    handles.config.togFineValue = handles.config.preDisabledTogFineValue;
-end
-
-if strcmp(handles.togStrip.Enable, 'off')
-    handles.config.togStripValue = 1 - handles.config.preDisabledTogStripValue;
-    handles.togStrip.Enable = 'on';
-    handles.configStrip.Enable = 'on';
-    togStrip_Callback(handles.togStrip, eventdata, handles);
-    handles.config.togStripValue = handles.config.preDisabledTogStripValue;
-end
-
-if strcmp(handles.togCoarse.Enable, 'off')
-    handles.config.togCoarseValue = 1 - handles.config.preDisabledTogCoarseValue;
-    handles.togCoarse.Enable = 'on';
-    handles.configCoarse.Enable = 'on';
-    togCoarse_Callback(handles.togCoarse, eventdata, handles);
-    handles.config.togCoarseValue = handles.config.preDisabledTogCoarseValue;
+for i = [6, 7, 5]
+    handles = reEnable(i, eventdata, handles);
 end
 
 if handles.lastRadio ~= 5
@@ -759,7 +741,6 @@ end
 % Update handles structure
 guidata(hObject, handles);
 
-
 % --- Executes on button press in radioStrip.
 function radioStrip_Callback(hObject, eventdata, handles)
 % hObject    handle to radioStrip (see GCBO)
@@ -767,67 +748,9 @@ function radioStrip_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of radioStrip
-if strcmp(handles.togTrim.Enable, 'on')
-    handles.config.preDisabledTogTrimValue = handles.config.togTrimValue;
-    handles.config.togTrimValue = 1;
-    handles.togTrim.Enable = 'off';
-    handles.configTrim.Enable = 'off';
-    togTrim_Callback(handles.togTrim, eventdata, handles);
-    handles.config.togTrimValue = 0;
-end
 
-if strcmp(handles.togStim.Enable, 'on')
-    handles.config.preDisabledTogStimValue = handles.config.togStimValue;
-    handles.config.togStimValue = 1;
-    handles.togStim.Enable = 'off';
-    handles.configStim.Enable = 'off';
-    togStim_Callback(handles.togStim, eventdata, handles);
-    handles.config.togStimValue = 0;
-end
-
-if strcmp(handles.togGamma.Enable, 'on')
-    handles.config.preDisabledTogGammaValue = handles.config.togGammaValue;
-    handles.config.togGammaValue = 1;
-    handles.togGamma.Enable = 'off';
-    handles.configGamma.Enable = 'off';
-    togGamma_Callback(handles.togGamma, eventdata, handles);
-    handles.config.togGammaValue = 0;
-end
-
-if strcmp(handles.togBandFilt.Enable, 'on')
-    handles.config.preDisabledTogBandFiltValue = handles.config.togBandFiltValue;
-    handles.config.togBandFiltValue = 1;
-    handles.togBandFilt.Enable = 'off';
-    handles.configBandFilt.Enable = 'off';
-    togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
-    handles.config.togBandFiltValue = 0;
-end
-
-if strcmp(handles.togFine.Enable, 'on')
-    handles.config.preDisabledTogFineValue = handles.config.togFineValue;
-    handles.config.togFineValue = 1;
-    handles.togFine.Enable = 'off';
-    handles.configFine.Enable = 'off';
-    togFine_Callback(handles.togFine, eventdata, handles);
-    handles.config.togFineValue = 0;
-end
-
-if strcmp(handles.togStrip.Enable, 'on')
-    handles.config.preDisabledTogStripValue = handles.config.togStripValue;
-    handles.config.togStripValue = 1;
-    handles.togStrip.Enable = 'off';
-    handles.configStrip.Enable = 'off';
-    togStrip_Callback(handles.togStrip, eventdata, handles);
-    handles.config.togStripValue = 0;
-end
-
-if strcmp(handles.togCoarse.Enable, 'on')
-    handles.config.preDisabledTogCoarseValue = handles.config.togCoarseValue;
-    handles.config.togCoarseValue = 1;
-    handles.togCoarse.Enable = 'off';
-    handles.configCoarse.Enable = 'off';
-    togCoarse_Callback(handles.togCoarse, eventdata, handles);
-    handles.config.togCoarseValue = 0;
+for i = [1, 2, 3, 4, 6, 7, 5]
+    handles = tempDisable(i, eventdata, handles);
 end
 
 if handles.lastRadio ~= 6
@@ -871,8 +794,8 @@ end
 
 % --- Executes on button press in togTrim.
 function togTrim_Callback(hObject, eventdata, handles)
-handles.config.togTrimValue = 1 - handles.config.togTrimValue;
-if handles.config.togTrimValue == 1
+handles.config.togValues('trim') = 1 - handles.config.togValues('trim');
+if handles.config.togValues('trim') == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
     hObject.ForegroundColor = handles.colors{1,2};
@@ -887,8 +810,8 @@ guidata(hObject, handles);
 
 % --- Executes on button press in togStrip.
 function togStrip_Callback(hObject, eventdata, handles)
-handles.config.togStripValue = 1 - handles.config.togStripValue;
-if handles.config.togStripValue == 1
+handles.config.togValues('strip') = 1 - handles.config.togValues('strip');
+if handles.config.togValues('strip') == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
     hObject.ForegroundColor = handles.colors{1,2};
@@ -903,8 +826,8 @@ guidata(hObject, handles);
 
 % --- Executes on button press in togStim.
 function togStim_Callback(hObject, eventdata, handles)
-handles.config.togStimValue = 1 - handles.config.togStimValue;
-if handles.config.togStimValue == 1
+handles.config.togValues('stim') = 1 - handles.config.togValues('stim');
+if handles.config.togValues('stim') == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
     hObject.ForegroundColor = handles.colors{1,2};
@@ -919,8 +842,8 @@ guidata(hObject, handles);
 
 % --- Executes on button press in togGamma.
 function togGamma_Callback(hObject, eventdata, handles)
-handles.config.togGammaValue = 1 - handles.config.togGammaValue;
-if handles.config.togGammaValue == 1
+handles.config.togValues('gamma') = 1 - handles.config.togValues('gamma');
+if handles.config.togValues('gamma') == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
     hObject.ForegroundColor = handles.colors{1,2};
@@ -935,16 +858,16 @@ guidata(hObject, handles);
 
 % --- Executes on button press in togCoarse.
 function togCoarse_Callback(hObject, eventdata, handles)
-handles.config.togCoarseValue = 1 - handles.config.togCoarseValue;
-if handles.config.togCoarseValue == 1
+handles.config.togValues('coarse') = 1 - handles.config.togValues('coarse');
+if handles.config.togValues('coarse') == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
     hObject.ForegroundColor = handles.colors{1,2};
 else
-    if handles.config.togFineValue == 1 && handles.radioStrip.Value ~= 1
+    if handles.config.togValues('fine') == 1 && handles.radioStrip.Value ~= 1
         errordlg(...
             'Make Coarse Reference Frame must be enabled if Make Fine Reference Frame is enabled.', 'Invalid Selection');
-        handles.config.togCoarseValue = 1;
+        handles.config.togValues('coarse') = 1;
     else
         hObject.String = 'DISABLED';
         hObject.BackgroundColor = handles.colors{1,1};
@@ -957,8 +880,8 @@ guidata(hObject, handles);
 
 % --- Executes on button press in togReRef.
 function togReRef_Callback(hObject, eventdata, handles)
-handles.config.togReRefValue = 1 - handles.config.togReRefValue;
-if handles.config.togReRefValue == 1
+handles.config.togValues('reref') = 1 - handles.config.togValues('reref');
+if handles.config.togValues('reref') == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
     hObject.ForegroundColor = handles.colors{1,2};
@@ -973,8 +896,8 @@ guidata(hObject, handles);
 
 % --- Executes on button press in togFilt.
 function togFilt_Callback(hObject, eventdata, handles)
-handles.config.togFiltValue = 1 - handles.config.togFiltValue;
-if handles.config.togFiltValue == 1
+handles.config.togValues('filt') = 1 - handles.config.togValues('filt');
+if handles.config.togValues('filt') == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
     hObject.ForegroundColor = handles.colors{1,2};
@@ -989,8 +912,8 @@ guidata(hObject, handles);
 
 % --- Executes on button press in togSacDrift.
 function togSacDrift_Callback(hObject, eventdata, handles)
-handles.config.togSacDriftValue = 1 - handles.config.togSacDriftValue;
-if handles.config.togSacDriftValue == 1
+handles.config.togValues('sacdrift') = 1 - handles.config.togValues('sacdrift');
+if handles.config.togValues('sacdrift') == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
     hObject.ForegroundColor = handles.colors{1,2};
@@ -1005,13 +928,13 @@ guidata(hObject, handles);
 
 % --- Executes on button press in togFine.
 function togFine_Callback(hObject, eventdata, handles)
-handles.config.togFineValue = 1 - handles.config.togFineValue;
-if handles.config.togFineValue == 1
-    if handles.config.togCoarseValue == 0 && handles.lastRadio ~= 6
+handles.config.togValues('fine') = 1 - handles.config.togValues('fine');
+if handles.config.togValues('fine') == 1
+    if handles.config.togValues('coarse') == 0 && handles.lastRadio ~= 6
         warndlg('Make Coarse Reference Frame has been enabled since it must be if Make Fine Reference Frame is enabled.', 'Input Warning');
-        handles.config.togCoarseValue = 0;
+        handles.config.togValues('coarse') = 0;
         togCoarse_Callback(handles.togCoarse, eventdata, handles);
-        handles.config.togCoarseValue = 1;
+        handles.config.togValues('coarse') = 1;
     end
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
@@ -1027,8 +950,8 @@ guidata(hObject, handles);
 
 % --- Executes on button press in togBandFilt.
 function togBandFilt_Callback(hObject, eventdata, handles)
-handles.config.togBandFiltValue = 1 - handles.config.togBandFiltValue;
-if handles.config.togBandFiltValue == 1
+handles.config.togValues('bandfilt') = 1 - handles.config.togValues('bandfilt');
+if handles.config.togValues('bandfilt') == 1
     hObject.String = 'ENABLED';
     hObject.BackgroundColor = handles.colors{1,4};
     hObject.ForegroundColor = handles.colors{1,2};
@@ -1119,61 +1042,13 @@ function radioTrim_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of radioTrim
-if strcmp(handles.togTrim.Enable, 'on')
-    handles.config.preDisabledTogTrimValue = handles.config.togTrimValue;
-    handles.config.togTrimValue = 1;
-    handles.togTrim.Enable = 'off';
-    handles.configTrim.Enable = 'off';
-    togTrim_Callback(handles.togTrim, eventdata, handles);
-    handles.config.togTrimValue = 0;
-end
 
-if strcmp(handles.togStim.Enable, 'off')
-    handles.config.togStimValue = 1 - handles.config.preDisabledTogStimValue;
-    handles.togStim.Enable = 'on';
-    handles.configStim.Enable = 'on';
-    togStim_Callback(handles.togStim, eventdata, handles);
-    handles.config.togStimValue = handles.config.preDisabledTogStimValue;
+% We update coarse after fine and strip to avoid warning dialogues.
+for i = 1
+    handles = tempDisable(i, eventdata, handles);
 end
-
-if strcmp(handles.togGamma.Enable, 'off')
-    handles.config.togGammaValue = 1 - handles.config.preDisabledTogGammaValue;
-    handles.togGamma.Enable = 'on';
-    handles.configGamma.Enable = 'on';
-    togGamma_Callback(handles.togGamma, eventdata, handles);
-    handles.config.togGammaValue = handles.config.preDisabledTogGammaValue;
-end
-
-if strcmp(handles.togBandFilt.Enable, 'off')
-    handles.config.togBandFiltValue = 1 - handles.config.preDisabledTogBandFiltValue;
-    handles.togBandFilt.Enable = 'on';
-    handles.configBandFilt.Enable = 'on';
-    togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
-    handles.config.togBandFiltValue = handles.config.preDisabledTogBandFiltValue;
-end
-
-if strcmp(handles.togFine.Enable, 'off')
-    handles.config.togFineValue = 1 - handles.config.preDisabledTogFineValue;
-    handles.togFine.Enable = 'on';
-    handles.configFine.Enable = 'on';
-    togFine_Callback(handles.togFine, eventdata, handles);
-    handles.config.togFineValue = handles.config.preDisabledTogFineValue;
-end
-
-if strcmp(handles.togStrip.Enable, 'off')
-    handles.config.togStripValue = 1 - handles.config.preDisabledTogStripValue;
-    handles.togStrip.Enable = 'on';
-    handles.configStrip.Enable = 'on';
-    togStrip_Callback(handles.togStrip, eventdata, handles);
-    handles.config.togStripValue = handles.config.preDisabledTogStripValue;
-end
-
-if strcmp(handles.togCoarse.Enable, 'off')
-    handles.config.togCoarseValue = 1 - handles.config.preDisabledTogCoarseValue;
-    handles.togCoarse.Enable = 'on';
-    handles.configCoarse.Enable = 'on';
-    togCoarse_Callback(handles.togCoarse, eventdata, handles);
-    handles.config.togCoarseValue = handles.config.preDisabledTogCoarseValue;
+for i = [2, 3, 4, 6, 7, 5]
+    handles = reEnable(i, eventdata, handles);
 end
 
 if handles.lastRadio ~= 2
@@ -1193,62 +1068,13 @@ function radioNoStim_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of radioNoStim
-if strcmp(handles.togTrim.Enable, 'on')
-    handles.config.preDisabledTogTrimValue = handles.config.togTrimValue;
-    handles.config.togTrimValue = 1;
-    handles.togTrim.Enable = 'off';
-    handles.configTrim.Enable = 'off';
-    togTrim_Callback(handles.togTrim, eventdata, handles);
-    handles.config.togTrimValue = 0;
-end
 
-if strcmp(handles.togStim.Enable, 'on')
-    handles.config.preDisabledTogStimValue = handles.config.togStimValue;
-    handles.config.togStimValue = 1;
-    handles.togStim.Enable = 'off';
-    handles.configStim.Enable = 'off';
-    togStim_Callback(handles.togStim, eventdata, handles);
-    handles.config.togStimValue = 0;
+% We update coarse after fine and strip to avoid warning dialogues.
+for i = [1, 2]
+    handles = tempDisable(i, eventdata, handles);
 end
-
-if strcmp(handles.togGamma.Enable, 'off')
-    handles.config.togGammaValue = 1 - handles.config.preDisabledTogGammaValue;
-    handles.togGamma.Enable = 'on';
-    handles.configGamma.Enable = 'on';
-    togGamma_Callback(handles.togGamma, eventdata, handles);
-    handles.config.togGammaValue = handles.config.preDisabledTogGammaValue;
-end
-
-if strcmp(handles.togBandFilt.Enable, 'off')
-    handles.config.togBandFiltValue = 1 - handles.config.preDisabledTogBandFiltValue;
-    handles.togBandFilt.Enable = 'on';
-    handles.configBandFilt.Enable = 'on';
-    togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
-    handles.config.togBandFiltValue = handles.config.preDisabledTogBandFiltValue;
-end
-
-if strcmp(handles.togFine.Enable, 'off')
-    handles.config.togFineValue = 1 - handles.config.preDisabledTogFineValue;
-    handles.togFine.Enable = 'on';
-    handles.configFine.Enable = 'on';
-    togFine_Callback(handles.togFine, eventdata, handles);
-    handles.config.togFineValue = handles.config.preDisabledTogFineValue;
-end
-
-if strcmp(handles.togStrip.Enable, 'off')
-    handles.config.togStripValue = 1 - handles.config.preDisabledTogStripValue;
-    handles.togStrip.Enable = 'on';
-    handles.configStrip.Enable = 'on';
-    togStrip_Callback(handles.togStrip, eventdata, handles);
-    handles.config.togStripValue = handles.config.preDisabledTogStripValue;
-end
-
-if strcmp(handles.togCoarse.Enable, 'off')
-    handles.config.togCoarseValue = 1 - handles.config.preDisabledTogCoarseValue;
-    handles.togCoarse.Enable = 'on';
-    handles.configCoarse.Enable = 'on';
-    togCoarse_Callback(handles.togCoarse, eventdata, handles);
-    handles.config.togCoarseValue = handles.config.preDisabledTogCoarseValue;
+for i = [3, 4, 6, 7, 5]
+    handles = reEnable(i, eventdata, handles);
 end
 
 if handles.lastRadio ~= 3
@@ -1267,63 +1093,13 @@ function radioGamma_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of radioGamma
-if strcmp(handles.togTrim.Enable, 'on')
-    handles.config.preDisabledTogTrimValue = handles.config.togTrimValue;
-    handles.config.togTrimValue = 1;
-    handles.togTrim.Enable = 'off';
-    handles.configTrim.Enable = 'off';
-    togTrim_Callback(handles.togTrim, eventdata, handles);
-    handles.config.togTrimValue = 0;
-end
 
-if strcmp(handles.togStim.Enable, 'on')
-    handles.config.preDisabledTogStimValue = handles.config.togStimValue;
-    handles.config.togStimValue = 1;
-    handles.togStim.Enable = 'off';
-    handles.configStim.Enable = 'off';
-    togStim_Callback(handles.togStim, eventdata, handles);
-    handles.config.togStimValue = 0;
+% We update coarse after fine and strip to avoid warning dialogues.
+for i = [1, 2, 3]
+    handles = tempDisable(i, eventdata, handles);
 end
-
-if strcmp(handles.togGamma.Enable, 'on')
-    handles.config.preDisabledTogGammaValue = handles.config.togGammaValue;
-    handles.config.togGammaValue = 1;
-    handles.togGamma.Enable = 'off';
-    handles.configGamma.Enable = 'off';
-    togGamma_Callback(handles.togGamma, eventdata, handles);
-    handles.config.togGammaValue = 0;
-end
-
-if strcmp(handles.togBandFilt.Enable, 'off')
-    handles.config.togBandFiltValue = 1 - handles.config.preDisabledTogBandFiltValue;
-    handles.togBandFilt.Enable = 'on';
-    handles.configBandFilt.Enable = 'on';
-    togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
-    handles.config.togBandFiltValue = handles.config.preDisabledTogBandFiltValue;
-end
-
-if strcmp(handles.togFine.Enable, 'off')
-    handles.config.togFineValue = 1 - handles.config.preDisabledTogFineValue;
-    handles.togFine.Enable = 'on';
-    handles.configFine.Enable = 'on';
-    togFine_Callback(handles.togFine, eventdata, handles);
-    handles.config.togFineValue = handles.config.preDisabledTogFineValue;
-end
-
-if strcmp(handles.togStrip.Enable, 'off')
-    handles.config.togStripValue = 1 - handles.config.preDisabledTogStripValue;
-    handles.togStrip.Enable = 'on';
-    handles.configStrip.Enable = 'on';
-    togStrip_Callback(handles.togStrip, eventdata, handles);
-    handles.config.togStripValue = handles.config.preDisabledTogStripValue;
-end
-
-if strcmp(handles.togCoarse.Enable, 'off')
-    handles.config.togCoarseValue = 1 - handles.config.preDisabledTogCoarseValue;
-    handles.togCoarse.Enable = 'on';
-    handles.configCoarse.Enable = 'on';
-    togCoarse_Callback(handles.togCoarse, eventdata, handles);
-    handles.config.togCoarseValue = handles.config.preDisabledTogCoarseValue;
+for i = [4, 6, 7, 5]
+    handles = reEnable(i, eventdata, handles);
 end
 
 if handles.lastRadio ~= 4
@@ -1383,7 +1159,7 @@ if fileName == 0
     return;
 end
 configurationsStruct = struct;
-toggleButtonStates = [];
+toggleButtonStates = containers.Map;
 
 % Suppress warning if variables not found in loaded file
 warning('off','MATLAB:load:variableNotFound');
@@ -1396,57 +1172,55 @@ for i = 1:length(configurationsStructFieldNames)
     handles.config.(configurationsStructFieldNames{i}) = ...
         configurationsStruct.(configurationsStructFieldNames{i});
 end
+
+% Switch to raw radio button first to avoid illegal states.
+radioRaw_Callback(handles.radioRaw, eventdata, handles);
+handles.radioRaw.Value = 1;
+
 try
     % To avoid error dialogues, must be careful with Coarse and Fine toggle
-    % states while restoring previous saved values.
+    % states when restoring previous saved values.
     
-    handles.config.togTrimValue = 1 - toggleButtonStates('togTrim');
-    handles.config.togStimValue = 1 - toggleButtonStates('togStim');
-    handles.config.togGammaValue = 1 - toggleButtonStates('togGamma');
-    handles.config.togBandFiltValue = 1 - toggleButtonStates('togBandFilt');
-    handles.config.togCoarseValue = toggleButtonStates('togCoarse');
-    handles.config.togFineValue = toggleButtonStates('togFine');
-    handles.config.togStripValue = 1 - toggleButtonStates('togStrip');
-    handles.config.togReRefValue = 1 - toggleButtonStates('togReRef');
-    handles.config.togFiltValue = 1 - toggleButtonStates('togFilt');
-    handles.config.togSacDriftValue = 1 - toggleButtonStates('togSacDrift');
+    % Copy over inverted values to prepare for callbacks.
+    for i = 1:size(handles.moduleNames, 2)
+        module = handles.moduleNames{i};
+        handles.config.togValues(module) = 1 - toggleButtonStates(module);
+    end
     
-    togTrim_Callback(handles.togTrim, eventdata, handles);
-    togStim_Callback(handles.togStim, eventdata, handles);
-    togGamma_Callback(handles.togGamma, eventdata, handles);
-    togBandFilt_Callback(handles.togBandFilt, eventdata, handles);
+    % Start with the first 4 callbacks.
+    for i = 1:4
+        module = handles.moduleNames{i};
+        currCallback = handles.togCallbacks(module);
+        currCallback(handles.togHandles(module), eventdata, handles);
+    end
     
-    handles.config.togFineValue = 1 - toggleButtonStates('togFine');
-    togFine_Callback(handles.togFine, eventdata, handles);
-    handles.config.togFineValue = toggleButtonStates('togFine');
-    handles.config.togCoarseValue = 1 - toggleButtonStates('togCoarse');
-    togCoarse_Callback(handles.togCoarse, eventdata, handles);
-    handles.config.togCoarseValue = toggleButtonStates('togCoarse');
+    % Set fine and coarse to saved config carefully.
+    handles.config.togValues('coarse') = toggleButtonStates('coarse');
+    handles.config.togValues('fine') = toggleButtonStates('fine');
+    handles.config.togValues('fine') = 1 - toggleButtonStates('fine');
+    togFine_Callback(handles.togHandles('fine'), eventdata, handles);
+    handles.config.togValues('fine') = toggleButtonStates('fine');
+    handles.config.togValues('coarse') = 1 - toggleButtonStates('coarse');
+    togCoarse_Callback(handles.togHandles('coarse'), eventdata, handles);
+    handles.config.togValues('coarse') = toggleButtonStates('coarse');
     
-    togStrip_Callback(handles.togStrip, eventdata, handles);
-    togReRef_Callback(handles.togReRef, eventdata, handles);
-    togFilt_Callback(handles.togFilt, eventdata, handles);
-    togSacDrift_Callback(handles.togSacDrift, eventdata, handles);
+    % Finish the remaining callbacks.
+    for i = 7:size(handles.moduleNames, 2)
+        module = handles.moduleNames{i};
+        currCallback = handles.togCallbacks(module);
+        currCallback(handles.togHandles(module), eventdata, handles);
+    end
     
-    handles.config.togTrimValue = toggleButtonStates('togTrim');
-    handles.config.togStimValue = toggleButtonStates('togStim');
-    handles.config.togGammaValue = toggleButtonStates('togGamma');
-    handles.config.togBandFiltValue = toggleButtonStates('togBandFilt');
-    handles.config.togCoarseValue = toggleButtonStates('togCoarse');
-    handles.config.togFineValue = toggleButtonStates('togFine');
-    handles.config.togStripValue = toggleButtonStates('togStrip');
-    handles.config.togReRefValue = toggleButtonStates('togReRef');
-    handles.config.togFiltValue = toggleButtonStates('togFilt');
-    handles.config.togSacDriftValue = toggleButtonStates('togSacDrift');
+    % Save back correct values
+    for i = 1:size(handles.moduleNames, 2)
+        module = handles.moduleNames{i};
+        handles.config.togValues(module) = toggleButtonStates(module);
+    end
 catch
     errordlg('Load configurations failed because the file is corrupted or incompatible with the current release.', ...
         'Corrupt Configurations File');
     return;
 end
-
-% Switch to raw radio button once done to avoid illegal states.
-radioRaw_Callback(handles.radioRaw, eventdata, handles);
-handles.radioRaw.Value = 1;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -1462,40 +1236,19 @@ if fileName == 0
     return;
 end
 configurationsStruct = handles.config; %#ok<NASGU>
-toggleButtonStates = containers.Map;
-toggleButtonStates('togTrim') = handles.config.togTrimValue;
-toggleButtonStates('togStim') = handles.config.togStimValue;
-toggleButtonStates('togGamma') = handles.config.togGammaValue;
-toggleButtonStates('togBandFilt') = handles.config.togBandFiltValue;
-toggleButtonStates('togCoarse') = handles.config.togCoarseValue;
-toggleButtonStates('togFine') = handles.config.togFineValue;
-toggleButtonStates('togStrip') = handles.config.togStripValue;
-toggleButtonStates('togReRef') = handles.config.togReRefValue;
-toggleButtonStates('togFilt') = handles.config.togFiltValue;
-toggleButtonStates('togSacDrift') = handles.config.togSacDriftValue;
-if strcmp(handles.togTrim.Enable, 'off')
-    toggleButtonStates('togTrim') = handles.config.preDisabledTogTrimValue;
-end
-if strcmp(handles.togStim.Enable, 'off')
-    toggleButtonStates('togStim') = handles.config.preDisabledTogStimValue;
-end
-if strcmp(handles.togGamma.Enable, 'off')
-   toggleButtonStates('togGamma') = handles.config.preDisabledTogGammaValue;
-end
-if strcmp(handles.togBandFilt.Enable, 'off')
-   toggleButtonStates('togBandFilt') = handles.config.preDisabledTogBandFiltValue;
-end
-if strcmp(handles.togCoarse.Enable, 'off')
-   toggleButtonStates('togCoarse') = handles.config.preDisabledTogCoarseValue;
-end
-if strcmp(handles.togFine.Enable, 'off')
-   toggleButtonStates('togFine') = handles.config.preDisabledTogFineValue;
-end
-if strcmp(handles.togStrip.Enable, 'off')
-   toggleButtonStates('togStrip') = handles.config.preDisabledTogStripValue; %#ok<NASGU>
-end
-save(fullfile(pathName, fileName), 'configurationsStruct', 'toggleButtonStates');
+toggleButtonStates = containers.Map(...
+    keys(handles.config.togValues), ...
+    values(handles.config.togValues));
 
+for i = 1:7
+    module = handles.moduleNames{i};
+    currHandle = handles.togHandles(module);
+    if strcmp(currHandle.Enable, 'off')
+        toggleButtonStates(module) = handles.config.preDisabledTogValues(module);
+    end
+end
+
+save(fullfile(pathName, fileName), 'configurationsStruct', 'toggleButtonStates');
 
 % --------------------------------------------------------------------
 function menuExit_Callback(hObject, eventdata, handles)
