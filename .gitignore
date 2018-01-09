@@ -7,6 +7,7 @@ pseudocode/
 testbench/
 example/
 log.txt
+configurations.mat
 ReRefTesting.m
 Test.m
 util/not_for_release
