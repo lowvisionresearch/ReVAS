@@ -14,3 +14,4 @@ util/not_for_release
 demo/*
 !demo/globalRef.tif
 !demo/sample10deg.avi
+*.m~
