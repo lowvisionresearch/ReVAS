@@ -806,6 +806,9 @@ guidata(hObject, handles);
 
 % --- Executes on button press in togFine.
 function togFine_Callback(hObject, eventdata, handles)
+% First check to see if an illegal flip of fine is taking place (i.e.
+% enabling fine while coarse is still disabled, since a trigger on this
+% callback means that there is an attempt to flip the state of fine.)
 if handles.config.togValues('fine') == 0 && ...
     handles.config.togValues('coarse') == 0 && ...
     handles.lastRadio ~= 6
