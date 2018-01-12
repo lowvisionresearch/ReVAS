@@ -616,6 +616,20 @@ if strcmp(handles.togHandles(module).Enable, 'on')
     handles.config.togValues(module) = 0;
 end
 
+% Helper function to apply callback on a toggle button.
+function handles = toggle_Callback(module, handles)
+handles.config.togValues(module) = 1 - handles.config.togValues(module);
+currHandle = handles.togHandles(module);
+if handles.config.togValues(module) == 1
+    currHandle.String = 'ENABLED';
+    currHandle.BackgroundColor = handles.colors{1,4};
+    currHandle.ForegroundColor = handles.colors{1,2};
+else
+    currHandle.String = 'DISABLED';
+    currHandle.BackgroundColor = handles.colors{1,1};
+    currHandle.ForegroundColor = handles.colors{1,3};
+end
+
 % --- Executes on button press in radioRaw.
 function radioRaw_Callback(hObject, eventdata, handles)
 % hObject    handle to radioRaw (see GCBO)
@@ -716,59 +730,12 @@ handles.inputList.String = displayFileList;
 % Update handles structure
 guidata(hObject, handles);
 
-% --- Executes on button press in radioBandFilt.
-function radioBandFilt_Callback(hObject, eventdata, handles)
-% hObject    handle to radioBandFilt (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of radioBandFilt
-
-% We update coarse after fine and strip to avoid warning dialogues.
-for i = [1, 2, 3, 4]
-    handles = tempDisable(i, eventdata, handles);
-end
-for i = [6, 7, 5]
-    handles = reEnable(i, eventdata, handles);
-end
-
-if handles.lastRadio ~= 5
-    handles.lastRadio = 5;
-    handles.inputList.String = cell(0);
-    handles.files = cell(0);
-end
-
-% Update handles structure
-guidata(hObject, handles);
-
-% --- Executes on button press in radioStrip.
-function radioStrip_Callback(hObject, eventdata, handles)
-% hObject    handle to radioStrip (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of radioStrip
-
-for i = [1, 2, 3, 4, 6, 7, 5]
-    handles = tempDisable(i, eventdata, handles);
-end
-
-if handles.lastRadio ~= 6
-    handles.lastRadio = 6;
-    handles.inputList.String = cell(0);
-    handles.files = cell(0);
-end
-
-% Update handles structure
-guidata(hObject, handles);
-
 % --- Executes when selected cell(s) is changed in inputList.
 function inputList_CellSelectionCallback(hObject, eventdata, handles)
 % hObject    handle to inputList (see GCBO)
 % eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
 %	Indices: row and column indices of the cell(s) currently selecteds
 % handles    structure with handles and user data (see GUIDATA)
-
 
 % --- Executes on selection change in inputList.
 function inputList_Callback(hObject, eventdata, handles)
@@ -778,7 +745,6 @@ function inputList_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns inputList contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from inputList
-
 
 % --- Executes during object creation, after setting all properties.
 function inputList_CreateFcn(hObject, eventdata, handles)
@@ -794,133 +760,45 @@ end
 
 % --- Executes on button press in togTrim.
 function togTrim_Callback(hObject, eventdata, handles)
-handles.config.togValues('trim') = 1 - handles.config.togValues('trim');
-if handles.config.togValues('trim') == 1
-    hObject.String = 'ENABLED';
-    hObject.BackgroundColor = handles.colors{1,4};
-    hObject.ForegroundColor = handles.colors{1,2};
-else
-    hObject.String = 'DISABLED';
-    hObject.BackgroundColor = handles.colors{1,1};
-    hObject.ForegroundColor = handles.colors{1,3};
-end
-
-% Update handles structure
-guidata(hObject, handles);
-
-% --- Executes on button press in togStrip.
-function togStrip_Callback(hObject, eventdata, handles)
-handles.config.togValues('strip') = 1 - handles.config.togValues('strip');
-if handles.config.togValues('strip') == 1
-    hObject.String = 'ENABLED';
-    hObject.BackgroundColor = handles.colors{1,4};
-    hObject.ForegroundColor = handles.colors{1,2};
-else
-    hObject.String = 'DISABLED';
-    hObject.BackgroundColor = handles.colors{1,1};
-    hObject.ForegroundColor = handles.colors{1,3};
-end
+handles = toggle_Callback('trim', handles);
 
 % Update handles structure
 guidata(hObject, handles);
 
 % --- Executes on button press in togStim.
 function togStim_Callback(hObject, eventdata, handles)
-handles.config.togValues('stim') = 1 - handles.config.togValues('stim');
-if handles.config.togValues('stim') == 1
-    hObject.String = 'ENABLED';
-    hObject.BackgroundColor = handles.colors{1,4};
-    hObject.ForegroundColor = handles.colors{1,2};
-else
-    hObject.String = 'DISABLED';
-    hObject.BackgroundColor = handles.colors{1,1};
-    hObject.ForegroundColor = handles.colors{1,3};
-end
+handles = toggle_Callback('stim', handles);
 
 % Update handles structure
 guidata(hObject, handles);
 
 % --- Executes on button press in togGamma.
 function togGamma_Callback(hObject, eventdata, handles)
-handles.config.togValues('gamma') = 1 - handles.config.togValues('gamma');
-if handles.config.togValues('gamma') == 1
-    hObject.String = 'ENABLED';
-    hObject.BackgroundColor = handles.colors{1,4};
-    hObject.ForegroundColor = handles.colors{1,2};
-else
-    hObject.String = 'DISABLED';
-    hObject.BackgroundColor = handles.colors{1,1};
-    hObject.ForegroundColor = handles.colors{1,3};
-end
+handles = toggle_Callback('gamma', handles);
+
+% Update handles structure
+guidata(hObject, handles);
+
+% --- Executes on button press in togBandFilt.
+function togBandFilt_Callback(hObject, eventdata, handles)
+handles = toggle_Callback('bandfilt', handles);
 
 % Update handles structure
 guidata(hObject, handles);
 
 % --- Executes on button press in togCoarse.
 function togCoarse_Callback(hObject, eventdata, handles)
-handles.config.togValues('coarse') = 1 - handles.config.togValues('coarse');
-if handles.config.togValues('coarse') == 1
-    hObject.String = 'ENABLED';
-    hObject.BackgroundColor = handles.colors{1,4};
-    hObject.ForegroundColor = handles.colors{1,2};
+% First check to see if an illegal flip of coarse is taking place (i.e.
+% disabling coarse while fine is still enabled, since a trigger on this
+% callback means that there is an attempt to flip the state of coarse.)
+if handles.config.togValues('coarse') == 1 && ...
+    handles.config.togValues('fine') == 1 && ...
+    handles.radioStrip.Value ~= 1
+    errordlg(...
+        'Make Coarse Reference Frame must be enabled if Make Fine Reference Frame is enabled.', 'Invalid Selection');
+    handles.config.togValues('coarse') = 1;
 else
-    if handles.config.togValues('fine') == 1 && handles.radioStrip.Value ~= 1
-        errordlg(...
-            'Make Coarse Reference Frame must be enabled if Make Fine Reference Frame is enabled.', 'Invalid Selection');
-        handles.config.togValues('coarse') = 1;
-    else
-        hObject.String = 'DISABLED';
-        hObject.BackgroundColor = handles.colors{1,1};
-        hObject.ForegroundColor = handles.colors{1,3};
-    end
-end
-
-% Update handles structure
-guidata(hObject, handles);
-
-% --- Executes on button press in togReRef.
-function togReRef_Callback(hObject, eventdata, handles)
-handles.config.togValues('reref') = 1 - handles.config.togValues('reref');
-if handles.config.togValues('reref') == 1
-    hObject.String = 'ENABLED';
-    hObject.BackgroundColor = handles.colors{1,4};
-    hObject.ForegroundColor = handles.colors{1,2};
-else
-    hObject.String = 'DISABLED';
-    hObject.BackgroundColor = handles.colors{1,1};
-    hObject.ForegroundColor = handles.colors{1,3};
-end
-
-% Update handles structure
-guidata(hObject, handles);
-
-% --- Executes on button press in togFilt.
-function togFilt_Callback(hObject, eventdata, handles)
-handles.config.togValues('filt') = 1 - handles.config.togValues('filt');
-if handles.config.togValues('filt') == 1
-    hObject.String = 'ENABLED';
-    hObject.BackgroundColor = handles.colors{1,4};
-    hObject.ForegroundColor = handles.colors{1,2};
-else
-    hObject.String = 'DISABLED';
-    hObject.BackgroundColor = handles.colors{1,1};
-    hObject.ForegroundColor = handles.colors{1,3};
-end
-
-% Update handles structure
-guidata(hObject, handles);
-
-% --- Executes on button press in togSacDrift.
-function togSacDrift_Callback(hObject, eventdata, handles)
-handles.config.togValues('sacdrift') = 1 - handles.config.togValues('sacdrift');
-if handles.config.togValues('sacdrift') == 1
-    hObject.String = 'ENABLED';
-    hObject.BackgroundColor = handles.colors{1,4};
-    hObject.ForegroundColor = handles.colors{1,2};
-else
-    hObject.String = 'DISABLED';
-    hObject.BackgroundColor = handles.colors{1,1};
-    hObject.ForegroundColor = handles.colors{1,3};
+    handles = toggle_Callback('coarse', handles);
 end
 
 % Update handles structure
@@ -928,38 +806,43 @@ guidata(hObject, handles);
 
 % --- Executes on button press in togFine.
 function togFine_Callback(hObject, eventdata, handles)
-handles.config.togValues('fine') = 1 - handles.config.togValues('fine');
-if handles.config.togValues('fine') == 1
-    if handles.config.togValues('coarse') == 0 && handles.lastRadio ~= 6
+if handles.config.togValues('fine') == 0 && ...
+    handles.config.togValues('coarse') == 0 && ...
+    handles.lastRadio ~= 6
         warndlg('Make Coarse Reference Frame has been enabled since it must be if Make Fine Reference Frame is enabled.', 'Input Warning');
         handles.config.togValues('coarse') = 0;
         togCoarse_Callback(handles.togCoarse, eventdata, handles);
         handles.config.togValues('coarse') = 1;
-    end
-    hObject.String = 'ENABLED';
-    hObject.BackgroundColor = handles.colors{1,4};
-    hObject.ForegroundColor = handles.colors{1,2};
-else
-    hObject.String = 'DISABLED';
-    hObject.BackgroundColor = handles.colors{1,1};
-    hObject.ForegroundColor = handles.colors{1,3};
 end
+handles = toggle_Callback('fine', handles);
 
 % Update handles structure
 guidata(hObject, handles);
 
-% --- Executes on button press in togBandFilt.
-function togBandFilt_Callback(hObject, eventdata, handles)
-handles.config.togValues('bandfilt') = 1 - handles.config.togValues('bandfilt');
-if handles.config.togValues('bandfilt') == 1
-    hObject.String = 'ENABLED';
-    hObject.BackgroundColor = handles.colors{1,4};
-    hObject.ForegroundColor = handles.colors{1,2};
-else
-    hObject.String = 'DISABLED';
-    hObject.BackgroundColor = handles.colors{1,1};
-    hObject.ForegroundColor = handles.colors{1,3};
-end
+% --- Executes on button press in togStrip.
+function togStrip_Callback(hObject, eventdata, handles)
+handles = toggle_Callback('strip', handles);
+
+% Update handles structure
+guidata(hObject, handles);
+
+% --- Executes on button press in togReRef.
+function togReRef_Callback(hObject, eventdata, handles)
+handles = toggle_Callback('reref', handles);
+
+% Update handles structure
+guidata(hObject, handles);
+
+% --- Executes on button press in togFilt.
+function togFilt_Callback(hObject, eventdata, handles)
+handles = toggle_Callback('filt', handles);
+
+% Update handles structure
+guidata(hObject, handles);
+
+% --- Executes on button press in togSacDrift.
+function togSacDrift_Callback(hObject, eventdata, handles)
+handles = toggle_Callback('sacdrift', handles);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -992,19 +875,19 @@ function configBandFilt_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 BandFiltParameters;
 
-% --- Executes on button press in configFine.
-function configFine_Callback(hObject, eventdata, handles)
-% hObject    handle to configFine (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-FineParameters;
-
 % --- Executes on button press in configCoarse.
 function configCoarse_Callback(hObject, eventdata, handles)
 % hObject    handle to configCoarse (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 CoarseParameters;
+
+% --- Executes on button press in configFine.
+function configFine_Callback(hObject, eventdata, handles)
+% hObject    handle to configFine (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+FineParameters;
 
 % --- Executes on button press in configStrip.
 function configStrip_Callback(hObject, eventdata, handles)
@@ -1013,13 +896,6 @@ function configStrip_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 StripParameters;
 
-% --- Executes on button press in configFilt.
-function configFilt_Callback(hObject, eventdata, handles)
-% hObject    handle to configFilt (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-FilteringParameters;
-
 % --- Executes on button press in configReRef.
 function configReRef_Callback(hObject, eventdata, handles)
 % hObject    handle to configFilt (see GCBO)
@@ -1027,13 +903,19 @@ function configReRef_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 ReRefParameters;
 
+% --- Executes on button press in configFilt.
+function configFilt_Callback(hObject, eventdata, handles)
+% hObject    handle to configFilt (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+FilteringParameters;
+
 % --- Executes on button press in configSacDrift.
 function configSacDrift_Callback(hObject, eventdata, handles)
 % hObject    handle to configSacDrift (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 SacDriftParameters;
-
 
 % --- Executes on button press in radioTrim.
 function radioTrim_Callback(hObject, eventdata, handles)
@@ -1059,7 +941,6 @@ end
 
 % Update handles structure
 guidata(hObject, handles);
-
 
 % --- Executes on button press in radioNoStim.
 function radioNoStim_Callback(hObject, eventdata, handles)
@@ -1111,6 +992,51 @@ end
 % Update handles structure
 guidata(hObject, handles);
 
+% --- Executes on button press in radioBandFilt.
+function radioBandFilt_Callback(hObject, eventdata, handles)
+% hObject    handle to radioBandFilt (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radioBandFilt
+
+% We update coarse after fine and strip to avoid warning dialogues.
+for i = [1, 2, 3, 4]
+    handles = tempDisable(i, eventdata, handles);
+end
+for i = [6, 7, 5]
+    handles = reEnable(i, eventdata, handles);
+end
+
+if handles.lastRadio ~= 5
+    handles.lastRadio = 5;
+    handles.inputList.String = cell(0);
+    handles.files = cell(0);
+end
+
+% Update handles structure
+guidata(hObject, handles);
+
+% --- Executes on button press in radioStrip.
+function radioStrip_Callback(hObject, eventdata, handles)
+% hObject    handle to radioStrip (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radioStrip
+
+for i = [1, 2, 3, 4, 6, 7, 5]
+    handles = tempDisable(i, eventdata, handles);
+end
+
+if handles.lastRadio ~= 6
+    handles.lastRadio = 6;
+    handles.inputList.String = cell(0);
+    handles.files = cell(0);
+end
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes on button press in abort.
 function abort_Callback(hObject, eventdata, handles)
@@ -1122,7 +1048,6 @@ global abortTriggered;
 abortTriggered = true;
 
 hObject.Enable = 'off';
-
 
 % --------------------------------------------------------------------
 function menuAbout_Callback(hObject, eventdata, handles)
@@ -1257,16 +1182,6 @@ function menuExit_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 close;
 
-
-function commandWindow_Callback(hObject, eventdata, handles)
-% hObject    handle to commandWindow (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of commandWindow as text
-%        str2double(get(hObject,'String')) returns contents of commandWindow as a double
-
-
 % --- Executes during object creation, after setting all properties.
 function commandWindow_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to commandWindow (see GCBO)
@@ -1278,7 +1193,6 @@ function commandWindow_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes on button press in reconfig.
 function reconfig_Callback(hObject, eventdata, handles)
@@ -1411,9 +1325,3 @@ function axes3_ButtonDownFcn(hObject, eventdata, handles)
 if isValid(hObject)
     figure(hObject);
 end
-
-% --- Executes during object creation, after setting all properties.
-function revas_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to revas (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
