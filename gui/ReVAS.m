@@ -54,6 +54,10 @@ function Main_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for ReVAS
 handles.output = hObject;
 
+if ~isdeployed
+    addpath(genpath('..'));
+end
+
 % COLOR PALETTE
 % http://paletton.com/palette.php?uid=c491l5-2L0kj0tK00%2B%2B6SNBlToaqM2g
 handles.colors = ... % primary, white, light, dark, black
