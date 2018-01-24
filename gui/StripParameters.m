@@ -318,12 +318,10 @@ mainHandles.config.stripSubpixelInterp = logical(handles.subpixelInterp.Value);
 mainHandles.config.stripNeighborhoodSize = str2double(handles.neighborhoodSize.String);
 mainHandles.config.stripSubpixelDepth = str2double(handles.subpixelDepth.String);
 
-
 % Update handles structure
 guidata(figureHandle, mainHandles);
 
 close;
-
 
 % --- Executes on button press in overwrite.
 function overwrite_Callback(hObject, eventdata, handles)
@@ -583,13 +581,13 @@ function adaptiveSearch_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of adaptiveSearch
-    if get(hObject,'Value') == 1
-        handles.scalingFactor.Enable = 'on';
-        handles.searchWindowHeight.Enable = 'on';
-    else
-        handles.scalingFactor.Enable = 'off';
-        handles.searchWindowHeight.Enable = 'off';
-    end
+if get(hObject,'Value') == 1
+    handles.scalingFactor.Enable = 'on';
+    handles.searchWindowHeight.Enable = 'on';
+else
+    handles.scalingFactor.Enable = 'off';
+    handles.searchWindowHeight.Enable = 'off';
+end
 
 
 function scalingFactor_Callback(hObject, eventdata, handles)
