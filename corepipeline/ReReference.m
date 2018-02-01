@@ -224,7 +224,10 @@ if ischar(globalRefArgument) % globalRefArgument is a file path
     
     try
         % load the globalRef
-        load(globalRefArgument,'globalRef');
+        load(globalRefArgument,'globalRef', 'refFrame');
+        if ~exist('globalRef', 'var')
+            globalRef = refFrame;
+        end
     catch
         % maybe this is an image file
         globalRef = imread(globalRefArgument);

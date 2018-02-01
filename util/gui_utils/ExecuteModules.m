@@ -197,25 +197,63 @@ if logical(handles.config.togValues('strip')) && ~logical(abortTriggered)
     parametersStructure.maximumSD = handles.config.stripGaussSD;
     parametersStructure.SDWindowSize = handles.config.stripSDWindow;
 
-    % Load a fine ref frame if we didn't run the previous module in this
+    % Load a fine ref if we didn't run the previous module in this
     % session.
     if ~exist('fineRefFrame', 'var')
+        if contains(originalInputVideoPath, '_dwt')
+            rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_dwt')-1);
+        elseif contains(originalInputVideoPath, '_nostim')
+            rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_nostim')-1);
+        elseif contains(originalInputVideoPath, '_gamscaled')
+            rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_gamscaled')-1);
+        elseif contains(originalInputVideoPath, '_bandfilt')
+            rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_bandfilt')-1);
+        else
+            rawVideoPath = originalInputVideoPath;
+        end
+            
+        % Try to identify a fine ref to use from file.
+        fineRefFrames = dir([rawVideoPath '*refframe.mat']);
+        % Try to identify a coarse ref to use from file.
+        coarseRefFrames = dir([rawVideoPath '*coarseref.mat']);
+        
         if logical(handles.config.togValues('coarse'))
            % Use coarse ref frame if fine ref module disabled and if
            % available.
            fineRefFrame = coarseRefFrame;
-        elseif exist([originalInputVideoPath '_refframe.mat'], 'file')
+        elseif ~isempty({fineRefFrames.name})
            % Load a saved fine ref if available.
-           RevasWarning(['Loading fine reference frame from: ' originalInputVideoPath '_refframe.mat'], parametersStructure);
-           load([originalInputVideoPath '_refframe.mat']);
+           % If there are multiple such files, we make the assumption that
+           % we desire the one with longest file name since that had the
+           % most amount of processing applied to it.
+           longestFileName = '';
+           for name = {fineRefFrames.name}
+               if length(name) > length(longestFileName)
+                   longestFileName = name{1};
+               end
+           end
+           RevasWarning(['Loading fine reference frame from: ' longestFileName], parametersStructure);
+           load(longestFileName, 'refFrame');
            fineRefFrame = refFrame;
-        elseif exist([originalInputVideoPath '_coarseref.mat'], 'file')
-            % Load a saved coarse ref if available.
-           RevasWarning(['Loading coarse reference frame from: ' originalInputVideoPath '_coarseref.mat'], parametersStructure);
-           load([originalInputVideoPath '_refframe.mat']);
+        elseif ~isempty({coarseRefFrames.name})
+           % Load a saved coarse ref if available.
+           % If there are multiple such files, we make the assumption that
+           % we desire the one with longest file name since that had the
+           % most amount of processing applied to it.
+           longestFileName = '';
+           for name = {coarseRefFrames.name}
+               if length(name) > length(longestFileName)
+                   longestFileName = name{1};
+               end
+           end
+           RevasWarning(['Loading coarse reference frame from: ' longestFileName], parametersStructure);
+           load(longestFileName, 'refFrame');
            fineRefFrame = refFrame;
         else
-           RevasError('No reference frame available for strip analysis.', parametersStructure);
+           RevasError(originalInputVideoPath, ...
+               'No reference frame available for strip analysis.', ...
+               parametersStructure);
+           return;
         end
     end
     
@@ -232,7 +270,7 @@ if logical(handles.config.togValues('strip')) && ~logical(abortTriggered)
         'eyePositionTraces', ...
         'rawEyePositionTraces', ...
         'peakRatios');
-    csvPath = [inputPath(1:end-3) '.csv'];
+    csvPath = [inputPath(1:end-4) '.csv'];
     fid = fopen(csvPath, 'w');
     fprintf(fid, '%s\n', cell2mat({ ...
         'time,' ...
@@ -276,27 +314,81 @@ elseif logical(handles.config.togValues('reref')) && ~logical(abortTriggered)
     % Load a fine ref if we didn't run the previous module in this
     % session.
     if ~exist('fineRefFrame', 'var')
+        if contains(originalInputVideoPath, '_dwt')
+            rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_dwt')-1);
+        elseif contains(originalInputVideoPath, '_nostim')
+            rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_nostim')-1);
+        elseif contains(originalInputVideoPath, '_gamscaled')
+            rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_gamscaled')-1);
+        elseif contains(originalInputVideoPath, '_bandfilt')
+            rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_bandfilt')-1);
+        else
+            rawVideoPath = originalInputVideoPath;
+        end
+            
+        % Try to identify a fine ref to use from file.
+        fineRefFrames = dir([rawVideoPath '*refframe.mat']);
+        % Try to identify a coarse ref to use from file.
+        coarseRefFrames = dir([rawVideoPath '*coarseref.mat']);
+        
         if logical(handles.config.togValues('coarse'))
            % Use coarse ref frame if fine ref module disabled and if
            % available.
            fineRefFrame = coarseRefFrame;
-        elseif exist([originalInputVideoPath '_refframe.mat'], 'file')
+        elseif ~isempty({fineRefFrames.name})
            % Load a saved fine ref if available.
-           RevasWarning(['Loading fine reference frame from: ' originalInputVideoPath '_refframe.mat'], parametersStructure);
-           load([originalInputVideoPath '_refframe.mat']);
+           % If there are multiple such files, we make the assumption that
+           % we desire the one with longest file name since that had the
+           % most amount of processing applied to it.
+           longestFileName = '';
+           for name = {fineRefFrames.name}
+               if length(name) > length(longestFileName)
+                   longestFileName = name{1};
+               end
+           end
+           RevasWarning(['Loading fine reference frame from: ' longestFileName], parametersStructure);
+           load(longestFileName, 'refFrame');
            fineRefFrame = refFrame;
-        elseif exist([originalInputVideoPath '_coarseref.mat'], 'file')
-            % Load a saved coarse ref if available.
-           RevasWarning(['Loading coarse reference frame from: ' originalInputVideoPath '_coarseref.mat'], parametersStructure);
-           load([originalInputVideoPath '_refframe.mat']);
+        elseif ~isempty({coarseRefFrames.name})
+           % Load a saved coarse ref if available.
+           % If there are multiple such files, we make the assumption that
+           % we desire the one with longest file name since that had the
+           % most amount of processing applied to it.
+           longestFileName = '';
+           for name = {coarseRefFrames.name}
+               if length(name) > length(longestFileName)
+                   longestFileName = name{1};
+               end
+           end
+           RevasWarning(['Loading coarse reference frame from: ' longestFileName], parametersStructure);
+           load(longestFileName, 'refFrame');
            fineRefFrame = refFrame;
         else
-           RevasError('No reference frame available for re-referencing.', parametersStructure);
+           RevasError(originalInputVideoPath, ...
+               'No reference frame available for re-referencing.', ...
+               parametersStructure);
+           return;
         end
     end
     
     % Call the function
     [~,inputPath] = ReReference(inputPath, fineRefFrame, globalRefFrame, parametersStructure);
+    
+    % Write output file as csv
+    load(inputPath, ...
+        'timeArray', ...
+        'eyePositionTraces');
+    csvPath = [inputPath(1:end-4) '.csv'];
+    fid = fopen(csvPath, 'w');
+    fprintf(fid, '%s\n', cell2mat({ ...
+        'time,' ...
+        'eyePositionTraceHoriz,' ...
+        'eyePositionTraceVert,' ...
+        }));
+    fclose(fid);
+    dlmwrite(csvPath, [ ...
+        timeArray, ...
+        eyePositionTraces], '-append');
 end
 
 %% Filtering Module
@@ -336,25 +428,18 @@ if logical(handles.config.togValues('filt')) && ~logical(abortTriggered)
     % Write output file as csv
     load(inputPath, ...
         'timeArray', ...
-        'eyePositionTraces', ...
-        'rawEyePositionTraces', ...
-        'peakRatios');
-    csvPath = [inputPath(1:end-3) '.csv'];
+        'eyePositionTraces');
+    csvPath = [inputPath(1:end-4) '.csv'];
     fid = fopen(csvPath, 'w');
     fprintf(fid, '%s\n', cell2mat({ ...
         'time,' ...
         'eyePositionTraceHoriz,' ...
         'eyePositionTraceVert,' ...
-        'rawEyePositionTraceHoriz,' ...
-        'rawEyePositionTraceVert,' ...
-        'peakRatio,' ...
         }));
     fclose(fid);
     dlmwrite(csvPath, [ ...
         timeArray, ...
-        eyePositionTraces, ...
-        rawEyePositionTraces, ...
-        peakRatios], '-append');
+        eyePositionTraces], '-append');
 end
 
 %% Saccade Detection Module
@@ -393,7 +478,7 @@ if logical(handles.config.togValues('sacdrift')) && ~logical(abortTriggered)
     load(inputPath, ...
         'saccades', ...
         'drifts');
-    csvPath = [inputPath(1:end-3) '.csv'];
+    csvPath = [inputPath(1:end-4) '.csv'];
     fid = fopen(csvPath, 'w');
     headerRow = fieldnames(saccades);
     headerRow(1:end-1) = strcat(headerRow(1:end-1), ',');
