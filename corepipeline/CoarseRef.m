@@ -204,9 +204,16 @@ params.stripWidth = shrunkReader.Width;
 params.samplingRate = videoFrameRate;
 params.badFrames = badFrames;
 params.originalVideoPath = shrunkFileName;
-
-if ndims(temporaryRefFrame) == 3
-    temporaryRefFrame = rgb2gray(temporaryRefFrame);
+try
+    if ndims(temporaryRefFrame) == 3
+        temporaryRefFrame = rgb2gray(temporaryRefFrame);
+    end
+catch
+    RevasError(inputVideoPath, ...
+        'Your chosen reference frame number is out of bounds.', ...
+        parametersStructure);
+    coarseRefFrame = [];
+    return;
 end
 % Check if user has rotateCorrection enabled.
 if isfield(params, 'rotateCorrection') && params.rotateCorrection
