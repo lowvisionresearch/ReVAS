@@ -846,13 +846,13 @@ if ~abortTriggered && ~isempty(videoInputPath)
     
     try
         parametersStructure = rmfield(parametersStructure,'axesHandles'); 
-        parametersStructure = rmfield(parametersStructure,'commandWindowHandle'); %#ok<NASGU>
+        parametersStructure = rmfield(parametersStructure,'commandWindowHandle'); 
     catch
     end
     
     % Save under file labeled 'final'.
     if ~usingTemp
-        eyePositionTraces = usefulEyePositionTraces; %#ok<NASGU>
+        eyePositionTraces = usefulEyePositionTraces; 
         peakRatios = statisticsStructure.peakRatios; %#ok<NASGU>
         save(outputFileName, 'eyePositionTraces', 'rawEyePositionTraces', ...
             'timeArray', 'parametersStructure', 'referenceFramePath', ...
@@ -862,16 +862,7 @@ end
 
 %% Create stabilized video if requested
 if ~abortTriggered && createStabilizedVideo
-    
-    ind = strfind(videoInputPath,'_dwt');
-    if ~isempty(ind)
-        rawVideoPath = [videoInputPath(1:ind-1) '.avi'];
-    else
-        rawVideoPath = videoInputPath;
-    end
-    
     parametersStructure.positions = eyePositionTraces;
     parametersStructure.time = timeArray;
-    StabilizeVideo(rawVideoPath, parametersStructure);
-
+    StabilizeVideo(videoInputPath, parametersStructure);
 end
