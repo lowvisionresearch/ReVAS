@@ -718,6 +718,7 @@ end
 % Display final list of files back in the gui
 handles.files = sort(handles.files);
 displayFileList = handles.files;
+set(handles.inputList,'Value',1); 
 for i = 1:size(handles.files, 2)
     [~,displayFileList{i},~] = fileparts(handles.files{i});
     if get(handles.radioStrip, 'Value')
