@@ -106,7 +106,7 @@ if isfield(parametersStructure, 'stabilizeVideo') && ...
     stabilizedVideoFilename = fileName;
     stabilizedVideoFilename(end-3:end) = [];
     stabilizedVideoFilename(end+1:end+11) = '_stabilized';
-    stabilizedVideo = VideoWriter(stabilizedVideoFilename);
+    stabilizedVideo = VideoWriter(stabilizedVideoFilename, 'Grayscale AVI');
     open(stabilizedVideo)
 else
     stabilizedVideo = false;
@@ -456,9 +456,8 @@ for frameNumber = 1:totalFrames
                     + (std(relevantPixels(~indices)) * randn(sum(sum(indices)), 1));
                 stabilizedFrame(minRow:maxRow, minColumn:maxColumn) = relevantPixels;
                 
-                % Sometimes random noise will add pixels not within 0 and 1
+                % Sometimes random noise will add pixels not within 0
                 stabilizedFrame(stabilizedFrame<0) = 0;
-                stabilizedFrame(stabilizedFrame>1) = 1;
                 
                 % crop the black boundaries 
                 hw = round([frameHeight width]*stabilizedVideoSizeMultiplier);
@@ -466,12 +465,12 @@ for frameNumber = 1:totalFrames
                 frameToWrite = imcrop(stabilizedFrame,cropRect);
                 
                 % Write to a video file
-                writeVideo(stabilizedVideo, frameToWrite);
+                writeVideo(stabilizedVideo, uint8(frameToWrite));
                 
                 % Reset refFrame and counterArray for the next frame.
                 refFrame = zeros(size(refFrame, 1), size(refFrame, 2));
                 counterArray = zeros(size(counterArray, 1), size(counterArray, 2));
-                break
+                break;
             end
         end
     end
