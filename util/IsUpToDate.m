@@ -11,7 +11,8 @@ thisVersion = cellstr(thisVersion);
 thisVersion = thisVersion{1};
 
 % Looks online to see whether this version is the most up to date.
-newestVersion = webread('https://mattsit.github.io/revas-version');
+newestVersion = webread('http://selab.berkeley.edu/revas-version');
+newestVersion = regexp(newestVersion, '\d+\.\d+.\d+', 'match');
 newestVersion = cellstr(newestVersion);
 newestVersion = newestVersion{1};
 isUpToDate = strcmp(newestVersion, thisVersion);
