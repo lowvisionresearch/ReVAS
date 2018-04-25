@@ -241,7 +241,8 @@ tiltUp = str2double(handles.tiltUp.String);
 tiltStep = str2double(handles.tiltStep.String);
 
 % Global Reference Frame
-if ~IsImageFile(handles.globalFullPath) && ~strcmp(handles.globalFullPath(end-3:end), '.mat')
+if ~IsImageFile(handles.globalFullPath) && ...
+        (length(handles.globalFullPath) < 5 || ~strcmp(handles.globalFullPath(end-3:end), '.mat'))
     errordlg('Global Reference Frame must be a mat or image file.', 'Invalid Parameter');
     return;
 elseif size(handles.globalFullPath, 2) > 3 && strcmp(handles.globalFullPath(end-3:end), '.mat') && ...
