@@ -265,6 +265,8 @@ handles.config.rerefTiltStep = 1;
 handles.config.rerefGlobalPath = '';
 handles.config.rerefGlobalFullPath = '';
 % Filtering
+handles.config.filtFirstPrefilter = false;
+handles.config.filtSecondPrefilter = false;
 handles.config.filtOverwrite = true;
 handles.config.filtVerbosity = true;
 handles.config.filtMaxGapDur = 10;

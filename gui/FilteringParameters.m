@@ -22,7 +22,7 @@ function varargout = FilteringParameters(varargin)
 
 % Edit the above text to modify the response to help FilteringParameters
 
-% Last Modified by GUIDE v2.5 04-Nov-2017 14:29:43
+% Last Modified by GUIDE v2.5 31-May-2018 15:44:08
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,6 +61,8 @@ mainHandles = guidata(figureHandle);
 handles.overwrite.Value = mainHandles.config.filtOverwrite;
 handles.verbosity.Value = mainHandles.config.filtVerbosity;
 handles.maxGapDur.String = mainHandles.config.filtMaxGapDur;
+handles.FirstPrefilter.Value = mainHandles.config.filtFirstPrefilter;
+handles.SecondPrefilter.Value = mainHandles.config.filtSecondPrefilter;
 handles.median1Radio.Value = mainHandles.config.filtEnableMedian1;
 handles.sgo1Radio.Value = mainHandles.config.filtEnableSgo1;
 handles.median1.String = mainHandles.config.filtMedian1;
@@ -87,11 +89,14 @@ handles.kernel2.BackgroundColor = mainHandles.colors{4,2};
 handles.titleBox.BackgroundColor = mainHandles.colors{4,3};
 handles.usageBox.BackgroundColor = mainHandles.colors{4,3};
 handles.filtBox.BackgroundColor = mainHandles.colors{4,3};
+handles.filt0Box.BackgroundColor = mainHandles.colors{4,3};
 handles.filt1Box.BackgroundColor = mainHandles.colors{4,3};
 handles.filt1GroupBox.BackgroundColor = mainHandles.colors{4,3};
 handles.filt2Box.BackgroundColor = mainHandles.colors{4,3};
 handles.filt2GroupBox.BackgroundColor = mainHandles.colors{4,3};
 handles.overwrite.BackgroundColor = mainHandles.colors{4,3};
+handles.FirstPrefilter.BackgroundColor = mainHandles.colors{4,3};
+handles.SecondPrefilter.BackgroundColor = mainHandles.colors{4,3};
 handles.verbosity.BackgroundColor = mainHandles.colors{4,3};
 handles.maxGapDurText.BackgroundColor = mainHandles.colors{4,3};
 handles.maxGapDurTextSub.BackgroundColor = mainHandles.colors{4,3};
@@ -114,11 +119,14 @@ handles.noFilt2Radio.BackgroundColor = mainHandles.colors{4,3};
 handles.titleBox.ForegroundColor = mainHandles.colors{4,5};
 handles.usageBox.ForegroundColor = mainHandles.colors{4,5};
 handles.filtBox.ForegroundColor = mainHandles.colors{4,5};
+handles.filt0Box.ForegroundColor = mainHandles.colors{4,5};
 handles.filt1Box.ForegroundColor = mainHandles.colors{4,5};
 handles.filt1GroupBox.ForegroundColor = mainHandles.colors{4,5};
 handles.filt2Box.ForegroundColor = mainHandles.colors{4,5};
 handles.filt2GroupBox.ForegroundColor = mainHandles.colors{4,5};
 handles.overwrite.ForegroundColor = mainHandles.colors{4,5};
+handles.FirstPrefilter.ForegroundColor = mainHandles.colors{4,5};
+handles.SecondPrefilter.ForegroundColor = mainHandles.colors{4,5};
 handles.verbosity.ForegroundColor = mainHandles.colors{4,5};
 handles.maxGapDurText.ForegroundColor = mainHandles.colors{4,5};
 handles.maxGapDurTextSub.ForegroundColor = mainHandles.colors{4,5};
@@ -238,6 +246,8 @@ end
 mainHandles.config.filtMaxGapDur = str2double(handles.maxGapDur.String);
 mainHandles.config.filtOverwrite = logical(handles.overwrite.Value);
 mainHandles.config.filtVerbosity = logical(handles.verbosity.Value);
+mainHandles.config.filtFirstPrefilter= logical(handles.FirstPrefilter.Value);
+mainHandles.config.filtSecondPrefilter= logical(handles.SecondPrefilter.Value);
 mainHandles.config.filtEnableMedian1 = logical(handles.median1Radio.Value);
 mainHandles.config.filtEnableSgo1 = logical(handles.sgo1Radio.Value);
 mainHandles.config.filtMedian1 = str2double(handles.median1.String);
@@ -668,3 +678,21 @@ else
     handles.poly2.Enable = 'off';
     handles.kernel2.Enable = 'off';
 end
+
+
+% --- Executes on button press in FirstPrefilter.
+function FirstPrefilter_Callback(hObject, eventdata, handles)
+% hObject    handle to FirstPrefilter (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of FirstPrefilter
+
+
+% --- Executes on button press in SecondPrefilter.
+function SecondPrefilter_Callback(hObject, eventdata, handles)
+% hObject    handle to SecondPrefilter (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of SecondPrefilter

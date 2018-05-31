@@ -200,13 +200,13 @@ if logical(handles.config.togValues('strip')) && ~logical(abortTriggered)
     % Load a fine ref if we didn't run the previous module in this
     % session.
     if ~exist('fineRefFrame', 'var')
-        if contains(originalInputVideoPath, '_dwt')
+        if ~isempty(strfind(originalInputVideoPath, '_dwt'))
             rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_dwt')-1);
-        elseif contains(originalInputVideoPath, '_nostim')
+        elseif ~isempty(strfind(originalInputVideoPath, '_nostim'))
             rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_nostim')-1);
-        elseif contains(originalInputVideoPath, '_gamscaled')
+        elseif ~isempty(strfind(originalInputVideoPath, '_gamscaled'))
             rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_gamscaled')-1);
-        elseif contains(originalInputVideoPath, '_bandfilt')
+        elseif ~isempty(strfind(originalInputVideoPath, '_bandfilt'))
             rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_bandfilt')-1);
         else
             rawVideoPath = originalInputVideoPath;
@@ -314,13 +314,13 @@ elseif logical(handles.config.togValues('reref')) && ~logical(abortTriggered)
     % Load a fine ref if we didn't run the previous module in this
     % session.
     if ~exist('fineRefFrame', 'var')
-        if contains(originalInputVideoPath, '_dwt')
+        if ~isempty(strfind(originalInputVideoPath, '_dwt'))%JG replace ~isempty(strfind(
             rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_dwt')-1);
-        elseif contains(originalInputVideoPath, '_nostim')
+        elseif ~isempty(strfind(originalInputVideoPath, '_nostim'))
             rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_nostim')-1);
-        elseif contains(originalInputVideoPath, '_gamscaled')
+        elseif ~isempty(strfind(originalInputVideoPath, '_gamscaled'))
             rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_gamscaled')-1);
-        elseif contains(originalInputVideoPath, '_bandfilt')
+        elseif ~isempty(strfind(originalInputVideoPath, '_bandfilt'))
             rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_bandfilt')-1);
         else
             rawVideoPath = originalInputVideoPath;
@@ -397,9 +397,12 @@ if logical(handles.config.togValues('filt')) && ~logical(abortTriggered)
     % Set the parameters    
     parametersStructure.overwrite = handles.config.filtOverwrite;
     parametersStructure.verbosity = handles.config.filtVerbosity;
+    parametersStructure.FirstPrefilter=handles.config.filtFirstPrefilter;
+    parametersStructure.SecondPrefilter=handles.config.filtSecondPrefilter;
     parametersStructure.maxGapDurationMs = handles.config.filtMaxGapDur;
     parametersStructure.filterTypes = {};
     parametersStructure.filterParameters = {};
+    
     if handles.config.filtEnableMedian1
         % Median Filtering
         parametersStructure.filterTypes{1} = @medfilt1;
