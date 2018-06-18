@@ -28,6 +28,12 @@ msit@berkeley.edu
 Derek Wan.  
 derek.wan11@berkeley.edu
 
+Josselin Gautier, PhD.
+jgautier@berkeley.edu
+
+Robert Green, PhD.
+robert.green@berkeley.edu
+
 Susana T. L. Chung, OD, PhD.  
 s.chung@berkeley.edu
 
