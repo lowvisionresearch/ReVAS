@@ -10,4 +10,7 @@
 * making a ref frame from a bunch of videos OR combining refs from videos to make a better ref 
 * color scheme, make it simpler, cleaner. avoid lots of colors. 
 * check for an update at launch and let the user know if there is a newer version 
+* check for color channels..
+* Make FOV adjustable 
+* Check if Re-referencing works without strip analysis
 * 
