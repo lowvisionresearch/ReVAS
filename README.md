@@ -1,5 +1,5 @@
 * ReVAS
-0.1.1
+0.1.2
 
 Retinal Video Analysis Suite: a utility for generating reference frames and extracting eye position traces from retinal videos recorded via scanning laser ophthalmoscopes. It also includes a set of tools for classifying eye movements into drifts and (micro)saccades, and extracting detailed information about these eye movements.
 
@@ -27,6 +27,12 @@ msit@berkeley.edu
 
 Derek Wan.  
 derek.wan11@berkeley.edu
+
+Josselin Gautier, PhD.  
+jgautier@berkeley.edu
+
+Robert Green, PhD.  
+robert.green@berkeley.edu
 
 Susana T. L. Chung, OD, PhD.  
 s.chung@berkeley.edu

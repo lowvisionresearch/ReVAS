@@ -69,6 +69,9 @@ else
     stabilizedVideoSizeMultiplier = parametersStructure.stabilizedVideoSizeMultiplier;
 end
 
+if ~isfield(parametersStructure, 'stabilizeVideo')
+    parametersStructure.stabilizeVideo = false;
+end
 %% Identify which frames are bad frames
 nameEnd = fileName(1:size(fileName, 2)-4);
 blinkFramesPath = [nameEnd '_blinkframes.mat'];
