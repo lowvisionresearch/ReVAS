@@ -288,7 +288,7 @@ for frameNumber = 1:totalFrames
     % for-loop because the processing for interpolatedPositions and
     % leftOver was necessary for future frames
     if any(badFrames==frameNumber)
-        if ~isfield(parametersStructure,'stabilizeVideo')
+        if ~parametersStructure.stabilizeVideo
             continue
         else
             writeVideo(stabilizedVideo, refFrame);
