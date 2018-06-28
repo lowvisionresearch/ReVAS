@@ -169,6 +169,44 @@ for i=1:size(eyePositionTraces,2)
     eyePositionTraces(:,i) = interp1(timeArray(~nanIndices),eyePositionTraces(~nanIndices,i),timeArray,'linear');
 end
 
+% Notch filter for 30Hz and 60 Hz removal - addition by JG
+% Butterworth IIR 2nd order filter
+% we can't select the samplingRate in the same maner as in StripAnalysis:
+% as it is not accessible in parametersStructure from the postproc window
+% TO DO : add samplingRate as a global variable
+
+% NaN positions have been marked and interpolated between values, but not
+% interpolated at leading and trailing position. However we can't filter
+% with those NaN value if they exist. So basically we replace them with the 
+% next/last scalar available. 
+% After filtering, these areas will be replaced with nanIndices and stitched.
+
+% Replace leading and trailing NaN value with first and last data
+% 'fillmissing' function exist for Matlab version >=2016b
+for i=1:size(eyePositionTraces,2)
+	eyePositionTraces(1:find(~any(isnan(eyePositionTraces),2),1,'first')-1,i)=eyePositionTraces(find(~any(isnan(eyePositionTraces),2),1,'first'),i);
+	eyePositionTraces(find(~any(isnan(eyePositionTraces),2),1,'last')+1:end,i)=eyePositionTraces(find(~any(isnan(eyePositionTraces),2),1,'last'),i);
+end
+if parametersStructure.FirstPrefilter
+    samplingRate = 540;
+    d = designfilt('bandstopiir','FilterOrder',2, ...
+                   'HalfPowerFrequency1',29,'HalfPowerFrequency2',31, ...
+                   'DesignMethod','butter','SampleRate',samplingRate);
+    for i=1:size(eyePositionTraces,2)
+        eyePositionTraces(:,i)=filtfilt(d,eyePositionTraces(:,i));
+    end
+    clear d;
+end
+
+if parametersStructure.SecondPrefilter
+    d2 = designfilt('bandstopiir','FilterOrder',2, ...
+                   'HalfPowerFrequency1',59,'HalfPowerFrequency2',61, ...
+                   'DesignMethod','butter','SampleRate',samplingRate);
+    for i=1:size(eyePositionTraces,2)
+        eyePositionTraces(:,i)=filtfilt(d2,eyePositionTraces(:,i));
+    end
+    clear d2;
+end
 
 %% Do filtering.
 % note: although some filters can be applied to 2D arrays directly (e.g., 
