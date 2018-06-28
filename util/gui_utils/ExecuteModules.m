@@ -397,8 +397,8 @@ if logical(handles.config.togValues('filt')) && ~logical(abortTriggered)
     % Set the parameters    
     parametersStructure.overwrite = handles.config.filtOverwrite;
     parametersStructure.verbosity = handles.config.filtVerbosity;
-    parametersStructure.firstPrefilter = handles.config.filtFirstPrefilter;
-    parametersStructure.secondPrefilter = handles.config.filtSecondPrefilter;
+    parametersStructure.FirstPrefilter = handles.config.filtFirstPrefilter;
+    parametersStructure.SecondPrefilter = handles.config.filtSecondPrefilter;
     parametersStructure.maxGapDurationMs = handles.config.filtMaxGapDur;
     parametersStructure.filterTypes = {};
     parametersStructure.filterParameters = {};
