@@ -61,8 +61,8 @@ mainHandles = guidata(figureHandle);
 handles.overwrite.Value = mainHandles.config.filtOverwrite;
 handles.verbosity.Value = mainHandles.config.filtVerbosity;
 handles.maxGapDur.String = mainHandles.config.filtMaxGapDur;
-handles.firstPrefilter.Value = mainHandles.config.filtFirstPrefilter;
-handles.secondPrefilter.Value = mainHandles.config.filtSecondPrefilter;
+handles.FirstPrefilter.Value = mainHandles.config.filtFirstPrefilter;
+handles.SecondPrefilter.Value = mainHandles.config.filtSecondPrefilter;
 handles.median1Radio.Value = mainHandles.config.filtEnableMedian1;
 handles.sgo1Radio.Value = mainHandles.config.filtEnableSgo1;
 handles.median1.String = mainHandles.config.filtMedian1;
@@ -95,8 +95,8 @@ handles.filt1GroupBox.BackgroundColor = mainHandles.colors{4,3};
 handles.filt2Box.BackgroundColor = mainHandles.colors{4,3};
 handles.filt2GroupBox.BackgroundColor = mainHandles.colors{4,3};
 handles.overwrite.BackgroundColor = mainHandles.colors{4,3};
-handles.firstPrefilter.BackgroundColor = mainHandles.colors{4,3};
-handles.secondPrefilter.BackgroundColor = mainHandles.colors{4,3};
+handles.FirstPrefilter.BackgroundColor = mainHandles.colors{4,3};
+handles.SecondPrefilter.BackgroundColor = mainHandles.colors{4,3};
 handles.verbosity.BackgroundColor = mainHandles.colors{4,3};
 handles.maxGapDurText.BackgroundColor = mainHandles.colors{4,3};
 handles.maxGapDurTextSub.BackgroundColor = mainHandles.colors{4,3};
@@ -125,8 +125,8 @@ handles.filt1GroupBox.ForegroundColor = mainHandles.colors{4,5};
 handles.filt2Box.ForegroundColor = mainHandles.colors{4,5};
 handles.filt2GroupBox.ForegroundColor = mainHandles.colors{4,5};
 handles.overwrite.ForegroundColor = mainHandles.colors{4,5};
-handles.firstPrefilter.ForegroundColor = mainHandles.colors{4,5};
-handles.secondPrefilter.ForegroundColor = mainHandles.colors{4,5};
+handles.FirstPrefilter.ForegroundColor = mainHandles.colors{4,5};
+handles.SecondPrefilter.ForegroundColor = mainHandles.colors{4,5};
 handles.verbosity.ForegroundColor = mainHandles.colors{4,5};
 handles.maxGapDurText.ForegroundColor = mainHandles.colors{4,5};
 handles.maxGapDurTextSub.ForegroundColor = mainHandles.colors{4,5};
@@ -246,8 +246,8 @@ end
 mainHandles.config.filtMaxGapDur = str2double(handles.maxGapDur.String);
 mainHandles.config.filtOverwrite = logical(handles.overwrite.Value);
 mainHandles.config.filtVerbosity = logical(handles.verbosity.Value);
-mainHandles.config.filtFirstPrefilter = logical(handles.firstPrefilter.Value);
-mainHandles.config.filtSecondPrefilter = logical(handles.secondPrefilter.Value);
+mainHandles.config.filtFirstPrefilter = logical(handles.FirstPrefilter.Value);
+mainHandles.config.filtSecondPrefilter = logical(handles.SecondPrefilter.Value);
 mainHandles.config.filtEnableMedian1 = logical(handles.median1Radio.Value);
 mainHandles.config.filtEnableSgo1 = logical(handles.sgo1Radio.Value);
 mainHandles.config.filtMedian1 = str2double(handles.median1.String);
@@ -681,7 +681,7 @@ end
 
 
 % --- Executes on button press in FirstPrefilter.
-function firstPrefilter_Callback(hObject, eventdata, handles)
+function FirstPrefilter_Callback(hObject, eventdata, handles)
 % hObject    handle to FirstPrefilter (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -690,7 +690,7 @@ function firstPrefilter_Callback(hObject, eventdata, handles)
 
 
 % --- Executes on button press in SecondPrefilter.
-function secondPrefilter_Callback(hObject, eventdata, handles)
+function SecondPrefilter_Callback(hObject, eventdata, handles)
 % hObject    handle to SecondPrefilter (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
