@@ -188,7 +188,7 @@ for i=1:size(eyePositionTraces,2)
 	eyePositionTraces(find(~any(isnan(eyePositionTraces),2),1,'last')+1:end,i)=eyePositionTraces(find(~any(isnan(eyePositionTraces),2),1,'last'),i);
 end
 if parametersStructure.FirstPrefilter
-    samplingRate = 540;
+    samplingRate = parametersStructure.samplingRate;%540;
     d = designfilt('bandstopiir','FilterOrder',2, ...
                    'HalfPowerFrequency1',29,'HalfPowerFrequency2',31, ...
                    'DesignMethod','butter','SampleRate',samplingRate);
@@ -214,7 +214,7 @@ end
 % column separately.
 
 % preallocate memory for the filtered position
-filteredEyePosition = nan(size(eyePositionTraces));
+filteredEyePosition = eyePositionTraces;
 
 % go over each filter type in the order they are given.
 for i=1:length(filterTypes)
@@ -231,7 +231,7 @@ for i=1:length(filterTypes)
     % go over each eye position column
     for j=1:size(eyePositionTraces,2)
         filteredEyePosition(:,j) = eval(...
-            ['currentFilter(eyePositionTraces(:,j)' parameterStr ')']);
+            ['currentFilter(filteredEyePosition(:,j)' parameterStr ')']);
     end
 
 end
