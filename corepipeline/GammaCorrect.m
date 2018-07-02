@@ -62,10 +62,13 @@ end
 %% Gamma correct frame by frame
 
 writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
+reader = VideoReader(inputVideoPath);
+% some videos are not 30fps, we need to keep the same framerate as
+% the source video.
+writer.FrameRate=reader.Framerate;
 open(writer);
 
 % Determine dimensions of video.
-reader = VideoReader(inputVideoPath);
 numberOfFrames = reader.Framerate * reader.Duration;
 
 % Read, gamma correct, and write frame by frame.
