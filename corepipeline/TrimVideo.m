@@ -80,10 +80,13 @@ top = borderTrimAmount(3);
 bottom = borderTrimAmount(4);
 
 writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
+reader = VideoReader(inputVideoPath);
+% some videos are not 30fps, we need to keep the same framerate as
+% the source video.
+writer.FrameRate=reader.Framerate;
 open(writer);
 
 % Determine dimensions of video.
-reader = VideoReader(inputVideoPath);
 width = reader.Width;
 height = reader.Height;
 numberOfFrames = reader.Framerate * reader.Duration;
