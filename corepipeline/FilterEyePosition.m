@@ -188,8 +188,10 @@ for i=1:size(eyePositionTraces,2)
 	eyePositionTraces(find(~any(isnan(eyePositionTraces),2),1,'last')+1:end,i)=eyePositionTraces(find(~any(isnan(eyePositionTraces),2),1,'last'),i);
 end
 if parametersStructure.FirstPrefilter
-    if ~exist('parametersStructure.samplingRate','var')
+    if ~isfield(parametersStructure,'samplingRate')
         samplingRate= 540;%JG: Matt please change with parametersStructure.samplingRate;
+    else
+        samplingRate=parametersStructure.samplingRate;
     end
     d = designfilt('bandstopiir','FilterOrder',2, ...
                    'HalfPowerFrequency1',29,'HalfPowerFrequency2',31, ...
