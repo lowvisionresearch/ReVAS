@@ -134,9 +134,9 @@ if logical(handles.config.togValues('coarse')) && ~logical(abortTriggered)
     parametersStructure.enableGaussianFiltering = false;
     parametersStructure.enableGPU = false; % TODO
     % parametersStructure.maximumPeakRatio = Inf;
-    parametersStructure.maximumPeakRatio = 0.35; % TODO make changeable from GUI, and check values
+    parametersStructure.maximumPeakRatio = 0.8; % TODO make changeable from GUI, and check values
     % parametersStructure.minimumPeakThreshold = -Inf;
-    parametersStructure.minimumPeakThreshold = 0.1; % TODO make changeable from GUI, and check values
+    parametersStructure.minimumPeakThreshold = 0.2; % TODO make changeable from GUI, and check values
     parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
 
     % Call the function
