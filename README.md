@@ -28,15 +28,10 @@ msit@berkeley.edu
 Derek Wan.  
 derek.wan11@berkeley.edu
 
-Josselin Gautier, PhD.  
-jgautier@berkeley.edu
-
-Robert Green, PhD.  
-robert.green@berkeley.edu
-
 Susana T. L. Chung, OD, PhD.  
 s.chung@berkeley.edu
 
-Additional contributions by: Jason Chen (jbchen120@berkeley.edu), Alex Yeo (alexsyeo@berkeley.edu).  
+Additional contributions by: Jason Chen (jbchen120@berkeley.edu), Alex Yeo (alexsyeo@berkeley.edu), Josselin Gautier, PhD (jgautier@berkeley.edu).
+
 Acknowledgments: [uipickfiles 1.13 by Douglas Schwarz](https://www.mathworks.com/matlabcentral/fileexchange/10867-uipickfiles--uigetfile-on-steroids).
 *
