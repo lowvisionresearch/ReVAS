@@ -58,6 +58,50 @@ if ~isdeployed
     addpath(genpath('..'));
 end
 
+try
+    load([pwd '/gui/uiconfig.mat'],'revasOuterPosition','uiFontSize',...
+        'uiTitleFontSize','revasColors');
+catch 
+    disp('''uiconfig.mat'' file cannot be loaded. Executing UIConfigMaker.m')
+    disp('to creat a configuration file with default values.')
+    disp('Use UIConfigMaker.m to make or change this configuration file.')
+    UIConfigMaker;
+    load([pwd '/gui/uiconfig.mat'],'revasOuterPosition','uiFontSize',...
+        'uiTitleFontSize','revasColors');
+end
+
+% update the handles
+handles.revasOuterPosition = revasOuterPosition;
+handles.uiFontSize = uiFontSize;
+handles.uiTitleFontSize = uiTitleFontSize;
+handles.revasColors = revasColors;
+
+
+% set a proper size for the main GUI window. a
+handles.revas.Units = 'normalized';
+handles.revas.OuterPosition = revasOuterPosition;
+
+% set all text objects to proper font sizes..
+children = handles.revas.Children.findobj('Type','uicontrol');
+for i=1:length(children)
+    if contains(lower(children(i).Style),'text') || ...
+       contains(lower(children(i).Style),'button') 
+        children(i).FontUnits = 'points';
+        children(i).FontSize = uiFontSize;
+        children(i).FontWeight = 'normal';
+    end
+end
+
+
+panelAndButtonGroups = handles.revas.Children.findobj('Type','uipanel');
+panelAndButtonGroups = [panelAndButtonGroups;...
+    handles.revas.Children.findobj('Type','uibuttongroup')];
+for i=1:length(panelAndButtonGroups)
+    panelAndButtonGroups(i).FontUnits = 'points';
+    panelAndButtonGroups(i).FontSize = uiTitleFontSize;
+    panelAndButtonGroups(i).FontWeight = 'bold';
+end
+
 % COLOR PALETTE
 % http://paletton.com/palette.php?uid=c491l5-2L0kj0tK00%2B%2B6SNBlToaqM2g
 handles.colors = ... % primary, white, light, dark, black
@@ -74,118 +118,118 @@ end
  
 % Set colors
 % ReVAS Background
-handles.revas.Color = handles.colors{1,2};
-handles.inputList.BackgroundColor = handles.colors{1,2};
-handles.axes1.XColor = handles.colors{1,2};
-handles.axes1.YColor = handles.colors{1,2};
-handles.axes2.XColor = handles.colors{1,2};
-handles.axes2.YColor = handles.colors{1,2};
-handles.axes3.XColor = handles.colors{1,2};
-handles.axes3.YColor = handles.colors{1,2};
-handles.commandWindow.BackgroundColor = handles.colors{1,2};
+handles.revas.Color = revasColors.background;
+handles.inputList.BackgroundColor = revasColors.background;
+handles.axes1.XColor = revasColors.background;
+handles.axes1.YColor = revasColors.background;
+handles.axes2.XColor = revasColors.background;
+handles.axes2.YColor = revasColors.background;
+handles.axes3.XColor = revasColors.background;
+handles.axes3.YColor = revasColors.background;
+handles.commandWindow.BackgroundColor = revasColors.background;
 
 % Box backgrounds
-handles.inputVideoBox.BackgroundColor = handles.colors{1,3};
-handles.radioRaw.BackgroundColor = handles.colors{1,3};
-handles.radioTrim.BackgroundColor = handles.colors{1,3};
-handles.radioNoStim.BackgroundColor = handles.colors{1,3};
-handles.radioGamma.BackgroundColor = handles.colors{1,3};
-handles.radioBandFilt.BackgroundColor = handles.colors{1,3};
-handles.radioStrip.BackgroundColor = handles.colors{1,3};
-handles.modulesBox.BackgroundColor = handles.colors{1,3};
-handles.textTrim.BackgroundColor = handles.colors{1,3};
-handles.textStim.BackgroundColor = handles.colors{1,3};
-handles.textGamma.BackgroundColor = handles.colors{1,3};
-handles.textBandFilt.BackgroundColor = handles.colors{1,3};
-handles.textCoarse.BackgroundColor = handles.colors{1,3};
-handles.textFine.BackgroundColor = handles.colors{1,3};
-handles.textStrip.BackgroundColor = handles.colors{1,3};
-handles.textReRef.BackgroundColor = handles.colors{1,3};
-handles.textFilt.BackgroundColor = handles.colors{1,3};
-handles.textSacDrift.BackgroundColor = handles.colors{1,3};
+handles.inputVideoBox.BackgroundColor = revasColors.boxBackground;
+handles.radioRaw.BackgroundColor = revasColors.boxBackground;
+handles.radioTrim.BackgroundColor = revasColors.boxBackground;
+handles.radioNoStim.BackgroundColor = revasColors.boxBackground;
+handles.radioGamma.BackgroundColor = revasColors.boxBackground;
+handles.radioBandFilt.BackgroundColor = revasColors.boxBackground;
+handles.radioStrip.BackgroundColor = revasColors.boxBackground;
+handles.modulesBox.BackgroundColor = revasColors.boxBackground;
+handles.textTrim.BackgroundColor = revasColors.boxBackground;
+handles.textStim.BackgroundColor = revasColors.boxBackground;
+handles.textGamma.BackgroundColor = revasColors.boxBackground;
+handles.textBandFilt.BackgroundColor = revasColors.boxBackground;
+handles.textCoarse.BackgroundColor = revasColors.boxBackground;
+handles.textFine.BackgroundColor = revasColors.boxBackground;
+handles.textStrip.BackgroundColor = revasColors.boxBackground;
+handles.textReRef.BackgroundColor = revasColors.boxBackground;
+handles.textFilt.BackgroundColor = revasColors.boxBackground;
+handles.textSacDrift.BackgroundColor = revasColors.boxBackground;
 % Box text
-handles.inputList.ForegroundColor = handles.colors{1,5};
-handles.inputVideoBox.ForegroundColor = handles.colors{1,5};
-handles.radioRaw.ForegroundColor = handles.colors{1,5};
-handles.radioTrim.ForegroundColor = handles.colors{1,5};
-handles.radioNoStim.ForegroundColor = handles.colors{1,5};
-handles.radioGamma.ForegroundColor = handles.colors{1,5};
-handles.radioBandFilt.ForegroundColor = handles.colors{1,5};
-handles.radioStrip.ForegroundColor = handles.colors{1,5};
-handles.modulesBox.ForegroundColor = handles.colors{1,5};
-handles.textTrim.ForegroundColor = handles.colors{1,5};
-handles.textStim.ForegroundColor = handles.colors{1,5};
-handles.textGamma.ForegroundColor = handles.colors{1,5};
-handles.textBandFilt.ForegroundColor = handles.colors{1,5};
-handles.textCoarse.ForegroundColor = handles.colors{1,5};
-handles.textFine.ForegroundColor = handles.colors{1,5};
-handles.textStrip.ForegroundColor = handles.colors{1,5};
-handles.textReRef.ForegroundColor = handles.colors{1,5};
-handles.textFilt.ForegroundColor = handles.colors{1,5};
-handles.textSacDrift.ForegroundColor = handles.colors{1,5};
-handles.commandWindow.ForegroundColor = handles.colors{1,5};
+handles.inputList.ForegroundColor = revasColors.text;
+handles.inputVideoBox.ForegroundColor = revasColors.text;
+handles.radioRaw.ForegroundColor = revasColors.text;
+handles.radioTrim.ForegroundColor = revasColors.text;
+handles.radioNoStim.ForegroundColor = revasColors.text;
+handles.radioGamma.ForegroundColor = revasColors.text;
+handles.radioBandFilt.ForegroundColor = revasColors.text;
+handles.radioStrip.ForegroundColor = revasColors.text;
+handles.modulesBox.ForegroundColor = revasColors.text;
+handles.textTrim.ForegroundColor = revasColors.text;
+handles.textStim.ForegroundColor = revasColors.text;
+handles.textGamma.ForegroundColor = revasColors.text;
+handles.textBandFilt.ForegroundColor = revasColors.text;
+handles.textCoarse.ForegroundColor = revasColors.text;
+handles.textFine.ForegroundColor = revasColors.text;
+handles.textStrip.ForegroundColor = revasColors.text;
+handles.textReRef.ForegroundColor = revasColors.text;
+handles.textFilt.ForegroundColor = revasColors.text;
+handles.textSacDrift.ForegroundColor = revasColors.text;
+handles.commandWindow.ForegroundColor = revasColors.text;
 % Select/Enable buttons backgrounds
-handles.selectFiles.BackgroundColor = handles.colors{1,4};
-handles.togTrim.BackgroundColor = handles.colors{1,4};
-handles.togStim.BackgroundColor = handles.colors{1,4};
-handles.togGamma.BackgroundColor = handles.colors{1,4};
-handles.togBandFilt.BackgroundColor = handles.colors{1,4};
-handles.togCoarse.BackgroundColor = handles.colors{1,4};
-handles.togFine.BackgroundColor = handles.colors{1,4};
-handles.togStrip.BackgroundColor = handles.colors{1,4};
-handles.togReRef.BackgroundColor = handles.colors{1,4};
-handles.togFilt.BackgroundColor = handles.colors{1,4};
-handles.togSacDrift.BackgroundColor = handles.colors{1,4};
+handles.selectFiles.BackgroundColor = revasColors.pushButtonBackground;
+handles.togTrim.BackgroundColor = revasColors.activeButtonBackground;
+handles.togStim.BackgroundColor = revasColors.activeButtonBackground;
+handles.togGamma.BackgroundColor = revasColors.activeButtonBackground;
+handles.togBandFilt.BackgroundColor = revasColors.activeButtonBackground;
+handles.togCoarse.BackgroundColor = revasColors.activeButtonBackground;
+handles.togFine.BackgroundColor = revasColors.activeButtonBackground;
+handles.togStrip.BackgroundColor = revasColors.activeButtonBackground;
+handles.togReRef.BackgroundColor = revasColors.activeButtonBackground;
+handles.togFilt.BackgroundColor = revasColors.activeButtonBackground;
+handles.togSacDrift.BackgroundColor = revasColors.activeButtonBackground;
 % Select/Enable button text
-handles.selectFiles.ForegroundColor = handles.colors{1,2};
-handles.togTrim.ForegroundColor = handles.colors{1,2};
-handles.togStim.ForegroundColor = handles.colors{1,2};
-handles.togGamma.ForegroundColor = handles.colors{1,2};
-handles.togBandFilt.ForegroundColor = handles.colors{1,2};
-handles.togCoarse.ForegroundColor = handles.colors{1,2};
-handles.togFine.ForegroundColor = handles.colors{1,2};
-handles.togStrip.ForegroundColor = handles.colors{1,2};
-handles.togReRef.ForegroundColor = handles.colors{1,2};
-handles.togFilt.ForegroundColor = handles.colors{1,2};
-handles.togSacDrift.ForegroundColor = handles.colors{1,2};
+handles.selectFiles.ForegroundColor = revasColors.pushButtonText;
+handles.togTrim.ForegroundColor = revasColors.activeButtonText;
+handles.togStim.ForegroundColor = revasColors.activeButtonText;
+handles.togGamma.ForegroundColor = revasColors.activeButtonText;
+handles.togBandFilt.ForegroundColor = revasColors.activeButtonText;
+handles.togCoarse.ForegroundColor = revasColors.activeButtonText;
+handles.togFine.ForegroundColor = revasColors.activeButtonText;
+handles.togStrip.ForegroundColor = revasColors.activeButtonText;
+handles.togReRef.ForegroundColor = revasColors.activeButtonText;
+handles.togFilt.ForegroundColor = revasColors.activeButtonText;
+handles.togSacDrift.ForegroundColor = revasColors.activeButtonText;
 % Configure buttons backgrounds
-handles.configTrim.BackgroundColor = handles.colors{4,4};
-handles.configStim.BackgroundColor = handles.colors{4,4};
-handles.configGamma.BackgroundColor = handles.colors{4,4};
-handles.configBandFilt.BackgroundColor = handles.colors{4,4};
-handles.configCoarse.BackgroundColor = handles.colors{4,4};
-handles.configFine.BackgroundColor = handles.colors{4,4};
-handles.configStrip.BackgroundColor = handles.colors{4,4};
-handles.configReRef.BackgroundColor = handles.colors{4,4};
-handles.configFilt.BackgroundColor = handles.colors{4,4};
-handles.configSacDrift.BackgroundColor = handles.colors{4,4};
+handles.configTrim.BackgroundColor = revasColors.pushButtonBackground;
+handles.configStim.BackgroundColor = revasColors.pushButtonBackground;
+handles.configGamma.BackgroundColor = revasColors.pushButtonBackground;
+handles.configBandFilt.BackgroundColor = revasColors.pushButtonBackground;
+handles.configCoarse.BackgroundColor = revasColors.pushButtonBackground;
+handles.configFine.BackgroundColor = revasColors.pushButtonBackground;
+handles.configStrip.BackgroundColor = revasColors.pushButtonBackground;
+handles.configReRef.BackgroundColor = revasColors.pushButtonBackground;
+handles.configFilt.BackgroundColor = revasColors.pushButtonBackground;
+handles.configSacDrift.BackgroundColor = revasColors.pushButtonBackground;
 % Configure button text
-handles.configTrim.ForegroundColor = handles.colors{4,2};
-handles.configStim.ForegroundColor = handles.colors{4,2};
-handles.configGamma.ForegroundColor = handles.colors{4,2};
-handles.configBandFilt.ForegroundColor = handles.colors{4,2};
-handles.configCoarse.ForegroundColor = handles.colors{4,2};
-handles.configFine.ForegroundColor = handles.colors{4,2};
-handles.configStrip.ForegroundColor = handles.colors{4,2};
-handles.configReRef.ForegroundColor = handles.colors{4,2};
-handles.configFilt.ForegroundColor = handles.colors{4,2};
-handles.configSacDrift.ForegroundColor = handles.colors{4,2};
+handles.configTrim.ForegroundColor = revasColors.pushButtonText;
+handles.configStim.ForegroundColor = revasColors.pushButtonText;
+handles.configGamma.ForegroundColor = revasColors.pushButtonText;
+handles.configBandFilt.ForegroundColor = revasColors.pushButtonText;
+handles.configCoarse.ForegroundColor = revasColors.pushButtonText;
+handles.configFine.ForegroundColor = revasColors.pushButtonText;
+handles.configStrip.ForegroundColor = revasColors.pushButtonText;
+handles.configReRef.ForegroundColor = revasColors.pushButtonText;
+handles.configFilt.ForegroundColor = revasColors.pushButtonText;
+handles.configSacDrift.ForegroundColor = revasColors.pushButtonText;
 % Parallelization button background
-handles.parallelization.BackgroundColor = handles.colors{4,4};
+handles.parallelization.BackgroundColor = revasColors.pushButtonBackground;
 % Parallelization button text
-handles.parallelization.ForegroundColor = handles.colors{4,2};
+handles.parallelization.ForegroundColor = revasColors.pushButtonText;
 % Execute button background
-handles.execute.BackgroundColor = handles.colors{3,4};
+handles.execute.BackgroundColor = revasColors.pushButtonBackground;
 % Execute button text
-handles.execute.ForegroundColor = handles.colors{3,2};
+handles.execute.ForegroundColor = revasColors.pushButtonText;
 % Save Log button background
-handles.saveLog.BackgroundColor = handles.colors{4,4};
+handles.saveLog.BackgroundColor = revasColors.pushButtonBackground;
 % Save Log button text
-handles.saveLog.ForegroundColor = handles.colors{4,2};
+handles.saveLog.ForegroundColor = revasColors.pushButtonText;
 % Re-Config button background
-handles.reconfig.BackgroundColor = handles.colors{4,4};
+handles.reconfig.BackgroundColor = revasColors.pushButtonBackground;
 % Re-Config button text
-handles.reconfig.ForegroundColor = handles.colors{4,2};
+handles.reconfig.ForegroundColor = revasColors.pushButtonText;
 
 % DEFAULT PARAMETERS
 % Trim
@@ -347,6 +391,9 @@ togCallbackRefs = {
     @togReRef_Callback, ...
     @togFilt_Callback, ...
     @togSacDrift_Callback};
+
+
+
 % Used when push buttons are to be disabled by the radio buttons, in
 % which case the should temporarily show as disabled.
 handles.config.preDisabledTogValues = ...
@@ -369,6 +416,8 @@ handles.config.togValues = ...
 
 % Set ReRef to be disabled by default.
 togReRef_Callback(handles.togReRef, eventdata, handles);
+
+
 % Update the value after the callback on reref.
 handles.config.togValues('reref') = 0;
 
@@ -624,13 +673,13 @@ function handles = toggle_Callback(module, handles)
 handles.config.togValues(module) = 1 - handles.config.togValues(module);
 currHandle = handles.togHandles(module);
 if handles.config.togValues(module) == 1
-    currHandle.String = 'ENABLED';
-    currHandle.BackgroundColor = handles.colors{1,4};
-    currHandle.ForegroundColor = handles.colors{1,2};
+%     currHandle.String = 'ENABLED';
+    currHandle.BackgroundColor = handles.revasColors.activeButtonBackground;
+    currHandle.ForegroundColor = handles.revasColors.activeButtonText;
 else
-    currHandle.String = 'DISABLED';
-    currHandle.BackgroundColor = handles.colors{1,1};
-    currHandle.ForegroundColor = handles.colors{1,3};
+%     currHandle.String = 'DISABLED';
+    currHandle.BackgroundColor = handles.revasColors.passiveButtonBackground;
+    currHandle.ForegroundColor = handles.revasColors.passiveButtonText;
 end
 
 % --- Executes on button press in radioRaw.
@@ -1231,12 +1280,15 @@ axes(handles.axes3);
 cla reset;
 drawnow;
 
-handles.axes1.XColor = handles.colors{1,2};
-handles.axes1.YColor = handles.colors{1,2};
-handles.axes2.XColor = handles.colors{1,2};
-handles.axes2.YColor = handles.colors{1,2};
-handles.axes3.XColor = handles.colors{1,2};
-handles.axes3.YColor = handles.colors{1,2};
+handles.axes1.XColor = handles.revasColors.background;
+handles.axes1.YColor = handles.revasColors.background;
+handles.axes2.XColor = handles.revasColors.background;
+handles.axes2.YColor = handles.revasColors.background;
+handles.axes3.XColor = handles.revasColors.background;
+handles.axes3.YColor = handles.revasColors.background;
+set(handles.axes1,'fontunits','points','fontsize',handles.uiFontSize);
+set(handles.axes2,'fontunits','points','fontsize',handles.uiFontSize);
+set(handles.axes3,'fontunits','points','fontsize',handles.uiFontSize);
 
 drawnow;
 
