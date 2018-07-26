@@ -62,29 +62,39 @@ mainHandles = guidata(figureHandle);
 handles.exponent.String = mainHandles.config.gammaExponent;
 handles.overwrite.Value = mainHandles.config.gammaOverwrite;
 
+
+% set a proper size for the main GUI window. a
+handles.gammaParameters.Units = 'normalized';
+handles.gammaParameters.OuterPosition = mainHandles.GUIposition.gammaParameters;
+
+% set font size and size and position of the GUI
+InitGUIHelper(mainHandles, handles.gammaParameters);
+
+
 % Set colors
+revasColors = mainHandles.revasColors;
 % Main Background
-handles.gammaParameters.Color = mainHandles.colors{4,2};
-handles.exponent.BackgroundColor = mainHandles.colors{4,2};
+handles.gammaParameters.Color = revasColors.background;
+handles.exponent.BackgroundColor = revasColors.background;
 % Box backgrounds
-handles.titleBox.BackgroundColor = mainHandles.colors{4,3};
-handles.usageBox.BackgroundColor = mainHandles.colors{4,3};
-handles.gammaBox.BackgroundColor = mainHandles.colors{4,3};
-handles.overwrite.BackgroundColor = mainHandles.colors{4,3};
-handles.exponentText.BackgroundColor = mainHandles.colors{4,3};
+handles.titleBox.BackgroundColor = revasColors.boxBackground;
+handles.usageBox.BackgroundColor = revasColors.boxBackground;
+handles.gammaBox.BackgroundColor = revasColors.boxBackground;
+handles.overwrite.BackgroundColor = revasColors.boxBackground;
+handles.exponentText.BackgroundColor = revasColors.boxBackground;
 % Box text
-handles.titleBox.ForegroundColor = mainHandles.colors{4,5};
-handles.usageBox.ForegroundColor = mainHandles.colors{4,5};
-handles.trimBox.ForegroundColor = mainHandles.colors{4,5};
-handles.overwrite.ForegroundColor = mainHandles.colors{4,5};
-handles.exponentText.ForegroundColor = mainHandles.colors{4,5};
-handles.exponent.ForegroundColor = mainHandles.colors{4,5};
+handles.titleBox.ForegroundColor = revasColors.text;
+handles.usageBox.ForegroundColor = revasColors.text;
+handles.trimBox.ForegroundColor = revasColors.text;
+handles.overwrite.ForegroundColor = revasColors.text;
+handles.exponentText.ForegroundColor = revasColors.text;
+handles.exponent.ForegroundColor = revasColors.text;
 % Save button
-handles.save.BackgroundColor = mainHandles.colors{3,4};
-handles.save.ForegroundColor = mainHandles.colors{3,2};
+handles.save.BackgroundColor = revasColors.pushButtonBackground;
+handles.save.ForegroundColor = revasColors.pushButtonText;
 % Cancel button
-handles.cancel.BackgroundColor = mainHandles.colors{2,4};
-handles.cancel.ForegroundColor = mainHandles.colors{2,2};
+handles.cancel.BackgroundColor = revasColors.pushButtonBackground;
+handles.cancel.ForegroundColor = revasColors.pushButtonText;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -159,13 +169,13 @@ figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
-if ~IsRealNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
-    hObject.TooltipString = 'Must be a real number.';
+if ~IsRealNumber(value) || (value<=0)
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
+    hObject.TooltipString = 'Must be a positive, real number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
