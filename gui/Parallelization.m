@@ -67,30 +67,41 @@ else
     handles.noRadio.Value = false;
 end
 
+
+
+% set a proper size for the main GUI window. a
+handles.parallelization.Units = 'normalized';
+handles.parallelization.OuterPosition = mainHandles.GUIposition.parallelization;
+
+% set font size and size and position of the GUI
+InitGUIHelper(mainHandles, handles.parallelization);
+
+
 % Set colors
+revasColors = mainHandles.revasColors;
 % Main Background
-handles.parallelization.Color = mainHandles.colors{4,2};
+handles.parallelization.Color = revasColors.background;
 % Box backgrounds
-handles.titleBox.BackgroundColor = mainHandles.colors{4,3};
-handles.parallelizationBox.BackgroundColor = mainHandles.colors{4,3};
-handles.enableMultiCore.BackgroundColor = mainHandles.colors{4,3};
-handles.enableGPU.BackgroundColor = mainHandles.colors{4,3};
-handles.noRadio.BackgroundColor = mainHandles.colors{4,3};
-handles.radioGroup.BackgroundColor = mainHandles.colors{4,3};
+handles.titleBox.BackgroundColor = revasColors.boxBackground;
+handles.parallelizationBox.BackgroundColor = revasColors.boxBackground;
+handles.enableMultiCore.BackgroundColor = revasColors.boxBackground;
+handles.enableGPU.BackgroundColor = revasColors.boxBackground;
+handles.noRadio.BackgroundColor = revasColors.boxBackground;
+handles.radioGroup.BackgroundColor = revasColors.boxBackground;
 % Box text
-handles.titleBox.ForegroundColor = mainHandles.colors{4,5};
-handles.parallelizationBox.ForegroundColor = mainHandles.colors{4,5};
-handles.enableMultiCore.ForegroundColor = mainHandles.colors{4,5};
-handles.enableGPU.ForegroundColor = mainHandles.colors{4,5};
-handles.noRadio.ForegroundColor = mainHandles.colors{4,5};
-handles.radioGroup.BackgroundColor = mainHandles.colors{4,3};
+handles.titleBox.ForegroundColor = revasColors.text;
+handles.parallelizationBox.ForegroundColor = revasColors.text;
+handles.enableMultiCore.ForegroundColor = revasColors.text;
+handles.enableGPU.ForegroundColor = revasColors.text;
+handles.noRadio.ForegroundColor = revasColors.text;
+handles.radioGroup.BackgroundColor = revasColors.boxBackground;
 
 % Save button
-handles.save.BackgroundColor = mainHandles.colors{3,4};
-handles.save.ForegroundColor = mainHandles.colors{3,2};
+handles.save.BackgroundColor = revasColors.pushButtonBackground;
+handles.save.ForegroundColor = revasColors.pushButtonText;
 % Cancel button
-handles.cancel.BackgroundColor = mainHandles.colors{2,4};
-handles.cancel.ForegroundColor = mainHandles.colors{2,2};
+handles.cancel.BackgroundColor = revasColors.pushButtonBackground;
+handles.cancel.ForegroundColor = revasColors.pushButtonText;
 
 % Update handles structure
 guidata(hObject, handles);

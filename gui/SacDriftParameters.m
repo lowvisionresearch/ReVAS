@@ -86,81 +86,93 @@ else
     handles.secThresholdVal.Enable = 'on';
 end
 
+
+
+
+% set a proper size for the main GUI window. a
+handles.sacParameters.Units = 'normalized';
+handles.sacParameters.OuterPosition = mainHandles.GUIposition.sacParameters;
+
+% set font size and size and position of the GUI
+InitGUIHelper(mainHandles, handles.sacParameters);
+
+
 % Set colors
+revasColors = mainHandles.revasColors;
 % Main Background
-handles.sacParameters.Color = mainHandles.colors{4,2};
-handles.thresholdVal.BackgroundColor = mainHandles.colors{4,2};
-handles.secThresholdVal.BackgroundColor = mainHandles.colors{4,2};
-handles.stitch.BackgroundColor = mainHandles.colors{4,2};
-handles.minAmplitude.BackgroundColor = mainHandles.colors{4,2};
-handles.maxDuration.BackgroundColor = mainHandles.colors{4,2};
-handles.minDuration.BackgroundColor = mainHandles.colors{4,2};
-handles.hardVelThreshold.BackgroundColor = mainHandles.colors{4,2};
-handles.hardSecondaryVelThreshold.BackgroundColor = mainHandles.colors{4,2};
+handles.sacParameters.Color = revasColors.background;
+handles.thresholdVal.BackgroundColor = revasColors.background;
+handles.secThresholdVal.BackgroundColor = revasColors.background;
+handles.stitch.BackgroundColor = revasColors.background;
+handles.minAmplitude.BackgroundColor = revasColors.background;
+handles.maxDuration.BackgroundColor = revasColors.background;
+handles.minDuration.BackgroundColor = revasColors.background;
+handles.hardVelThreshold.BackgroundColor = revasColors.background;
+handles.hardSecondaryVelThreshold.BackgroundColor = revasColors.background;
 % Box backgrounds
-handles.titleBox.BackgroundColor = mainHandles.colors{4,3};
-handles.usageBox.BackgroundColor = mainHandles.colors{4,3};
-handles.sacBox.BackgroundColor = mainHandles.colors{4,3};
-handles.detectionBox.BackgroundColor = mainHandles.colors{4,3};
-handles.velBox.BackgroundColor = mainHandles.colors{4,3};
-handles.overwrite.BackgroundColor = mainHandles.colors{4,3};
-handles.verbosity.BackgroundColor = mainHandles.colors{4,3};
-handles.stitchText.BackgroundColor = mainHandles.colors{4,3};
-handles.ampText.BackgroundColor = mainHandles.colors{4,3};
-handles.durText.BackgroundColor = mainHandles.colors{4,3};
-handles.minDurText.BackgroundColor = mainHandles.colors{4,3};
-handles.detectionMethod1.BackgroundColor = mainHandles.colors{4,3};
-handles.hardThreshText.BackgroundColor = mainHandles.colors{4,3};
-handles.hardThreshTextSub.BackgroundColor = mainHandles.colors{4,3};
-handles.hardSecThreshText.BackgroundColor = mainHandles.colors{4,3};
-handles.hardSecThreshTextSub.BackgroundColor = mainHandles.colors{4,3};
-handles.threshValText.BackgroundColor = mainHandles.colors{4,3};
-handles.threshValTextSub.BackgroundColor = mainHandles.colors{4,3};
-handles.secThreshValText.BackgroundColor = mainHandles.colors{4,3};
-handles.secThreshValTextSub.BackgroundColor = mainHandles.colors{4,3};
-handles.detectionMethod2.BackgroundColor = mainHandles.colors{4,3};
-handles.detectionGroup.BackgroundColor = mainHandles.colors{4,3};
-handles.velMethod1.BackgroundColor = mainHandles.colors{4,3};
-handles.velMethod2.BackgroundColor = mainHandles.colors{4,3};
-handles.velGroup.BackgroundColor = mainHandles.colors{4,3};
+handles.titleBox.BackgroundColor = revasColors.boxBackground;
+handles.usageBox.BackgroundColor = revasColors.boxBackground;
+handles.sacBox.BackgroundColor = revasColors.boxBackground;
+handles.detectionBox.BackgroundColor = revasColors.boxBackground;
+handles.velBox.BackgroundColor = revasColors.boxBackground;
+handles.overwrite.BackgroundColor = revasColors.boxBackground;
+handles.verbosity.BackgroundColor = revasColors.boxBackground;
+handles.stitchText.BackgroundColor = revasColors.boxBackground;
+handles.ampText.BackgroundColor = revasColors.boxBackground;
+handles.durText.BackgroundColor = revasColors.boxBackground;
+handles.minDurText.BackgroundColor = revasColors.boxBackground;
+handles.detectionMethod1.BackgroundColor = revasColors.boxBackground;
+handles.hardThreshText.BackgroundColor = revasColors.boxBackground;
+handles.hardThreshTextSub.BackgroundColor = revasColors.boxBackground;
+handles.hardSecThreshText.BackgroundColor = revasColors.boxBackground;
+handles.hardSecThreshTextSub.BackgroundColor = revasColors.boxBackground;
+handles.threshValText.BackgroundColor = revasColors.boxBackground;
+handles.threshValTextSub.BackgroundColor = revasColors.boxBackground;
+handles.secThreshValText.BackgroundColor = revasColors.boxBackground;
+handles.secThreshValTextSub.BackgroundColor = revasColors.boxBackground;
+handles.detectionMethod2.BackgroundColor = revasColors.boxBackground;
+handles.detectionGroup.BackgroundColor = revasColors.boxBackground;
+handles.velMethod1.BackgroundColor = revasColors.boxBackground;
+handles.velMethod2.BackgroundColor = revasColors.boxBackground;
+handles.velGroup.BackgroundColor = revasColors.boxBackground;
 % Box text
-handles.titleBox.ForegroundColor = mainHandles.colors{4,5};
-handles.usageBox.ForegroundColor = mainHandles.colors{4,5};
-handles.sacBox.ForegroundColor = mainHandles.colors{4,5};
-handles.detectionBox.ForegroundColor = mainHandles.colors{4,5};
-handles.velBox.ForegroundColor = mainHandles.colors{4,5};
-handles.overwrite.ForegroundColor = mainHandles.colors{4,5};
-handles.verbosity.ForegroundColor = mainHandles.colors{4,5};
-handles.stitchText.ForegroundColor = mainHandles.colors{4,5};
-handles.ampText.ForegroundColor = mainHandles.colors{4,5};
-handles.durText.ForegroundColor = mainHandles.colors{4,5};
-handles.minDurText.ForegroundColor = mainHandles.colors{4,5};
-handles.detectionMethod1.ForegroundColor = mainHandles.colors{4,5};
-handles.hardThreshText.ForegroundColor = mainHandles.colors{4,5};
-handles.hardThreshTextSub.ForegroundColor = mainHandles.colors{4,5};
-handles.hardSecThreshText.ForegroundColor = mainHandles.colors{4,5};
-handles.hardSecThreshTextSub.ForegroundColor = mainHandles.colors{4,5};
-handles.threshValText.ForegroundColor = mainHandles.colors{4,5};
-handles.threshValTextSub.ForegroundColor = mainHandles.colors{4,5};
-handles.secThreshValText.ForegroundColor = mainHandles.colors{4,5};
-handles.secThreshValTextSub.ForegroundColor = mainHandles.colors{4,5};
-handles.detectionMethod2.ForegroundColor = mainHandles.colors{4,5};
-handles.velMethod1.ForegroundColor = mainHandles.colors{4,5};
-handles.velMethod2.ForegroundColor = mainHandles.colors{4,5};
-handles.thresholdVal.ForegroundColor = mainHandles.colors{4,5};
-handles.secThresholdVal.ForegroundColor = mainHandles.colors{4,5};
-handles.stitch.ForegroundColor = mainHandles.colors{4,5};
-handles.minAmplitude.ForegroundColor = mainHandles.colors{4,5};
-handles.maxDuration.ForegroundColor = mainHandles.colors{4,5};
-handles.minDuration.ForegroundColor = mainHandles.colors{4,5};
-handles.hardVelThreshold.ForegroundColor = mainHandles.colors{4,5};
-handles.hardSecondaryVelThreshold.ForegroundColor = mainHandles.colors{4,5};
+handles.titleBox.ForegroundColor = revasColors.text;
+handles.usageBox.ForegroundColor = revasColors.text;
+handles.sacBox.ForegroundColor = revasColors.text;
+handles.detectionBox.ForegroundColor = revasColors.text;
+handles.velBox.ForegroundColor = revasColors.text;
+handles.overwrite.ForegroundColor = revasColors.text;
+handles.verbosity.ForegroundColor = revasColors.text;
+handles.stitchText.ForegroundColor = revasColors.text;
+handles.ampText.ForegroundColor = revasColors.text;
+handles.durText.ForegroundColor = revasColors.text;
+handles.minDurText.ForegroundColor = revasColors.text;
+handles.detectionMethod1.ForegroundColor = revasColors.text;
+handles.hardThreshText.ForegroundColor = revasColors.text;
+handles.hardThreshTextSub.ForegroundColor = revasColors.text;
+handles.hardSecThreshText.ForegroundColor = revasColors.text;
+handles.hardSecThreshTextSub.ForegroundColor = revasColors.text;
+handles.threshValText.ForegroundColor = revasColors.text;
+handles.threshValTextSub.ForegroundColor = revasColors.text;
+handles.secThreshValText.ForegroundColor = revasColors.text;
+handles.secThreshValTextSub.ForegroundColor = revasColors.text;
+handles.detectionMethod2.ForegroundColor = revasColors.text;
+handles.velMethod1.ForegroundColor = revasColors.text;
+handles.velMethod2.ForegroundColor = revasColors.text;
+handles.thresholdVal.ForegroundColor = revasColors.text;
+handles.secThresholdVal.ForegroundColor = revasColors.text;
+handles.stitch.ForegroundColor = revasColors.text;
+handles.minAmplitude.ForegroundColor = revasColors.text;
+handles.maxDuration.ForegroundColor = revasColors.text;
+handles.minDuration.ForegroundColor = revasColors.text;
+handles.hardVelThreshold.ForegroundColor = revasColors.text;
+handles.hardSecondaryVelThreshold.ForegroundColor = revasColors.text;
 % Save button
-handles.save.BackgroundColor = mainHandles.colors{3,4};
-handles.save.ForegroundColor = mainHandles.colors{3,2};
+handles.save.BackgroundColor = revasColors.pushButtonBackground;
+handles.save.ForegroundColor = revasColors.pushButtonText;
 % Cancel button
-handles.cancel.BackgroundColor = mainHandles.colors{2,4};
-handles.cancel.ForegroundColor = mainHandles.colors{2,2};
+handles.cancel.BackgroundColor = revasColors.pushButtonBackground;
+handles.cancel.ForegroundColor = revasColors.pushButtonText;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -306,12 +318,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsNonNegativeRealNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a non-negative, real number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -352,12 +364,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsNonNegativeRealNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a non-negative, real number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -390,12 +402,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsNonNegativeRealNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a non-negative, real number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -428,12 +440,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsNaturalNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a natural number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -466,12 +478,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsRealNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a real number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -504,12 +516,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsPositiveRealNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a positive, real number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -536,17 +548,17 @@ function detectionMethod1_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of detectionMethod1
-    if get(hObject,'Value') == 1
-        handles.hardVelThreshold.Enable = 'on';
-        handles.hardSecondaryVelThreshold.Enable = 'on';
-        handles.thresholdVal.Enable = 'off';
-        handles.secThresholdVal.Enable = 'off';
-    else
-        handles.hardVelThreshold.Enable = 'off';
-        handles.hardSecondaryVelThreshold.Enable = 'off';
-        handles.thresholdVal.Enable = 'on';
-        handles.secThresholdVal.Enable = 'on';
-    end
+if get(hObject,'Value') == 1
+    handles.hardVelThreshold.Enable = 'on';
+    handles.hardSecondaryVelThreshold.Enable = 'on';
+    handles.thresholdVal.Enable = 'off';
+    handles.secThresholdVal.Enable = 'off';
+else
+    handles.hardVelThreshold.Enable = 'off';
+    handles.hardSecondaryVelThreshold.Enable = 'off';
+    handles.thresholdVal.Enable = 'on';
+    handles.secThresholdVal.Enable = 'on';
+end
 
 % --- Executes on button press in detectionMethod2.
 function detectionMethod2_Callback(hObject, eventdata, handles)
@@ -555,17 +567,17 @@ function detectionMethod2_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of detectionMethod2
-    if get(hObject,'Value') == 1
-        handles.hardVelThreshold.Enable = 'off';
-        handles.hardSecondaryVelThreshold.Enable = 'off';
-        handles.thresholdVal.Enable = 'on';
-        handles.secThresholdVal.Enable = 'on';
-    else
-        handles.hardVelThreshold.Enable = 'on';
-        handles.hardSecondaryVelThreshold.Enable = 'on';
-        handles.thresholdVal.Enable = 'off';
-        handles.secThresholdVal.Enable = 'off';
-    end
+if get(hObject,'Value') == 1
+    handles.hardVelThreshold.Enable = 'off';
+    handles.hardSecondaryVelThreshold.Enable = 'off';
+    handles.thresholdVal.Enable = 'on';
+    handles.secThresholdVal.Enable = 'on';
+else
+    handles.hardVelThreshold.Enable = 'on';
+    handles.hardSecondaryVelThreshold.Enable = 'on';
+    handles.thresholdVal.Enable = 'off';
+    handles.secThresholdVal.Enable = 'off';
+end
 
 % --- Executes on button press in velMethod1.
 function velMethod1_Callback(hObject, eventdata, handles)
@@ -597,12 +609,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsNonNegativeRealNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a non-negative, real number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -633,12 +645,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsPositiveRealNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a positive, real number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 

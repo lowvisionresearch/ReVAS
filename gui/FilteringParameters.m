@@ -75,82 +75,92 @@ handles.median2.String = mainHandles.config.filtMedian2;
 handles.poly2.String = mainHandles.config.filtPoly2;
 handles.kernel2.String = mainHandles.config.filtKernel2;
 
+
+% set a proper size for the main GUI window. a
+handles.filtParameters.Units = 'normalized';
+handles.filtParameters.OuterPosition = mainHandles.GUIposition.filtParameters;
+
+% set font size and size and position of the GUI
+InitGUIHelper(mainHandles, handles.filtParameters);
+
+
 % Set colors
+revasColors = mainHandles.revasColors;
 % Main Background
-handles.filtParameters.Color = mainHandles.colors{4,2};
-handles.maxGapDur.BackgroundColor = mainHandles.colors{4,2};
-handles.median1.BackgroundColor = mainHandles.colors{4,2};
-handles.poly1.BackgroundColor = mainHandles.colors{4,2};
-handles.kernel1.BackgroundColor = mainHandles.colors{4,2};
-handles.median2.BackgroundColor = mainHandles.colors{4,2};
-handles.poly2.BackgroundColor = mainHandles.colors{4,2};
-handles.kernel2.BackgroundColor = mainHandles.colors{4,2};
+handles.filtParameters.Color = revasColors.background;
+handles.maxGapDur.BackgroundColor = revasColors.background;
+handles.median1.BackgroundColor = revasColors.background;
+handles.poly1.BackgroundColor = revasColors.background;
+handles.kernel1.BackgroundColor = revasColors.background;
+handles.median2.BackgroundColor = revasColors.background;
+handles.poly2.BackgroundColor = revasColors.background;
+handles.kernel2.BackgroundColor = revasColors.background;
 % Box backgrounds
-handles.titleBox.BackgroundColor = mainHandles.colors{4,3};
-handles.usageBox.BackgroundColor = mainHandles.colors{4,3};
-handles.filtBox.BackgroundColor = mainHandles.colors{4,3};
-handles.filt0Box.BackgroundColor = mainHandles.colors{4,3};
-handles.filt1Box.BackgroundColor = mainHandles.colors{4,3};
-handles.filt1GroupBox.BackgroundColor = mainHandles.colors{4,3};
-handles.filt2Box.BackgroundColor = mainHandles.colors{4,3};
-handles.filt2GroupBox.BackgroundColor = mainHandles.colors{4,3};
-handles.overwrite.BackgroundColor = mainHandles.colors{4,3};
-handles.FirstPrefilter.BackgroundColor = mainHandles.colors{4,3};
-handles.SecondPrefilter.BackgroundColor = mainHandles.colors{4,3};
-handles.verbosity.BackgroundColor = mainHandles.colors{4,3};
-handles.maxGapDurText.BackgroundColor = mainHandles.colors{4,3};
-handles.maxGapDurTextSub.BackgroundColor = mainHandles.colors{4,3};
-handles.median1Radio.BackgroundColor = mainHandles.colors{4,3};
-handles.median1Text.BackgroundColor = mainHandles.colors{4,3};
-handles.median1TextSub.BackgroundColor = mainHandles.colors{4,3};
-handles.sgo1Radio.BackgroundColor = mainHandles.colors{4,3};
-handles.poly1Text.BackgroundColor = mainHandles.colors{4,3};
-handles.kernel1Text.BackgroundColor = mainHandles.colors{4,3};
-handles.kernel1TextSub.BackgroundColor = mainHandles.colors{4,3};
-handles.median2Radio.BackgroundColor = mainHandles.colors{4,3};
-handles.median2Text.BackgroundColor = mainHandles.colors{4,3};
-handles.median2TextSub.BackgroundColor = mainHandles.colors{4,3};
-handles.sgo2Radio.BackgroundColor = mainHandles.colors{4,3};
-handles.poly2Text.BackgroundColor = mainHandles.colors{4,3};
-handles.kernel2Text.BackgroundColor = mainHandles.colors{4,3};
-handles.kernel2TextSub.BackgroundColor = mainHandles.colors{4,3};
-handles.noFilt2Radio.BackgroundColor = mainHandles.colors{4,3};
+handles.titleBox.BackgroundColor = revasColors.boxBackground;
+handles.usageBox.BackgroundColor = revasColors.boxBackground;
+handles.filtBox.BackgroundColor = revasColors.boxBackground;
+handles.filt0Box.BackgroundColor = revasColors.boxBackground;
+handles.filt1Box.BackgroundColor = revasColors.boxBackground;
+handles.filt1GroupBox.BackgroundColor = revasColors.boxBackground;
+handles.filt2Box.BackgroundColor = revasColors.boxBackground;
+handles.filt2GroupBox.BackgroundColor = revasColors.boxBackground;
+handles.overwrite.BackgroundColor = revasColors.boxBackground;
+handles.FirstPrefilter.BackgroundColor = revasColors.boxBackground;
+handles.SecondPrefilter.BackgroundColor = revasColors.boxBackground;
+handles.verbosity.BackgroundColor = revasColors.boxBackground;
+handles.maxGapDurText.BackgroundColor = revasColors.boxBackground;
+handles.maxGapDurTextSub.BackgroundColor = revasColors.boxBackground;
+handles.median1Radio.BackgroundColor = revasColors.boxBackground;
+handles.median1Text.BackgroundColor = revasColors.boxBackground;
+handles.median1TextSub.BackgroundColor = revasColors.boxBackground;
+handles.sgo1Radio.BackgroundColor = revasColors.boxBackground;
+handles.poly1Text.BackgroundColor = revasColors.boxBackground;
+handles.kernel1Text.BackgroundColor = revasColors.boxBackground;
+handles.kernel1TextSub.BackgroundColor = revasColors.boxBackground;
+handles.median2Radio.BackgroundColor = revasColors.boxBackground;
+handles.median2Text.BackgroundColor = revasColors.boxBackground;
+handles.median2TextSub.BackgroundColor = revasColors.boxBackground;
+handles.sgo2Radio.BackgroundColor = revasColors.boxBackground;
+handles.poly2Text.BackgroundColor = revasColors.boxBackground;
+handles.kernel2Text.BackgroundColor = revasColors.boxBackground;
+handles.kernel2TextSub.BackgroundColor = revasColors.boxBackground;
+handles.noFilt2Radio.BackgroundColor = revasColors.boxBackground;
 % Box text
-handles.titleBox.ForegroundColor = mainHandles.colors{4,5};
-handles.usageBox.ForegroundColor = mainHandles.colors{4,5};
-handles.filtBox.ForegroundColor = mainHandles.colors{4,5};
-handles.filt0Box.ForegroundColor = mainHandles.colors{4,5};
-handles.filt1Box.ForegroundColor = mainHandles.colors{4,5};
-handles.filt1GroupBox.ForegroundColor = mainHandles.colors{4,5};
-handles.filt2Box.ForegroundColor = mainHandles.colors{4,5};
-handles.filt2GroupBox.ForegroundColor = mainHandles.colors{4,5};
-handles.overwrite.ForegroundColor = mainHandles.colors{4,5};
-handles.FirstPrefilter.ForegroundColor = mainHandles.colors{4,5};
-handles.SecondPrefilter.ForegroundColor = mainHandles.colors{4,5};
-handles.verbosity.ForegroundColor = mainHandles.colors{4,5};
-handles.maxGapDurText.ForegroundColor = mainHandles.colors{4,5};
-handles.maxGapDurTextSub.ForegroundColor = mainHandles.colors{4,5};
-handles.median1Radio.ForegroundColor = mainHandles.colors{4,5};
-handles.median1Text.ForegroundColor = mainHandles.colors{4,5};
-handles.median1TextSub.ForegroundColor = mainHandles.colors{4,5};
-handles.sgo1Radio.ForegroundColor = mainHandles.colors{4,5};
-handles.poly1Text.ForegroundColor = mainHandles.colors{4,5};
-handles.kernel1Text.ForegroundColor = mainHandles.colors{4,5};
-handles.kernel1TextSub.ForegroundColor = mainHandles.colors{4,5};
-handles.median2Radio.ForegroundColor = mainHandles.colors{4,5};
-handles.median2Text.ForegroundColor = mainHandles.colors{4,5};
-handles.median2TextSub.ForegroundColor = mainHandles.colors{4,5};
-handles.sgo2Radio.ForegroundColor = mainHandles.colors{4,5};
-handles.poly2Text.ForegroundColor = mainHandles.colors{4,5};
-handles.kernel2Text.ForegroundColor = mainHandles.colors{4,5};
-handles.kernel2TextSub.ForegroundColor = mainHandles.colors{4,5};
-handles.noFilt2Radio.ForegroundColor = mainHandles.colors{4,5};
+handles.titleBox.ForegroundColor = revasColors.text;
+handles.usageBox.ForegroundColor = revasColors.text;
+handles.filtBox.ForegroundColor = revasColors.text;
+handles.filt0Box.ForegroundColor = revasColors.text;
+handles.filt1Box.ForegroundColor = revasColors.text;
+handles.filt1GroupBox.ForegroundColor = revasColors.text;
+handles.filt2Box.ForegroundColor = revasColors.text;
+handles.filt2GroupBox.ForegroundColor = revasColors.text;
+handles.overwrite.ForegroundColor = revasColors.text;
+handles.FirstPrefilter.ForegroundColor = revasColors.text;
+handles.SecondPrefilter.ForegroundColor = revasColors.text;
+handles.verbosity.ForegroundColor = revasColors.text;
+handles.maxGapDurText.ForegroundColor = revasColors.text;
+handles.maxGapDurTextSub.ForegroundColor = revasColors.text;
+handles.median1Radio.ForegroundColor = revasColors.text;
+handles.median1Text.ForegroundColor = revasColors.text;
+handles.median1TextSub.ForegroundColor = revasColors.text;
+handles.sgo1Radio.ForegroundColor = revasColors.text;
+handles.poly1Text.ForegroundColor = revasColors.text;
+handles.kernel1Text.ForegroundColor = revasColors.text;
+handles.kernel1TextSub.ForegroundColor = revasColors.text;
+handles.median2Radio.ForegroundColor = revasColors.text;
+handles.median2Text.ForegroundColor = revasColors.text;
+handles.median2TextSub.ForegroundColor = revasColors.text;
+handles.sgo2Radio.ForegroundColor = revasColors.text;
+handles.poly2Text.ForegroundColor = revasColors.text;
+handles.kernel2Text.ForegroundColor = revasColors.text;
+handles.kernel2TextSub.ForegroundColor = revasColors.text;
+handles.noFilt2Radio.ForegroundColor = revasColors.text;
 % Save button
-handles.save.BackgroundColor = mainHandles.colors{3,4};
-handles.save.ForegroundColor = mainHandles.colors{3,2};
+handles.save.BackgroundColor = revasColors.pushButtonBackground;
+handles.save.ForegroundColor = revasColors.pushButtonText;
 % Cancel button
-handles.cancel.BackgroundColor = mainHandles.colors{2,4};
-handles.cancel.ForegroundColor = mainHandles.colors{2,2};
+handles.cancel.BackgroundColor = revasColors.pushButtonBackground;
+handles.cancel.ForegroundColor = revasColors.pushButtonText;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -300,12 +310,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsNaturalNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a natural number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -338,12 +348,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsPositiveRealNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a positive, real number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -374,12 +384,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsNaturalNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a natural number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -412,12 +422,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsOddNaturalNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
-    hObject.TooltipString = 'Must be an odd natural number.';
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
+    hObject.TooltipString = 'Must be an odd, natural number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -448,12 +458,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsOddNaturalNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
-    hObject.TooltipString = 'Must be an odd natural number.';
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
+    hObject.TooltipString = 'Must be an odd, natural number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -484,12 +494,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsNaturalNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a natural number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -520,12 +530,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsOddNaturalNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
-    hObject.TooltipString = 'Must be an odd natural number.';
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
+    hObject.TooltipString = 'Must be an odd, natural number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -556,12 +566,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsOddNaturalNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
-    hObject.TooltipString = 'Must be an odd natural number.';
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
+    hObject.TooltipString = 'Must be an odd, natural number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 

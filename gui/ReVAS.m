@@ -22,7 +22,7 @@ function varargout = ReVAS(varargin)
 
 % Edit the above text to modify the response to help ReVAS
 
-% Last Modified by GUIDE v2.5 07-Jan-2018 15:56:23
+% Last Modified by GUIDE v2.5 26-Jul-2018 01:38:34
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -51,70 +51,41 @@ function Main_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to ReVAS (see VARARGIN)
 
+% clear the command window
+clc;
+
 % Choose default command line output for ReVAS
 handles.output = hObject;
+
+set(hObject,'CloseRequestFcn',@revasCloseRequest);
 
 if ~isdeployed
     addpath(genpath('..'));
 end
 
 try
-    load([pwd '/gui/uiconfig.mat'],'revasOuterPosition','uiFontSize',...
+    load([pwd '/gui/uiconfig.mat'],'GUIposition','uiFontSize',...
         'uiTitleFontSize','revasColors');
 catch 
     disp('''uiconfig.mat'' file cannot be loaded. Executing UIConfigMaker.m')
     disp('to creat a configuration file with default values.')
-    disp('Use UIConfigMaker.m to make or change this configuration file.')
-    UIConfigMaker;
-    load([pwd '/gui/uiconfig.mat'],'revasOuterPosition','uiFontSize',...
-        'uiTitleFontSize','revasColors');
+    disp('Using UIConfigMaker.m to make a new configuration file.')
+    [GUIposition, uiFontSize,...
+        uiTitleFontSize,revasColors] = UIConfigMaker;
 end
 
 % update the handles
-handles.revasOuterPosition = revasOuterPosition;
+handles.GUIposition = GUIposition;
 handles.uiFontSize = uiFontSize;
 handles.uiTitleFontSize = uiTitleFontSize;
 handles.revasColors = revasColors;
 
-
 % set a proper size for the main GUI window. a
 handles.revas.Units = 'normalized';
-handles.revas.OuterPosition = revasOuterPosition;
+handles.revas.OuterPosition = handles.GUIposition.revas;
 
-% set all text objects to proper font sizes..
-children = handles.revas.Children.findobj('Type','uicontrol');
-for i=1:length(children)
-    if contains(lower(children(i).Style),'text') || ...
-       contains(lower(children(i).Style),'button') 
-        children(i).FontUnits = 'points';
-        children(i).FontSize = uiFontSize;
-        children(i).FontWeight = 'normal';
-    end
-end
-
-
-panelAndButtonGroups = handles.revas.Children.findobj('Type','uipanel');
-panelAndButtonGroups = [panelAndButtonGroups;...
-    handles.revas.Children.findobj('Type','uibuttongroup')];
-for i=1:length(panelAndButtonGroups)
-    panelAndButtonGroups(i).FontUnits = 'points';
-    panelAndButtonGroups(i).FontSize = uiTitleFontSize;
-    panelAndButtonGroups(i).FontWeight = 'bold';
-end
-
-% COLOR PALETTE
-% http://paletton.com/palette.php?uid=c491l5-2L0kj0tK00%2B%2B6SNBlToaqM2g
-handles.colors = ... % primary, white, light, dark, black
-    {[114,102,173],[255,255,255],[206,201,226],[ 67, 53,133],[  5,  3, 12];
-     [229, 93,106],[255,255,255],[251,198,203],[186, 59, 71],[ 17,  3,  4];
-     [101,198, 80],[255,255,255],[195,237,187],[ 70,161, 51],[  5, 15,  2];
-     [237,209, 96],[255,255,255],[255,244,200],[209,180, 69],[ 18, 15,  3]};
-
-for i = 1:size(handles.colors,1)
-    for j = 1:size(handles.colors,2)
-        handles.colors{i,j} = handles.colors{i,j}/255;
-    end
-end
+% set font size and size and position of the GUI
+InitGUIHelper(handles, handles.revas);
  
 % Set colors
 % ReVAS Background
@@ -910,6 +881,7 @@ function configTrim_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 TrimParameters;
 
+
 % --- Executes on button press in configStim.
 function configStim_Callback(hObject, eventdata, handles)
 % hObject    handle to configStim (see GCBO)
@@ -1243,6 +1215,8 @@ function menuExit_Callback(hObject, eventdata, handles)
 % hObject    handle to menuExit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
 close;
 
 % --- Executes during object creation, after setting all properties.
@@ -1390,4 +1364,20 @@ function axes3_ButtonDownFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 if isValid(hObject)
     figure(hObject);
+end
+
+
+
+function revasCloseRequest(hObject,src,callbackdata)
+% Close request function 
+% to display a question dialog box 
+selection = questdlg('Do you want to exit ReVAS?',...
+              'Close Request',...
+              'Yes','No','Yes'); 
+          
+switch selection 
+    case 'Yes'
+        delete(hObject);
+    case 'No'
+        return 
 end
