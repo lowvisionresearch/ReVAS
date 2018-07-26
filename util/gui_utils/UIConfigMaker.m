@@ -21,7 +21,7 @@ uiFontSize = 14;
 uiTitleFontSize = 18;
 
 
-% color theme
+% bright color theme
 revasColors.background = [255 255 255]/255;
 revasColors.boxBackground = [245 245 245]/255;
 revasColors.text = [0 0 0]/255;
@@ -31,10 +31,27 @@ revasColors.pushButtonBackground = [142 142 147]/255;
 revasColors.pushButtonText = [255 255 255]/255;
 revasColors.passiveButtonBackground = [255 255 255]/255;
 revasColors.passiveButtonText = [0 122 255]/255;
-revasColors.activeBorder = [0 122 255]/255;
-revasColors.passiveBorder = [142 142 147]/255;
+revasColors.activeBorder = [0 122 255]/255; % NOT used
+revasColors.passiveBorder = [142 142 147]/255; % NOT used
 revasColors.abortButtonBackground = [255 59 48]/255;
 revasColors.abortButtonText = [255 255 255]/255;
+
+
+% % dark color theme
+% revasColors.background = [0 0 0]/255;
+% revasColors.boxBackground = [10 10 10]/255;
+% revasColors.text = [255 255 255]/255;
+% revasColors.activeButtonBackground = [255 149 0]/255;
+% revasColors.activeButtonText = [255 255 255]/255;
+% revasColors.pushButtonBackground = [0 0 0]/255;
+% revasColors.pushButtonText = [255 255 255]/255;
+% revasColors.passiveButtonBackground = [0 0 0]/255;
+% revasColors.passiveButtonText = [255 149 0]/255;
+% revasColors.activeBorder = [0 122 255]/255; % NOT used
+% revasColors.passiveBorder = [142 142 147]/255; % NOT used
+% revasColors.abortButtonBackground = [255 59 48]/255;
+% revasColors.abortButtonText = [255 255 255]/255;
+
 
 % save them in a config file
 save([pwd '/gui/uiconfig.mat'],'GUIposition','uiFontSize',...
