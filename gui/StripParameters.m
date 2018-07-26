@@ -78,101 +78,114 @@ handles.subpixelInterp.Value = mainHandles.config.stripSubpixelInterp;
 handles.neighborhoodSize.String = mainHandles.config.stripNeighborhoodSize;
 handles.subpixelDepth.String = mainHandles.config.stripSubpixelDepth;
 
+
+
+
+
+% set a proper size for the main GUI window. a
+handles.stripParameters.Units = 'normalized';
+handles.stripParameters.OuterPosition = mainHandles.GUIposition.stripParameters;
+
+% set font size and size and position of the GUI
+InitGUIHelper(mainHandles, handles.stripParameters);
+
+
 % Set colors
+revasColors = mainHandles.revasColors;
 % Main Background
-handles.stripParameters.Color = mainHandles.colors{4,2};
-handles.stripHeight.BackgroundColor = mainHandles.colors{4,2};
-handles.stripWidth.BackgroundColor = mainHandles.colors{4,2};
-handles.samplingRate.BackgroundColor = mainHandles.colors{4,2};
-handles.gaussSD.BackgroundColor = mainHandles.colors{4,2};
-handles.maxPeakRatio.BackgroundColor = mainHandles.colors{4,2};
-handles.minPeakThreshold.BackgroundColor = mainHandles.colors{4,2};
-handles.scalingFactor.BackgroundColor = mainHandles.colors{4,2};
-handles.searchWindowHeight.BackgroundColor = mainHandles.colors{4,2};
-handles.neighborhoodSize.BackgroundColor = mainHandles.colors{4,2};
-handles.subpixelDepth.BackgroundColor = mainHandles.colors{4,2};
+handles.stripParameters.Color = revasColors.background;
+handles.stripHeight.BackgroundColor = revasColors.background;
+handles.stripWidth.BackgroundColor = revasColors.background;
+handles.samplingRate.BackgroundColor = revasColors.background;
+handles.gaussSD.BackgroundColor = revasColors.background;
+handles.maxPeakRatio.BackgroundColor = revasColors.background;
+handles.minPeakThreshold.BackgroundColor = revasColors.background;
+handles.scalingFactor.BackgroundColor = revasColors.background;
+handles.searchWindowHeight.BackgroundColor = revasColors.background;
+handles.neighborhoodSize.BackgroundColor = revasColors.background;
+handles.subpixelDepth.BackgroundColor = revasColors.background;
 % Box backgrounds
-handles.createStabilizedVideo.BackgroundColor = mainHandles.colors{4,3};
-handles.outputOptionsPanel.BackgroundColor = mainHandles.colors{4,3};
-handles.titleBox.BackgroundColor = mainHandles.colors{4,3};
-handles.usageBox.BackgroundColor = mainHandles.colors{4,3};
-handles.stripBox.BackgroundColor = mainHandles.colors{4,3};
-handles.peakBox.BackgroundColor = mainHandles.colors{4,3};
-handles.peakGroup.BackgroundColor = mainHandles.colors{4,3};
-handles.adaptiveBox.BackgroundColor = mainHandles.colors{4,3};
-handles.interpBox.BackgroundColor = mainHandles.colors{4,3};
-handles.overwrite.BackgroundColor = mainHandles.colors{4,3};
-handles.verbosity.BackgroundColor = mainHandles.colors{4,3};
-handles.heightText.BackgroundColor = mainHandles.colors{4,3};
-handles.heightTextSub.BackgroundColor = mainHandles.colors{4,3};
-handles.widthText.BackgroundColor = mainHandles.colors{4,3};
-handles.widthTextSub.BackgroundColor = mainHandles.colors{4,3};
-handles.sampleText.BackgroundColor = mainHandles.colors{4,3};
-handles.sampleTextSub.BackgroundColor = mainHandles.colors{4,3};
-handles.enableGaussFilt.BackgroundColor = mainHandles.colors{4,3};
-handles.sdText.BackgroundColor = mainHandles.colors{4,3};
-handles.sdWindowText.BackgroundColor = mainHandles.colors{4,3};
-handles.sdWindowSubText.BackgroundColor = mainHandles.colors{4,3};
-handles.disableGaussFilt.BackgroundColor = mainHandles.colors{4,3};
-handles.ratioText.BackgroundColor = mainHandles.colors{4,3};
-handles.threshText.BackgroundColor = mainHandles.colors{4,3};
-handles.adaptiveSearch.BackgroundColor = mainHandles.colors{4,3};
-handles.scaleText.BackgroundColor = mainHandles.colors{4,3};
-handles.searchWindowHeightText.BackgroundColor = mainHandles.colors{4,3};
-handles.searchWindowHeightTextSub.BackgroundColor = mainHandles.colors{4,3};
-handles.subpixelInterp.BackgroundColor = mainHandles.colors{4,3};
-handles.neighborText.BackgroundColor = mainHandles.colors{4,3};
-handles.neighborTextSub.BackgroundColor = mainHandles.colors{4,3};
-handles.depthText.BackgroundColor = mainHandles.colors{4,3};
+handles.createStabilizedVideo.BackgroundColor = revasColors.boxBackground;
+handles.outputOptionsPanel.BackgroundColor = revasColors.boxBackground;
+handles.titleBox.BackgroundColor = revasColors.boxBackground;
+handles.usageBox.BackgroundColor = revasColors.boxBackground;
+handles.stripBox.BackgroundColor = revasColors.boxBackground;
+handles.peakBox.BackgroundColor = revasColors.boxBackground;
+handles.peakGroup.BackgroundColor = revasColors.boxBackground;
+handles.adaptiveBox.BackgroundColor = revasColors.boxBackground;
+handles.interpBox.BackgroundColor = revasColors.boxBackground;
+handles.overwrite.BackgroundColor = revasColors.boxBackground;
+handles.verbosity.BackgroundColor = revasColors.boxBackground;
+handles.heightText.BackgroundColor = revasColors.boxBackground;
+handles.heightTextSub.BackgroundColor = revasColors.boxBackground;
+handles.widthText.BackgroundColor = revasColors.boxBackground;
+handles.widthTextSub.BackgroundColor = revasColors.boxBackground;
+handles.sampleText.BackgroundColor = revasColors.boxBackground;
+handles.sampleTextSub.BackgroundColor = revasColors.boxBackground;
+handles.enableGaussFilt.BackgroundColor = revasColors.boxBackground;
+handles.sdText.BackgroundColor = revasColors.boxBackground;
+handles.sdWindowText.BackgroundColor = revasColors.boxBackground;
+handles.sdWindowSubText.BackgroundColor = revasColors.boxBackground;
+handles.disableGaussFilt.BackgroundColor = revasColors.boxBackground;
+handles.ratioText.BackgroundColor = revasColors.boxBackground;
+handles.threshText.BackgroundColor = revasColors.boxBackground;
+handles.adaptiveSearch.BackgroundColor = revasColors.boxBackground;
+handles.scaleText.BackgroundColor = revasColors.boxBackground;
+handles.searchWindowHeightText.BackgroundColor = revasColors.boxBackground;
+handles.searchWindowHeightTextSub.BackgroundColor = revasColors.boxBackground;
+handles.subpixelInterp.BackgroundColor = revasColors.boxBackground;
+handles.neighborText.BackgroundColor = revasColors.boxBackground;
+handles.neighborTextSub.BackgroundColor = revasColors.boxBackground;
+handles.depthText.BackgroundColor = revasColors.boxBackground;
 % Box text
-handles.createStabilizedVideo.ForegroundColor = mainHandles.colors{4,5};
-handles.outputOptionsPanel.ForegroundColor = mainHandles.colors{4,5};
-handles.titleBox.ForegroundColor = mainHandles.colors{4,5};
-handles.usageBox.ForegroundColor = mainHandles.colors{4,5};
-handles.stripBox.ForegroundColor = mainHandles.colors{4,5};
-handles.peakBox.ForegroundColor = mainHandles.colors{4,5};
-handles.adaptiveBox.ForegroundColor = mainHandles.colors{4,5};
-handles.interpBox.ForegroundColor = mainHandles.colors{4,5};
-handles.overwrite.ForegroundColor = mainHandles.colors{4,5};
-handles.verbosity.ForegroundColor = mainHandles.colors{4,5};
-handles.heightText.ForegroundColor = mainHandles.colors{4,5};
-handles.heightTextSub.ForegroundColor = mainHandles.colors{4,5};
-handles.widthText.ForegroundColor = mainHandles.colors{4,5};
-handles.widthTextSub.ForegroundColor = mainHandles.colors{4,5};
-handles.sampleText.ForegroundColor = mainHandles.colors{4,5};
-handles.sampleTextSub.ForegroundColor = mainHandles.colors{4,5};
-handles.enableGaussFilt.ForegroundColor = mainHandles.colors{4,5};
-handles.sdText.ForegroundColor = mainHandles.colors{4,5};
-handles.sdWindowText.ForegroundColor = mainHandles.colors{4,5};
-handles.sdWindowSubText.ForegroundColor = mainHandles.colors{4,5};
-handles.disableGaussFilt.ForegroundColor = mainHandles.colors{4,5};
-handles.ratioText.ForegroundColor = mainHandles.colors{4,5};
-handles.threshText.ForegroundColor = mainHandles.colors{4,5};
-handles.adaptiveSearch.ForegroundColor = mainHandles.colors{4,5};
-handles.scaleText.ForegroundColor = mainHandles.colors{4,5};
-handles.searchWindowHeightText.ForegroundColor = mainHandles.colors{4,5};
-handles.searchWindowHeightTextSub.ForegroundColor = mainHandles.colors{4,5};
-handles.subpixelInterp.ForegroundColor = mainHandles.colors{4,5};
-handles.neighborText.ForegroundColor = mainHandles.colors{4,5};
-handles.neighborTextSub.ForegroundColor = mainHandles.colors{4,5};
-handles.depthText.ForegroundColor = mainHandles.colors{4,5};
-handles.stripHeight.ForegroundColor = mainHandles.colors{4,5};
-handles.stripWidth.ForegroundColor = mainHandles.colors{4,5};
-handles.samplingRate.ForegroundColor = mainHandles.colors{4,5};
-handles.gaussSD.ForegroundColor = mainHandles.colors{4,5};
-handles.sdWindow.ForegroundColor = mainHandles.colors{4,5};
-handles.maxPeakRatio.ForegroundColor = mainHandles.colors{4,5};
-handles.minPeakThreshold.ForegroundColor = mainHandles.colors{4,5};
-handles.scalingFactor.ForegroundColor = mainHandles.colors{4,5};
-handles.searchWindowHeight.ForegroundColor = mainHandles.colors{4,5};
-handles.neighborhoodSize.ForegroundColor = mainHandles.colors{4,5};
-handles.subpixelDepth.ForegroundColor = mainHandles.colors{4,5};
+handles.createStabilizedVideo.ForegroundColor = revasColors.text;
+handles.outputOptionsPanel.ForegroundColor = revasColors.text;
+handles.titleBox.ForegroundColor = revasColors.text;
+handles.usageBox.ForegroundColor = revasColors.text;
+handles.stripBox.ForegroundColor = revasColors.text;
+handles.peakBox.ForegroundColor = revasColors.text;
+handles.adaptiveBox.ForegroundColor = revasColors.text;
+handles.interpBox.ForegroundColor = revasColors.text;
+handles.overwrite.ForegroundColor = revasColors.text;
+handles.verbosity.ForegroundColor = revasColors.text;
+handles.heightText.ForegroundColor = revasColors.text;
+handles.heightTextSub.ForegroundColor = revasColors.text;
+handles.widthText.ForegroundColor = revasColors.text;
+handles.widthTextSub.ForegroundColor = revasColors.text;
+handles.sampleText.ForegroundColor = revasColors.text;
+handles.sampleTextSub.ForegroundColor = revasColors.text;
+handles.enableGaussFilt.ForegroundColor = revasColors.text;
+handles.sdText.ForegroundColor = revasColors.text;
+handles.sdWindowText.ForegroundColor = revasColors.text;
+handles.sdWindowSubText.ForegroundColor = revasColors.text;
+handles.disableGaussFilt.ForegroundColor = revasColors.text;
+handles.ratioText.ForegroundColor = revasColors.text;
+handles.threshText.ForegroundColor = revasColors.text;
+handles.adaptiveSearch.ForegroundColor = revasColors.text;
+handles.scaleText.ForegroundColor = revasColors.text;
+handles.searchWindowHeightText.ForegroundColor = revasColors.text;
+handles.searchWindowHeightTextSub.ForegroundColor = revasColors.text;
+handles.subpixelInterp.ForegroundColor = revasColors.text;
+handles.neighborText.ForegroundColor = revasColors.text;
+handles.neighborTextSub.ForegroundColor = revasColors.text;
+handles.depthText.ForegroundColor = revasColors.text;
+handles.stripHeight.ForegroundColor = revasColors.text;
+handles.stripWidth.ForegroundColor = revasColors.text;
+handles.samplingRate.ForegroundColor = revasColors.text;
+handles.gaussSD.ForegroundColor = revasColors.text;
+handles.sdWindow.ForegroundColor = revasColors.text;
+handles.maxPeakRatio.ForegroundColor = revasColors.text;
+handles.minPeakThreshold.ForegroundColor = revasColors.text;
+handles.scalingFactor.ForegroundColor = revasColors.text;
+handles.searchWindowHeight.ForegroundColor = revasColors.text;
+handles.neighborhoodSize.ForegroundColor = revasColors.text;
+handles.subpixelDepth.ForegroundColor = revasColors.text;
 % Save button
-handles.save.BackgroundColor = mainHandles.colors{3,4};
-handles.save.ForegroundColor = mainHandles.colors{3,2};
+handles.save.BackgroundColor = revasColors.pushButtonBackground;
+handles.save.ForegroundColor = revasColors.pushButtonText;
 % Cancel button
-handles.cancel.BackgroundColor = mainHandles.colors{2,4};
-handles.cancel.ForegroundColor = mainHandles.colors{2,2};
+handles.cancel.BackgroundColor = revasColors.pushButtonBackground;
+handles.cancel.ForegroundColor = revasColors.pushButtonText;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -347,13 +360,13 @@ function subpixelInterp_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of subpixelInterp
-    if get(hObject,'Value') == 1
-        handles.neighborhoodSize.Enable = 'on';
-        handles.subpixelDepth.Enable = 'on';
-    else
-        handles.neighborhoodSize.Enable = 'off';
-        handles.subpixelDepth.Enable = 'off';
-    end
+if get(hObject,'Value') == 1
+    handles.neighborhoodSize.Enable = 'on';
+    handles.subpixelDepth.Enable = 'on';
+else
+    handles.neighborhoodSize.Enable = 'off';
+    handles.subpixelDepth.Enable = 'off';
+end
 
 % --- Executes on button press in verbosity.
 function verbosity_Callback(hObject, eventdata, handles)
@@ -400,12 +413,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsNaturalNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a natural number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -438,12 +451,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsNaturalNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a natural number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -475,12 +488,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsPositiveRealNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a positive, real number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -513,12 +526,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsPositiveRealNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a positive, real number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -549,12 +562,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsNonNegativeRealNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a non-negative, real number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -602,12 +615,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsPositiveRealNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a positive, real number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -637,13 +650,13 @@ figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
-if ~IsNaturalNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+if ~IsNaturalNumber(value) || (value <= 0)
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a natural number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -673,13 +686,13 @@ figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
-if ~IsNaturalNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
-    hObject.TooltipString = 'Must be a natural number.';
+if ~IsNaturalNumber(value) || (value <= 0)
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
+    hObject.TooltipString = 'Must be a non-zero natural number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -710,12 +723,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsPositiveRealNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a positive, real number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -746,12 +759,12 @@ mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
 if ~IsPositiveRealNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a positive, real number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
@@ -815,13 +828,13 @@ figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
-if ~IsNaturalNumber(value)
-    hObject.BackgroundColor = mainHandles.colors{2,4};
-    hObject.ForegroundColor = mainHandles.colors{2,2};
-    hObject.TooltipString = 'Must be a natural number.';
+if ~IsNaturalNumber(value) || (value <= 0)
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
+    hObject.TooltipString = 'Must be a positive, natural number.';
 else
-    hObject.BackgroundColor = mainHandles.colors{4,2};
-    hObject.ForegroundColor = mainHandles.colors{4,5};
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
     hObject.TooltipString = '';
 end
 
