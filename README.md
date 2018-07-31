@@ -1,5 +1,4 @@
-* ReVAS
-0.2.2
+# ReVAS 0.2.2  
 
 Retinal Video Analysis Suite: a utility for generating reference frames and extracting eye position traces from retinal videos recorded via scanning laser ophthalmoscopes. It also includes a set of tools for classifying eye movements into drifts and (micro)saccades, and extracting detailed information about these eye movements.
 
