@@ -1396,7 +1396,8 @@ selection = questdlg('Do you want to exit ReVAS?',...
           
 switch selection 
     case 'Yes'
-        delete(hObject);
+        objs = hObject.Parent.Children;
+        delete(objs);
     case 'No'
         return 
 end
