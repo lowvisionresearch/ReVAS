@@ -68,7 +68,7 @@ try
         'uiTitleFontSize','revasColors');
 catch 
     disp('''uiconfig.mat'' file cannot be loaded. Executing UIConfigMaker.m')
-    disp('to creat a configuration file with default values.')
+    disp('to create a configuration file with default values.')
     disp('Using UIConfigMaker.m to make a new configuration file.')
     [GUIposition, uiFontSize,...
         uiTitleFontSize,revasColors] = UIConfigMaker;
