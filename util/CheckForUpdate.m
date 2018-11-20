@@ -1,6 +1,9 @@
 function [isSuccess, msg] = CheckForUpdate
 
 % Check if there is a newer version
+currentDir = pwd;
+p = which('ReVAS');
+cd(fileparts(fileparts(p)));
 try
     [~, cmdout] = system('git fetch --dry-run');
 catch err0
@@ -18,8 +21,10 @@ if ~isempty(cmdout)
     try
         switch choice
             case 'Yes'
+                
                 !git pull
                 msg = 'ReVAS has been updated';
+                
             case 'No'
                 msg = 'User skipped the update.';
             otherwise 
@@ -36,3 +41,4 @@ else
 end
 
 isSuccess = 1;
+cd(currentDir);
