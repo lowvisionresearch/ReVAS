@@ -85,6 +85,9 @@ handles.revasColors = revasColors;
 handles.revas.Units = 'normalized';
 handles.revas.OuterPosition = handles.GUIposition.revas;
 
+% Update handles structure
+guidata(hObject, handles);
+
 % set font size and size and position of the GUI
 InitGUIHelper(handles, handles.revas);
  
