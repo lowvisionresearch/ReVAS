@@ -64,7 +64,8 @@ if ~isdeployed
 end
 
 try
-    load([pwd '/gui/uiconfig.mat'],'GUIposition','uiFontSize',...
+    p = which('ReVAS');
+    load([fileparts(p) filesep 'uiconfig.mat'],'GUIposition','uiFontSize',...
         'uiTitleFontSize','revasColors');
 catch 
     disp('''uiconfig.mat'' file cannot be loaded. Executing UIConfigMaker.m')
