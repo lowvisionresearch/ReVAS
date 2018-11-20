@@ -54,5 +54,6 @@ revasColors.abortButtonText = [255 255 255]/255;
 
 
 % save them in a config file
-save([pwd '/gui/uiconfig.mat'],'GUIposition','uiFontSize',...
+p = which('ReVAS');
+save([fileparts(p) filesep 'uiconfig.mat'],'GUIposition','uiFontSize',...
     'uiTitleFontSize','revasColors');
