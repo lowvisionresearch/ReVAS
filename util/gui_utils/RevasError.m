@@ -11,4 +11,14 @@ if isfield(parametersStructure, 'commandWindowHandle')
         message; ...
         parametersStructure.commandWindowHandle.String];
 end
+
+% get system color for text
+c = com.mathworks.services.Prefs.getColorPref('Colors_M_Errors');
+textColor = [get(c,'Red') get(c,'Green') get(c,'Blue')]/255;
+
+% display the same message via MATLAB command window
+for i=1:length(parametersStructure.commandWindowHandle.String)
+    cprintf(textColor,'%s\n',parametersStructure.commandWindowHandle.String{i});
+end
+
 end
