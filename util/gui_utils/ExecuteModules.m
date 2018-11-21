@@ -232,7 +232,7 @@ if logical(handles.config.togValues('strip')) && ~logical(abortTriggered)
                    longestFileName = name{1};
                end
            end
-           RevasWarning(['Loading fine reference frame from: ' longestFileName], parametersStructure);
+           RevasMessage(['Loading fine reference frame from: ' longestFileName], parametersStructure);
            load(longestFileName, 'refFrame');
            fineRefFrame = refFrame;
         elseif ~isempty({coarseRefFrames.name})
@@ -246,7 +246,7 @@ if logical(handles.config.togValues('strip')) && ~logical(abortTriggered)
                    longestFileName = name{1};
                end
            end
-           RevasWarning(['Loading coarse reference frame from: ' longestFileName], parametersStructure);
+           RevasMessage(['Loading coarse reference frame from: ' longestFileName], parametersStructure);
            load(longestFileName, 'refFrame');
            fineRefFrame = refFrame;
         else
@@ -346,7 +346,7 @@ elseif logical(handles.config.togValues('reref')) && ~logical(abortTriggered)
                    longestFileName = name{1};
                end
            end
-           RevasWarning(['Loading fine reference frame from: ' longestFileName], parametersStructure);
+           RevasMessage(['Loading fine reference frame from: ' longestFileName], parametersStructure);
            load(fullfile(fileparts(rawVideoPath),longestFileName), 'refFrame');
            fineRefFrame = refFrame;
         elseif ~isempty({coarseRefFrames.name})
@@ -360,7 +360,7 @@ elseif logical(handles.config.togValues('reref')) && ~logical(abortTriggered)
                    longestFileName = name{1};
                end
            end
-           RevasWarning(['Loading coarse reference frame from: ' longestFileName], parametersStructure);
+           RevasMessage(['Loading coarse reference frame from: ' longestFileName], parametersStructure);
            load(fullfile(fileparts(rawVideoPath),longestFileName), 'refFrame');
            fineRefFrame = refFrame;
         else
@@ -482,7 +482,7 @@ if logical(handles.config.togValues('sacdrift')) && ~logical(abortTriggered)
         'drifts');
     csvPath = [inputPath(1:end-4) '.csv'];
     fid = fopen(csvPath, 'w');
-    headerRow = fieldnames(saccades);
+    headerRow = fieldnames(saccades); %#ok<*NODEF>
     headerRow(1:end-1) = strcat(headerRow(1:end-1), ',');
     headerRow = [{'saccadeOrDrift,'}; headerRow];
     fprintf(fid, '%s\n', cell2mat(headerRow'));
