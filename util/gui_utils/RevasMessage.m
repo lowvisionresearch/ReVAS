@@ -8,7 +8,15 @@ if isfield(parametersStructure, 'commandWindowHandle')
         ['(' time ') ' ...
         message; ...
         parametersStructure.commandWindowHandle.String];
-else
-    warning(message);
-end    
+end
+
+% get system color for text
+c = com.mathworks.services.Prefs.getColorPref('ColorsText');
+textColor = [get(c,'Red') get(c,'Green') get(c,'Blue')]/255;
+
+% display the same message via MATLAB command window
+for i=1:length(parametersStructure.commandWindowHandle.String)
+    cprintf(textColor,'%s\n',parametersStructure.commandWindowHandle.String{i});
+end
+    
 end
