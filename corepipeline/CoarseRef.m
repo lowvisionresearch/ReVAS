@@ -234,6 +234,9 @@ try
     [filteredStripIndices2, endNaNs2, beginNaNs2] = FilterStrips(framePositions(:, 2));
     endNaNs = max(endNaNs1, endNaNs2);
     beginNaNs = max(beginNaNs1, beginNaNs2);
+    if isempty(beginNaNs)
+        beginNaNs = 0;
+    end
     
     framePositions = [filteredStripIndices1 filteredStripIndices2];
     save(outputTracesName, 'framePositions');
