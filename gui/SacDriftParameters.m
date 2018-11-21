@@ -22,7 +22,7 @@ function varargout = SacDriftParameters(varargin)
 
 % Edit the above text to modify the response to help SacDriftParameters
 
-% Last Modified by GUIDE v2.5 11-Nov-2017 13:25:51
+% Last Modified by GUIDE v2.5 21-Nov-2018 01:27:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -118,6 +118,7 @@ handles.velBox.BackgroundColor = revasColors.boxBackground;
 handles.overwrite.BackgroundColor = revasColors.boxBackground;
 handles.verbosity.BackgroundColor = revasColors.boxBackground;
 handles.stitchText.BackgroundColor = revasColors.boxBackground;
+handles.pixelSizeText.BackgroundColor = revasColors.boxBackground;
 handles.ampText.BackgroundColor = revasColors.boxBackground;
 handles.durText.BackgroundColor = revasColors.boxBackground;
 handles.minDurText.BackgroundColor = revasColors.boxBackground;
@@ -144,6 +145,7 @@ handles.velBox.ForegroundColor = revasColors.text;
 handles.overwrite.ForegroundColor = revasColors.text;
 handles.verbosity.ForegroundColor = revasColors.text;
 handles.stitchText.ForegroundColor = revasColors.text;
+handles.pixelSizeText.ForegroundColor = revasColors.text;
 handles.ampText.ForegroundColor = revasColors.text;
 handles.durText.ForegroundColor = revasColors.text;
 handles.minDurText.ForegroundColor = revasColors.text;
@@ -446,7 +448,7 @@ if ~IsNaturalNumber(value)
 else
     hObject.BackgroundColor = mainHandles.revasColors.background;
     hObject.ForegroundColor = mainHandles.revasColors.text;
-    hObject.TooltipString = '';
+    hObject.TooltipString = 'Must be a natural number.';
 end
 
 % Update handles structure
@@ -484,7 +486,7 @@ if ~IsRealNumber(value)
 else
     hObject.BackgroundColor = mainHandles.revasColors.background;
     hObject.ForegroundColor = mainHandles.revasColors.text;
-    hObject.TooltipString = '';
+    hObject.TooltipString = 'Must be a real number.';
 end
 
 % Update handles structure
@@ -522,7 +524,7 @@ if ~IsPositiveRealNumber(value)
 else
     hObject.BackgroundColor = mainHandles.revasColors.background;
     hObject.ForegroundColor = mainHandles.revasColors.text;
-    hObject.TooltipString = '';
+    hObject.TooltipString = 'Must be a positive, real number.';
 end
 
 % Update handles structure
@@ -615,7 +617,7 @@ if ~IsNonNegativeRealNumber(value)
 else
     hObject.BackgroundColor = mainHandles.revasColors.background;
     hObject.ForegroundColor = mainHandles.revasColors.text;
-    hObject.TooltipString = '';
+    hObject.TooltipString = 'Must be a non-negative, real number.';
 end
 
 % Update handles structure
@@ -651,7 +653,7 @@ if ~IsPositiveRealNumber(value)
 else
     hObject.BackgroundColor = mainHandles.revasColors.background;
     hObject.ForegroundColor = mainHandles.revasColors.text;
-    hObject.TooltipString = '';
+    hObject.TooltipString = 'Must be a positive, real number.';
 end
 
 % Update handles structure
@@ -660,6 +662,46 @@ guidata(hObject, handles);
 % --- Executes during object creation, after setting all properties.
 function minDuration_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to minDuration (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function pixelSizeBox_Callback(hObject, eventdata, handles)
+% hObject    handle to pixelSizeBox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of pixelSizeBox as text
+%        str2double(get(hObject,'String')) returns contents of pixelSizeBox as a double
+figureHandle = findobj(0, 'tag', 'revas');
+mainHandles = guidata(figureHandle);
+value = str2double(hObject.String);
+
+if ~IsPositiveRealNumber(value)
+    hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
+    hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
+    hObject.TooltipString = 'Must be a positive, real number.';
+else
+    hObject.BackgroundColor = mainHandles.revasColors.background;
+    hObject.ForegroundColor = mainHandles.revasColors.text;
+    hObject.TooltipString = 'Must be a positive, real number.';
+end
+
+% Update handles structure
+guidata(hObject, handles);
+
+
+
+% --- Executes during object creation, after setting all properties.
+function pixelSizeBox_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pixelSizeBox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
