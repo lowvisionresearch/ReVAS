@@ -703,12 +703,12 @@ elseif get(handles.radioGamma, 'Value')
 elseif get(handles.radioBandFilt, 'Value')
     suffix = '_bandfilt.avi'; 
 elseif get(handles.radioStrip, 'Value')
-    suffix = '_hz_final.mat'; 
+    suffix = '_hz_final*.mat'; 
 else
     suffix = '';
 end
 
-handles.files = uipickfiles();
+handles.files = uipickfiles('FilterSpec',['*' suffix]);
 
 % Go through list of selected items and filter
 i = 1;
@@ -1103,7 +1103,7 @@ tline = fgetl(fileID);
 
 
 message = ['Retinal Video Analysis Suite (' tline ')' newline newline...
-    'Copyright (c) August 2017.' newline ...
+    'Copyright (c) 2018.' newline ...
     'Sight Enhancement Laboratory at Berkeley.' newline ...
     'School of Optometry.' newline ...
     'University of California, Berkeley, USA.' newline newline ...
@@ -1371,8 +1371,8 @@ function axes1_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to axes1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if isValid(hObject)
-    figure(hObject);
+if isvalid(hObject)
+    axes(hObject);
 end
 
 % --- Executes on mouse press over axes background.
@@ -1380,8 +1380,8 @@ function axes2_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to axes2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if isValid(hObject)
-    figure(hObject);
+if isvalid(hObject)
+    axes(hObject);
 end
 
 % --- Executes on mouse press over axes background.
@@ -1389,8 +1389,8 @@ function axes3_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to axes3 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if isValid(hObject)
-    figure(hObject);
+if isvalid(hObject)
+    axes(hObject);
 end
 
 
