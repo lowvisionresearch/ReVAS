@@ -347,7 +347,7 @@ elseif logical(handles.config.togValues('reref')) && ~logical(abortTriggered)
                end
            end
            RevasWarning(['Loading fine reference frame from: ' longestFileName], parametersStructure);
-           load(longestFileName, 'refFrame');
+           load(fullfile(fileparts(rawVideoPath),longestFileName), 'refFrame');
            fineRefFrame = refFrame;
         elseif ~isempty({coarseRefFrames.name})
            % Load a saved coarse ref if available.
@@ -361,7 +361,7 @@ elseif logical(handles.config.togValues('reref')) && ~logical(abortTriggered)
                end
            end
            RevasWarning(['Loading coarse reference frame from: ' longestFileName], parametersStructure);
-           load(longestFileName, 'refFrame');
+           load(fullfile(fileparts(rawVideoPath),longestFileName), 'refFrame');
            fineRefFrame = refFrame;
         else
            RevasError(originalInputVideoPath, ...
