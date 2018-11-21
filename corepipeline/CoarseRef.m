@@ -237,6 +237,9 @@ try
     if isempty(beginNaNs)
         beginNaNs = 0;
     end
+    if isempty(endNaNs)
+        beginNaNs = 0;
+    end
     
     framePositions = [filteredStripIndices1 filteredStripIndices2];
     save(outputTracesName, 'framePositions');
