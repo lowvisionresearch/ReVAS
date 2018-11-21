@@ -303,6 +303,7 @@ handles.config.filtKernel2 = 15;
 % Sac
 handles.config.sacOverwrite = true;
 handles.config.sacVerbosity = true;
+handles.config.sacPixelSize = 10*60/512;
 handles.config.sacThresholdVal = 6;
 handles.config.sacSecThresholdVal = 3;
 handles.config.sacStitch = 15;
@@ -550,9 +551,11 @@ drawnow;
 
 % Apply modules to all selected files
 if logical(handles.config.parMultiCore)
-    handles.commandWindow.String = ['Verbosity is not available while parallelizing.'; ...
+    handles.commandWindow.String = ['Graphical verbosity is not available while parallelizing.'; ...
         handles.commandWindow.String];
     handles.commandWindow.String = ['Full output is being written to log.txt.'; ...
+        handles.commandWindow.String];
+    handles.commandWindow.String = ['Also see the Matlab command window for progress.'; ...
         handles.commandWindow.String];
     drawnow;
     if exist('log.txt', 'file') == 2
@@ -563,6 +566,7 @@ if logical(handles.config.parMultiCore)
     fprintf(['(' time ') Execution in Progress...\n']);
     % Use parallelization if requested
     % TODO deal with GPU (see |ExecuteModules.m|).
+    parametersStructure.commandWindowHandle = handles.commandWindow;
     parfor i = 1:size(handles.files, 2)
         try
             % TODO perhaps use loop unrolling to suppress warning below
@@ -573,8 +577,7 @@ if logical(handles.config.parMultiCore)
                 message = [message ME.stack(j).name '(' int2str(ME.stack(j).line) ') < '];
             end
             message = [message(1:end-3) '.'];
-            warning(['(Error while processing ' handles.files{i} '. Proceeding to next video.) ' ...
-                message]);
+            RevasError(handles.files{i},message,parametersStructure);
         end
     end
     fprintf(['(' time ') Process completed.\n']);
@@ -693,22 +696,29 @@ function selectFiles_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 if get(handles.radioRaw, 'Value')
-    suffix = '.avi';
+    suffix = '';
+    ext = '.avi';
 elseif get(handles.radioTrim, 'Value')
-    suffix = '_dwt.avi';        
+    suffix = '_dwt';
+    ext = '.avi';        
 elseif get(handles.radioNoStim, 'Value')
-    suffix = '_nostim.avi';    
+    suffix = '_nostim';
+    ext = '.avi';    
 elseif get(handles.radioGamma, 'Value')
-    suffix = '_gamscaled.avi';    
+    suffix = '_gamscaled';
+    ext = '.avi';    
 elseif get(handles.radioBandFilt, 'Value')
-    suffix = '_bandfilt.avi'; 
+    suffix = '_bandfilt';
+    ext = '.avi'; 
 elseif get(handles.radioStrip, 'Value')
-    suffix = '_hz_final*.mat'; 
+    suffix = '_hz_final';
+    ext = '*.mat'; 
 else
     suffix = '';
+    ext = '';
 end
 
-handles.files = uipickfiles('FilterSpec',['*' suffix]);
+handles.files = uipickfiles('FilterSpec',['*' suffix ext]);
 
 % Go through list of selected items and filter
 i = 1;
@@ -735,7 +745,7 @@ while i <= size(handles.files, 2)
             end
         end
     elseif isempty(strfind(handles.files{i}, suffix)) || ...
-            (strcmp('.avi', suffix) && ...
+            (strcmp('.avi', ext) && ...
                     (~isempty(findstr('_dwt', handles.files{i})) || ...
                     ~isempty(findstr('_nostim', handles.files{i})) || ...
                     ~isempty(findstr('_gamscaled', handles.files{i})) || ...
