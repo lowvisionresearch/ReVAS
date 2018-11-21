@@ -415,15 +415,19 @@ handles.inputList.String = cell(0);
 handles.files = cell(0);
 handles.lastRadio = 0;
 
+% Update handles structure
+guidata(hObject, handles);
 
 % check if there is an update
-[isSuccess, msg] = CheckForUpdate;
+handles.commandWindowHandle = handles.inputList;
+[~, msg] = CheckForUpdate(handles);
 
 % Initial command window
 handles.commandWindow.String = cellstr(msg);
 
 % Update handles structure
 guidata(hObject, handles);
+
 
 % UIWAIT makes ReVAS wait for user response (see UIRESUME)
 % uiwait(handles.revas);

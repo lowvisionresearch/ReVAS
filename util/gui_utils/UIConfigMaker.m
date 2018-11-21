@@ -17,9 +17,19 @@ GUIposition.gammaParameters = [0.4181    0.3143    0.2135    0.3486];
 
 
 % font sizes
-uiFontSize = 14;
-uiTitleFontSize = 18;
-
+if ispc
+    uiFontSize = 11;
+    uiTitleFontSize = 14;
+elseif ismac
+    uiFontSize = 14;
+    uiTitleFontSize = 18;
+elseif isunix
+    uiFontSize = 11;
+    uiTitleFontSize = 14;
+else
+    uiFontSize = 11;
+    uiTitleFontSize = 14;
+end
 
 % bright color theme
 revasColors.background = [255 255 255]/255;
