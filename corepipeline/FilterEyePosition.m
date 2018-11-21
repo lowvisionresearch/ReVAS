@@ -171,9 +171,6 @@ end
 
 % Notch filter for 30Hz and 60 Hz removal - addition by JG
 % Butterworth IIR 2nd order filter
-% we can't select the samplingRate in the same maner as in StripAnalysis:
-% as it is not accessible in parametersStructure from the postproc window
-% TO DO : add samplingRate as a global variable
 
 % NaN positions have been marked and interpolated between values, but not
 % interpolated at leading and trailing position. However we can't filter
@@ -189,9 +186,9 @@ for i=1:size(eyePositionTraces,2)
 end
 if parametersStructure.FirstPrefilter
     if ~isfield(parametersStructure,'samplingRate')
-        samplingRate= 540;%JG: Matt please change with parametersStructure.samplingRate;
+        samplingRate = round(1/diff(timeArray(1:2)));
     else
-        samplingRate=parametersStructure.samplingRate;
+        samplingRate = parametersStructure.samplingRate;
     end
     d = designfilt('bandstopiir','FilterOrder',2, ...
                    'HalfPowerFrequency1',29,'HalfPowerFrequency2',31, ...
