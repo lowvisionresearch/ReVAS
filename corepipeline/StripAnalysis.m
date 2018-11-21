@@ -138,7 +138,7 @@ else
     writeVideo(writer, videoInput);
     close(writer);
     clear videoInput;
-    warning('A raw matrix was provided; assuming that frame rate is 30 fps.');
+    RevasMessage('A raw matrix was provided; assuming that frame rate is 30 fps.');
     videoFrameRate = 30;
 end
 
@@ -149,7 +149,7 @@ if ischar(referenceFrame)
     referenceFramePath = referenceFrame;
     referenceFrame = importdata(referenceFrame);
 else
-   referenceFramePath = ''; 
+    referenceFramePath = ''; 
 end
 if ~ismatrix(referenceFrame)
     error('Invalid Input for referenceFrame (it was not a 2D array)');
@@ -171,7 +171,7 @@ end
 
 if ~isfield(parametersStructure, 'stripHeight')
     stripHeight = 15;
-    warning('using default parameter for stripHeight');
+    RevasMessage('using default parameter for stripHeight');
 else
     stripHeight = parametersStructure.stripHeight;
     if ~IsNaturalNumber(stripHeight)
@@ -182,7 +182,7 @@ end
 if ~isfield(parametersStructure, 'stripWidth')
     reader = VideoReader(videoInputPath);
     stripWidth = reader.Width;
-    warning('using default parameter for stripWidth');
+    RevasMessage('using default parameter for stripWidth');
 else
     stripWidth = parametersStructure.stripWidth;
     if ~IsNaturalNumber(stripWidth)
@@ -192,7 +192,7 @@ end
 
 if ~isfield(parametersStructure, 'samplingRate')
     samplingRate = 540;
-    warning('using default parameter for samplingRate');
+    RevasMessage('using default parameter for samplingRate');
 else
     samplingRate = parametersStructure.samplingRate;
     if ~IsNaturalNumber(samplingRate)
@@ -211,7 +211,7 @@ end
 
 if ~isfield(parametersStructure, 'maximumSD')
     maximumSD = 10;
-    warning('using default parameter for maximumSD');
+    RevasMessage('using default parameter for maximumSD');
 else
     maximumSD = parametersStructure.maximumSD;
     if ~IsPositiveRealNumber(maximumSD)
@@ -221,7 +221,7 @@ end
 
 if ~isfield(parametersStructure, 'SDWindowSize')
     SDWindowSize = 25;
-    warning('using default parameter for SDWindowSize');
+    RevasMessage('using default parameter for SDWindowSize');
 else
     SDWindowSize = parametersStructure.SDWindowSize;
     if ~IsNaturalNumber(SDWindowSize)
@@ -231,7 +231,7 @@ end
 
 if ~isfield(parametersStructure, 'maximumPeakRatio')
     maximumPeakRatio = 0.8;
-    warning('using default parameter for maximumPeakRatio');
+    RevasMessage('using default parameter for maximumPeakRatio');
 else
     maximumPeakRatio = parametersStructure.maximumPeakRatio;
     if ~IsPositiveRealNumber(maximumPeakRatio)
@@ -241,7 +241,7 @@ end
 
 if ~isfield(parametersStructure, 'minimumPeakThreshold')
     minimumPeakThreshold = 0;
-    warning('using default parameter for minimumPeakThreshold');
+    RevasMessage('using default parameter for minimumPeakThreshold');
 else
     minimumPeakThreshold = parametersStructure.minimumPeakThreshold;
     if ~IsNonNegativeRealNumber(minimumPeakThreshold)
@@ -260,7 +260,7 @@ end
 
 if ~isfield(parametersStructure, 'scalingFactor')
     scalingFactor = 10;
-    warning('using default parameter for scalingFactor');
+    RevasMessage('using default parameter for scalingFactor');
 else
     scalingFactor = parametersStructure.scalingFactor;
     if ~IsPositiveRealNumber(scalingFactor)
@@ -270,7 +270,7 @@ end
 
 if ~isfield(parametersStructure, 'searchWindowHeight')
     searchWindowHeight = 0.8;
-    warning('using default parameter for searchWindowHeight');
+    RevasMessage('using default parameter for searchWindowHeight');
 else
     searchWindowHeight = parametersStructure.searchWindowHeight;
     if ~IsNaturalNumber(searchWindowHeight)
@@ -291,7 +291,7 @@ if ~isfield(parametersStructure, 'subpixelInterpolationParameters')
    subpixelInterpolationParameters = struct;
    subpixelInterpolationParameters.neighborhoodSize = 7;
    subpixelInterpolationParameters.subpixelDepth = 2;
-   warning('using default parameter for subpixelInterpolationParameters');
+   RevasMessage('using default parameter for subpixelInterpolationParameters');
 else
     if ~isstruct(parametersStructure.subpixelInterpolationParameters)
        error('subpixelInterpolationParameters must be a struct');
@@ -299,7 +299,7 @@ else
        subpixelInterpolationParameters = parametersStructure.subpixelInterpolationParameters;
        if ~isfield(parametersStructure.subpixelInterpolationParameters, 'neighborhoodSize')
            subpixelInterpolationParameters.neighborhoodSize = 7;
-           warning('using default parameter for neighborhoodSize');
+           RevasMessage('using default parameter for neighborhoodSize');
        else
            subpixelInterpolationParameters.neighborhoodSize = parametersStructure.subpixelInterpolationParameters.neighborhoodSize;
            if ~IsNaturalNumber(subpixelInterpolationParameters.neighborhoodSize)
@@ -308,7 +308,7 @@ else
        end
        if ~isfield(parametersStructure.subpixelInterpolationParameters, 'subpixelDepth')
            subpixelInterpolationParameters.subpixelDepth = 2;
-           warning('using default parameter for subpixelDepth');
+           RevasMessage('using default parameter for subpixelDepth');
        else
            subpixelInterpolationParameters.subpixelDepth = parametersStructure.subpixelInterpolationParameters.subpixelDepth;
            if ~IsPositiveRealNumber(subpixelInterpolationParameters.subpixelDepth)
@@ -352,16 +352,16 @@ outputFileName = [videoInputPath(1:end-4) '_' ...
     int2str(samplingRate) '_hz_final'];
 
 if ~exist([outputFileName '.mat'], 'file')
-    % left blank to continue without issuing warning in this case
+    % left blank to continue without issuing RevasMessage in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-    RevasWarning(['StripAnalysis() did not execute because it would overwrite existing file. (' outputFileName ')'], parametersStructure);
+    RevasMessage(['StripAnalysis() did not execute because it would overwrite existing file. (' outputFileName ')'], parametersStructure);
     rawEyePositionTraces = [];
     usefulEyePositionTraces = [];
     timeArray = [];
     statisticsStructure = struct();
     return;
 else
-    RevasWarning(['StripAnalysis() is proceeding and overwriting an existing file. (' outputFileName ')'], parametersStructure);  
+    RevasMessage(['StripAnalysis() is proceeding and overwriting an existing file. (' outputFileName ')'], parametersStructure);  
 end
 
 %% Preallocation and variable setup
