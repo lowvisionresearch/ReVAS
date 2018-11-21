@@ -1,4 +1,4 @@
-function [isSuccess, msg] = CheckForUpdate
+function [isSuccess, msg] = CheckForUpdate(parametersStructure)
 
 % Check if there is a newer version
 currentDir = pwd;
@@ -12,7 +12,13 @@ catch err0
     return;
 end
 
-if ~isempty(cmdout)
+if ~isempty(strfind(cmdout,'error')) 
+    msg = sprintf('git fetch failed!\nCheck your git user name and email settings.\n');
+    isSuccess = 0;
+    
+    
+elseif ~isempty(cmdout)
+        
     % Construct a questdlg with three options
     choice = questdlg(['There is an update version of ReVAS.' ...
         'Would you like to update now?'], ...
@@ -24,21 +30,23 @@ if ~isempty(cmdout)
                 
                 !git pull
                 msg = 'ReVAS has been updated';
-                
+                isSuccess = 1;
             case 'No'
                 msg = 'User skipped the update.';
+                isSuccess = 0;
             otherwise 
                 % do nothing
         end
     catch err
         msg = sprintf('Update failed!\n%s',err.message);
         isSuccess = 0;  
-        return;
     end
     
 else
     msg = 'ReVAS is already up to date.';
+    isSuccess = 1;
 end
 
-isSuccess = 1;
 cd(currentDir);
+
+RevasMessage(sprintf('[[ Checking for update ]] \n%s', msg), parametersStructure);
