@@ -224,16 +224,24 @@ if ischar(globalRefArgument) % globalRefArgument is a file path
     
     try
         % load the globalRef
-        load(globalRefArgument,'globalRef', 'refFrame');
-        if ~exist('globalRef', 'var')
-            globalRef = refFrame;
+        fileContents = load(globalRefArgument);
+        if isfield(fileContents,'globalRef')
+            globalRef = fileContents.globalRef;
+        elseif ~isfield(fileContents,'globalRef') && isfield(fileContents,'refFrame')
+            globalRef = fileContents.refFrame;
+        elseif ~isfield(fileContents,'globalRef') && isfield(fileContents,'coarseRefFrame')
+            globalRef = fileContents.coarseRefFrame;
+        else
+            RevasError(globalRefArgument,...
+                'Neither globalRef nor refFrame nor coarseRefFrame can be found in %s',...
+                parametersStructure);
         end
     catch
         % maybe this is an image file
         globalRef = imread(globalRefArgument);
     end
 
-else % localRefArgument is not a file path, but carries the localRef.
+else % globalRefArgument is not a file path, but carries the globalRef.
     globalRef = globalRefArgument;
 end
 

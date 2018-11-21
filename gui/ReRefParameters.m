@@ -459,11 +459,14 @@ handles.globalPath.String = [' ' fileName];
 figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 
-if ~IsImageFile(fullfile(pathName, fileName)) && ~strcmp(fileName(end-3:end), '.mat')
+if ~IsImageFile(handles.globalFullPath) && ~strcmp(fileName(end-3:end), '.mat')
     handles.globalPath.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
     handles.globalPath.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Must be a mat or image file.';
-elseif size(fileName, 2) > 3 && strcmp(fileName(end-3:end), '.mat') && ismember('globalRef', who('-file', fullfile(pathName, fileName)))
+elseif size(fileName, 2) > 3 && strcmp(fileName(end-3:end), '.mat') && ...
+        (~ismember('globalRef', who('-file', handles.globalFullPath)) && ...
+         ~ismember('refFrame', who('-file', handles.globalFullPath)) && ...
+         ~ismember('coarseRefFrame', who('-file', handles.globalFullPath)))
     handles.globalPath.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
     handles.globalPath.ForegroundColor = mainHandles.revasColors.abortButtonText;
     hObject.TooltipString = 'Mat file must contain variable called globalRef.';
