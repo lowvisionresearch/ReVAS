@@ -200,7 +200,7 @@ if logical(handles.config.togValues('strip')) && ~logical(abortTriggered)
     % Load a fine ref if we didn't run the previous module in this
     % session.
     if ~exist('fineRefFrame', 'var')
-        if ~isempty(strfind(originalInputVideoPath, '_dwt'))
+        if ~isempty(strfind(originalInputVideoPath, '_dwt')) %#ok<*STREMP>
             rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_dwt')-1);
         elseif ~isempty(strfind(originalInputVideoPath, '_nostim'))
             rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_nostim')-1);
@@ -451,6 +451,7 @@ if logical(handles.config.togValues('sacdrift')) && ~logical(abortTriggered)
     % Set the parameters
     parametersStructure.overwrite = handles.config.sacOverwrite;
     parametersStructure.enableVerbosity = handles.config.sacVerbosity;
+    parametersStructure.pixelSize = handles.config.sacPixelSize;
     parametersStructure.thresholdValue = handles.config.sacThresholdVal;
     parametersStructure.secondaryThresholdValue = handles.config.sacSecThresholdVal;
     parametersStructure.stitchCriteria = handles.config.sacStitch;
@@ -473,9 +474,7 @@ if logical(handles.config.togValues('sacdrift')) && ~logical(abortTriggered)
     parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
 
     % Call the function
-    % TODO
-    [inputPath,~,~] = FindSaccadesAndDrifts(inputPath, [512 512], [10 10], ...
-        parametersStructure);
+    [inputPath,~,~] = FindSaccadesAndDrifts(inputPath,parametersStructure);
     
     % Write output file as csv
     load(inputPath, ...
