@@ -141,9 +141,9 @@ while sum(isDone == 0)>0 && (repeat < repeatLimit)
             filename = filelist{j};
 
             % load the local reference frame
-            load(filename,'referencematrix','referenceimage');
+            load(filename,'referenceimage');
             referenceimage = double(referenceimage);
-            referencematrix = double(referencematrix);
+%             referencematrix = double(referencematrix);
 
             % replace nans with zeros
             referenceimage(isnan(referenceimage)) = 0;
@@ -156,7 +156,7 @@ while sum(isDone == 0)>0 && (repeat < repeatLimit)
             % the initial seed for the global one. Otherwise, do the
             % montage.
             if fileCounter == 1 && repeat==0
-                globalRef = squeeze(referencematrix(:,:,3)); %#ok<NODEF>
+                globalRef = referenceimage;%squeeze(referencematrix); %#ok<NODEF>
                 paddedIndices = globalRef < 1;
                 counterRef = ones(size(globalRef))-paddedIndices;
                 peakVal(1) = 0.4;
@@ -168,14 +168,14 @@ while sum(isDone == 0)>0 && (repeat < repeatLimit)
                     % one.
                     counterRef(counterRef == 0) = 1;
                     [offsets, peakVal(j), bestTilt(j)] = ...
-                        LocalizeRef(gpuArray(referenceimage), ...
-                        gpuArray(globalRef./counterRef),isSolveTilt); %#ok<*ASGLU>
+                        LocalizeRef( (referenceimage), ...
+                         (globalRef./counterRef),isSolveTilt); %#ok<*ASGLU>
 
                     % use this local frame only if we can localize it on the
                     % global ref. without any problem.
                     if sum(isnan(offsets)) == 0 && peakVal(j)> peakValueThreshold
 
-                        referenceimage = squeeze(referencematrix(:,:,3)); %#ok<NODEF>
+%                         referenceimage = squeeze(referencematrix(:,:,3)); %#ok<NODEF>
                        
                         if isSolveTilt
                             referenceimage = imrotate(uint8(referenceimage),...
@@ -287,7 +287,7 @@ catch err1 %#ok<*NASGU>
     try
         if isSolveTilt
             [newLocalRef, bestTilt] = ...
-                SolveTiltIssue(referenceimage,tempRef,0.5);
+                SolveTiltIssue(referenceimage,tempRef,1.0);
         else
             bestTilt = 0;
             newLocalRef = referenceimage;
@@ -407,15 +407,18 @@ function [inp, bestTilt] = SolveTiltIssue(inp,ref,inc)
 % Across all tilts, find the best one which results in the max peak.
 % Also rotate the input image based on the bestTilt.
 
-tilt = -10:inc:10; % in degrees
+tilt = -5:inc:5; % in degrees
 for j=1:length(tilt)
     rotated = imrotate(uint8(inp),tilt(j),'bilinear','crop');
 %     rotated = PadNoise(rotated);
     c = normxcorr2(double(rotated),double(ref));
     [~, ~, maxVal(j)] = FindPeak(c);
 end
-[~,ind] = max(maxVal);
-bestTilt = tilt(ind);
+
+interpolatedVal = interp1(tilt,maxVal,-10:.1:10);
+bestTilt = max(interpolatedVal);
+% [~,ind] = max(maxVal);
+% bestTilt = tilt(ind);
 inp = imrotate(uint8(inp),bestTilt,'bilinear','crop');
 % inp = uint8(PadNoise(inp));
 
@@ -425,7 +428,7 @@ function output = PadNoise(input)
 % add noise to zero-padded regions
 input = double(input);
 padIndices = input < 1;
-noiseFrame = padIndices.*(rand(size(padIndices),'gpuArray')*100+mean(input(:)));
+noiseFrame = padIndices.*(rand(size(padIndices),' ')*100+mean(input(:)));
 output = double(input) + noiseFrame;
 
 

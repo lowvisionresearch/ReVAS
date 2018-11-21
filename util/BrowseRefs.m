@@ -51,12 +51,22 @@ for i=1:length(foldername)
             if ~isempty(keyPhrase)
                 try
                     % load the local reference frame
-                    load(filename,'referenceimage','referencematrix');
+                    %load(filename,'referenceimage','referencematrix');%JGc
                     
+                    % ========= JGa =========
+                    %%{
+                    load(filename,'coarseRefFrame');%JGa
+                    matfilename= [filename(1:end-7) 'framePositions.mat'];
+                    load(matfilename,'framePositions')% load correspinding referencematrix
+                    %rename variables for compatibility with rest of MNA code%JGa
+                    referenceimage=coarseRefFrame;
+                    referencematrix=framePositions;
+                    %}
                     figure(45678);
+                    k= regexp(listing(indices(j)).name,'\d*','Match');
                     imshow(uint8(referenceimage));
                     [m,n]=size(referenceimage);
-                    title('Click anywhere on the image to accept it. Otherwise click elsewhere.')
+                    title([k{1} '- Click anywhere on the image to accept it. Otherwise click elsewhere.'])
                     try
                         [x,y]=ginput(1);
                     catch
@@ -67,10 +77,11 @@ for i=1:length(foldername)
                     
                     if x>0 && y>0 && x<=m && y<=n
                         fileCounter = fileCounter+1;
-                        save(sprintf('%s\\%d_coarseref.mat',parentPath,fileCounter),'referenceimage','referencematrix','filename');
-                        fprintf('File saved\n');
+                        save(sprintf('%s\\%d_coarseref.mat',parentPath,str2num(k{1})),'referenceimage','referencematrix','filename');%JGm fileCounter
+                        %
+                        fprintf('%d - File saved\n',str2num(k{1}));%JGm
                     else
-                        fprintf('File ignored.\n');
+                        fprintf('%d - File ignored.\n',str2num(k{1}));%JGm
                     end
                     
                 catch 
