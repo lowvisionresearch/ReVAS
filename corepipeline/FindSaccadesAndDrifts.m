@@ -1,6 +1,5 @@
 function [outputFileName, saccades, drifts] = ...
-    FindSaccadesAndDrifts(inputEyePositionsFilePath, originalVideoSizePixels, ...
-    originalVideoSizeDegrees, parametersStructure)
+    FindSaccadesAndDrifts(inputEyePositionsFilePath,  parametersStructure)
 %FIND SACCADES AND DRIFTS Records in a mat file an array of structures
 %representing saccades and an array of structures representing drifts.
 %
@@ -9,12 +8,6 @@ function [outputFileName, saccades, drifts] = ...
 %   -----------------------------------
 %   |inputEyePositionsFilePath| is the path to the eye positions. The
 %   result is stored with '_sacsdrifts' appended to the input video file name.
-%
-%   |originalVideoSizePixels| is the size of the raw original video in
-%   pixels. The format is [height width].
-%
-%   |originalVideoSizeDegrees| is the size of the raw original video in
-%   degrees. The format is [height width].
 %
 %   |parametersStructure| is a struct as specified below.
 %
@@ -26,6 +19,7 @@ function [outputFileName, saccades, drifts] = ...
 %                             files already exist. (default false)
 %   enableVerbosity         : set to true to report back plots during execution.
 %                             (default false)
+%   pixelSize               : pixel size in arcminutes. 
 %   stitchCriteria          : if two consecutive saccades are closer in time
 %                             less than this value (in ms), then they are
 %                             stitched back to back. (default 15)
@@ -55,10 +49,9 @@ function [outputFileName, saccades, drifts] = ...
 %   Example usage
 %   -----------------------------------
 %       inputPath = 'MyFile.mat';
-%       originalVideoSizePixels = [512 512];
-%       originalVideoSizeDegrees = [10 10];
 %       parametersStructure.overwrite = true;
 %       parametersStructure.enableVerbosity = true;
+%       parametersStructure.pixelSize = 10*60/512;
 %       parametersStructure.thresholdValue = 6;
 %       parametersStructure.secondaryThresholdValue = 3;
 %       parametersStructure.stitchCriteria = 15;
@@ -66,8 +59,7 @@ function [outputFileName, saccades, drifts] = ...
 %       parametersStructure.minDuration = 8;
 %       parametersStructure.maxDuration = 100;
 %       parametersStructure.detectionMethod = 2;
-%       FindSaccadesAndDrifts(inputPath, originalVideoSizePixels, ...
-%           originalVideoSizeDegrees, parametersStructure);
+%       FindSaccadesAndDrifts(inputPath,  parametersStructure);
 
 %% Handle overwrite scenarios.
 outputFileName = [inputEyePositionsFilePath(1:end-4) '_sacsdrifts'];
@@ -81,6 +73,13 @@ else
 end
 
 %% Set parameters to defaults if not specified.
+if ~isfield(parametersStructure, 'pixelSize')
+    pixelSize = 10*60/512;
+    RevasWarning('using default parameter for pixel size', parametersStructure);
+else
+    pixelSize = parametersStructure.pixelSize;
+end
+
 % This second method is the EK Algorithm (Engbert & Kliegl, 2003 Vision Research).
 if ~isfield(parametersStructure, 'thresholdValue')
     lambda = 6;
@@ -181,7 +180,8 @@ if axesHandlesFlag
 end
 
 %% Load mat file with output from |StripAnalysis|
-load(inputEyePositionsFilePath);
+load(inputEyePositionsFilePath,'eyePositionTraces','parametersStructure',...
+    'referenceFramePath','timeArray');
 % Variables that should be loaded now:
 % - eyePositionTraces
 % - parametersStructure
@@ -189,13 +189,8 @@ load(inputEyePositionsFilePath);
 % - timeArray
 
 %% Convert eye position traces from pixels to degrees
-degreesPerPixelVertical = ...
-    originalVideoSizeDegrees(1) / originalVideoSizePixels(1);
-degreesPerPixelHorizontal = ...
-    originalVideoSizeDegrees(2) / originalVideoSizePixels(2);
-
-eyePositionTraces(:,1) = eyePositionTraces(:,1) * degreesPerPixelVertical; 
-eyePositionTraces(:,2) = eyePositionTraces(:,2) * degreesPerPixelHorizontal;
+eyePositionTraces(:,1) = eyePositionTraces(:,1) * (pixelSize/60);  %#ok<*NODEF>
+eyePositionTraces(:,2) = eyePositionTraces(:,2) * (pixelSize/60);
 
 %% Saccade detection algorithm
 % 2 methods to calculate velocity
