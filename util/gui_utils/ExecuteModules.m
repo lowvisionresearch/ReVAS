@@ -148,6 +148,7 @@ if logical(handles.config.togValues('fine')) && ~logical(abortTriggered)
     RevasMessage(['[[ Making Fine Reference Frame ]] ' inputPath], parametersStructure);
     % Set the parameters
     parametersStructure.enableVerbosity = handles.config.fineVerbosity;
+    parametersStructure.overwrite = handles.config.fineOverwrite;
     parametersStructure.numberOfIterations = handles.config.fineNumIterations;
     parametersStructure.stripHeight = handles.config.fineStripHeight;
     parametersStructure.stripWidth = handles.config.fineStripWidth;
@@ -166,7 +167,11 @@ if logical(handles.config.togValues('fine')) && ~logical(abortTriggered)
     parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
 
     % Call the function
-    fineRefFrame = FineRef(coarseRefFrame, inputPath, parametersStructure);
+    [fineRefFrame, fineRefEyePositions, fineRefTimeArray] = ...
+        FineRef(coarseRefFrame, inputPath, parametersStructure); %#ok<*ASGLU>
+    eyePositionTraces = fineRefEyePositions;
+    timeArray = fineRefTimeArray;
+    save([inputPath(1:end-4) '_refframe.mat'],'eyePositionTraces','timeArray','-append');
 end
 
 %% Strip Analysis Module
@@ -289,11 +294,13 @@ if logical(handles.config.togValues('strip')) && ~logical(abortTriggered)
 end
 
 %% Re-referencing Module
+RevasMessage(['[[ Re-referencing ]] ' inputPath], parametersStructure);
+
 if logical(handles.config.togValues('reref')) && strcmp(handles.config.rerefGlobalFullPath, '')
-    RevasMessage(['[[ Re-referencing ]] ' inputPath], parametersStructure);
     RevasMessage('No valid global reference frame provided, skipping Re-Referencing', parametersStructure);
+
 elseif logical(handles.config.togValues('reref')) && ~logical(abortTriggered)
-    RevasMessage(['[[ Re-referencing ]] ' inputPath], parametersStructure);
+    
     % Set the parameters    
     parametersStructure.verbosity = handles.config.rerefVerbosity;
     parametersStructure.overwrite = handles.config.rerefOverwrite;
@@ -314,7 +321,7 @@ elseif logical(handles.config.togValues('reref')) && ~logical(abortTriggered)
     % Load a fine ref if we didn't run the previous module in this
     % session.
     if ~exist('fineRefFrame', 'var')
-        if ~isempty(strfind(originalInputVideoPath, '_dwt'))%JG replace ~isempty(strfind(
+        if ~isempty(strfind(originalInputVideoPath, '_dwt'))%JG replaced ~isempty(strfind(
             rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_dwt')-1);
         elseif ~isempty(strfind(originalInputVideoPath, '_nostim'))
             rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_nostim')-1);
@@ -371,8 +378,16 @@ elseif logical(handles.config.togValues('reref')) && ~logical(abortTriggered)
         end
     end
     
+    
+    % if strip analysis is skipped, only fine ref is done, then use the eye
+    % position traces from refframe.mat file
+    if ~logical(handles.config.togValues('strip'))
+        inputPath = [inputPath(1:end-4) '_refframe.mat'];
+    end
+    
     % Call the function
-    [~,inputPath] = ReReference(inputPath, fineRefFrame, globalRefFrame, parametersStructure);
+    [~,inputPath] = ReReference(inputPath, fineRefFrame, globalRefFrame, ...
+        parametersStructure);
     
     % Write output file as csv
     load(inputPath, ...
