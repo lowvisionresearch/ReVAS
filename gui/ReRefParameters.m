@@ -182,7 +182,7 @@ if ~IsRealNumber(value)
 else
     hObject.BackgroundColor = mainHandles.revasColors.background;
     hObject.ForegroundColor = mainHandles.revasColors.text;
-    hObject.TooltipString = '';
+    hObject.TooltipString = 'Must be a real number.';
 end
 
 % Update handles structure
@@ -218,7 +218,7 @@ if ~IsRealNumber(value) || value < 0 || value > 1
 else
     hObject.BackgroundColor = mainHandles.revasColors.background;
     hObject.ForegroundColor = mainHandles.revasColors.text;
-    hObject.TooltipString = '';
+    hObject.TooltipString = 'Must be a real number between 0 and 1 (inclusive).';
 end
 
 % Update handles structure
@@ -343,7 +343,7 @@ if ~IsOddNaturalNumber(value)
 else
     hObject.BackgroundColor = mainHandles.revasColors.background;
     hObject.ForegroundColor = mainHandles.revasColors.text;
-    hObject.TooltipString = '';
+    hObject.TooltipString = 'Must be an odd, natural number.';
 end
 
 % Update handles structure
@@ -368,7 +368,7 @@ if ~IsRealNumber(value)
 else
     hObject.BackgroundColor = mainHandles.revasColors.background;
     hObject.ForegroundColor = mainHandles.revasColors.text;
-    hObject.TooltipString = '';
+    hObject.TooltipString = 'Must be a real number.';
 end
 
 % Update handles structure
@@ -392,7 +392,7 @@ if ~IsRealNumber(value)
 else
     hObject.BackgroundColor = mainHandles.revasColors.background;
     hObject.ForegroundColor = mainHandles.revasColors.text;
-    hObject.TooltipString = '';
+    hObject.TooltipString = 'Must be a real number.';
 end
 
 % Update handles structure
@@ -490,12 +490,17 @@ figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = handles.globalFullPath;
 
-if ~isempty(value) && ~IsImageFile(value) && ~strcmp(value, '.mat')
+if ~isempty(value) && ~IsImageFile(value) && ~strcmp(value(end-3:end), '.mat')
     hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
     hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
-elseif size(value, 2) > 3 && strcmp(value(end-3:end), '.mat') && ismember('globalRef', who('-file', value))
+    hObject.TooltipString = 'Must be a mat or image file.';
+elseif size(value, 2) > 3 && strcmp(value(end-3:end), '.mat') && ...
+        (~ismember('globalRef', who('-file', value)) && ...
+         ~ismember('refFrame', who('-file', value)) && ...
+         ~ismember('coarseRefFrame', who('-file', value)) )
     hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
     hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
+    hObject.TooltipString = 'Mat file must contain variable called globalRef.';
 else
     hObject.BackgroundColor = mainHandles.revasColors.background;
     hObject.ForegroundColor = mainHandles.revasColors.text;
