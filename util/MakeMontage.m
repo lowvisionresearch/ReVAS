@@ -137,6 +137,7 @@ end
 beginNaNs = max(beginNaNs1, beginNaNs2);
 endNaNs = max(endNaNs1, endNaNs2);
 
+
 % Handle the case in which the two column vectors are different sizes.
 difference1 = beginNaNs1 - beginNaNs2;
 difference2 = endNaNs1 - endNaNs2;
@@ -503,7 +504,9 @@ end
 
 fileName(end-3:end) = [];
 fileName(end+1:end+9) = '_refframe';
-save(fileName, 'refFrame');
+eyePositionTraces = parametersStructure.positions; %#ok<*NASGU>
+timeArray  = parametersStructure.time;
+save(fileName, 'refFrame','eyePositionTraces','timeArray');
 if ~isfield(parametersStructure, 'axesHandles')
     % Show only if not using GUI.
     figure('Name', 'Reference Frame')
