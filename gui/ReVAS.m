@@ -480,6 +480,31 @@ function execute_Callback(hObject, eventdata, handles)
 global abortTriggered;
 abortTriggered = false;
 
+% search for the file list content
+if isempty(handles.inputList.String)
+    filesSelected = false;
+else
+    for ix = 1: length(handles.inputList.String)
+        if ~isempty(strfind(handles.inputList.String{ix},'.avi')) || ...
+           ~isempty(strfind(handles.inputList.String{ix},'.mat'))
+            filesSelected = true;
+            break;
+        end
+    end
+end
+
+% see if there are any files selected
+if ~filesSelected
+    parametersStructure.commandWindowHandle = handles.commandWindow;
+    message = 'No files have been selected. Nothing to analyze.';
+    RevasWarning(message, parametersStructure);
+    % this is required since the ReVAS command window is not available at
+    % this stage. but we have the file list box which we can use to put
+    % this message on.
+    handles.inputList.String = [message; handles.inputList.String];
+    return;
+end
+
 % Update visible and invisible gui components
 handles.inputVideoBox.Visible = 'off';
 handles.selectFiles.Visible = 'off';
@@ -696,29 +721,28 @@ function selectFiles_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 if get(handles.radioRaw, 'Value')
-    suffix = '';
+    suffix = '.avi';
     ext = '.avi';
 elseif get(handles.radioTrim, 'Value')
-    suffix = '_dwt';
-    ext = '.avi';        
+    suffix = '_dwt.avi';       
 elseif get(handles.radioNoStim, 'Value')
-    suffix = '_nostim';
-    ext = '.avi';    
+    suffix = '_nostim.avi';  
 elseif get(handles.radioGamma, 'Value')
-    suffix = '_gamscaled';
-    ext = '.avi';    
+    suffix = '_gamscaled.avi';   
 elseif get(handles.radioBandFilt, 'Value')
-    suffix = '_bandfilt';
-    ext = '.avi'; 
+    suffix = '_bandfilt.avi';
 elseif get(handles.radioStrip, 'Value')
-    suffix = '_hz_final';
-    ext = '*.mat'; 
+    suffix = '_hz_final.mat';
 else
     suffix = '';
-    ext = '';
 end
 
-handles.files = uipickfiles('FilterSpec',['*' suffix ext]);
+% for _final_ files, allow filtered files as well
+if get(handles.radioStrip, 'Value')
+    handles.files = uipickfiles('FilterSpec',['*' suffix(1:end-4) '*' suffix(end-3:end)]);
+else
+    handles.files = uipickfiles('FilterSpec',['*' suffix]);
+end
 
 % Go through list of selected items and filter
 i = 1;
@@ -745,7 +769,7 @@ while i <= size(handles.files, 2)
             end
         end
     elseif isempty(strfind(handles.files{i}, suffix)) || ...
-            (strcmp('.avi', ext) && ...
+            (strcmp('.avi', suffix) && ...
                     (~isempty(findstr('_dwt', handles.files{i})) || ...
                     ~isempty(findstr('_nostim', handles.files{i})) || ...
                     ~isempty(findstr('_gamscaled', handles.files{i})) || ...
