@@ -1,4 +1,5 @@
-function newRefFrame = FineRef(coarseRefFrame, inputVideoPath, parametersStructure)
+function [newRefFrame, usefulEyePositionTraces, timeArray] = ...
+    FineRef(coarseRefFrame, inputVideoPath, parametersStructure)
 %FINE REF  Generate a better reference frame.
 %   The function alternates between StripAnalysis and MakeMontage,
 %   alternating between generating eye traces and generating the reference
@@ -39,8 +40,20 @@ function newRefFrame = FineRef(coarseRefFrame, inputVideoPath, parametersStructu
 %       newRefFrame = FineRef(coarseRefFrame, inputVideoPath, parametersStructure);
 
 %% Handle overwrite scenarios.
+outputFileName = [inputVideoPath(1:end-4) '_refframe'];
 
-% No files are saved by this function so no overwrite checking necessary.
+if ~exist([outputFileName '.mat'], 'file')
+    % left blank to continue without issuing warning in this case
+elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
+    RevasWarning(['FineRef() did not execute because it would overwrite existing file. (' outputFileName ')'], parametersStructure);
+    data = load(outputFileName);
+    newRefFrame = data.refFrame;
+    usefulEyePositionTraces = data.eyePositionTraces;
+    timeArray = data.timeArray;
+    return;
+else
+    RevasWarning(['FineRef() is proceeding and overwriting an existing file. (' outputFileName ')'], parametersStructure);  
+end
 
 %% Set parameters to defaults if not specified.
 
