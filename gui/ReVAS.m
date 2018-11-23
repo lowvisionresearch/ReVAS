@@ -233,8 +233,9 @@ handles.config.bandFiltSmoothing = 1;
 handles.config.bandFiltFreqCut = 3.0;
 handles.config.bandFiltOverwrite = true;
 % Coarse
-handles.config.coarseRefFrameNum = 15;
+handles.config.coarseRefFrameNum = 3;
 handles.config.coarseScalingFactor = 1.0;
+handles.config.coarseFrameIncrement = 1;
 handles.config.coarseOverwrite = true;
 handles.config.coarseVerbosity = true;
 % Fine
