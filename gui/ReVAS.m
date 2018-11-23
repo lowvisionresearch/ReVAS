@@ -483,9 +483,8 @@ global abortTriggered;
 abortTriggered = false;
 
 % search for the file list content
-if isempty(handles.inputList.String)
-    filesSelected = false;
-else
+filesSelected = false;
+if ~isempty(handles.inputList.String)
     for ix = 1: length(handles.inputList.String)
         if ~isempty(strfind(handles.inputList.String{ix},'.avi')) || ...
            ~isempty(strfind(handles.inputList.String{ix},'.mat'))
