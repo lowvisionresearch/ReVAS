@@ -66,13 +66,11 @@ if logical(handles.config.togValues('stim')) && ~logical(abortTriggered)
 
     % Call the function
     if logical(handles.config.stimUseRectangle)
-        FindStimulusLocations(inputPath, stimulus, parametersStructure, ...
+        RemoveStimuli(inputPath, stimulus, parametersStructure, ...
                               removalAreaSize);
     else
-        FindStimulusLocations(inputPath, stimulus, parametersStructure);
+        RemoveStimuli(inputPath, stimulus, parametersStructure);
     end
-
-    RemoveStimuli(inputPath, parametersStructure);
 
     % Update file name to output file name
     inputPath = [inputPath(1:end-4) '_nostim' inputPath(end-3:end)];
