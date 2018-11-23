@@ -124,6 +124,7 @@ if logical(handles.config.togValues('coarse')) && ~logical(abortTriggered)
     % Set the parameters
     parametersStructure.refFrameNumber = handles.config.coarseRefFrameNum;
     parametersStructure.scalingFactor = handles.config.coarseScalingFactor;
+    parametersStructure.frameIncrement = handles.config.coarseFrameIncrement;
     parametersStructure.overwrite = handles.config.coarseOverwrite;
     parametersStructure.enableVerbosity = handles.config.coarseVerbosity;
     parametersStructure.fileName = inputPath;
