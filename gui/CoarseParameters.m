@@ -22,7 +22,7 @@ function varargout = CoarseParameters(varargin)
 
 % Edit the above text to modify the response to help CoarseParameters
 
-% Last Modified by GUIDE v2.5 30-Jun-2017 23:50:49
+% Last Modified by GUIDE v2.5 23-Nov-2018 02:50:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,6 +61,7 @@ mainHandles = guidata(figureHandle);
 
 handles.refFrameNum.String = mainHandles.config.coarseRefFrameNum;
 handles.scalingFactor.String = mainHandles.config.coarseScalingFactor;
+handles.frameIncrement.String = mainHandles.config.coarseFrameIncrement;
 handles.overwrite.Value = mainHandles.config.coarseOverwrite;
 handles.verbosity.Value = mainHandles.config.coarseVerbosity;
 
@@ -78,6 +79,7 @@ revasColors = mainHandles.revasColors;
 handles.coarseParameters.Color = revasColors.background;
 handles.refFrameNum.BackgroundColor = revasColors.background;
 handles.scalingFactor.BackgroundColor = revasColors.background;
+handles.frameIncrement.BackgroundColor = revasColors.background;
 % Box backgrounds
 handles.titleBox.BackgroundColor = revasColors.boxBackground;
 handles.usageBox.BackgroundColor = revasColors.boxBackground;
@@ -85,6 +87,7 @@ handles.coarseBox.BackgroundColor = revasColors.boxBackground;
 handles.overwrite.BackgroundColor = revasColors.boxBackground;
 handles.verbosity.BackgroundColor = revasColors.boxBackground;
 handles.refFrameNumText.BackgroundColor = revasColors.boxBackground;
+handles.frameIncrementText.BackgroundColor = revasColors.boxBackground;
 handles.scalingFactorText.BackgroundColor = revasColors.boxBackground;
 % Box text
 handles.titleBox.ForegroundColor = revasColors.text;
@@ -93,6 +96,7 @@ handles.coarseBox.ForegroundColor = revasColors.text;
 handles.overwrite.ForegroundColor = revasColors.text;
 handles.verbosity.ForegroundColor = revasColors.text;
 handles.refFrameNumText.ForegroundColor = revasColors.text;
+handles.frameIncrementText.ForegroundColor = revasColors.text;
 handles.scalingFactorText.ForegroundColor = revasColors.text;
 % Save button
 handles.save.BackgroundColor = revasColors.pushButtonBackground;
@@ -143,9 +147,17 @@ if ~IsPositiveRealNumber(scalingFactor)
     return;
 end
 
+% frameIncrement
+frameIncrement = str2double(handles.frameIncrement.String);
+if ~IsNaturalNumber(frameIncrement) || (frameIncrement < 1)
+    errordlg('Frame Increment must be a positive integer.', 'Invalid Parameter');
+    return;
+end
+
 % Save new configurations
 mainHandles.config.coarseRefFrameNum = str2double(handles.refFrameNum.String);
 mainHandles.config.coarseScalingFactor = str2double(handles.scalingFactor.String);
+mainHandles.config.coarseFrameIncrement = str2double(handles.frameIncrement.String);
 mainHandles.config.coarseOverwrite = logical(handles.overwrite.Value);
 mainHandles.config.coarseVerbosity = logical(handles.verbosity.Value);
 
@@ -247,6 +259,29 @@ guidata(hObject, handles);
 % --- Executes during object creation, after setting all properties.
 function scalingFactor_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to scalingFactor (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function frameIncrement_Callback(hObject, eventdata, handles)
+% hObject    handle to frameIncrement (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of frameIncrement as text
+%        str2double(get(hObject,'String')) returns contents of frameIncrement as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function frameIncrement_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to frameIncrement (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
