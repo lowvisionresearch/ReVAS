@@ -303,6 +303,8 @@ handles.config.filtKernel2 = 15;
 % Sac
 handles.config.sacOverwrite = true;
 handles.config.sacVerbosity = true;
+handles.config.sacIsAdaptive = true;
+handles.config.sacIsMedianBased = false;
 handles.config.sacPixelSize = 10*60/512;
 handles.config.sacThresholdVal = 6;
 handles.config.sacSecThresholdVal = 3;

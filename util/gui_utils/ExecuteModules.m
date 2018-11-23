@@ -294,13 +294,12 @@ if logical(handles.config.togValues('strip')) && ~logical(abortTriggered)
 end
 
 %% Re-referencing Module
-RevasMessage(['[[ Re-referencing ]] ' inputPath], parametersStructure);
-
 if logical(handles.config.togValues('reref')) && strcmp(handles.config.rerefGlobalFullPath, '')
+    RevasMessage(['[[ Re-referencing ]] ' inputPath], parametersStructure);
     RevasMessage('No valid global reference frame provided, skipping Re-Referencing', parametersStructure);
-
-elseif logical(handles.config.togValues('reref')) && ~logical(abortTriggered)
     
+elseif logical(handles.config.togValues('reref')) && ~logical(abortTriggered)
+    RevasMessage(['[[ Re-referencing ]] ' inputPath], parametersStructure);
     % Set the parameters    
     parametersStructure.verbosity = handles.config.rerefVerbosity;
     parametersStructure.overwrite = handles.config.rerefOverwrite;
@@ -466,6 +465,8 @@ if logical(handles.config.togValues('sacdrift')) && ~logical(abortTriggered)
     % Set the parameters
     parametersStructure.overwrite = handles.config.sacOverwrite;
     parametersStructure.enableVerbosity = handles.config.sacVerbosity;
+    parametersStructure.isAdaptive = handles.config.sacIsAdaptive;
+    parametersStructure.isMedianBased = handles.config.sacIsMedianBased;
     parametersStructure.pixelSize = handles.config.sacPixelSize;
     parametersStructure.thresholdValue = handles.config.sacThresholdVal;
     parametersStructure.secondaryThresholdValue = handles.config.sacSecThresholdVal;
