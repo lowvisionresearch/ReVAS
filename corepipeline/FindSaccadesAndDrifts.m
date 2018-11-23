@@ -95,6 +95,25 @@ else
     secondaryLambda = parametersStructure.secondaryThresholdValue;
 end
 
+% if enabled, instead of a single threshold, we use a running (adaptive)
+% velocity threshold that changes with the variabiltiy of velocity
+if ~isfield(parametersStructure, 'isAdaptive')
+    isAdaptive = false;
+    RevasWarning('using default parameter for isAdaptive', parametersStructure);
+else
+    isAdaptive = parametersStructure.isAdaptive;
+end
+
+% the default form of Engbert & Kliegl algorithm uses median based standard
+% deviation. but here we have the ability to use regular sd.
+if ~isfield(parametersStructure, 'isMedianBased')
+    isMedianBased = true;
+    RevasWarning('using default parameter for isMedianBased', parametersStructure);
+else
+    isMedianBased = parametersStructure.isMedianBased;
+end
+
+
 % units are in milliseconds
 if ~isfield(parametersStructure, 'stitchCriteria')
     stitchCriteria = 15;
@@ -214,31 +233,43 @@ end
 %% Find saccades.
 % Use the differences in the velocity to identify saccades
 vectorialVelocity = sqrt(sum(velocity.^2,2));
-medianVelocity = nanmedian(vectorialVelocity);
-sdVelocity = sqrt(nanmedian(vectorialVelocity.^2) - medianVelocity.^2);
+
 if detectionMethod == 1
     velocityThreshold = hardVelocityThreshold;
     secondaryVelocityThreshold = hardSecondaryVelocityThreshold;
 else
-    velocityThreshold = ...
-        medianVelocity + lambda * sdVelocity;
+    medianVelocity = nanmedian(vectorialVelocity);
+    if isAdaptive
+        sdVelocity = AdaptiveThreshold(vectorialVelocity,timeArray,isMedianBased);
+    else
+        if isMedianBased
+            sdVelocity = sqrt(nanmedian(vectorialVelocity.^2) - medianVelocity.^2);
+        else
+            sdVelocity = nanstd(vectorialVelocity);
+        end
+    end
+    velocityThreshold = medianVelocity + lambda * sdVelocity;
     secondaryVelocityThreshold = medianVelocity + secondaryLambda * sdVelocity;
 end
 
-% it's enough to exceed the threshold in one dimension only
-saccadeIndices = velocity > velocityThreshold;
-saccadeIndices = saccadeIndices(:,1) | saccadeIndices(:,2);
+% commented out by MNA on 11/22/18. 
+% % it's enough to exceed the threshold in one dimension only
+% % saccadeIndices = velocity > velocityThreshold;
+% % saccadeIndices = saccadeIndices(:,1) | saccadeIndices(:,2);
+
+% use vectorial velocity for more robust detection % MNA 11/22/18
+saccadeIndices = vectorialVelocity > velocityThreshold;
 
 % compute saccade onset and offset indices
 [onsets, offsets] = GetEventOnsetsAndOffsets(saccadeIndices);
 
 % remove artifacts
 [onsets, offsets] = RemoveFakeSaccades(timeArray, ...
-    onsets, offsets, stitchCriteria, minDuration, maxDuration, velocity);
+    onsets, offsets, stitchCriteria, minDuration, maxDuration, vectorialVelocity);
 
 % Get saccade properties
-saccades = GetSaccadeProperties(eyePositionTraces,timeArray,onsets,offsets,velocity,...
-    secondaryVelocityThreshold);
+saccades = GetSaccadeProperties(eyePositionTraces,timeArray,onsets,offsets,...
+    vectorialVelocity, secondaryVelocityThreshold);
 
 % filter out really small saccades
 toRemove = [saccades.vectorAmplitude] < minAmplitude;
@@ -264,7 +295,7 @@ end
 drifts = GetDriftProperties(eyePositionTraces,timeArray,driftOnsets,driftOffsets,velocity); 
 
 %% Save to output mat file.
-save(outputFileName, 'saccades', 'drifts');
+save(outputFileName, 'saccades', 'drifts','parametersStructure');
 
 %% Verbosity for Results.
 if enableVerbosity
@@ -297,6 +328,40 @@ if enableVerbosity
     hold off;
 end
 end
+
+
+
+% get a running (adaptive) velocity threshold depending on the variability
+% in the velocity
+function sds = AdaptiveThreshold(velocity,timeArray,isMedianBased)
+
+if nargin < 3
+    isMedianBased = 0;
+end
+
+samplingRate = round(1/diff(timeArray(1:2)));
+windowSize = round(1*samplingRate); % 1 second
+stepSize = round(0.1*samplingRate); % 100ms
+
+sds = nan(size(timeArray));
+steps = 1 : stepSize : length(timeArray)-windowSize;
+for i = 1:length(steps)-1
+    ix = steps(i):(steps(i)+windowSize-1);
+    if isMedianBased
+        sds(ix) = sqrt(nanmedian(velocity(ix).^2) - nanmedian(velocity(ix))^2);
+    else
+        sds(ix) = nanstd(velocity(ix));
+    end
+end
+
+% in case we have nans at the end, replace them with the nearest nonnan
+% value
+lastNonNan = find(~isnan(sds),1,'last');
+sds(lastNonNan:end) = sds(lastNonNan);
+
+
+end
+
 
 function [newOnsets, newOffsets] = RemoveFakeSaccades(time, ...
     onsets, offsets, stitchCriteria, minDuration, maxDuration, velocity)
@@ -352,7 +417,7 @@ function [newOnsets, newOffsets] = RemoveFakeSaccades(time, ...
 
 end
 
-function saccades = GetSaccadeProperties(eyePosition,time,onsets,offsets,...
+function saccades = GetSaccadeProperties(eyePosition,timeArray,onsets,offsets,...
     velocity,secondaryThreshold)
 
     hor = eyePosition(:,1);
@@ -363,16 +428,16 @@ function saccades = GetSaccadeProperties(eyePosition,time,onsets,offsets,...
 
     for i=1:length(onsets)
         [newOnset, newOffset, peakVelocity, meanVelocity] = ...
-            ReviseOnsetOffset(time,onsets(i),offsets(i),velocity,secondaryThreshold);
+            ReviseOnsetOffset(timeArray,onsets(i),offsets(i),velocity,secondaryThreshold);
 
         if ~(isempty(newOnset) || isempty(newOffset) || isempty(peakVelocity))
             
             % extract saccade parameters
-            saccades(i).onsetTime = time(newOnset);
-            saccades(i).offsetTime = time(newOffset);
+            saccades(i).onsetTime = timeArray(newOnset);
+            saccades(i).offsetTime = timeArray(newOffset);
             saccades(i).onsetIndex = newOnset;
             saccades(i).offsetIndex = newOffset;
-            saccades(i).duration = time(newOffset) - time(newOnset);
+            saccades(i).duration = timeArray(newOffset) - timeArray(newOnset);
             saccades(i).xStart = hor(newOnset);
             saccades(i).xEnd = hor(newOffset);
             saccades(i).yStart = ver(newOnset);
@@ -431,7 +496,7 @@ function drift = GetEmptyDriftStruct
 end
 
 function [newOnset, newOffset, peakVel, meanVel] = ...
-    ReviseOnsetOffset(time,onset,offset,velocity,secondaryThreshold)
+    ReviseOnsetOffset(timeArray,onset,offset,vectorialVelocity,secondaryThreshold)
 
     d = 10;
 
@@ -441,18 +506,20 @@ function [newOnset, newOffset, peakVel, meanVel] = ...
         onset = onset - d;
     end
     
-    if offset+d>length(time)
-        offset = length(time);
+    if offset+d>length(timeArray)
+        offset = length(timeArray);
     else
         offset = offset+d;
     end
 
-    vectorialVelocity = sqrt(sum(velocity(onset:offset,:).^2,2));
+    %vectorialVelocity = sqrt(sum(velocity(onset:offset,:).^2,2));
+    vectorialVelocity = vectorialVelocity(onset:offset);
+    secondaryThreshold = secondaryThreshold(onset:offset);
     [peakVel,peakDelta] = max(vectorialVelocity);
     meanVel = nanmean(vectorialVelocity);
 
-    onsetDelta = find(vectorialVelocity(1:peakDelta)<secondaryThreshold,1,'last');
-    offsetDelta = find(vectorialVelocity(peakDelta:end)<secondaryThreshold,1,'first');
+    onsetDelta = find(vectorialVelocity(1:peakDelta)<secondaryThreshold(1:peakDelta),1,'last');
+    offsetDelta = find(vectorialVelocity(peakDelta:end)<secondaryThreshold(peakDelta:end),1,'first');
 
     newOnset = onset + onsetDelta;
     newOffset = onset + peakDelta + offsetDelta;
@@ -469,8 +536,8 @@ function [newOnset, newOffset, peakVel, meanVel] = ...
     if newOnset < 0
         newOnset = 1;
     end
-    if newOffset > length(time)
-        newOffset = length(time);
+    if newOffset > length(timeArray)
+        newOffset = length(timeArray);
     end
 end
 
