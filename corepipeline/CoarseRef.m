@@ -114,14 +114,22 @@ else
 end
 
 % If no frame number is designated as the original reference frame, then
-% the default frame should be the "middle" frame of the total frames (i.e.,
-% if frameRate = 30 Hz and duration is 2 seconds, there are 60 total frames
-% and the default frame should therefore be the 30th frame).
+% the default frame should be the 3rd frame. (arbitrary decision at this
+% point)
 if ~isfield(parametersStructure, 'refFrameNumber')
-    refFrameNumber = floor(numberOfFrames / 2);
+    refFrameNumber = 3;
 else
     refFrameNumber = parametersStructure.refFrameNumber;
 end
+
+if ~isfield(parametersStructure, 'frameIncrement')
+    frameIncrement = 1;
+else
+    frameIncrement = parametersStructure.frameIncrement;
+end
+
+
+
 
 if exist('badFrames', 'var')
     while any(badFrames == refFrameNumber)
@@ -179,17 +187,22 @@ catch
         if ndims(frame) == 3
             frame = rgb2gray(frame);
         end
-        frame = imresize(frame, scalingFactor);
         
-        % Sometimes resizing causes numbers to dip below 0 (but just barely)
-        frame(frame<0) = 0;
-        % Similarly, values occasionally exceed 255
-        frame(frame>255) = 255;
+        if rem(frameNumber,frameIncrement) == 0
+            frame = imresize(frame, scalingFactor);
+
+            % Sometimes resizing causes numbers to dip below 0 (but just barely)
+            frame(frame<0) = 0;
+            % Similarly, values occasionally exceed 255
+            frame(frame>255) = 255;
+
+            writeVideo(writer, frame);
+        end
         
-        writeVideo(writer, frame);
         if frameNumber == refFrameNumber
             temporaryRefFrame = frame;
         end
+        
         frameNumber = frameNumber + 1;
     end
     close(writer);
