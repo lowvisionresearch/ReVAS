@@ -22,7 +22,7 @@ function varargout = SacDriftParameters(varargin)
 
 % Edit the above text to modify the response to help SacDriftParameters
 
-% Last Modified by GUIDE v2.5 21-Nov-2018 01:27:01
+% Last Modified by GUIDE v2.5 23-Nov-2018 00:03:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,8 +61,11 @@ mainHandles = guidata(figureHandle);
 
 handles.overwrite.Value = mainHandles.config.sacOverwrite;
 handles.verbosity.Value = mainHandles.config.sacVerbosity;
+handles.cbIsAdaptive.Value = mainHandles.config.sacIsAdaptive;
+handles.cbIsMedianBased.Value = mainHandles.config.sacIsMedianBased;
 handles.thresholdVal.String = mainHandles.config.sacThresholdVal;
 handles.secThresholdVal.String = mainHandles.config.sacSecThresholdVal;
+handles.pixelSizeBox.String = mainHandles.config.sacPixelSize;
 handles.stitch.String = mainHandles.config.sacStitch;
 handles.minAmplitude.String = mainHandles.config.sacMinAmplitude;
 handles.maxDuration.String = mainHandles.config.sacMaxDuration;
@@ -117,6 +120,8 @@ handles.detectionBox.BackgroundColor = revasColors.boxBackground;
 handles.velBox.BackgroundColor = revasColors.boxBackground;
 handles.overwrite.BackgroundColor = revasColors.boxBackground;
 handles.verbosity.BackgroundColor = revasColors.boxBackground;
+handles.cbIsAdaptive.BackgroundColor = revasColors.boxBackground;
+handles.cbIsMedianBased.BackgroundColor = revasColors.boxBackground;
 handles.stitchText.BackgroundColor = revasColors.boxBackground;
 handles.pixelSizeText.BackgroundColor = revasColors.boxBackground;
 handles.ampText.BackgroundColor = revasColors.boxBackground;
@@ -144,6 +149,8 @@ handles.detectionBox.ForegroundColor = revasColors.text;
 handles.velBox.ForegroundColor = revasColors.text;
 handles.overwrite.ForegroundColor = revasColors.text;
 handles.verbosity.ForegroundColor = revasColors.text;
+handles.cbIsAdaptive.ForegroundColor = revasColors.text;
+handles.cbIsMedianBased.ForegroundColor = revasColors.text;
 handles.stitchText.ForegroundColor = revasColors.text;
 handles.pixelSizeText.ForegroundColor = revasColors.text;
 handles.ampText.ForegroundColor = revasColors.text;
@@ -210,6 +217,13 @@ figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 
 % Validate new configurations
+% pixel size
+pixelSize = str2double(handles.pixelSizeBox.String);
+if ~IsPositiveRealNumber(pixelSize)
+    errordlg('Pixel Size (arcmin) must be a positive real number.', 'Invalid Parameter');
+    return;
+end
+
 % stitch
 stitch = str2double(handles.stitch.String);
 if ~IsNaturalNumber(stitch)
@@ -271,6 +285,9 @@ end
 % Save new configurations
 mainHandles.config.sacOverwrite = logical(handles.overwrite.Value);
 mainHandles.config.sacVerbosity = logical(handles.verbosity.Value);
+mainHandles.config.sacIsAdaptive = logical(handles.cbIsAdaptive.Value);
+mainHandles.config.sacIsMedianBased = logical(handles.cbIsMedianBased.Value);
+mainHandles.config.sacPixelSize = str2double(handles.pixelSizeBox.String);
 mainHandles.config.sacStitch = str2double(handles.stitch.String);
 mainHandles.config.sacMinAmplitude = str2double(handles.minAmplitude.String);
 mainHandles.config.sacMaxDuration = str2double(handles.maxDuration.String);
@@ -710,3 +727,21 @@ function pixelSizeBox_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in cbIsAdaptive.
+function cbIsAdaptive_Callback(hObject, eventdata, handles)
+% hObject    handle to cbIsAdaptive (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of cbIsAdaptive
+
+
+% --- Executes on button press in cbIsMedianBased.
+function cbIsMedianBased_Callback(hObject, eventdata, handles)
+% hObject    handle to cbIsMedianBased (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of cbIsMedianBased
