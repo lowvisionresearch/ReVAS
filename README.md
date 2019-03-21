@@ -2,7 +2,7 @@
 
 Retinal Video Analysis Suite: a utility for generating reference frames and extracting eye position traces from retinal videos recorded via scanning laser ophthalmoscopes. It can generate stabilized retinal videos, create reference frames from raw videos, or combine a bunch of reference frames or videos to create large montages. It also includes a set of tools for filtering and classifying eye movements into drifts and (micro)saccades, and extracting detailed information about these eye movements.
 
-*Note that it is still a work in progress...*
+*Note that this work is still in progress, and a citable paper will be associated with ReVAS in the near future.*
 
 Software requirements (to run from source code): 
 Matlab, Image Processing Toolbox, Statistics and Machine Learning Toolbox, Computer Vision Systems Toolbox, Parallel Computing Toolbox.
