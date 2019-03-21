@@ -10,8 +10,7 @@ Matlab, Image Processing Toolbox, Statistics and Machine Learning Toolbox, Compu
 Software requirements (to run as a standalone application):
 (to-be-added)
 
-[Here](/documentation/revastutorial.pdf) is a brief tutorial demonstrating the basic workflow.  
-*A better tutorial for the latest version will be provided soon.*
+[Documentation](https://github.com/lowvisionresearch/ReVAS/wiki) is available in the Wiki tab of this repository.
 
 ---
 
