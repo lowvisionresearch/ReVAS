@@ -22,7 +22,7 @@ function varargout = GammaParameters(varargin)
 
 % Edit the above text to modify the response to help GammaParameters
 
-% Last Modified by GUIDE v2.5 22-Dec-2017 22:54:58
+% Last Modified by GUIDE v2.5 10-Jun-2019 00:03:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,6 +61,8 @@ mainHandles = guidata(figureHandle);
 
 handles.exponent.String = mainHandles.config.gammaExponent;
 handles.overwrite.Value = mainHandles.config.gammaOverwrite;
+handles.rbGammaCorrect.Value = mainHandles.config.isGammaCorrect;
+handles.rbHisteq.Value = mainHandles.config.isHistEq;
 
 
 % set a proper size for the main GUI window. a
@@ -82,6 +84,8 @@ handles.usageBox.BackgroundColor = revasColors.boxBackground;
 handles.gammaBox.BackgroundColor = revasColors.boxBackground;
 handles.overwrite.BackgroundColor = revasColors.boxBackground;
 handles.exponentText.BackgroundColor = revasColors.boxBackground;
+handles.rbHisteq.BackgroundColor = revasColors.boxBackground;
+handles.rbGammaCorrect.BackgroundColor = revasColors.boxBackground;
 % Box text
 handles.titleBox.ForegroundColor = revasColors.text;
 handles.usageBox.ForegroundColor = revasColors.text;
@@ -89,6 +93,8 @@ handles.trimBox.ForegroundColor = revasColors.text;
 handles.overwrite.ForegroundColor = revasColors.text;
 handles.exponentText.ForegroundColor = revasColors.text;
 handles.exponent.ForegroundColor = revasColors.text;
+handles.rbHisteq.ForegroundColor = revasColors.text;
+handles.rbGammaCorrect.ForegroundColor = revasColors.text;
 % Save button
 handles.save.BackgroundColor = revasColors.pushButtonBackground;
 handles.save.ForegroundColor = revasColors.pushButtonText;
@@ -134,6 +140,8 @@ end
 % Save new configurations
 mainHandles.config.gammaExponent = str2double(handles.exponent.String);
 mainHandles.config.gammaOverwrite = logical(handles.overwrite.Value);
+mainHandles.config.isGammaCorrect = logical(handles.rbGammaCorrect.Value); 
+mainHandles.config.isHistEq = logical(handles.rbHisteq.Value); 
 
 % Update handles structure
 guidata(figureHandle, mainHandles);
@@ -191,3 +199,27 @@ function exponent_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in rbGammaCorrect.
+function rbGammaCorrect_Callback(hObject, eventdata, handles)
+% hObject    handle to rbGammaCorrect (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of rbGammaCorrect
+if get(hObject,'Value') == 1
+    handles.exponent.Enable = 'on';
+else
+    handles.exponent.Enable = 'off';
+end
+
+% --- Executes on button press in rbHisteq.
+function rbHisteq_Callback(hObject, eventdata, handles)
+% hObject    handle to rbHisteq (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of rbHisteq
+
+

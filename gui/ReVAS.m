@@ -228,6 +228,8 @@ handles.config.stimUseRectangle = false;
 % Gamma
 handles.config.gammaExponent = 0.6;
 handles.config.gammaOverwrite = true;
+handles.config.isGammaCorrect = true;
+handles.config.isHistEq = false;
 % BandFilt
 handles.config.bandFiltSmoothing = 1;
 handles.config.bandFiltFreqCut = 3.0;
