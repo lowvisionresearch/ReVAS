@@ -82,7 +82,9 @@ if logical(handles.config.togValues('gamma')) && ~logical(abortTriggered)
     % Set the parameters
     parametersStructure.gammaExponent = handles.config.gammaExponent;
     parametersStructure.overwrite = handles.config.gammaOverwrite;
-
+    parametersStructure.isGammaCorrect = handles.config.isGammaCorrect;
+    parametersStructure.isHistEq = handles.config.isHistEq;
+    
     % Call the function
     GammaCorrect(inputPath, parametersStructure);
 
