@@ -14,7 +14,14 @@ function GammaCorrect(inputVideoPath, parametersStructure)
 %   overwrite          : set to true to overwrite existing files.
 %                        Set to false to abort the function call if the
 %                        files already exist. (default false)
-%   gammaExponent      : gamma specifies the shape of the curve 
+%   isHistEq           : true/false. if true, we do histogram equalization
+%                        using MATLAB's histeq function. This is more
+%                        robust against fluctuations in overall brightness
+%                        across frames.
+%   isGammaCorrect     : true/false. Note that if both methods are set to
+%                        true, then gamma correction is applied first.
+%   gammaExponent      : (applies only when 'isGammaCorrect' is true) 
+%                        gamma specifies the shape of the curve 
 %                        describing the relationship between the 
 %                        values in I and J, where new intensity
 %                        values are being mapped from I (a frame) 
@@ -25,6 +32,8 @@ function GammaCorrect(inputVideoPath, parametersStructure)
 %       inputVideoPath = 'MyVid.avi';
 %       parametersStructure.overwrite = true;
 %       parametersStructure.gammaExponent = 0.6;
+%       parametersStructure.isGammaCorrect = true;
+%       parametersStructure.isHistEq = false;
 %       GammaCorrect(inputVideoPath, parametersStructure);
 
 %% Handle overwrite scenarios.
@@ -39,6 +48,19 @@ else
 end
 
 %% Set parameters to defaults if not specified.
+if ~isfield(parametersStructure, 'isHistEq')
+    isHistEq = true;
+    RevasWarning('using default parameter for isHistEq', parametersStructure);
+else
+    isHistEq = parametersStructure.isHistEq;
+end
+
+if ~isfield(parametersStructure, 'isGammaCorrect')
+    isGammaCorrect = false;
+    RevasWarning('using default parameter for isGammaCorrect', parametersStructure);
+else
+    isGammaCorrect = parametersStructure.isGammaCorrect;
+end
 
 if ~isfield(parametersStructure, 'gammaExponent')
     gammaExponent = 0.6;
@@ -78,8 +100,15 @@ for frameNumber = 1:numberOfFrames
         if ndims(frame) == 3
             frame = rgb2gray(frame);
         end
-        frame = imadjust(frame, [], [], gammaExponent);
-       writeVideo(writer, frame);
+        
+        if isGammaCorrect
+            frame = imadjust(frame, [], [], gammaExponent);
+        end
+        if isHistEq
+            frame = histeq(frame);
+        end
+        
+        writeVideo(writer, frame);
     end
 end
 
