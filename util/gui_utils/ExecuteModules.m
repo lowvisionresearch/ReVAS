@@ -253,8 +253,8 @@ if logical(handles.config.togValues('strip')) && ~logical(abortTriggered)
                end
            end
            RevasMessage(['Loading coarse reference frame from: ' longestFileName], parametersStructure);
-           load(longestFileName, 'refFrame');
-           fineRefFrame = refFrame;
+           load(fullfile(fileparts(rawVideoPath),longestFileName), 'coarseRefFrame');
+           fineRefFrame = coarseRefFrame;
         else
            RevasError(originalInputVideoPath, ...
                'No reference frame available for strip analysis.', ...
@@ -368,8 +368,8 @@ elseif logical(handles.config.togValues('reref')) && ~logical(abortTriggered)
                end
            end
            RevasMessage(['Loading coarse reference frame from: ' longestFileName], parametersStructure);
-           load(fullfile(fileparts(rawVideoPath),longestFileName), 'refFrame');
-           fineRefFrame = refFrame;
+           load(fullfile(fileparts(rawVideoPath),longestFileName), 'coarseRefFrame');
+           fineRefFrame = coarseRefFrame;
         else
            RevasError(originalInputVideoPath, ...
                'No reference frame available for re-referencing.', ...
