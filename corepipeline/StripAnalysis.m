@@ -147,7 +147,9 @@ if ischar(referenceFrame)
     % Reference Frame Path is needed because it is written to the file in
     % the end.
     referenceFramePath = referenceFrame;
-    referenceFrame = importdata(referenceFrame);
+    load(referenceFrame, 'refFrame');
+    referenceFrame = refFrame;
+    clear refFrame;
 else
     referenceFramePath = ''; 
 end
