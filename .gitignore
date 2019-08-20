@@ -5,7 +5,6 @@ documentation/analysis_report/
 documentation/screenshots/
 pseudocode/
 testbench/
-example/
 log.txt
 configurations.mat
 ReRefTesting.m
