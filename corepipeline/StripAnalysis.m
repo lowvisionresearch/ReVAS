@@ -420,12 +420,12 @@ if adaptiveSearch
             1:scalingFactor:end, ...
             1:scalingFactor:end);
 
-        correlationMap = normxcorr2(scaledDownFrame, scaledDownReferenceFrame);
+        correlationMap = matchTemplateOCV(scaledDownFrame, scaledDownReferenceFrame);
 
         [~, yPeak, ~, ~] = ...
             FindPeak(correlationMap, parametersStructure);
 
-        % Account for padding introduced by normxcorr2
+        % Account for padding introduced by normalized cross-correlation.
         yPeak = yPeak - (size(scaledDownFrame, 1) - 1);
 
         % Populate search windows array but only fill in coordinates for the
@@ -478,7 +478,7 @@ if isempty(abortTriggered)
 end
 isSetView = true;
 
-%% Call normxcorr2() on each strip
+%% Normalized cross-correlate each strip
 % Note that calculation for each array value does not end with this loop,
 % the logic below the loop in this section perform remaining operations on
 % the values but are done outside of the loop in order to take advantage of
@@ -524,7 +524,7 @@ for stripNumber = (1:numberOfStrips)
         columnEnd = columnStart + stripWidth - 1;
         strip = frame(rowStart:rowEnd, columnStart:columnEnd);
         
-        correlationMap = normxcorr2(strip, referenceFrame);
+        correlationMap = matchTemplateOCV(strip, referenceFrame);
         parametersStructure.stripNumber = stripNumber;  
         parametersStructure.stripsPerFrame = stripsPerFrame;
 
@@ -692,7 +692,7 @@ for stripNumber = (1:numberOfStrips)
         % being plotted as they become available.
         if enableVerbosity
 
-            % Adjust for padding offsets added by normxcorr2()
+            % Adjust for padding offsets added by normalized cross-correlation.
             % If we enable verbosity and demand that we plot the points as we
             % go, then adjustments must be made here in order for the plot to
             % be interpretable.
@@ -732,7 +732,7 @@ for stripNumber = (1:numberOfStrips)
     end
 end
 
-%% Adjust for padding offsets added by normxcorr2()
+%% Adjust for padding offsets added by normalized cross-correlation.
 % Do this after the loop to take advantage of vectorization
 % Only run this section if verbosity was not enabled. If verbosity was
 % enabled, then these operations were already performed for each point
