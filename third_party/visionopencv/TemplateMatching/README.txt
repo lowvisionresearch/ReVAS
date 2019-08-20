@@ -1,4 +1,10 @@
-To run the Template Matching example, follow these steps:
+This version is adapted from the Template Matching example that ships with
+the support package.
+
+It performs padding prior to correlating, in order to copy the behavior
+of normxcorr2().
+
+To run, follow these steps:
 
 1. Change your current working folder to example/TemplateMatching where 
 source file matchTemplateOCV.cpp is located
