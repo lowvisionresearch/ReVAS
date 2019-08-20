@@ -73,7 +73,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     cv::Ptr<cv::Mat> imgCV         = ocvMxArrayToImage_uint8(prhs[1], true);
     
     // Pad input image
-   // mxarray *myData = mxCreateDoubleMatrix(m, 1, mxREAL);
     cv::Mat imgCVPadded((int)imgCV->rows + 2*(templateImgCV->rows - 1), 
             (int)imgCV->cols + 2*(templateImgCV->cols - 1), 
             CV_32FC1);
