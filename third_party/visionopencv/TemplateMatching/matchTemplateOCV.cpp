@@ -24,9 +24,9 @@ void checkInputs(int nrhs, const mxArray *prhs[])
 	const mwSize * tdims, *fdims;
         
     // Check number of inputs
-    if (nrhs != 2)
+    if (nrhs != 3)
     {
-        mexErrMsgTxt("Incorrect number of inputs. Function expects 2 inputs.");
+        mexErrMsgTxt("Incorrect number of inputs. Function expects 3 inputs.");
     }
     
     // Check input dimensions
@@ -71,32 +71,52 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // Convert mxArray inputs into OpenCV types
     cv::Ptr<cv::Mat> templateImgCV = ocvMxArrayToImage_uint8(prhs[0], true);
     cv::Ptr<cv::Mat> imgCV         = ocvMxArrayToImage_uint8(prhs[1], true);
+    bool withPadding = mxIsLogicalScalarTrue(prhs[2]);
     
-    // Pad input image
-    cv::Mat imgCVPadded((int)imgCV->rows + 2*(templateImgCV->rows - 1), 
-            (int)imgCV->cols + 2*(templateImgCV->cols - 1), 
-            CV_32FC1);
-    cv::copyMakeBorder(*imgCV, 
-            imgCVPadded, 
-            templateImgCV->rows - 1, 
-            templateImgCV->rows - 1,
-            templateImgCV->cols - 1, 
-           templateImgCV->cols - 1, 
-           cv::BORDER_CONSTANT, 0);
-    
-    // Allocate output matrix
-    int outRows = imgCV->rows - templateImgCV->rows + 1;
-    int outCols = imgCV->cols - templateImgCV->cols + 1;
-    
-    cv::Mat outCV((int)outRows, (int)outCols, CV_32FC1);
-    
-    // Run the OpenCV template matching routine
-    // CV_TM_CCOEFF_NORMED for normalized
-    // CV_TM_CCOEFF for unnormalized
-    // See https://docs.opencv.org/2.4/modules/imgproc/doc/object_detection.html?highlight=matchtemplate#matchtemplate
-    cv::matchTemplate(imgCVPadded, *templateImgCV, outCV, CV_TM_CCOEFF_NORMED );
-    
-    // Put the data back into the output MATLAB array
-    plhs[0] = ocvMxArrayFromImage_single(outCV);
-}
+    int outRows, outCols;
 
+    if (withPadding)
+    {
+        // Pad input image
+        cv::Mat imgCVPadded((int)imgCV->rows + 2*(templateImgCV->rows - 1), 
+                (int)imgCV->cols + 2*(templateImgCV->cols - 1), 
+                CV_32FC1);
+        cv::copyMakeBorder(*imgCV, 
+                imgCVPadded, 
+                templateImgCV->rows - 1, 
+                templateImgCV->rows - 1,
+                templateImgCV->cols - 1, 
+               templateImgCV->cols - 1, 
+               cv::BORDER_CONSTANT, 0);
+    
+        // Allocate output matrix
+        outRows = imgCV->rows - templateImgCV->rows + 1;
+        outCols = imgCV->cols - templateImgCV->cols + 1;
+        cv::Mat outCV((int)outRows, (int)outCols, CV_32FC1);
+
+        // Run the OpenCV template matching routine
+        // CV_TM_CCOEFF_NORMED for normalized
+        // CV_TM_CCOEFF for unnormalized
+        // See https://docs.opencv.org/2.4/modules/imgproc/doc/object_detection.html?highlight=matchtemplate#matchtemplate
+        cv::matchTemplate(imgCVPadded, *templateImgCV, outCV, CV_TM_CCOEFF_NORMED );
+        
+        // Put the data back into the output MATLAB array
+        plhs[0] = ocvMxArrayFromImage_single(outCV);
+    }
+    else
+    {
+        // Allocate output matrix
+        outRows = imgCV->rows + templateImgCV->rows - 1;
+        outCols = imgCV->cols + templateImgCV->cols - 1;
+        cv::Mat outCV((int)outRows, (int)outCols, CV_32FC1);
+
+        // Run the OpenCV template matching routine
+        // CV_TM_CCOEFF_NORMED for normalized
+        // CV_TM_CCOEFF for unnormalized
+        // See https://docs.opencv.org/2.4/modules/imgproc/doc/object_detection.html?highlight=matchtemplate#matchtemplate
+        cv::matchTemplate(*imgCV, *templateImgCV, outCV, CV_TM_CCOEFF_NORMED );
+        
+        // Put the data back into the output MATLAB array
+        plhs[0] = ocvMxArrayFromImage_single(outCV);
+    }
+}
