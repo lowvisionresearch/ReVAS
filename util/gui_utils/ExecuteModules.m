@@ -4,9 +4,9 @@ function ExecuteModules(inputPath, handles)
 %   modules for one video. Call this function in a loop to execute on all
 %   videos.
 
-if ~isdeployed
-    addpath(genpath('..'));
-end
+% if ~isdeployed
+%     addpath(genpath('..'));
+% end
 
 global abortTriggered;
 originalInputVideoPath = inputPath(1:end-4);
