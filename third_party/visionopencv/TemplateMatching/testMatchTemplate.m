@@ -15,7 +15,7 @@ template  = imcrop(peppers,rectOnion);
 %% Compute
 % Invoke mex function to search for matches between an image patch and an
 % input image.
-result = matchTemplateOCV(template, peppers);
+result = matchTemplateOCV(template, peppers, false);
 
 %% Show Results
 % Show the input image and the result of normalized cross correlation
