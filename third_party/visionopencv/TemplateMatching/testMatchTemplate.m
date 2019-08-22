@@ -5,6 +5,7 @@
 %
 % Copyright 2014 The MathWorks, Inc.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+close all
 
 %% Setup
 % Set up test data
