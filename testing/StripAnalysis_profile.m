@@ -15,6 +15,7 @@ parametersStructure.adaptiveSearch = true;
 global abortTriggered;
 abortTriggered = 0;
 
+oldWarningState = warning;
 warning('off','all')
 profile on
 
@@ -26,7 +27,7 @@ profile on
 );
 
 profile viewer
-warning('on','all')
+warning(oldWarningState);
 
 % profsave
 profile off
