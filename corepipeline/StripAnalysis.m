@@ -271,7 +271,7 @@ else
 end
 
 if ~isfield(parametersStructure, 'searchWindowHeight')
-    searchWindowHeight = 0.8;
+    searchWindowHeight = 79;
     RevasMessage('using default parameter for searchWindowHeight');
 else
     searchWindowHeight = parametersStructure.searchWindowHeight;
@@ -420,7 +420,7 @@ if adaptiveSearch
             1:scalingFactor:end, ...
             1:scalingFactor:end);
 
-        correlationMap = matchTemplateOCV(scaledDownFrame, scaledDownReferenceFrame);
+        correlationMap = matchTemplateOCV(scaledDownFrame, scaledDownReferenceFrame, true);
 
         [~, yPeak, ~, ~] = ...
             FindPeak(correlationMap, parametersStructure);
@@ -524,7 +524,6 @@ for stripNumber = (1:numberOfStrips)
         columnEnd = columnStart + stripWidth - 1;
         strip = frame(rowStart:rowEnd, columnStart:columnEnd);
         
-        correlationMap = matchTemplateOCV(strip, referenceFrame);
         parametersStructure.stripNumber = stripNumber;  
         parametersStructure.stripsPerFrame = stripsPerFrame;
 
@@ -533,18 +532,17 @@ for stripNumber = (1:numberOfStrips)
             % Cut out a smaller search window from correlation.
             upperBound = floor(min(max(1, ...
                 estimatedStripYLocations(stripNumber) ...
-                - ((searchWindowHeight - stripHeight)/2)), ...
-                size(videoInput, 1)));
-            lowerBound = floor(min(size(videoInput, 1), ...
-                estimatedStripYLocations(stripNumber) ...
-                + ((searchWindowHeight - stripHeight)/2) ...
-                + stripHeight));
-            adaptedCorrelation = correlationMap(upperBound:lowerBound,1:end);
+                - ((searchWindowHeight - stripHeight)/2))));
+            lowerBound = upperBound + searchWindowHeight - 1;
+                        
+            adaptedCorrelationMap = matchTemplateOCV( ...
+                strip, ...
+                referenceFrame(upperBound:min(lowerBound, end),1:end), true);
             
             try
                 % Try to use adapted version of correlation map.
                 [xPeak, yPeak, peakValue, secondPeakValue] = ...
-                    FindPeak(adaptedCorrelation, parametersStructure);
+                    FindPeak(adaptedCorrelationMap, parametersStructure);
   
                 % See if adapted result is acceptable or not.
                 if ~enableGaussianFiltering && ...
@@ -556,20 +554,20 @@ for stripNumber = (1:numberOfStrips)
                 elseif enableGaussianFiltering % TODO, need to test.
                     % Middle row SDs in column 1, Middle column SDs in column 2.
                     middleRow = ...
-                        adaptedCorrelation(max(ceil(yPeak-...
+                        adaptedCorrelationMap(max(ceil(yPeak-...
                             SDWindowSize/2/scalingFactor),...
                             1): ...
                         min(floor(yPeak+...
                             SDWindowSize/2/scalingFactor),...
-                            size(adaptedCorrelation,1)), ...
+                            size(adaptedCorrelationMap,1)), ...
                             floor(xPeak));
                     middleCol = ...
-                        adaptedCorrelation(floor(yPeak), ...
+                        adaptedCorrelationMap(floor(yPeak), ...
                         max(ceil(xPeak-...
                             SDWindowSize/2/scalingFactor),...
                             1): ...
                         min(floor(xPeak+SDWindowSize/2/scalingFactor),...
-                            size(adaptedCorrelation,2)))';
+                            size(adaptedCorrelationMap,2)))';
                     fitOutput = fit(((1:size(middleRow,1))-ceil(size(middleRow,1)/2))', middleRow, 'gauss1');
                     isAcceptable = true;
                     if fitOutput.c1 > maximumSD
@@ -587,11 +585,13 @@ for stripNumber = (1:numberOfStrips)
                         error('Jumping to catch block immediately below.'); 
                     end
                 end
-                correlationMap = adaptedCorrelation;
+                correlationMap = adaptedCorrelationMap;
                 searchWindowsArray(stripNumber,:) = [upperBound lowerBound];
             catch
                 upperBound = 1;
+                
                 % It failed or was unacceptable, so use full correlation map.
+                correlationMap = matchTemplateOCV(strip, referenceFrame, true);
                 [xPeak, yPeak, peakValue, secondPeakValue] = ...
                     FindPeak(correlationMap, parametersStructure);
     
@@ -599,6 +599,8 @@ for stripNumber = (1:numberOfStrips)
             end
         else
             upperBound = 1;
+
+            correlationMap = matchTemplateOCV(strip, referenceFrame, true);
             [xPeak, yPeak, peakValue, secondPeakValue] = ...
                 FindPeak(correlationMap, parametersStructure);        
         end
@@ -646,6 +648,14 @@ for stripNumber = (1:numberOfStrips)
             clear fitOutput;
         end
 
+        % If these peaks are in terms of an adapted correlation map, restore it
+        % back to in terms of the full map.
+        yPeak = yPeak + upperBound - 1;
+        rawEyePositionTraces(stripNumber,:) = [xPeak yPeak];
+        
+        peakValueArray(stripNumber) = peakValue;
+        secondPeakValueArray(stripNumber) = secondPeakValue;
+        
         % Show surface plot for this correlation if verbosity enabled
         if enableVerbosity
             if enableGPU
@@ -662,11 +672,24 @@ for stripNumber = (1:numberOfStrips)
             else
                 figure(1);
             end
-            [surfX,surfY] = meshgrid(1:size(correlationMap,2), 1:size(correlationMap,1));
-            surf(surfX, surfY, correlationMap, 'linestyle', 'none');
+            
+            fullMap = zeros( ...
+                size(referenceFrame,1) + stripHeight - 1, ...
+                size(referenceFrame,2) + stripWidth - 1);
+            if size(fullMap) == size(correlationMap)
+                fullMap = correlationMap;
+            else
+                fullMap( ...
+                    upperBound : upperBound + size(correlationMap,1) - 1, ...
+                    1 : end) = ...
+                    correlationMap(1:end,1:end);
+            end
+            
+            [surfX,surfY] = meshgrid(1:size(fullMap,2), 1:size(fullMap,1));
+            surf(surfX, surfY, fullMap, 'linestyle', 'none');
             title([num2str(stripNumber) ' out of ' num2str(numberOfStrips)]);
-            xlim([1 size(correlationMap,2)]);
-            ylim([1 size(correlationMap,1)]);
+            xlim([1 size(fullMap,2)]);
+            ylim([1 size(fullMap,1)]);
             zlim([-1 1]);
             xlabel('');
             ylabel('');
@@ -680,14 +703,6 @@ for stripNumber = (1:numberOfStrips)
 
             drawnow;  
         end
- 
-        % If these peaks are in terms of an adapted correlation map, restore it
-        % back to in terms of the full map.
-        yPeak = yPeak + upperBound - 1;
-        rawEyePositionTraces(stripNumber,:) = [xPeak yPeak];
-        
-        peakValueArray(stripNumber) = peakValue;
-        secondPeakValueArray(stripNumber) = secondPeakValue;
 
         % If verbosity is enabled, also show eye trace plot with points
         % being plotted as they become available.
