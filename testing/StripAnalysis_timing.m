@@ -21,10 +21,12 @@ f = @() StripAnalysis( ...
     parametersStructure ...
 ); % handle to function
 
+oldWarningState = warning;
 warning('off','all')
 
 result = timeit(f, 4);
 result
 
-warning('on','all')
+warning(oldWarningState);
+
 end
