@@ -612,6 +612,9 @@ if logical(handles.config.parMultiCore)
     fprintf(['(' time ') Process completed.\n']);
     diary off;
     fclose(fileID);
+    % Parallel computing might print out of order.
+    % Fix it by sorting the timestamps leading each line.
+    !sort log.txt > temp.txt; mv temp.txt log.txt
 else
     % Otherwise use a regular for loop
     for i = 1:size(handles.files, 2)
