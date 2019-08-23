@@ -39,7 +39,7 @@ function outputVideo = BandpassFilter(inputVideo, parametersStructure)
 %       BandpassFilter(inputVideo, parametersStructure);
 
 %% Determine inputVideo type.
-if isstring(inputVideo)
+if ischar(inputVideo)
     % A path was passed in.
     % Read the video and once finished with this module, write the result.
     writeResult = true;
