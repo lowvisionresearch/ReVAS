@@ -32,6 +32,10 @@ stimulus.size = 11;
 stimulus.thickness = 1;
 video = RemoveStimuli(video, stimulus, parametersStructure);
 
+parametersStructure.isHistEq = false;
+parametersStructure.isGammaCorrect = true;
+video = GammaCorrect(video, parametersStructure);
+
 
 % Write the video when finished with desired modules.
 writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
