@@ -1,13 +1,15 @@
-function TrimVideo(inputVideoPath, parametersStructure)
+function outputVideo = TrimVideo(inputVideo, parametersStructure)
 %TRIM VIDEO Removes upper and right edge of video.
 %   Removes the upper few rows and right few columns. 
 %
 %   -----------------------------------
 %   Input
 %   -----------------------------------
-%   |inputVideoPath| is the path to the video. The result is that the
-%   trimmed version of this video is stored with '_dwt' appended to the
-%   original file name.
+%   |inputVideo| is either the path to the video, or the video matrix itself. 
+%   In the former situation, the result is that the
+%   trimmed version of this video is written with '_dwt' appended to the
+%   original file name. In the latter situation, no video is written and
+%   the result is returned.
 %
 %   |parametersStructure| is a struct as specified below.
 %
@@ -30,14 +32,25 @@ function TrimVideo(inputVideoPath, parametersStructure)
 %   -----------------------------------
 %   Example usage
 %   -----------------------------------
-%       inputVideoPath = 'MyVid.avi';
+%       inputVideo = 'MyVid.avi';
 %       parametersStructure.overwrite = 1;
 %       parametersStructure.borderTrimAmount = [0 24 24 0];
-%       TrimVideo(inputVideoPath, parametersStructure);
+%       TrimVideo(inputVideo, parametersStructure);
+
+%% Determine inputVideo type.
+if isstring(inputVideo)
+    % A path was passed in.
+    % Read the video and once finished with this module, write the result.
+    writeResult = true;
+else
+    % A video matrix was passed in.
+    % Do not write the result; return it instead.
+    writeResult = false;
+end
 
 %% Handle overwrite scenarios.
-outputVideoPath = [inputVideoPath(1:end-4) '_dwt' inputVideoPath(end-3:end)];
-if ~exist(outputVideoPath, 'file')
+outputVideoPath = [inputVideo(1:end-4) '_dwt' inputVideo(end-3:end)];
+if ~exist(outputVideoPath, 'file') || ~writeResult
     % left blank to continue without issuing warning in this case
 elseif nargin == 1 || ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
     RevasWarning(['TrimVideo() did not execute because it would overwrite existing file. (' outputVideoPath ')'], parametersStructure);    
@@ -79,31 +92,47 @@ right = borderTrimAmount(2);
 top = borderTrimAmount(3);
 bottom = borderTrimAmount(4);
 
-writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
-reader = VideoReader(inputVideoPath);
-% some videos are not 30fps, we need to keep the same framerate as
-% the source video.
-writer.FrameRate=reader.Framerate;
-open(writer);
-
-% Determine dimensions of video.
-width = reader.Width;
-height = reader.Height;
-numberOfFrames = reader.Framerate * reader.Duration;
-
-% Read, trim, and write frame by frame.
-for frameNumber = 1:numberOfFrames
-    if ~abortTriggered
-        frame = readFrame(reader);
-        if ndims(frame) == 3
-            frame = rgb2gray(frame);
-        end
-        frame = frame(top+1 : height-bottom, ...
-           left+1 : width-right);
-       writeVideo(writer, frame);
-    end
+if writeResult
+    writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
+    reader = VideoReader(inputVideo);
+    % some videos are not 30fps, we need to keep the same framerate as
+    % the source video.
+    writer.FrameRate=reader.Framerate;
+    open(writer);
+    
+    % Determine dimensions of video.
+    width = reader.Width;
+    height = reader.Height;
+    numberOfFrames = reader.Framerate * reader.Duration;
+    
+else
+    % Determine dimensions of video.
+    [height, width, numberOfFrames] = size(inputVideo);
 end
 
-close(writer);
+if writeResult
+    % Read, trim, and write frame by frame.
+    for frameNumber = 1:numberOfFrames
+        if ~abortTriggered
+
+                frame = readFrame(reader);
+
+                if ndims(frame) == 3
+                    frame = rgb2gray(frame);
+                end
+
+                frame = frame(top+1 : height-bottom, ...
+                    left+1 : width-right);
+
+           writeVideo(writer, frame);
+        end
+    end
+    
+    close(writer);
+else
+    outputVideo = inputVideo(top+1 : height-bottom, ...
+                    left+1 : width-right, ...
+                    1 : end);
+end
 
 end
