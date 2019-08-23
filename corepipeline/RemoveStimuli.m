@@ -13,7 +13,7 @@ function outputVideo = RemoveStimuli(inputVideo, stimulus, parametersStructure, 
 %   file with the stimulus locations are saved, as well as the mean and 
 %   standard deviation of the pixels in each frame. This mat file has 
 %   '_stimlocs' appeneded to the input video file name, or is simply called
-%   'stimlocs.mat' if a video matrix was passed in.
+%   '.stimlocs.mat' if a video matrix was passed in (hidden file).
 %
 %   |stimulus| is a path to a stimulus or a struct containing a |size|
 %   field which is the size of the stimulus in pixels (default 11), and a
@@ -61,7 +61,7 @@ else
     % A video matrix was passed in.
     % Do not write the result; return it instead.
     writeResult = false;
-    matFileName = 'stimlocs.mat';
+    matFileName = '.stimlocs.mat';
 end
 
 %% Handle overwrite scenarios.
