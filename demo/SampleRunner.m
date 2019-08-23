@@ -6,6 +6,7 @@ function SampleRunner
 
 %% Example of running pipeline without writing result after each module.
 
+tic;
 inputVideoPath = 'demo/sample10deg.avi';
 outputVideoPath = 'demo/sampleRunnerResult.avi';
 
@@ -38,6 +39,8 @@ video = GammaCorrect(video, parametersStructure);
 
 video = BandpassFilter(video, parametersStructure);
 
+CoarseRef(video, parametersStructure);
+
 
 % Write the video when finished with desired modules.
 writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
@@ -50,5 +53,32 @@ for frameNumber = 1:numberOfFrames
 end
 
 close(writer);
+toc;
+
+%% Example of running pipeline with result videos written between each module.
+
+tic;
+inputVideoPath = 'demo/sample10deg.avi';
+
+% Run desired modules.
+% Also see example usages in the header comment of each module file.
+parametersStructure = struct;
+parametersStructure.overwrite = true;
+TrimVideo(inputVideoPath, parametersStructure);
+
+stimulus = struct;
+stimulus.size = 11;
+stimulus.thickness = 1;
+RemoveStimuli(inputVideoPath, stimulus, parametersStructure);
+
+parametersStructure.isHistEq = false;
+parametersStructure.isGammaCorrect = true;
+GammaCorrect(inputVideoPath, parametersStructure);
+
+BandpassFilter(inputVideoPath, parametersStructure);
+
+CoarseRef(inputVideoPath, parametersStructure);
+
+toc;
 
 end

@@ -1,4 +1,4 @@
-function coarseRefFrame = CoarseRef(inputVideoPath, parametersStructure)
+function coarseRefFrame = CoarseRef(inputVideo, parametersStructure)
 %CoarseRef    Generates a coarse reference frame.
 %   f = CoarseRef(filename, parametersStructure) is the coarse reference 
 %   frame of a video, generated using a scaled down version of each frame 
@@ -13,7 +13,7 @@ function coarseRefFrame = CoarseRef(inputVideoPath, parametersStructure)
 %   -----------------------------------
 %   Input
 %   -----------------------------------
-%   |inputVideoPath| is the path to the video.
+%   |inputVideo| is the path to the video or a matrix containing the video.
 %
 %   |parametersStructure| is a struct as specified below.
 %
@@ -54,9 +54,22 @@ function coarseRefFrame = CoarseRef(inputVideoPath, parametersStructure)
 %   -----------------------------------
 %   Example usage
 %   -----------------------------------
-%       inputVideoPath = 'MyVid.avi';
+%       inputVideo = 'MyVid.avi';
 %       load('MyVid_params.mat')
-%       coarseReferenceFrame = CoarseRef(inputVideoPath, coarseParameters);
+%       coarseReferenceFrame = CoarseRef(inputVideo, coarseParameters);
+
+%% Determine inputVideo type.
+if ischar(inputVideo)
+    % A path was passed in.
+    % Read the video and once finished with this module, write the result.
+    writeResult = true;
+    inputVideoPath = inputVideo;
+else
+    % A video matrix was passed in.
+    % Do not write the result; return it instead.
+    writeResult = false;
+    inputVideoPath = '';
+end
 
 %% Allow for aborting if not parallel processing
 global abortTriggered;
@@ -68,26 +81,31 @@ if isempty(abortTriggered)
 end
 
 %% Initialize variables
-outputFileName = [inputVideoPath(1:end-4) '_coarseref'];
-outputTracesName = [inputVideoPath(1:end-4) '_coarseframepositions'];
-reader = VideoReader(inputVideoPath);
-videoFrameRate = reader.Framerate;
-numberOfFrames = videoFrameRate * reader.Duration;
+if writeResult
+    outputFileName = [inputVideo(1:end-4) '_coarseref'];
+    outputTracesName = [inputVideo(1:end-4) '_coarseframepositions'];
+    blinkFramesPath = [inputVideo(1:end-4) '_blinkframes.mat'];
+    shrunkFileName = [inputVideo(1:end-4) '_shrunk.avi'];
+else
+    outputFileName = 'coarseref';
+    outputTracesName = 'coarseframepositions';
+    blinkFramesPath = 'blinkframes.mat';
+end
 
 %% Handle overwrite scenarios.
-if ~exist([outputFileName '.mat'], 'file')
-    % left blank to continue without issuing warning in this case
-elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-    RevasWarning(['CoarseRef() did not execute because it would overwrite existing file. (' outputFileName ')'], parametersStructure);
-    coarseRefFrame = [];
-    return;
-else
-    RevasWarning(['CoarseRef() is proceeding and overwriting an existing file. (' outputFileName ')'], parametersStructure);  
+if writeResult
+    if ~exist([outputFileName '.mat'], 'file')
+        % left blank to continue without issuing warning in this case
+    elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
+        RevasWarning(['CoarseRef() did not execute because it would overwrite existing file. (' outputFileName ')'], parametersStructure);
+        coarseRefFrame = [];
+        return;
+    else
+        RevasWarning(['CoarseRef() is proceeding and overwriting an existing file. (' outputFileName ')'], parametersStructure);  
+    end
 end
 
 %% Identify which frames are bad frames
-nameEnd = inputVideoPath(1:end-4);
-blinkFramesPath = [nameEnd '_blinkframes.mat'];
 try
     load(blinkFramesPath, 'badFrames');
 catch
@@ -98,14 +116,17 @@ end
 
 if ~isfield(parametersStructure, 'peakDropWindow')
     parametersStructure.peakDropWindow = 20;
+    RevasWarning('using default parameter for peakDropWindow', parametersStructure);
 end
 
 if ~isfield(parametersStructure, 'rotateMaximumPeakRatio')
     parametersStructure.rotateMaximumPeakRatio = 0.6;
+    RevasWarning('using default parameter for rotateMaximumPeakRatio', parametersStructure);
 end
 
 if ~isfield(parametersStructure, 'scalingFactor')
     scalingFactor = 1;
+    RevasWarning('using default parameter for scalingFactor', parametersStructure);
 else
     scalingFactor = parametersStructure.scalingFactor;
     if ~IsPositiveRealNumber(scalingFactor)
@@ -118,18 +139,17 @@ end
 % point)
 if ~isfield(parametersStructure, 'refFrameNumber')
     refFrameNumber = 3;
+    RevasWarning('using default parameter for refFrameNumber', parametersStructure);
 else
     refFrameNumber = parametersStructure.refFrameNumber;
 end
 
 if ~isfield(parametersStructure, 'frameIncrement')
     frameIncrement = 1;
+    RevasWarning('using default parameter for frameIncrement', parametersStructure);
 else
     frameIncrement = parametersStructure.frameIncrement;
 end
-
-
-
 
 if exist('badFrames', 'var')
     while any(badFrames == refFrameNumber)
@@ -146,6 +166,13 @@ if exist('badFrames', 'var')
     end
 end
 
+if ~writeResult && ~isfield(parametersStructure, 'FrameRate')
+    FrameRate = 30;
+    RevasWarning('using default parameter for FrameRate', parametersStructure);
+elseif ~writeResult
+    FrameRate = parametersStructure.FrameRate;
+end
+
 enableGPU = isfield(parametersStructure, 'enableGPU') && ...
     islogical(parametersStructure.enableGPU) && ...
     parametersStructure.enableGPU && ...
@@ -153,10 +180,27 @@ enableGPU = isfield(parametersStructure, 'enableGPU') && ...
 
 %% Shrink video, call strip analysis, and calculate estimated traces.
 
-shrunkFileName = [inputVideoPath(1:end-4) '_shrunk.avi'];
+if writeResult
+    reader = VideoReader(inputVideo);
+    FrameRate = reader.Framerate;
+    numberOfFrames = FrameRate * reader.Duration;
+    height = reader.Height;
+    width = reader.Width;
+
+else
+    % FrameRate set in "Set parameters to default if not specified"
+    % section already.
+    [height, width, numberOfFrames] = size(inputVideo);
+end
 
 % First check whether the shrunk video already exists
 try
+    % Since we're not writing files, we should not try to load a shrunk
+    % video. Just skip to the catch block to make a new one.
+    if ~writeResult
+        error
+    end
+    
     shrunkReader = VideoReader(shrunkFileName);
     % If it does exist, check that it's of correct dimensions. If the
     % shrunk video is not scaled to the desired amount, throw an error to
@@ -177,15 +221,29 @@ try
             frameNumber = frameNumber + 1;
         end
     end
-catch
-    writer = VideoWriter(shrunkFileName, 'Grayscale AVI');
-    open(writer);
     
-    frameNumber = 1;
-    while hasFrame(reader)
-        frame = readFrame(reader);
-        if ndims(frame) == 3
-            frame = rgb2gray(frame);
+catch
+    if writeResult
+        writer = VideoWriter(shrunkFileName, 'Grayscale AVI');
+        open(writer);
+    else
+        % preallocate shrunk video
+        shrunkVideo = zeros( ...
+            size(inputVideo, 1) * scalingFactor, ...
+            size(inputVideo, 2) * scalingFactor, ...
+            size(inputVideo, 3), ...
+            'uint8');
+    end
+    
+    for frameNumber = 1:numberOfFrames
+        
+        if writeResult
+            frame = readFrame(reader);
+            if ndims(frame) == 3
+                frame = rgb2gray(frame);
+            end
+        else
+            frame = inputVideo(1:end, 1:end, frameNumber);
         end
         
         if rem(frameNumber,frameIncrement) == 0
@@ -196,27 +254,39 @@ catch
             % Similarly, values occasionally exceed 255
             frame(frame>255) = 255;
 
-            writeVideo(writer, frame);
+            if writeResult
+                writeVideo(writer, frame);
+            else
+                shrunkVideo(1:end, 1:end, frameNumber) = frame;
+            end
         end
         
         if frameNumber == refFrameNumber
             temporaryRefFrame = frame;
-        end
-        
-        frameNumber = frameNumber + 1;
+        end        
     end
-    close(writer);
+    
+    if writeResult
+        close(writer);
+    end
 end
 
 % Prepare parameters for calling StripAnalysis, using each shrunk frame as
 % a single "strip"
-shrunkReader = VideoReader(shrunkFileName);
 params = parametersStructure;
-params.stripHeight = shrunkReader.Height;
-params.stripWidth = shrunkReader.Width;
-params.samplingRate = videoFrameRate;
+
+if writeResult
+    shrunkReader = VideoReader(shrunkFileName);
+    params.stripHeight = shrunkReader.Height;
+    params.stripWidth = shrunkReader.Width;   
+    shrunkVideo = shrunkFileName;
+else
+    [params.stripHeight, params.stripWidth, ~] = size(shrunkVideo);
+end
+
+params.samplingRate = FrameRate;
 params.badFrames = badFrames;
-params.originalVideoPath = shrunkFileName;
+
 try
     if ndims(temporaryRefFrame) == 3
         temporaryRefFrame = rgb2gray(temporaryRefFrame);
@@ -230,11 +300,11 @@ catch
 end
 % Check if user has rotateCorrection enabled.
 if isfield(params, 'rotateCorrection') && params.rotateCorrection
-    [coarseRefFrame, ~] = RotateCorrect(shrunkFileName, inputVideoPath, ...
+    [coarseRefFrame, ~] = RotateCorrect(shrunkVideo, inputVideo, ...
         temporaryRefFrame, outputFileName, params);
     return;
 else
-    [~, usefulEyePositionTraces, ~, ~] = StripAnalysis(shrunkFileName, ...
+    [~, usefulEyePositionTraces, ~, ~] = StripAnalysis(shrunkVideo, ...
         temporaryRefFrame, params);
 end
 framePositions = usefulEyePositionTraces;
@@ -274,7 +344,6 @@ end
 framePositions = framePositions * 1/scalingFactor;
 
 %% Set up the counter array and the template for the coarse reference frame.
-height = reader.Height;
 counterArray = zeros(height*3);
 coarseRefFrame = zeros(height*3);
 
@@ -288,16 +357,23 @@ if enableGPU
 end
 
 ending = size(usefulEyePositionTraces, 1);
-frameNumber = 1;
-reader = VideoReader(inputVideoPath);
 
-while hasFrame(reader)
-    frame = readFrame(reader);
-    if ndims(frame) == 3
-        frame = rgb2gray(frame);
+if writeResult
+   reader = VideoReader(inputVideo);
+end
+
+for frameNumber = 1:numberOfFrames
+    
+    if writeResult
+        frame = readFrame(reader);
+        if ndims(frame) == 3
+            frame = rgb2gray(frame);
+        end
+    else
+        frame = inputVideo(1:end, 1:end, frameNumber);
     end
+    
     if frameNumber < (1 + beginNaNs) || any(badFrames == frameNumber)
-        frameNumber = frameNumber + 1;
         continue;
     elseif frameNumber > ending-endNaNs 
         break;
@@ -329,7 +405,6 @@ while hasFrame(reader)
     coarseRefFrame(selectRow, selectColumn) = coarseRefFrame(selectRow, ...
         selectColumn) + double(frame);
     counterArray(selectRow, selectColumn) = counterArray(selectRow, selectColumn) + 1;
-    frameNumber = frameNumber + 1;
 end
 
 % Divide the template frame by the counterArray to obtain the average value
