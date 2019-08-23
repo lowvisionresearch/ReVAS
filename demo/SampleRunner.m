@@ -23,8 +23,14 @@ end
 
 
 % Run desired modules.
+% Also see example usages in the header comment of each module file.
 parametersStructure = struct;
 video = TrimVideo(video, parametersStructure);
+
+stimulus = struct;
+stimulus.size = 11;
+stimulus.thickness = 1;
+video = RemoveStimuli(video, stimulus, parametersStructure);
 
 
 % Write the video when finished with desired modules.
