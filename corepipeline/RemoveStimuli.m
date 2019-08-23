@@ -1,15 +1,19 @@
-function RemoveStimuli(inputVideoPath, stimulus, parametersStructure, removalAreaSize)
+function outputVideo = RemoveStimuli(inputVideo, stimulus, parametersStructure, removalAreaSize)
 %REMOVE STIMULI Finds and removes stimuli from each frame. 
 % Stimulus locations are saved in a mat file, and the video with stimuli
-% removed is saved wiht "_no_stim" suffix.
+% removed is saved with "_nostim" suffix.
 %
 %   -----------------------------------
 %   Input
 %   -----------------------------------
-%   |inputVideoPath| is the path to the video. The result is stored with 
-%   '_stimlocs' appended to the input video file name (and the file type
-%   is now .mat). The mean and standard deviation of the pixels in each
-%   frame are also saved as two separate arrays in this output mat file.
+%   |inputVideo| is either the path to the video, or the video matrix itself. 
+%   In the former situation, the result is stored in a new video file with 
+%   '_nostim' appended to the input video file name. In the latter situation, 
+%   no video is written and the result is returned. In either case, a mat 
+%   file with the stimulus locations are saved, as well as the mean and 
+%   standard deviation of the pixels in each frame. This mat file has 
+%   '_stimlocs' appeneded to the input video file name, or is simply called
+%   'stimlocs.mat' if a video matrix was passed in.
 %
 %   |stimulus| is a path to a stimulus or a struct containing a |size|
 %   field which is the size of the stimulus in pixels (default 11), and a
@@ -38,28 +42,42 @@ function RemoveStimuli(inputVideoPath, stimulus, parametersStructure, removalAre
 %   -----------------------------------
 %   Example usage
 %   -----------------------------------
-%       inputVideoPath = 'MyVid.avi';
+%       inputVideo = 'MyVid.avi';
 %       parametersStructure.enableVerbosity = true;
 %       parametersStructure.overwrite = true;
 %       stimulus = struct;
 %       stimulus.size = 11;
 %       stimulus.thickness = 1;
 %       removalAreaSize = [11 11];
-%       RemoveStimuli(inputVideoPath, stimulus, parametersStructure, ...
+%       RemoveStimuli(inputVideo, stimulus, parametersStructure, ...
 %                             removalAreaSize);
 
-%% Handle overwrite scenarios.
-outputVideoPath = [inputVideoPath(1:end-4) '_nostim' inputVideoPath(end-3:end)];
-matFileName = [inputVideoPath(1:end-4) '_stimlocs'];
-if ~exist([matFileName '.mat'], 'file') && ~exist(outputVideoPath, 'file')
-    % left blank to continue without issuing warning in this case
-elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-    RevasWarning('RemoveStimuli() did not execute because it would overwrite existing file.', parametersStructure);
-    return;
+%% Determine inputVideo type.
+if isstring(inputVideo)
+    % A path was passed in.
+    % Read the video and once finished with this module, write the result.
+    writeResult = true;
 else
-    RevasWarning('RemoveStimuli() is proceeding and overwriting an existing file.', parametersStructure);
+    % A video matrix was passed in.
+    % Do not write the result; return it instead.
+    writeResult = false;
+    matFileName = 'stimlocs.mat';
 end
 
+%% Handle overwrite scenarios.
+
+if writeResult
+    outputVideoPath = [inputVideo(1:end-4) '_nostim' inputVideo(end-3:end)];
+    matFileName = [inputVideo(1:end-4) '_stimlocs'];
+    if ~exist([matFileName '.mat'], 'file') && ~exist(outputVideoPath, 'file')
+        % left blank to continue without issuing warning in this case
+    elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
+        RevasWarning('RemoveStimuli() did not execute because it would overwrite existing file.', parametersStructure);
+        return;
+    else
+        RevasWarning('RemoveStimuli() is proceeding and overwriting an existing file.', parametersStructure);
+    end
+end
 
 %% Convert stimulus to matrix
 % Two stimulus input types are acceptable:
@@ -98,6 +116,10 @@ end
 % Validation on the input stimulus was already performed as it was converted to a
 % matrix.
 
+if ~isfield(parametersStructure, 'enableVerbosity')
+    parametersStructure.enableVerbosity = false;
+end
+
 if nargin == 3
    stimulusSize = size(stimulus);
 else
@@ -111,6 +133,13 @@ else
    end
 end
 
+if ~writeResult && ~isfield(parametersStructure, 'FrameRate')
+    FrameRate = 30;
+    RevasWarning('using default parameter for FrameRate', parametersStructure);
+else
+    FrameRate = parametersStructure.FrameRate;
+end
+
 %% Allow for aborting if not parallel processing
 global abortTriggered;
 
@@ -122,15 +151,23 @@ end
 
 %% Find stimulus location of each frame
 
-writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
-open(writer);
+if writeResult
+    writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
+    open(writer);
 
-% Determine dimensions of video.
-reader = VideoReader(inputVideoPath);
-samplingRate = reader.FrameRate;
-width = reader.Width;
-height = reader.Height;
-numberOfFrames = reader.Framerate * reader.Duration;
+    % Determine dimensions of video.
+    reader = VideoReader(inputVideo);
+    samplingRate = reader.FrameRate;
+    width = reader.Width;
+    height = reader.Height;
+    numberOfFrames = reader.Framerate * reader.Duration;
+    
+else
+    samplingRate = FrameRate;
+    
+    % Determine dimensions of video.
+    [height, width, numberOfFrames] = size(inputVideo);
+end
 
 % Populate time array
 timeArray = (1:numberOfFrames)' / samplingRate;   
@@ -155,9 +192,13 @@ stimulusThresholdValue = 0.8; % TODO hard-coded threshold.
 
 for frameNumber = 1:numberOfFrames
     if ~abortTriggered
-        frame = readFrame(reader);
-        if ndims(frame) == 3
-            frame = rgb2gray(frame);
+        if writeResult
+            frame = readFrame(reader);
+            if ndims(frame) == 3
+                frame = rgb2gray(frame);
+            end
+        else
+            frame = inputVideo(1:end, 1:end, frameNumber);
         end
 
         correlationMap = normxcorr2(stimulus, frame);
@@ -254,17 +295,22 @@ for frameNumber = 1:numberOfFrames
         targetArea(toBeRemoved) = noise;
         
         frame(max(xLow, 1) : min(xHigh, height),max(yLow, 1) : min(yHigh, width)) = targetArea;
-        writeVideo(writer, frame);
+        
+        if writeResult
+            writeVideo(writer, frame);
+        else
+           inputVideo(1:end, 1:end, frameNumber) = frame; 
+        end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
     end
 end
 
-
-%% close videos
-close(writer);
-
-
+if writeResult
+    close(writer);
+else
+    outputVideo = inputVideo;
+end
 
 %% Save to output mat file
 save(matFileName, 'stimulusLocationInEachFrame', 'stimulusSize', ...
