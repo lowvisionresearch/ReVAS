@@ -36,6 +36,8 @@ parametersStructure.isHistEq = false;
 parametersStructure.isGammaCorrect = true;
 video = GammaCorrect(video, parametersStructure);
 
+video = BandpassFilter(video, parametersStructure);
+
 
 % Write the video when finished with desired modules.
 writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
