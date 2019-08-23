@@ -13,7 +13,8 @@ function coarseRefFrame = CoarseRef(inputVideo, parametersStructure)
 %   -----------------------------------
 %   Input
 %   -----------------------------------
-%   |inputVideo| is the path to the video or a matrix containing the video.
+%   |inputVideo| is the path to the video or a matrix containing the video,
+%   or a matrix containing the video.
 %
 %   |parametersStructure| is a struct as specified below.
 %
@@ -87,9 +88,9 @@ if writeResult
     blinkFramesPath = [inputVideo(1:end-4) '_blinkframes.mat'];
     shrunkFileName = [inputVideo(1:end-4) '_shrunk.avi'];
 else
-    outputFileName = 'coarseref';
-    outputTracesName = 'coarseframepositions';
-    blinkFramesPath = 'blinkframes.mat';
+    outputFileName = '.coarseref.mat';
+    outputTracesName = '.coarseframepositions';
+    blinkFramesPath = '.blinkframes.mat';
 end
 
 %% Handle overwrite scenarios.
