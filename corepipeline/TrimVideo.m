@@ -62,15 +62,15 @@ end
 %% Set parameters to defaults if not specified.
 
 if nargin == 1 || ~isfield(parametersStructure, 'borderTrimAmount')
-    borderTrimAmount = [0 24 24 0];
+    parametersStructure.borderTrimAmount = [0 24 24 0];
     RevasWarning('using default parameter for borderTrimAmount', parametersStructure);
 elseif isscalar(parametersStructure.borderTrimAmount)
-    borderTrimAmount = [0 parametersStructure.borderTrimAmount ...
+    parametersStructure.borderTrimAmount = [0 parametersStructure.borderTrimAmount ...
         parametersStructure.borderTrimAmount 0];
 else
-    borderTrimAmount = parametersStructure.borderTrimAmount;
+    parametersStructure.borderTrimAmount = parametersStructure.borderTrimAmount;
 end
-for t = borderTrimAmount
+for t = parametersStructure.borderTrimAmount
     if ~IsNaturalNumber(t)
         error('borderTrimAmount must consist of natural numbers');
     end
@@ -87,10 +87,10 @@ end
 
 %% Trim the video frame by frame
 
-left = borderTrimAmount(1);
-right = borderTrimAmount(2);
-top = borderTrimAmount(3);
-bottom = borderTrimAmount(4);
+left = parametersStructure.borderTrimAmount(1);
+right = parametersStructure.borderTrimAmount(2);
+top = parametersStructure.borderTrimAmount(3);
+bottom = parametersStructure.borderTrimAmount(4);
 
 if writeResult
     writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
@@ -134,5 +134,4 @@ else
                     left+1 : width-right, ...
                     1 : end);
 end
-
 end

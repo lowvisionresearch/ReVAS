@@ -125,11 +125,10 @@ if ~isfield(parametersStructure, 'rotateMaximumPeakRatio')
 end
 
 if ~isfield(parametersStructure, 'scalingFactor')
-    scalingFactor = 1;
+    parametersStructure.scalingFactor = 1;
     RevasWarning('using default parameter for scalingFactor', parametersStructure);
 else
-    scalingFactor = parametersStructure.scalingFactor;
-    if ~IsPositiveRealNumber(scalingFactor)
+    if ~IsPositiveRealNumber(parametersStructure.scalingFactor)
         error('scalingFactor must be a positive, real number');
     end
 end
@@ -138,23 +137,19 @@ end
 % the default frame should be the 3rd frame. (arbitrary decision at this
 % point)
 if ~isfield(parametersStructure, 'refFrameNumber')
-    refFrameNumber = 3;
+    parametersStructure.refFrameNumber = 3;
     RevasWarning('using default parameter for refFrameNumber', parametersStructure);
-else
-    refFrameNumber = parametersStructure.refFrameNumber;
 end
 
 if ~isfield(parametersStructure, 'frameIncrement')
-    frameIncrement = 1;
+    parametersStructure.frameIncrement = 1;
     RevasWarning('using default parameter for frameIncrement', parametersStructure);
-else
-    frameIncrement = parametersStructure.frameIncrement;
 end
 
 if exist('badFrames', 'var')
-    while any(badFrames == refFrameNumber)
-        if refFrameNumber > 1
-            refFrameNumber = refFrameNumber - 1;
+    while any(badFrames == parametersStructure.refFrameNumber)
+        if parametersStructure.refFrameNumber > 1
+            parametersStructure.refFrameNumber = parametersStructure.refFrameNumber - 1;
         else
             % If this case is ever reached, that means that half the video
             % has been marked as bad frames.
@@ -167,14 +162,12 @@ if exist('badFrames', 'var')
 end
 
 if ~writeResult && ~isfield(parametersStructure, 'FrameRate')
-    FrameRate = 30;
+    parametersStructure.FrameRate = 30;
     RevasWarning('using default parameter for FrameRate', parametersStructure);
-elseif ~writeResult
-    FrameRate = parametersStructure.FrameRate;
 end
 
-enableGPU = isfield(parametersStructure, 'enableGPU') && ...
-    islogical(parametersStructure.enableGPU) && ...
+parametersStructure.enableGPU = isfield(parametersStructure, 'enableGPU') && ...
+    islogical(parametersStructure.parametersStructure.enableGPU) && ...
     parametersStructure.enableGPU && ...
     gpuDeviceCount > 0;
 
@@ -182,12 +175,12 @@ enableGPU = isfield(parametersStructure, 'enableGPU') && ...
 
 if writeResult
     reader = VideoReader(inputVideo);
-    FrameRate = reader.Framerate;
-    numberOfFrames = FrameRate * reader.Duration;
+    parametersStructure.FrameRate = reader.parametersStructure.FrameRate;
+    numberOfFrames = parametersStructure.FrameRate * reader.Duration;
     height = reader.Height;
 
 else
-    % FrameRate set in "Set parameters to default if not specified"
+    % parametersStructure.FrameRate set in "Set parameters to default if not specified"
     % section already.
     [height, ~, numberOfFrames] = size(inputVideo);
 end
@@ -213,7 +206,7 @@ try
             if ndims(frame) == 3
                 frame = rgb2gray(frame);
             end
-            if frameNumber == refFrameNumber
+            if frameNumber == parametersStructure.refFrameNumber
                 temporaryRefFrame = frame;
                 break;
             end
@@ -228,8 +221,8 @@ catch
     else
         % preallocate shrunk video
         shrunkVideo = zeros( ...
-            size(inputVideo, 1) * scalingFactor, ...
-            size(inputVideo, 2) * scalingFactor, ...
+            size(inputVideo, 1) * parametersStructure.scalingFactor, ...
+            size(inputVideo, 2) * parametersStructure.scalingFactor, ...
             size(inputVideo, 3), ...
             'uint8');
     end
@@ -245,8 +238,8 @@ catch
             frame = inputVideo(1:end, 1:end, frameNumber);
         end
         
-        if rem(frameNumber,frameIncrement) == 0
-            frame = imresize(frame, scalingFactor);
+        if rem(frameNumber,parametersStructure.frameIncrement) == 0
+            frame = imresize(frame, parametersStructure.scalingFactor);
 
             % Sometimes resizing causes numbers to dip below 0 (but just barely)
             frame(frame<0) = 0;
@@ -260,7 +253,7 @@ catch
             end
         end
         
-        if frameNumber == refFrameNumber
+        if frameNumber == parametersStructure.refFrameNumber
             temporaryRefFrame = frame;
         end        
     end
@@ -283,7 +276,7 @@ else
     [params.stripHeight, params.stripWidth, ~] = size(shrunkVideo);
 end
 
-params.samplingRate = FrameRate;
+params.samplingRate = parametersStructure.FrameRate;
 params.badFrames = badFrames;
 
 try
@@ -340,7 +333,7 @@ catch
 end
 
 %% Scale the coordinates back up.
-framePositions = framePositions * 1/scalingFactor;
+framePositions = framePositions * 1/parametersStructure.scalingFactor;
 
 %% Set up the counter array and the template for the coarse reference frame.
 counterArray = zeros(height*3);
@@ -348,7 +341,7 @@ coarseRefFrame = zeros(height*3);
 
 framePositions = round(ScaleCoordinates(framePositions));
 
-if enableGPU
+if parametersStructure.enableGPU
     numberOfFrames = gpuArray(numberOfFrames);
     framePositions = gpuArray(framePositions);
     counterArray = gpuArray(counterArray);
@@ -379,7 +372,7 @@ for frameNumber = 1:numberOfFrames
     end
     framePositionIndex = frameNumber - beginNaNs;
     
-    if enableGPU
+    if parametersStructure.enableGPU
         frame = gpuArray(frame);
     end
     
@@ -410,7 +403,7 @@ end
 % for each pixel.
 coarseRefFrame = coarseRefFrame./counterArray;
 
-if enableGPU
+if parametersStructure.enableGPU
     coarseRefFrame = gather(coarseRefFrame);
 end
 

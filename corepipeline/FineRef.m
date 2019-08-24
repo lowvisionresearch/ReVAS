@@ -71,10 +71,9 @@ end
 %% Set parameters to defaults if not specified.
 
 if ~isfield(parametersStructure, 'numberOfIterations')
-    numberOfIterations = 1;
+    parametersStructure.numberOfIterations = 1;
 else
-    numberOfIterations = parametersStructure.numberOfIterations;
-    if ~IsNaturalNumber(numberOfIterations)
+    if ~IsNaturalNumber(parametersStructure.numberOfIterations)
         error('numberOfIterations must be a natural number');
     end
 end
@@ -89,7 +88,7 @@ if isempty(abortTriggered)
 end
 
 %% First perform strip analysis on the coarseRefFrame. 
-if numberOfIterations > 0
+if parametersStructure.numberOfIterations > 0
     [~, usefulEyePositionTraces, timeArray, ~] = ...
         StripAnalysis(inputVideo, coarseRefFrame, parametersStructure);
 
@@ -113,13 +112,13 @@ end
 % and forth between extracting positions and generating reference frames
 % based on those positions
 k = 0;
-while k < numberOfIterations
+while k < parametersStructure.numberOfIterations
     parametersStructure.positions = usefulEyePositionTraces;
     parametersStructure.time = timeArray;
     
     % If this is the final iteration, add a flag to the parametersStructure
     % to add random noise to black regions of the final reference frame.
-    if k + 1 == numberOfIterations
+    if k + 1 == parametersStructure.numberOfIterations
         parametersStructure.addNoise = true;
     end
     
@@ -128,7 +127,7 @@ while k < numberOfIterations
     % reference frame. If this is the last iteration, do not execute this
     % suite because the reference frame has already been updated to its
     % final form.
-    if k ~= numberOfIterations - 1
+    if k ~= parametersStructure.numberOfIterations - 1
         [~, usefulEyePositionTraces, timeArray, ~] = ...
             StripAnalysis(inputVideo, newRefFrame, parametersStructure);
         
