@@ -64,26 +64,21 @@ end
 
 %% Set parameters to defaults if not specified.
 if ~isfield(parametersStructure, 'isHistEq')
-    isHistEq = true;
+    parametersStructure.isHistEq = true;
     RevasWarning('using default parameter for isHistEq', parametersStructure);
-else
-    isHistEq = parametersStructure.isHistEq;
 end
 
 if ~isfield(parametersStructure, 'isGammaCorrect')
-    isGammaCorrect = false;
+    parametersStructure.isGammaCorrect = false;
     RevasWarning('using default parameter for isGammaCorrect', parametersStructure);
-else
-    isGammaCorrect = parametersStructure.isGammaCorrect;
 end
 
 if ~isfield(parametersStructure, 'gammaExponent')
-    gammaExponent = 0.6;
+    parametersStructure.gammaExponent = 0.6;
     RevasWarning('using default parameter for gammaExponent', parametersStructure);
 else
-    gammaExponent = parametersStructure.gammaExponent;
-    if ~IsRealNumber(gammaExponent)
-       error('gammaExponent must be a real number'); 
+    if ~IsRealNumber(parametersStructure.gammaExponent)
+       error('parametersStructure.gammaExponent must be a real number'); 
     end
 end
 
@@ -117,10 +112,10 @@ if writeResult
                 frame = rgb2gray(frame);
             end
 
-            if isGammaCorrect
-                frame = imadjust(frame, [], [], gammaExponent);
+            if parametersStructure.isGammaCorrect
+                frame = imadjust(frame, [], [], parametersStructure.gammaExponent);
             end
-            if isHistEq
+            if parametersStructure.isHistEq
                 frame = histeq(frame);
             end
 
@@ -133,10 +128,10 @@ if writeResult
 else
     outputVideo = inputVideo;
     for i = 1:size(inputVideo, 3)
-        if isGammaCorrect
-            outputVideo(1:end,1:end,i) = imadjust(outputVideo(1:end,1:end,i), [], [], gammaExponent);
+        if parametersStructure.isGammaCorrect
+            outputVideo(1:end,1:end,i) = imadjust(outputVideo(1:end,1:end,i), [], [], parametersStructure.gammaExponent);
         end
-        if isHistEq
+        if parametersStructure.isHistEq
             outputVideo(1:end,1:end,i) = histeq(outputVideo(1:end,1:end,i));
         end
     end
