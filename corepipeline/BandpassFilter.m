@@ -65,21 +65,19 @@ end
 %% Set parameters to defaults if not specified.
 
 if ~isfield(parametersStructure, 'smoothing')
-    smoothing = 1; % standard deviation of the gaussian kernel, in pixels
+    parametersStructure.smoothing = 1; % standard deviation of the gaussian kernel, in pixels
     RevasWarning('using default parameter for smoothing', parametersStructure);
 else
-    smoothing = parametersStructure.smoothing;
-    if ~IsNaturalNumber(smoothing)
+    if ~IsNaturalNumber(parametersStructure.smoothing)
         error('smoothing must be a natural number');
     end
 end
 
 if ~isfield(parametersStructure, 'lowSpatialFrequencyCutoff')
-    lowSpatialFrequencyCutoff = 3; % cycles per image
+    parametersStructure.lowSpatialFrequencyCutoff = 3; % cycles per image
     RevasWarning('using default parameter for lowSpatialFrequencyCutoff', parametersStructure);
 else
-    lowSpatialFrequencyCutoff = parametersStructure.lowSpatialFrequencyCutoff;
-    if ~IsNonNegativeRealNumber(lowSpatialFrequencyCutoff)
+    if ~IsNonNegativeRealNumber(parametersStructure.lowSpatialFrequencyCutoff)
         error('lowSpatialFrequencyCutoff must be a non-negative real number');
     end
 end
@@ -123,7 +121,7 @@ radiusMatrix = sqrt((repmat(xVector,height,1) .^ 2) + ...
 % create the amplitude response of the high-pass filter (which will remove
 % only the low spatial frequency components in the image such as luminance
 % gradient, darker foveal pit, etc.)
-highPassFilter = double(radiusMatrix > lowSpatialFrequencyCutoff);
+highPassFilter = double(radiusMatrix > parametersStructure.lowSpatialFrequencyCutoff);
 highPassFilter(floor(height/2) + 1, floor(width/2) + 1) = 1;
 
 % Read, apply filters, and write frame by frame.
@@ -138,8 +136,8 @@ for frameNumber = 1:numberOfFrames
             frame = inputVideo(1:end, 1:end, frameNumber);
         end
     
-        % apply smoothing
-        I1 = imgaussfilt(frame, smoothing);
+        % apply parametersStructure.smoothing
+        I1 = imgaussfilt(frame, parametersStructure.smoothing);
 
         % remove low spatial frequencies
         I2 = abs(ifft2((fft2(I1)) .* ifftshift(highPassFilter)));

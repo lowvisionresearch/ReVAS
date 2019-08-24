@@ -18,7 +18,7 @@ function [stripIndices, stripsPerFrame] = DivideIntoStrips(videoInputPath, param
 %% Set parameters to defaults if not specified.
 if ~isfield(parametersStructure, 'samplingRate')
     samplingRate = 540;
-    warning('using default parameter for samplingRate');
+    RevasMessage('using default parameter for samplingRate');
 else
     samplingRate = parametersStructure.samplingRate;
     if ~IsNaturalNumber(samplingRate)
@@ -28,7 +28,7 @@ end
 
 if ~isfield(parametersStructure, 'stripHeight')
     stripHeight = 15;
-    warning('using default parameter for stripHeight');
+    RevasMessage('using default parameter for stripHeight');
 else
     stripHeight = parametersStructure.stripHeight;
     if ~IsNaturalNumber(stripHeight)

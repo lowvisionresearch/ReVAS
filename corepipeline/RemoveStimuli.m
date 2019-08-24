@@ -134,10 +134,8 @@ else
 end
 
 if ~writeResult && ~isfield(parametersStructure, 'FrameRate')
-    FrameRate = 30;
+    parametersStructure.FrameRate = 30;
     RevasWarning('using default parameter for FrameRate', parametersStructure);
-elseif ~writeResult
-    FrameRate = parametersStructure.FrameRate;
 end
 
 %% Allow for aborting if not parallel processing
@@ -157,13 +155,13 @@ if writeResult
 
     % Determine dimensions of video.
     reader = VideoReader(inputVideo);
-    samplingRate = reader.FrameRate;
+    samplingRate = reader.parametersStructure.FrameRate;
     width = reader.Width;
     height = reader.Height;
-    numberOfFrames = reader.Framerate * reader.Duration;
+    numberOfFrames = reader.parametersStructure.FrameRate * reader.Duration;
     
 else
-    samplingRate = FrameRate;
+    samplingRate = parametersStructure.FrameRate;
     
     % Determine dimensions of video.
     [height, width, numberOfFrames] = size(inputVideo);
