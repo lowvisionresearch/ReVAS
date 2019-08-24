@@ -40,8 +40,12 @@ video = GammaCorrect(video, parametersStructure);
 video = BandpassFilter(video, parametersStructure);
 
 refFrame = CoarseRef(video, parametersStructure);
+
 [refFrame, ~, ~] = FineRef(refFrame, video, parametersStructure);
 
+parametersStructure.adaptiveSearch = true;
+[rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
+    statisticsStructure] = StripAnalysis(video, refFrame, parametersStructure);
 
 % Write the video when finished with desired modules.
 writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
@@ -87,6 +91,10 @@ refFramePath = Filename(inputVideoPath, 'coarseref');
 
 FineRef(refFramePath, inputVideoPath, parametersStructure);
 refFramePath = Filename(inputVideoPath, 'fineref');
+
+parametersStructure.adaptiveSearch = true;
+[rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
+    statisticsStructure] = StripAnalysis(inputVideoPath, refFramePath, parametersStructure);
 
 toc;
 

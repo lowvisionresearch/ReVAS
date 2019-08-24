@@ -175,7 +175,7 @@ parametersStructure.enableGPU = isfield(parametersStructure, 'enableGPU') && ...
 
 if writeResult
     reader = VideoReader(inputVideo);
-    parametersStructure.FrameRate = reader.parametersStructure.FrameRate;
+    parametersStructure.FrameRate = reader.FrameRate;
     numberOfFrames = parametersStructure.FrameRate * reader.Duration;
     height = reader.Height;
 
