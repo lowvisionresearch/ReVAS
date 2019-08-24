@@ -88,7 +88,6 @@ if writeResult
     blinkFramesPath = [inputVideo(1:end-4) '_blinkframes.mat'];
     shrunkFileName = [inputVideo(1:end-4) '_shrunk.avi'];
 else
-    outputFileName = '.coarseref.mat';
     outputTracesName = '.coarseframepositions';
     blinkFramesPath = '.blinkframes.mat';
 end
@@ -186,12 +185,11 @@ if writeResult
     FrameRate = reader.Framerate;
     numberOfFrames = FrameRate * reader.Duration;
     height = reader.Height;
-    width = reader.Width;
 
 else
     % FrameRate set in "Set parameters to default if not specified"
     % section already.
-    [height, width, numberOfFrames] = size(inputVideo);
+    [height, ~, numberOfFrames] = size(inputVideo);
 end
 
 % First check whether the shrunk video already exists
@@ -421,7 +419,9 @@ coarseRefFrame = uint8(coarseRefFrame);
 %% Remove extra padding from the coarse reference frame
 coarseRefFrame = Crop(coarseRefFrame);
 
-save(outputFileName, 'coarseRefFrame');
+if writeResult
+    save(outputFileName, 'coarseRefFrame');
+end
 
 if isfield(parametersStructure, 'enableVerbosity') && ...
         parametersStructure.enableVerbosity >= 1

@@ -1,5 +1,5 @@
 function [newRefFrame, usefulEyePositionTraces, timeArray] = ...
-    FineRef(coarseRefFrame, inputVideoPath, parametersStructure)
+    FineRef(coarseRefFrame, inputVideo, parametersStructure)
 %FINE REF  Generate a better reference frame.
 %   The function alternates between StripAnalysis and MakeMontage,
 %   alternating between generating eye traces and generating the reference
@@ -11,7 +11,7 @@ function [newRefFrame, usefulEyePositionTraces, timeArray] = ...
 %   |coarseRefFrame| is the path to the coarse reference frame or a matrix 
 %   representation of the coarse reference frame
 %
-%   |inputVideoPath| is the path to the video.
+%   |inputVideo| is the path to the video or the video matrix.
 %
 %   |parametersStructure| is a struct as specified below.
 %
@@ -34,25 +34,38 @@ function [newRefFrame, usefulEyePositionTraces, timeArray] = ...
 %   -----------------------------------
 %   Example usage
 %   -----------------------------------
-%       inputVideoPath = 'MyVid.avi';
+%       inputVideo = 'MyVid.avi';
 %       coarseRefFrame = load('MyVid_coarseRef.mat');
 %       parametersStructure = load(MyVid_params.mat');
-%       newRefFrame = FineRef(coarseRefFrame, inputVideoPath, parametersStructure);
+%       newRefFrame = FineRef(coarseRefFrame, inputVideo, parametersStructure);
+
+%% Determine inputVideo type.
+if ischar(inputVideo)
+    % A path was passed in.
+    % Read the video and once finished with this module, write the result.
+    writeResult = true;
+else
+    % A video matrix was passed in.
+    % Do not write the result; return it instead.
+    writeResult = false;
+end
 
 %% Handle overwrite scenarios.
-outputFileName = [inputVideoPath(1:end-4) '_refframe'];
+if writeResult
+    outputFileName = [inputVideo(1:end-4) '_refframe'];
 
-if ~exist([outputFileName '.mat'], 'file')
-    % left blank to continue without issuing warning in this case
-elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-    RevasWarning(['FineRef() did not execute because it would overwrite existing file. (' outputFileName ')'], parametersStructure);
-    data = load(outputFileName);
-    newRefFrame = data.refFrame;
-    usefulEyePositionTraces = data.eyePositionTraces;
-    timeArray = data.timeArray;
-    return;
-else
-    RevasWarning(['FineRef() is proceeding and overwriting an existing file. (' outputFileName ')'], parametersStructure);  
+    if ~exist([outputFileName '.mat'], 'file')
+        % left blank to continue without issuing warning in this case
+    elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
+        RevasWarning(['FineRef() did not execute because it would overwrite existing file. (' outputFileName ')'], parametersStructure);
+        data = load(outputFileName);
+        newRefFrame = data.refFrame;
+        usefulEyePositionTraces = data.eyePositionTraces;
+        timeArray = data.timeArray;
+        return;
+    else
+        RevasWarning(['FineRef() is proceeding and overwriting an existing file. (' outputFileName ')'], parametersStructure);  
+    end
 end
 
 %% Set parameters to defaults if not specified.
@@ -78,7 +91,7 @@ end
 %% First perform strip analysis on the coarseRefFrame. 
 if numberOfIterations > 0
     [~, usefulEyePositionTraces, timeArray, ~] = ...
-        StripAnalysis(inputVideoPath, coarseRefFrame, parametersStructure);
+        StripAnalysis(inputVideo, coarseRefFrame, parametersStructure);
 
     if logical(abortTriggered)
         newRefFrame = [];
@@ -88,10 +101,12 @@ else
     % If user specifies 0 iterations, set the return value to the coarse
     % reference frame that was passed in.
     newRefFrame = coarseRefFrame;
-    outputFileName = inputVideoPath;
-    ouputFileName(end-3:end) = [];
-    outputFileName(end+1:end+9) = '_refframe';
-    save(outputFileName, 'newRefFrame');
+    if writeResult
+        outputFileName = inputVideo;
+        outputFileName(end-3:end) = [];
+        outputFileName(end+1:end+9) = '_refframe';
+        save(outputFileName, 'newRefFrame');
+    end
 end
 
 %% For a certain number of iterations specified by the user, pingpong back
@@ -108,14 +123,14 @@ while k < numberOfIterations
         parametersStructure.addNoise = true;
     end
     
-    newRefFrame = MakeMontage(parametersStructure, inputVideoPath);
+    newRefFrame = MakeMontage(parametersStructure, inputVideo);
     % If this is not the last iteration, perform strip analysis using the new
     % reference frame. If this is the last iteration, do not execute this
     % suite because the reference frame has already been updated to its
     % final form.
     if k ~= numberOfIterations - 1
         [~, usefulEyePositionTraces, timeArray, ~] = ...
-            StripAnalysis(inputVideoPath, newRefFrame, parametersStructure);
+            StripAnalysis(inputVideo, newRefFrame, parametersStructure);
         
         if logical(abortTriggered)
             newRefFrame = [];
