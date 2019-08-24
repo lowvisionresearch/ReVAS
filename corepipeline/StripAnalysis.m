@@ -147,7 +147,14 @@ if ischar(referenceFrame)
     % Reference Frame Path is needed because it is written to the file in
     % the end.
     referenceFramePath = referenceFrame;
-    referenceFrame = importdata(referenceFrame);
+    load(referenceFramePath, 'refFrame');
+    load(referenceFramePath, 'coarseRefFrame');
+    if exist('refFrame', 'var')
+        referenceFrame = refFrame;
+    else
+        referenceFrame = coarseRefFrame;
+
+    end
 else
     referenceFramePath = ''; 
 end
@@ -485,7 +492,7 @@ isSetView = true;
 % trace values can be plotted as early as possible).
 currFrameNumber = 0;
 reader = VideoReader(videoInputPath);
-for stripNumber = (1:numberOfStrips)
+for stripNumber = 1:numberOfStrips
 
     if ~abortTriggered
         
@@ -532,8 +539,8 @@ for stripNumber = (1:numberOfStrips)
             upperBound = floor(min(max(1, ...
                 estimatedStripYLocations(stripNumber) ...
                 - ((searchWindowHeight - stripHeight)/2)), ...
-                size(videoInput, 1)));
-            lowerBound = floor(min(size(videoInput, 1), ...
+                reader.Height));
+            lowerBound = floor(min(reader.Height, ...
                 estimatedStripYLocations(stripNumber) ...
                 + ((searchWindowHeight - stripHeight)/2) ...
                 + stripHeight));

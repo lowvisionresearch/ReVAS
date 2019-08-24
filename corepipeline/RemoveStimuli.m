@@ -155,10 +155,10 @@ if writeResult
 
     % Determine dimensions of video.
     reader = VideoReader(inputVideo);
-    samplingRate = reader.parametersStructure.FrameRate;
+    samplingRate = reader.FrameRate;
     width = reader.Width;
     height = reader.Height;
-    numberOfFrames = reader.parametersStructure.FrameRate * reader.Duration;
+    numberOfFrames = reader.FrameRate * reader.Duration;
     
 else
     samplingRate = parametersStructure.FrameRate;
