@@ -39,7 +39,8 @@ video = GammaCorrect(video, parametersStructure);
 
 video = BandpassFilter(video, parametersStructure);
 
-CoarseRef(video, parametersStructure);
+refFrame = CoarseRef(video, parametersStructure);
+[refFrame, ~, ~] = FineRef(refFrame, video, parametersStructure);
 
 
 % Write the video when finished with desired modules.
@@ -65,19 +66,27 @@ inputVideoPath = 'demo/sample10deg.avi';
 parametersStructure = struct;
 parametersStructure.overwrite = true;
 TrimVideo(inputVideoPath, parametersStructure);
+inputVideoPath = Filename(inputVideoPath, 'trim');
 
 stimulus = struct;
 stimulus.size = 11;
 stimulus.thickness = 1;
 RemoveStimuli(inputVideoPath, stimulus, parametersStructure);
+inputVideoPath = Filename(inputVideoPath, 'removestim');
 
 parametersStructure.isHistEq = false;
 parametersStructure.isGammaCorrect = true;
 GammaCorrect(inputVideoPath, parametersStructure);
+inputVideoPath = Filename(inputVideoPath, 'gamma');
 
 BandpassFilter(inputVideoPath, parametersStructure);
+inputVideoPath = Filename(inputVideoPath, 'bandpass');
 
 CoarseRef(inputVideoPath, parametersStructure);
+refFramePath = Filename(inputVideoPath, 'coarseref');
+
+FineRef(refFramePath, inputVideoPath, parametersStructure);
+refFramePath = Filename(inputVideoPath, 'fineref');
 
 toc;
 
