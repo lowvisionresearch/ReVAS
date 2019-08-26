@@ -1,6 +1,6 @@
-function [stripIndices, stripsPerFrame] = DivideIntoStrips(videoInputPath, parametersStructure)
+function [stripIndices, stripsPerFrame] = DivideIntoStrips(inputVideo, parametersStructure)
 %DIVIDE INTO STRIPS Returns coordinates of top left corner of strips.
-%   Takes the video input in array format and uses the given parameters
+%   Takes the video input and uses the given parameters
 %   to evenly divide the video into strips. It then will return the index
 %   in the videoInputArray of the top left corner of each strip and return
 %   all of these indices in an array. Each row of the output array
@@ -14,6 +14,17 @@ function [stripIndices, stripsPerFrame] = DivideIntoStrips(videoInputPath, param
 %   -----------------------------------
 %  samplingRate        :   sampling rate of the video
 %  stripHeight         :   the size of each strip
+
+%% Determine inputVideo type.
+if ischar(inputVideo)
+    % A path was passed in.
+    % Read the video and once finished with this module, write the result.
+    writeResult = true;
+else
+    % A video matrix was passed in.
+    % Do not write the result; return it instead.
+    writeResult = false;
+end
 
 %% Set parameters to defaults if not specified.
 if ~isfield(parametersStructure, 'samplingRate')
@@ -36,19 +47,29 @@ else
     end
 end
 
+% Default frame rate if a matrix representation of the video passed in.
+% Users may also specify custom frame rate via parametersStructure.
+if ~writeResult && ~isfield(parametersStructure, 'FrameRate')
+    parametersStructure.FrameRate = 30;
+    RevasWarning('using default parameter for FrameRate', parametersStructure);
+end
+
 %% Divide into strips.
 
-reader = VideoReader(videoInputPath);
-numberOfFrames = reader.Framerate * reader.Duration;
-videoFrameRate = reader.FrameRate;
-frame = readFrame(reader);
-frameHeight = reader.Height;
+if writeResult
+    reader = VideoReader(inputVideo);
+    numberOfFrames = reader.Framerate * reader.Duration;
+    height = reader.Height;
+    parametersStructure.FrameRate = reader.FrameRate;
+else
+    [height, ~, numberOfFrames] = size(inputVideo);
+end
 
-stripsPerFrame = round(samplingRate / videoFrameRate);
+stripsPerFrame = round(samplingRate / parametersStructure.FrameRate);
 
 stripIndices = zeros(stripsPerFrame*numberOfFrames, 3);
 
-distanceBetweenStrips = (frameHeight - stripHeight)...
+distanceBetweenStrips = (height - stripHeight)...
     / (stripsPerFrame - 1);
 
 % compute the rows of stripIndices

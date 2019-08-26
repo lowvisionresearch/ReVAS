@@ -1,6 +1,6 @@
 function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
     statisticsStructure] = ...
-    StripAnalysis(videoInput, referenceFrame, parametersStructure)
+    StripAnalysis(inputVideo, referenceFrame, parametersStructure)
 %STRIP ANALYSIS Extract eye movements in units of pixels.
 %   Cross-correlation of horizontal strips with a pre-defined
 %   reference frame.
@@ -8,7 +8,7 @@ function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
 %   -----------------------------------
 %   Input
 %   -----------------------------------
-%   |videoInput| is the path to the video or a matrix representation of the
+%   |inputVideo| is the path to the video or a matrix representation of the
 %   video that is already loaded into memory.
 %
 %   |referenceFrame| is the path to the reference frame or a matrix representation of the
@@ -97,7 +97,7 @@ function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
 %   -----------------------------------
 %   Example usage
 %   -----------------------------------
-%       videoInput = 'MyVid.avi';
+%       inputVideo = 'MyVid.avi';
 %       load('MyVid_refFrame.mat');
 %       parametersStructure.overwrite = true;
 %       parametersStructure.enableVerbosity = true;
@@ -115,31 +115,26 @@ function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
 %           = 2;
 %       parametersStructure.createStabilizedVideo = false;
 %       [rawEyePositionTraces, usefulEyePositionTraces, timeArray, statisticsStructure] = ...
-%           StripAnalysis(videoInput, referenceFrame, parametersStructure);
+%           StripAnalysis(inputVideo, referenceFrame, parametersStructure);
+
+%% Determine inputVideo type.
+if ischar(inputVideo)
+    % A path was passed in.
+    % Read the video and once finished with this module, write the result.
+    writeResult = true;
+else
+    % A video matrix was passed in.
+    % Do not write the result; return it instead.
+    writeResult = false;
+end
 
 %% Set parameters to defaults if not specified.
 
-% If videoInput is a character array, then a path was passed in.
-% Attempt to convert it to a 3D array.
-if ischar(videoInput)
-    videoInputPath = videoInput;
-    usingTemp = false;
-else
-    % ASSUMPTION
-    % If only a raw matrix is provided, then we will take the frame rate to
-    % be 30.
-    % If a raw array was passed in, write video to a temporary file so we
-    % don't have to keep the entire video in memory while we run Strip
-    % Analysis.
-    usingTemp = true;
-    videoInputPath = fullfile(pwd, '.temp.avi');
-    writer = VideoWriter(videoInputPath, 'Grayscale AVI');
-    open(writer);
-    writeVideo(writer, videoInput);
-    close(writer);
-    clear videoInput;
-    RevasMessage('A raw matrix was provided; assuming that frame rate is 30 fps.');
-    videoFrameRate = 30;
+% Default frame rate if a matrix representation of the video passed in.
+% Users may also specify custom frame rate via parametersStructure.
+if ~writeResult && ~isfield(parametersStructure, 'FrameRate')
+    parametersStructure.FrameRate = 30;
+    RevasWarning('using default parameter for FrameRate', parametersStructure);
 end
 
 % If referenceFrame is a character array, then a path was passed in.
@@ -156,16 +151,16 @@ if ischar(referenceFrame)
 
     end
 else
-    referenceFramePath = ''; 
+    referenceFramePath = '';
 end
 if ~ismatrix(referenceFrame)
     error('Invalid Input for referenceFrame (it was not a 2D array)');
 end
 
 % Identify which frames are bad frames
-% The filename may not exist if a raw array was passed in.
+% The filename is unknown if a raw array was passed in.
 if ~isfield(parametersStructure, 'badFrames')
-    nameEnd = videoInputPath(1:size(videoInputPath, 2)-4);
+    nameEnd = inputVideo(1:size(inputVideo, 2)-4);
     blinkFramesPath = [nameEnd '_blinkframes.mat'];
     try
         load(blinkFramesPath, 'badFrames');
@@ -186,9 +181,12 @@ else
     end
 end
 
-if ~isfield(parametersStructure, 'stripWidth')
-    reader = VideoReader(videoInputPath);
+if ~isfield(parametersStructure, 'stripWidth') && writeResult
+    reader = VideoReader(inputVideo);
     stripWidth = reader.Width;
+    RevasMessage('using default parameter for stripWidth');
+elseif ~isfield(parametersStructure, 'stripWidth') && ~writeResult
+    stripWidth = size(inputVideo, 2);
     RevasMessage('using default parameter for stripWidth');
 else
     stripWidth = parametersStructure.stripWidth;
@@ -355,24 +353,26 @@ enableGPU = (gpuDeviceCount > 0) & enableGPU;
 
 %% Handle overwrite scenarios.
 
-outputFileName = [videoInputPath(1:end-4) '_' ...
-    int2str(samplingRate) '_hz_final'];
+if writeResult
+    outputFileName = [inputVideo(1:end-4) '_' ...
+        int2str(samplingRate) '_hz_final'];
 
-if ~exist([outputFileName '.mat'], 'file')
-    % left blank to continue without issuing RevasMessage in this case
-elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-    RevasMessage(['StripAnalysis() did not execute because it would overwrite existing file. (' outputFileName ')'], parametersStructure);
-    rawEyePositionTraces = [];
-    usefulEyePositionTraces = [];
-    timeArray = [];
-    statisticsStructure = struct();
-    return;
-else
-    RevasMessage(['StripAnalysis() is proceeding and overwriting an existing file. (' outputFileName ')'], parametersStructure);  
+    if ~exist([outputFileName '.mat'], 'file')
+        % left blank to continue without issuing RevasMessage in this case
+    elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
+        RevasMessage(['StripAnalysis() did not execute because it would overwrite existing file. (' outputFileName ')'], parametersStructure);
+        rawEyePositionTraces = [];
+        usefulEyePositionTraces = [];
+        timeArray = [];
+        statisticsStructure = struct();
+        return;
+    else
+        RevasMessage(['StripAnalysis() is proceeding and overwriting an existing file. (' outputFileName ')'], parametersStructure);  
+    end
 end
 
 %% Preallocation and variable setup
-[stripIndices, stripsPerFrame] = DivideIntoStrips(videoInputPath, parametersStructure);
+[stripIndices, stripsPerFrame] = DivideIntoStrips(inputVideo, parametersStructure);
 numberOfStrips = size(stripIndices, 1);
 
 % two columns for horizontal and vertical movements
@@ -409,17 +409,24 @@ if adaptiveSearch
         1:scalingFactor:end, ...
         1:scalingFactor:end);
     
-    reader = VideoReader(videoInputPath);
-    frameNumber = 0;
-    while hasFrame(reader)
+    if writeResult
+        reader = VideoReader(inputVideo);
+        numberOfFrames = reader.FrameRate * reader.Duration;
+    else
+        numberOfFrames = size(inputVideo, 3);
+    end
+    
+    for frameNumber = 1:numberOfFrames
         
-        frameNumber = frameNumber + 1;
-  
-        frame = readFrame(reader);
-        if ndims(frame) == 3
-            frame = rgb2gray(frame);
+        if writeResult
+            frame = readFrame(reader);
+            if ndims(frame) == 3
+                frame = rgb2gray(frame);
+            end
+        else
+            frame = inputVideo(1:end, 1:end, frameNumber);
         end
-
+        
         % Scale down the current frame to a smaller size as well
         scaledDownFrame = frame( ...
             1:scalingFactor:end, ...
@@ -438,8 +445,6 @@ if adaptiveSearch
         estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + 1,:) = yPeak;
     end
     
-    numberOfFrames = frameNumber;
-
     % Finish populating search window by taking the line between the top left
     % corner of the previous frame and the bottom left corner of the current
     % frame and dividing that line up by the number of strips per frame.
@@ -491,7 +496,13 @@ isSetView = true;
 % these operations must be computed immediately so that the correct eye
 % trace values can be plotted as early as possible).
 currFrameNumber = 0;
-reader = VideoReader(videoInputPath);
+
+if writeResult
+    reader = VideoReader(inputVideo);
+else
+    
+end
+
 for stripNumber = 1:numberOfStrips
 
     if ~abortTriggered
@@ -509,10 +520,17 @@ for stripNumber = 1:numberOfStrips
 
         frameNumber = stripData(1,3);
         if frameNumber > currFrameNumber
-            currFrameNumber = currFrameNumber + 1;
-            frame = readFrame(reader);
-            if ndims(frame) == 3
-                frame = rgb2gray(frame);
+            currFrameNumber = frameNumber;
+            
+            if writeResult
+                frame = readFrame(reader);
+                if ndims(frame) == 3
+                    frame = rgb2gray(frame);
+                end
+                height = reader.Height;
+            else
+                frame = inputVideo(1:end, 1:end, currFrameNumber);
+                height = size(inputVideo, 1);
             end
         end
 
@@ -539,8 +557,8 @@ for stripNumber = 1:numberOfStrips
             upperBound = floor(min(max(1, ...
                 estimatedStripYLocations(stripNumber) ...
                 - ((searchWindowHeight - stripHeight)/2)), ...
-                reader.Height));
-            lowerBound = floor(min(reader.Height, ...
+                height));
+            lowerBound = floor(min(height, ...
                 estimatedStripYLocations(stripNumber) ...
                 + ((searchWindowHeight - stripHeight)/2) ...
                 + stripHeight));
@@ -849,7 +867,7 @@ end
 
 %% Save to output mat file
 
-if ~abortTriggered && ~isempty(videoInputPath)
+if writeResult && ~abortTriggered
     
     try
         parametersStructure = rmfield(parametersStructure,'axesHandles'); 
@@ -858,7 +876,7 @@ if ~abortTriggered && ~isempty(videoInputPath)
     end
     
     % Save under file labeled 'final'.
-    if ~usingTemp
+    if writeResult
         eyePositionTraces = usefulEyePositionTraces; 
         peakRatios = statisticsStructure.peakRatios; %#ok<NASGU>
         save(outputFileName, 'eyePositionTraces', 'rawEyePositionTraces', ...
@@ -871,5 +889,5 @@ end
 if ~abortTriggered && createStabilizedVideo
     parametersStructure.positions = eyePositionTraces;
     parametersStructure.time = timeArray;
-    StabilizeVideo(videoInputPath, parametersStructure);
+    StabilizeVideo(inputVideoPath, parametersStructure);
 end
