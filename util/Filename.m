@@ -1,9 +1,9 @@
-function outputFileName = Filename(inputFileName, moduleToApply, frequency)
+function outputFileName = Filename(inputFileName, moduleToApply, samplingRate)
 % Filename
 %  Utility function for converting one file name to another, according to
 %  the conventions used by ReVAS.
 %
-%  frequency is only required for useful traces.
+%  samplingRate is only required for useful traces (default 540 Hz).
 %
 %  Options for moduleToApply are:
 %   - trim
@@ -44,7 +44,12 @@ switch moduleToApply
     case 'fineref'
         outputFileName = [inputFileName '_refframe.mat'];
     case 'usefultraces'
-        outputFileName = [inputFileName '_' frequency '_hz_final.mat'];
+        % Set samplingRate to default value if necessary
+        if nargin < 3
+            samplingRate = 540;
+            RevasMessage('using default parameter for samplingRate');
+        end
+        outputFileName = [inputFileName '_' num2str(samplingRate) '_hz_final.mat'];
     case 'filtered'
         outputFileName = [inputFileName '_filtered.mat'];
     case 'reref'

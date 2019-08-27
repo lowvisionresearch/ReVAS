@@ -47,6 +47,8 @@ parametersStructure.adaptiveSearch = true;
 [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
     statisticsStructure] = StripAnalysis(video, refFrame, parametersStructure);
 
+filteredEyePositions = FilterEyePosition([usefulEyePositionTraces timeArray], parametersStructure);
+
 % Write the video when finished with desired modules.
 writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
 % some videos are not 30fps, we need to keep the same framerate as
@@ -95,6 +97,9 @@ refFramePath = Filename(inputVideoPath, 'fineref');
 parametersStructure.adaptiveSearch = true;
 [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
     statisticsStructure] = StripAnalysis(inputVideoPath, refFramePath, parametersStructure);
+tracesPath = Filename(inputVideoPath, 'usefultraces');
+
+filteredEyePositions = FilterEyePosition(tracesPath, parametersStructure);
 
 toc;
 
