@@ -50,7 +50,8 @@ eyeTraces = FilterEyePosition([eyeTraces timeArray], parametersStructure);
 
 eyeTraces = ReReference(eyeTraces, refFrame, 'demo/globalRef.tif', parametersStructure);
 
-eyeTraces = FindSaccadesAndDrifts([eyeTraces timeArray], parametersStructure);
+parametersStructure.isAdaptive = true;
+[saccades, drifts] = FindSaccadesAndDrifts([eyeTraces timeArray], parametersStructure);
 
 
 % Write the video when finished with desired modules.
@@ -108,7 +109,8 @@ filteredPath = Filename(tracesPath, 'filtered');
 ReReference(filteredPath, refFramePath, 'demo/globalRef.tif', parametersStructure);
 rerefPath = Filename(filteredPath, 'reref');
 
-FindSaccadesAndDrifts(rerefPath, parametersStructure);
+parametersStructure.isAdaptive = true;
+[saccades, drifts] = FindSaccadesAndDrifts(rerefPath, parametersStructure);
 
 
 toc;
