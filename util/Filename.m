@@ -55,7 +55,7 @@ switch moduleToApply
     case 'reref'
         outputFileName = [inputFileName '_reref.mat'];
     case 'sacsdrift'
-        outputFileName = [inputFileName '_sacsdrift.mat'];
+        outputFileName = [inputFileName '_sacsdrifts.mat'];
 end
 
 end
