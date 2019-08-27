@@ -673,23 +673,13 @@ for stripNumber = (1:numberOfStrips)
                 figure(1);
             end
             
-            fullMap = zeros( ...
-                size(referenceFrame,1) + stripHeight - 1, ...
-                size(referenceFrame,2) + stripWidth - 1);
-            if size(fullMap) == size(correlationMap)
-                fullMap = correlationMap;
-            else
-                fullMap( ...
-                    upperBound : upperBound + size(correlationMap,1) - 1, ...
-                    1 : end) = ...
-                    correlationMap(1:end,1:end);
-            end
-            
-            [surfX,surfY] = meshgrid(1:size(fullMap,2), 1:size(fullMap,1));
-            surf(surfX, surfY, fullMap, 'linestyle', 'none');
+            [surfX,surfY] = meshgrid( ...
+                1 : size(correlationMap, 2), ...
+                upperBound : upperBound + size(correlationMap,1) - 1);
+            surf(surfX, surfY, correlationMap, 'linestyle', 'none');
             title([num2str(stripNumber) ' out of ' num2str(numberOfStrips)]);
-            xlim([1 size(fullMap,2)]);
-            ylim([1 size(fullMap,1)]);
+            xlim([1 size(correlationMap, 2)]);
+            ylim([upperBound upperBound + size(correlationMap,1) - 1]);
             zlim([-1 1]);
             xlabel('');
             ylabel('');
