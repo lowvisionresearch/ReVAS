@@ -84,11 +84,11 @@ end
 %% Initialize variables
 if writeResult
     outputFileName = Filename(inputVideo, 'coarseref');
-    outputTracesName = [inputVideo(1:end-4) '_coarseframepositions'];
+    outputTracesName = [inputVideo(1:end-4) '_coarseframepositions.mat'];
     blinkFramesPath = [inputVideo(1:end-4) '_blinkframes.mat'];
     shrunkFileName = [inputVideo(1:end-4) '_shrunk.avi'];
 else
-    outputTracesName = '.coarseframepositions';
+    outputTracesName = '.coarseframepositions.mat';
     blinkFramesPath = '.blinkframes.mat';
 end
 
