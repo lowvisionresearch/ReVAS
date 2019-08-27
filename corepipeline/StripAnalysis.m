@@ -339,8 +339,7 @@ parametersStructure.enableGPU = (gpuDeviceCount > 0) & parametersStructure.enabl
 %% Handle overwrite scenarios.
 
 if writeResult
-    outputFileName = [inputVideo(1:end-4) '_' ...
-        int2str(parametersStructure.samplingRate) '_hz_final'];
+    outputFileName = Filename(inputVideo, 'usefultraces', parametersStructure.samplingRate);
 
     if ~exist([outputFileName '.mat'], 'file')
         % left blank to continue without issuing RevasMessage in this case

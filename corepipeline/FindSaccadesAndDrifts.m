@@ -76,7 +76,7 @@ end
 
 %% Handle overwrite scenarios.
 if writeResult
-    outputFileName = [inputEyePositions(1:end-4) '_sacsdrifts'];
+    outputFileName = Filename(inputEyePositions, 'sacsdrifts');
     if ~exist([outputFileName '.mat'], 'file')
         % left blank to continue without issuing warning in this case
     elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
