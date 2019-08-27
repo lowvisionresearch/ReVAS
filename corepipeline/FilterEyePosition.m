@@ -134,7 +134,7 @@ end
 
 %% Handle |inputArgument| scenarios.
 if writeResult
-    outputFilePath = [inputArgument(1:end-4) '_filtered.mat'];
+    outputFilePath = Filename(inputArgument, 'filtered');
     
     % Handle parametersStructure.overwrite scenarios
     if ~exist(outputFilePath, 'file')

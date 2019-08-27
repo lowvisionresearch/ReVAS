@@ -168,7 +168,7 @@ end
 
 %% Handle |positionArgument| scenarios.
 if writeResult
-    outputFilePath = [positionArgument(1:end-4) '_reref.mat'];
+    outputFilePath = Filename(positionArgument, 'reref');
     
     % Handle overwrite scenarios
     if ~exist(outputFilePath, 'file')

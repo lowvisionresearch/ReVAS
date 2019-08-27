@@ -52,7 +52,7 @@ end
 
 %% Handle overwrite scenarios.
 if writeResult
-    outputFileName = [inputVideo(1:end-4) '_refframe'];
+    outputFileName = Filename(inputVideo, 'fineref');
 
     if ~exist([outputFileName '.mat'], 'file')
         % left blank to continue without issuing warning in this case
