@@ -23,20 +23,23 @@ function outputFileName = Filename(inputFileName, moduleToApply, samplingRate)
 
 % Check to see if there is a file extension on inputFileName.
 if length(inputFileName) > 4 && inputFileName(end-3) == '.'
-   inputFileName = inputFileName(1:end-4);
+    extension = inputFileName(end-3:end);
+    inputFileName = inputFileName(1:end-4);
+else
+    extension = '.avi';
 end
 
 switch moduleToApply
     case 'trim'
-        outputFileName = [inputFileName '_dwt.avi'];
+        outputFileName = [inputFileName '_dwt' extension];
     case 'removestim'
-        outputFileName = [inputFileName '_nostim.avi'];
+        outputFileName = [inputFileName '_nostim' extension];
     case 'stimlocs'
         outputFileName = [inputFileName '_stimlocs.mat'];
     case 'gamma'
-        outputFileName = [inputFileName '_gamscaled.avi'];
+        outputFileName = [inputFileName '_gamscaled' extension];
     case 'bandpass'
-        outputFileName = [inputFileName '_bandfilt.avi'];
+        outputFileName = [inputFileName '_bandfilt' extension];
     case 'coarseref'
         outputFileName = [inputFileName '_coarseref.mat'];
     case 'framepos'
@@ -54,7 +57,7 @@ switch moduleToApply
         outputFileName = [inputFileName '_filtered.mat'];
     case 'reref'
         outputFileName = [inputFileName '_reref.mat'];
-    case 'sacsdrift'
+    case 'sacsdrifts'
         outputFileName = [inputFileName '_sacsdrifts.mat'];
 end
 

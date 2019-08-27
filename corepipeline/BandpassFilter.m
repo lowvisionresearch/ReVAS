@@ -51,7 +51,7 @@ end
 
 %% Handle overwrite scenarios.
 if writeResult
-    outputVideoPath = [inputVideo(1:end-4) '_bandfilt' inputVideo(end-3:end)];
+    outputVideoPath = Filename(inputVideo, 'bandpass');
     if ~exist(outputVideoPath, 'file')
         % left blank to continue without issuing warning in this case
     elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite

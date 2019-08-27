@@ -67,8 +67,8 @@ end
 %% Handle overwrite scenarios.
 
 if writeResult
-    outputVideoPath = [inputVideo(1:end-4) '_nostim' inputVideo(end-3:end)];
-    matFileName = [inputVideo(1:end-4) '_stimlocs'];
+    outputVideoPath = Filename(inputVideo, 'removestim');
+    matFileName = Filename(inputVideo, 'stimlocs');
     if ~exist([matFileName '.mat'], 'file') && ~exist(outputVideoPath, 'file')
         % left blank to continue without issuing warning in this case
     elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
