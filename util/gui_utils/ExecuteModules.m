@@ -45,7 +45,7 @@ if logical(handles.config.togValues('trim')) && ~logical(abortTriggered)
     TrimVideo(inputPath, parametersStructure);
 
     % Update file name to output file name
-    inputPath = [inputPath(1:end-4) '_dwt' inputPath(end-3:end)];
+    inputPath = Filename(inputPath, 'trim');
 end
 
 %% Remove Stimulus Module
@@ -73,7 +73,7 @@ if logical(handles.config.togValues('stim')) && ~logical(abortTriggered)
     end
 
     % Update file name to output file name
-    inputPath = [inputPath(1:end-4) '_nostim' inputPath(end-3:end)];
+    inputPath = Filename(inputPath, 'removestim');
 end
 
 %% Gamma Correction Module
@@ -89,7 +89,7 @@ if logical(handles.config.togValues('gamma')) && ~logical(abortTriggered)
     GammaCorrect(inputPath, parametersStructure);
 
     % Update file name to output file name
-    inputPath = [inputPath(1:end-4) '_gamscaled' inputPath(end-3:end)];
+    inputPath = Filename(inputPath, 'gamma');
 end
 
 %% Bandpass Filtering Module
@@ -104,7 +104,7 @@ if logical(handles.config.togValues('bandfilt')) && ~logical(abortTriggered)
     BandpassFilter(inputPath, parametersStructure);
 
     % Update file name to output file name
-    inputPath = [inputPath(1:end-4) '_bandfilt' inputPath(end-3:end)];
+    inputPath = Filename(inputPath, 'bandpass');
 end
 
 %% Make Coarse Reference Frame Module
@@ -172,7 +172,7 @@ if logical(handles.config.togValues('fine')) && ~logical(abortTriggered)
         FineRef(coarseRefFrame, inputPath, parametersStructure); %#ok<*ASGLU>
     eyePositionTraces = fineRefEyePositions;
     timeArray = fineRefTimeArray;
-    save([inputPath(1:end-4) '_refframe.mat'],'eyePositionTraces','timeArray','-append');
+    save(Filename(inputPath, 'fineref'),'eyePositionTraces','timeArray','-append');
 end
 
 %% Strip Analysis Module
@@ -267,8 +267,7 @@ if logical(handles.config.togValues('strip')) && ~logical(abortTriggered)
     StripAnalysis(inputPath, fineRefFrame, parametersStructure);
     
     % Update file name to input file name
-    inputPath = [inputPath(1:end-4) '_' ...
-        int2str(parametersStructure.samplingRate) '_hz_final.mat'];
+    inputPath = Filename(inputPath, 'usefultraces', parametersStructure.samplingRate);
     
     % Write output file as csv
     load(inputPath, ...
@@ -382,12 +381,14 @@ elseif logical(handles.config.togValues('reref')) && ~logical(abortTriggered)
     % if strip analysis is skipped, only fine ref is done, then use the eye
     % position traces from refframe.mat file
     if ~logical(handles.config.togValues('strip'))
-        inputPath = [inputPath(1:end-4) '_refframe.mat'];
+        inputPath = Filename(inputPath, 'fineref');
     end
     
     % Call the function
-    [~,inputPath] = ReReference(inputPath, fineRefFrame, globalRefFrame, ...
+    ReReference(inputPath, fineRefFrame, globalRefFrame, ...
         parametersStructure);
+    
+    inputPath = Filename(inputPath, 'reref');
     
     % Write output file as csv
     load(inputPath, ...
@@ -441,7 +442,9 @@ if logical(handles.config.togValues('filt')) && ~logical(abortTriggered)
     parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
     
     % Call the function
-    [~,inputPath] = FilterEyePosition(inputPath, parametersStructure);
+    FilterEyePosition(inputPath, parametersStructure);
+    
+    inputPath = Filename(inputPath, 'filtered');
     
     % Write output file as csv
     load(inputPath, ...
@@ -491,7 +494,9 @@ if logical(handles.config.togValues('sacdrift')) && ~logical(abortTriggered)
     parametersStructure.axesHandles = [handles.axes1 handles.axes2 handles.axes3];
 
     % Call the function
-    [inputPath,~,~] = FindSaccadesAndDrifts(inputPath,parametersStructure);
+    FindSaccadesAndDrifts(inputPath, parametersStructure);
+    
+    inputPath = Filename(inputPath, 'sacsdrift');
     
     % Write output file as csv
     load(inputPath, ...
