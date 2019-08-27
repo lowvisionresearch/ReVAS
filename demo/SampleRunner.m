@@ -44,12 +44,13 @@ refFrame = CoarseRef(video, parametersStructure);
 [refFrame, ~, ~] = FineRef(refFrame, video, parametersStructure);
 
 parametersStructure.adaptiveSearch = true;
-[~, eyeTraces, timeArray, ...
-    statisticsStructure] = StripAnalysis(video, refFrame, parametersStructure);
+[~, eyeTraces, timeArray, ~] = StripAnalysis(video, refFrame, parametersStructure);
 
 eyeTraces = FilterEyePosition([eyeTraces timeArray], parametersStructure);
 
 eyeTraces = ReReference(eyeTraces, refFrame, 'demo/globalRef.tif', parametersStructure);
+
+eyeTraces = FindSaccadesAndDrifts([eyeTraces timeArray], parametersStructure);
 
 
 % Write the video when finished with desired modules.
@@ -105,6 +106,10 @@ FilterEyePosition(tracesPath, parametersStructure);
 filteredPath = Filename(tracesPath, 'filtered');
 
 ReReference(filteredPath, refFramePath, 'demo/globalRef.tif', parametersStructure);
+rerefPath = Filename(filteredPath, 'reref');
+
+FindSaccadesAndDrifts(rerefPath, parametersStructure);
+
 
 toc;
 

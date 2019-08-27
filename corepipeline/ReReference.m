@@ -279,9 +279,9 @@ else
 end
 
 % adjust eye position traces based on the estimated offsets
-offsetBetweenLocalAndGlobal = [xOffset yOffset ];
+offsetBetweenLocalAndGlobal = [xOffset yOffset];
 newEyePositionTraces = eyePositionTraces...
-    + repmat(offsetBetweenLocalAndGlobal,length(eyePositionTraces),1);
+    + repmat(offsetBetweenLocalAndGlobal,length(eyePositionTraces), 1);
 
 %% Save re-referenced data.
 if writeResult
