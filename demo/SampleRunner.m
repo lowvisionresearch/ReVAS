@@ -44,10 +44,13 @@ refFrame = CoarseRef(video, parametersStructure);
 [refFrame, ~, ~] = FineRef(refFrame, video, parametersStructure);
 
 parametersStructure.adaptiveSearch = true;
-[rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
+[~, eyeTraces, timeArray, ...
     statisticsStructure] = StripAnalysis(video, refFrame, parametersStructure);
 
-filteredEyePositions = FilterEyePosition([usefulEyePositionTraces timeArray], parametersStructure);
+eyeTraces = FilterEyePosition([eyeTraces timeArray], parametersStructure);
+
+eyeTraces = ReReference(eyeTraces, refFrame, 'demo/globalRef.tif', parametersStructure);
+
 
 % Write the video when finished with desired modules.
 writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
@@ -95,11 +98,13 @@ FineRef(refFramePath, inputVideoPath, parametersStructure);
 refFramePath = Filename(inputVideoPath, 'fineref');
 
 parametersStructure.adaptiveSearch = true;
-[rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
-    statisticsStructure] = StripAnalysis(inputVideoPath, refFramePath, parametersStructure);
+StripAnalysis(inputVideoPath, refFramePath, parametersStructure);
 tracesPath = Filename(inputVideoPath, 'usefultraces');
 
-filteredEyePositions = FilterEyePosition(tracesPath, parametersStructure);
+FilterEyePosition(tracesPath, parametersStructure);
+filteredPath = Filename(tracesPath, 'filtered');
+
+ReReference(filteredPath, refFramePath, 'demo/globalRef.tif', parametersStructure);
 
 toc;
 
