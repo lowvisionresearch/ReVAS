@@ -83,25 +83,25 @@ end
 
 %% Initialize variables
 if writeResult
-    outputFileName = Filename(inputVideo, 'coarseref');
-    outputTracesName = [inputVideo(1:end-4) '_coarseframepositions.mat'];
-    blinkFramesPath = [inputVideo(1:end-4) '_blinkframes.mat'];
-    shrunkFileName = [inputVideo(1:end-4) '_shrunk.avi'];
+    outputFilePath = Filename(inputVideo, 'coarseref');
+    outputTracesPath = [inputVideo(1:end-4) '_coarseframepositions.mat'];
+    blinkFramesPath = Filename(inputVideo, 'blink');
+    shrunkFilePath = [inputVideo(1:end-4) '_shrunk.avi'];
 else
-    outputTracesName = '.coarseframepositions.mat';
-    blinkFramesPath = '.blinkframes.mat';
+    outputTracesPath = fullfile(pwd, '.coarseframepositions.mat');
+    blinkFramesPath = fullfile(pwd, '.blinkframes.mat');
 end
 
 %% Handle overwrite scenarios.
 if writeResult
-    if ~exist([outputFileName '.mat'], 'file')
+    if ~exist(outputFilePath, 'file')
         % left blank to continue without issuing warning in this case
     elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-        RevasWarning(['CoarseRef() did not execute because it would overwrite existing file. (' outputFileName ')'], parametersStructure);
+        RevasWarning(['CoarseRef() did not execute because it would overwrite existing file. (' outputFilePath ')'], parametersStructure);
         coarseRefFrame = [];
         return;
     else
-        RevasWarning(['CoarseRef() is proceeding and overwriting an existing file. (' outputFileName ')'], parametersStructure);  
+        RevasWarning(['CoarseRef() is proceeding and overwriting an existing file. (' outputFilePath ')'], parametersStructure);  
     end
 end
 
@@ -193,7 +193,7 @@ try
         error
     end
     
-    shrunkReader = VideoReader(shrunkFileName);
+    shrunkReader = VideoReader(shrunkFilePath);
     % If it does exist, check that it's of correct dimensions. If the
     % shrunk video is not scaled to the desired amount, throw an error to
     % create a new shrunkVideo in the subsequent catch block.
@@ -216,7 +216,7 @@ try
     
 catch
     if writeResult
-        writer = VideoWriter(shrunkFileName, 'Grayscale AVI');
+        writer = VideoWriter(shrunkFilePath, 'Grayscale AVI');
         open(writer);
     else
         % preallocate shrunk video
@@ -268,10 +268,10 @@ end
 params = parametersStructure;
 
 if writeResult
-    shrunkReader = VideoReader(shrunkFileName);
+    shrunkReader = VideoReader(shrunkFilePath);
     params.stripHeight = shrunkReader.Height;
     params.stripWidth = shrunkReader.Width;   
-    shrunkVideo = shrunkFileName;
+    shrunkVideo = shrunkFilePath;
 else
     [params.stripHeight, params.stripWidth, ~] = size(shrunkVideo);
 end
@@ -293,7 +293,7 @@ end
 % Check if user has rotateCorrection enabled.
 if isfield(params, 'rotateCorrection') && params.rotateCorrection
     [coarseRefFrame, ~] = RotateCorrect(shrunkVideo, inputVideo, ...
-        temporaryRefFrame, outputFileName, params);
+        temporaryRefFrame, outputFilePath, params);
     return;
 else
     [~, usefulEyePositionTraces, ~, ~] = StripAnalysis(shrunkVideo, ...
@@ -327,7 +327,7 @@ try
     end
     
     framePositions = [filteredStripIndices1 filteredStripIndices2];
-    save(outputTracesName, 'framePositions');
+    save(outputTracesPath, 'framePositions');
 catch
     RevasError(inputVideoPath, 'There were no useful eye position traces. Lower the minimumPeakThreshold and/or raise the maximumPeakRatio.\n', parametersStructure);
 end
@@ -413,7 +413,7 @@ coarseRefFrame = uint8(coarseRefFrame);
 coarseRefFrame = Crop(coarseRefFrame);
 
 if writeResult
-    save(outputFileName, 'coarseRefFrame');
+    save(outputFilePath, 'coarseRefFrame');
 end
 
 if isfield(parametersStructure, 'enableVerbosity') && ...

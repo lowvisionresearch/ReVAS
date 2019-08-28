@@ -61,15 +61,15 @@ else
     % A video matrix was passed in.
     % Do not write the result; return it instead.
     writeResult = false;
-    matFileName = '.stimlocs.mat';
+    matFilePath = fullfile(pwd, '.stimlocs.mat');
 end
 
 %% Handle overwrite scenarios.
 
 if writeResult
     outputVideoPath = Filename(inputVideo, 'removestim');
-    matFileName = Filename(inputVideo, 'stimlocs');
-    if ~exist([matFileName '.mat'], 'file') && ~exist(outputVideoPath, 'file')
+    matFilePath = Filename(inputVideo, 'stimlocs');
+    if ~exist(matFilePath, 'file') && ~exist(outputVideoPath, 'file')
         % left blank to continue without issuing warning in this case
     elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
         RevasWarning('RemoveStimuli() did not execute because it would overwrite existing file.', parametersStructure);
@@ -311,7 +311,7 @@ else
 end
 
 %% Save to output mat file
-save(matFileName, 'stimulusLocationInEachFrame', 'stimulusSize', ...
+save(matFilePath, 'stimulusLocationInEachFrame', 'stimulusSize', ...
     'meanOfEachFrame', 'standardDeviationOfEachFrame');
 
 end

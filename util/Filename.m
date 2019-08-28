@@ -1,4 +1,4 @@
-function outputFileName = Filename(inputFileName, moduleToApply, samplingRate)
+function outputFilePath = Filename(inputFilePath, moduleToApply, samplingRate)
 % Filename
 %  Utility function for converting one file name to another, according to
 %  the conventions used by ReVAS.
@@ -8,6 +8,7 @@ function outputFileName = Filename(inputFileName, moduleToApply, samplingRate)
 %  Options for moduleToApply are:
 %   - trim
 %   - removestim
+%   - blink
 %   - stimlocs
 %   - gamma
 %   - bandpass
@@ -21,44 +22,46 @@ function outputFileName = Filename(inputFileName, moduleToApply, samplingRate)
 %
 %  MTS 8/23/19 wrote the initial version
 
-% Check to see if there is a file extension on inputFileName.
-if length(inputFileName) > 4 && inputFileName(end-3) == '.'
-    extension = inputFileName(end-3:end);
-    inputFileName = inputFileName(1:end-4);
-else
-    extension = '.avi';
+% Deconstruct input file path.
+[inputDir, inputFileName, inputExtension] = fileparts(inputFilePath);
+
+% Assume input had an  avi extension if none provided.
+if isempty(inputExtension)
+    inputExtension = '.avi';
 end
 
 switch moduleToApply
     case 'trim'
-        outputFileName = [inputFileName '_dwt' extension];
+        outputFilePath = fullfile(inputDir, [inputFileName '_dwt' inputExtension]);
     case 'removestim'
-        outputFileName = [inputFileName '_nostim' extension];
+        outputFilePath = fullfile(inputDir, [inputFileName '_nostim' inputExtension]);
+    case 'blink'
+        outputFilePath = fullfile(inputDir, [inputFileName '_blinkframes.mat']);
     case 'stimlocs'
-        outputFileName = [inputFileName '_stimlocs.mat'];
+        outputFilePath = fullfile(inputDir, [inputFileName '_stimlocs.mat']);
     case 'gamma'
-        outputFileName = [inputFileName '_gamscaled' extension];
+        outputFilePath = fullfile(inputDir, [inputFileName '_gamscaled' inputExtension]);
     case 'bandpass'
-        outputFileName = [inputFileName '_bandfilt' extension];
+        outputFilePath = fullfile(inputDir, [inputFileName '_bandfilt' inputExtension]);
     case 'coarseref'
-        outputFileName = [inputFileName '_coarseref.mat'];
+        outputFilePath = fullfile(inputDir, [inputFileName '_coarseref.mat']);
     case 'framepos'
-        outputFileName = 'framePositions.mat';
+        outputFilePath = 'framePositions.mat';
     case 'fineref'
-        outputFileName = [inputFileName '_refframe.mat'];
+        outputFilePath = fullfile(inputDir, [inputFileName '_refframe.mat']);
     case 'usefultraces'
         % Set samplingRate to default value if necessary
         if nargin < 3
             samplingRate = 540;
             RevasMessage('using default parameter for samplingRate');
         end
-        outputFileName = [inputFileName '_' num2str(samplingRate) '_hz_final.mat'];
+        outputFilePath = fullfile(inputDir, [inputFileName '_' num2str(samplingRate) '_hz_final.mat']);
     case 'filtered'
-        outputFileName = [inputFileName '_filtered.mat'];
+        outputFilePath = fullfile(inputDir, [inputFileName '_filtered.mat']);
     case 'reref'
-        outputFileName = [inputFileName '_reref.mat'];
+        outputFilePath = fullfile(inputDir, [inputFileName '_reref' inputExtension]);
     case 'sacsdrifts'
-        outputFileName = [inputFileName '_sacsdrifts.mat'];
+        outputFilePath = fullfile(inputDir, [inputFileName '_sacsdrifts.mat']);
 end
 
 end
