@@ -416,79 +416,6 @@ if enableGPU
     referenceFrame = gpuArray(referenceFrame);
 end
 
-%% Adaptive Search
-% Estimate peak locations if adaptive search is enabled
-
-if adaptiveSearch
-    % Scale down the reference frame to a smaller size
-    scaledDownReferenceFrame = referenceFrame( ...
-        1:scalingFactor:end, ...
-        1:scalingFactor:end);
-    
-    reader = VideoReader(videoInputPath);
-    frameNumber = 0;
-    while hasFrame(reader)
-        
-        frameNumber = frameNumber + 1;
-  
-        frame = readFrame(reader);
-        if ndims(frame) == 3
-            frame = rgb2gray(frame);
-        end
-
-        % Scale down the current frame to a smaller size as well
-        scaledDownFrame = frame( ...
-            1:scalingFactor:end, ...
-            1:scalingFactor:end);
-
-        correlationMap = matchTemplateOCV(scaledDownFrame, scaledDownReferenceFrame, true);
-
-        [~, yPeak, ~, ~] = ...
-            FindPeak(correlationMap, parametersStructure);
-
-        % Account for padding introduced by normalized cross-correlation.
-        yPeak = yPeak - (size(scaledDownFrame, 1) - 1);
-
-        % Populate search windows array but only fill in coordinates for the
-        % top strip of each frame
-        estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + 1,:) = yPeak;
-    end
-    
-    numberOfFrames = frameNumber;
-
-    % Finish populating search window by taking the line between the top left
-    % corner of the previous frame and the bottom left corner of the current
-    % frame and dividing that line up by the number of strips per frame.
-    for frameNumber = (1:numberOfFrames-1)
-        previousFrameYCoordinate = ...
-            estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + 1);
-        currentFrameYCoordinate = ...
-            estimatedStripYLocations((frameNumber) * stripsPerFrame + 1)...
-            + size(scaledDownFrame, 1);
-
-        % change per strip is determined by drawing a line from the top left
-        % corner of the previous frame and the bottom left corner of the
-        % current frame and then dividing it by the number of strips. Each time
-        % we add change per strip, we thus take a step closer to the latter
-        % point from the previous point and will arrive there after taking the
-        % same number of steps as we have strips per frame.
-        changePerStrip = (currentFrameYCoordinate - previousFrameYCoordinate) ...
-            / stripsPerFrame;
-
-        % For each strip, take the previous strip's value and add the change
-        % per strip.
-        for stripNumber = (2:stripsPerFrame)
-            estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + stripNumber) ...
-                = estimatedStripYLocations((frameNumber - 1) * stripsPerFrame + stripNumber - 1) ...
-                + changePerStrip;
-        end
-    end
-
-    % Scale back up
-    estimatedStripYLocations = (estimatedStripYLocations - 1) ...
-        * scalingFactor + 1;
-end
-
 %% Allow for aborting if not parallel processing
 global abortTriggered;
 
@@ -509,7 +436,12 @@ isSetView = true;
 currFrameNumber = 0;
 reader = VideoReader(videoInputPath);
 
-cache = struct; % for fft corrmethod
+% Variable for fft corrmethod
+cache = struct; 
+
+% Variables for adaptive search:
+loc = (reader.Height / stripsPerFrame) / 2;
+vel = reader.Height / stripsPerFrame;
 
 for stripNumber = (1:numberOfStrips)
 
@@ -550,69 +482,66 @@ for stripNumber = (1:numberOfStrips)
         
         parametersStructure.stripNumber = stripNumber;  
         parametersStructure.stripsPerFrame = stripsPerFrame;
+        
+        if adaptiveSearch
 
-        if adaptiveSearch ...
-                && ~isnan(estimatedStripYLocations(stripNumber))
-            % Cut out a smaller search window from correlation.
-            upperBound = floor(min(max(1, ...
-                estimatedStripYLocations(stripNumber) ...
-                - ((searchWindowHeight - stripHeight)/2))));
+            % Cut out a smaller search window from correlation,
+            % centered around loc, and searchWindowHeight tall.
+            upperBound = floor(min(max(1, loc - searchWindowHeight/2)));
             lowerBound = upperBound + searchWindowHeight - 1;
-                        
+            
+            if lowerBound > size(referenceFrame, 1)
+               lowerBound = size(referenceFrame, 1);
+               upperBound = lowerBound - searchWindowHeight + 1;
+            end
+
             adaptedCorrelationMap = matchTemplateOCV( ...
                 strip, ...
-                referenceFrame(upperBound:min(lowerBound, end),1:end), true);
+                referenceFrame(upperBound:lowerBound, 1:end), true);
             
-            try
-                % Try to use adapted version of correlation map.
-                [xPeak, yPeak, peakValue, secondPeakValue] = ...
-                    FindPeak(adaptedCorrelationMap, parametersStructure);
-  
-                % See if adapted result is acceptable or not.
-                if ~enableGaussianFiltering && ...
-                        (peakValue <= 0 || secondPeakValue <= 0 ...
-                        || secondPeakValue / peakValue > maximumPeakRatio ...
-                        || peakValue < minimumPeakThreshold)
-                    % Not acceptable, try again in the catch block with full correlation map.
-                    error('Jumping to catch block immediately below.');
-                elseif enableGaussianFiltering % TODO, need to test.
-                    % Middle row SDs in column 1, Middle column SDs in column 2.
-                    middleRow = ...
-                        adaptedCorrelationMap(max(ceil(yPeak-...
-                            SDWindowSize/2/scalingFactor),...
-                            1): ...
-                        min(floor(yPeak+...
-                            SDWindowSize/2/scalingFactor),...
-                            size(adaptedCorrelationMap,1)), ...
-                            floor(xPeak));
-                    middleCol = ...
-                        adaptedCorrelationMap(floor(yPeak), ...
-                        max(ceil(xPeak-...
-                            SDWindowSize/2/scalingFactor),...
-                            1): ...
-                        min(floor(xPeak+SDWindowSize/2/scalingFactor),...
-                            size(adaptedCorrelationMap,2)))';
-                    fitOutput = fit(((1:size(middleRow,1))-ceil(size(middleRow,1)/2))', middleRow, 'gauss1');
+            % Try to use adapted version of correlation map.
+            [xPeak, yPeak, peakValue, secondPeakValue] = ...
+                FindPeak(adaptedCorrelationMap, parametersStructure);
+
+            % See if adapted result is acceptable or not.
+            if ~enableGaussianFiltering && ...
+                    (peakValue <= 0 || secondPeakValue <= 0 ...
+                    || secondPeakValue / peakValue > maximumPeakRatio ...
+                    || peakValue < minimumPeakThreshold)
+                
+                isAcceptable = false;
+                
+            elseif enableGaussianFiltering % TODO, need to test.
+                % Middle row SDs in column 1, Middle column SDs in column 2.
+                middleRow = ...
+                    adaptedCorrelationMap(max(ceil(yPeak-...
+                        SDWindowSize/2/scalingFactor),...
+                        1): ...
+                    min(floor(yPeak+...
+                        SDWindowSize/2/scalingFactor),...
+                        size(adaptedCorrelationMap,1)), ...
+                        floor(xPeak));
+                middleCol = ...
+                    adaptedCorrelationMap(floor(yPeak), ...
+                    max(ceil(xPeak-...
+                        SDWindowSize/2/scalingFactor),...
+                        1): ...
+                    min(floor(xPeak+SDWindowSize/2/scalingFactor),...
+                        size(adaptedCorrelationMap,2)))';
+                
+                rowFit = fit(((1:size(middleRow,1))-ceil(size(middleRow,1)/2))', middleRow, 'gauss1');
+                colFit = fit(((1:size(middleCol,1))-ceil(size(middleCol,1)/2))', middleCol, 'gauss1');
+                
+                if rowFit.c1 > maximumSD || ...
+                    colFit.c1 > maximumSD || ...
+                    peakValue <= 0 || ...
+                    peakValue < minimumPeakThreshold
+                
+                    isAcceptable = false;
+                    
+                else
                     isAcceptable = true;
-                    if fitOutput.c1 > maximumSD
-                        isAcceptable = false;
-                    end
-                    fitOutput = fit(((1:size(middleCol,1))-ceil(size(middleCol,1)/2))', middleCol, 'gauss1');
-                    if fitOutput.c1 > maximumSD
-                        isAcceptable = false;
-                    end
-                    clear fitOutput;
-                    if peakValue <= 0 ...
-                        || ~isAcceptable ...
-                        || peakValue < minimumPeakThreshold
-                        % Not acceptable, try again in the catch block with full correlation map.
-                        error('Jumping to catch block immediately below.'); 
-                    end
                 end
-                correlationMap = adaptedCorrelationMap;
-                searchWindowsArray(stripNumber,:) = [upperBound lowerBound];
-            catch
-                upperBound = 1;
                 
                 % Do not re-use cached values here if also performing
                 % adaptive search.
@@ -638,8 +567,21 @@ for stripNumber = (1:numberOfStrips)
                 if adaptiveSearch
                     cache = struct;
                 end
+
+                clear rowFit;
+                clear colFit;
+            else
+                isAcceptable = true;
             end
-        else
+            
+            correlationMap = adaptedCorrelationMap;
+            searchWindowsArray(stripNumber,:) = [upperBound lowerBound];
+        end
+        
+        % Either adaptive search failed, the result was unacceptable, or we
+        % didn't want to use adaptive search in the first place.
+        % So we use the full correlation map.
+        if ~adaptiveSearch || ~isAcceptable
             upperBound = 1;
 
             if isequal(parametersStructure.corrMethod, 'normxcorr')
@@ -650,7 +592,9 @@ for stripNumber = (1:numberOfStrips)
                 [correlationMap, cache] = FastStripCorrelation(strip, referenceFrame, cache, parametersStructure.downSampleFactor);
             end
             [xPeak, yPeak, peakValue, secondPeakValue] = ...
-                FindPeak(correlationMap, parametersStructure);        
+                FindPeak(correlationMap, parametersStructure);
+
+            searchWindowsArray(stripNumber,:) = [NaN NaN];
         end
 
         % 2D Interpolation if enabled
@@ -703,6 +647,20 @@ for stripNumber = (1:numberOfStrips)
         
         peakValueArray(stripNumber) = peakValue;
         secondPeakValueArray(stripNumber) = secondPeakValue;
+        
+        % Update adaptive search variables for next iteration.
+        
+        % loc was our guess for yPeak. Adjust velocity accordingly.
+        % (This is how much we should have jumped from the previous yPeak
+        % to land precisely on the correct place.)
+        vel = vel + yPeak - loc;
+        
+        % Advance to the next loc, based upon vel.
+        % (Wrapping back to the top of the frame as necessary.)
+        loc = yPeak + vel;
+        if mod(stripNumber, stripsPerFrame) == 0
+            loc = loc - size(referenceFrame, 1);
+        end
         
         % Show surface plot for this correlation if verbosity enabled
         if enableVerbosity
