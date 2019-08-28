@@ -160,8 +160,12 @@ end
 % Identify which frames are bad frames
 % The filename is unknown if a raw array was passed in.
 if ~isfield(parametersStructure, 'badFrames')
-    nameEnd = inputVideo(1:size(inputVideo, 2)-4);
-    blinkFramesPath = [nameEnd '_blinkframes.mat'];
+    if writeResult
+        blinkFramesPath = Filename(inputVideo, 'blink');
+    else
+        blinkFramesPath = fullfile(pwd, '.blinkframes.mat');
+    end
+    
     try
         load(blinkFramesPath, 'badFrames');
     catch
@@ -339,19 +343,19 @@ parametersStructure.enableGPU = (gpuDeviceCount > 0) & parametersStructure.enabl
 %% Handle overwrite scenarios.
 
 if writeResult
-    outputFileName = Filename(inputVideo, 'usefultraces', parametersStructure.samplingRate);
+    outputFilePath = Filename(inputVideo, 'usefultraces', parametersStructure.samplingRate);
 
-    if ~exist([outputFileName '.mat'], 'file')
+    if ~exist(outputFilePath, 'file')
         % left blank to continue without issuing RevasMessage in this case
     elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-        RevasMessage(['StripAnalysis() did not execute because it would overwrite existing file. (' outputFileName ')'], parametersStructure);
+        RevasMessage(['StripAnalysis() did not execute because it would overwrite existing file. (' outputFilePath ')'], parametersStructure);
         rawEyePositionTraces = [];
         usefulEyePositionTraces = [];
         timeArray = [];
         statisticsStructure = struct();
         return;
     else
-        RevasMessage(['StripAnalysis() is proceeding and overwriting an existing file. (' outputFileName ')'], parametersStructure);  
+        RevasMessage(['StripAnalysis() is proceeding and overwriting an existing file. (' outputFilePath ')'], parametersStructure);  
     end
 end
 
@@ -863,7 +867,7 @@ if writeResult && ~abortTriggered
     if writeResult
         eyePositionTraces = usefulEyePositionTraces; 
         peakRatios = statisticsStructure.peakRatios; %#ok<NASGU>
-        save(outputFileName, 'eyePositionTraces', 'rawEyePositionTraces', ...
+        save(outputFilePath, 'eyePositionTraces', 'rawEyePositionTraces', ...
             'timeArray', 'parametersStructure', 'referenceFramePath', ...
             'peakRatios');
     end

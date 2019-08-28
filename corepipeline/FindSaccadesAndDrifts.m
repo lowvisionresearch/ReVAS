@@ -76,14 +76,14 @@ end
 
 %% Handle overwrite scenarios.
 if writeResult
-    outputFileName = Filename(inputEyePositions, 'sacsdrifts');
-    if ~exist([outputFileName '.mat'], 'file')
+    outputFilePath = Filename(inputEyePositions, 'sacsdrifts');
+    if ~exist(outputFilePath, 'file')
         % left blank to continue without issuing warning in this case
     elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-        RevasWarning(['FindSaccadesAndDrifts() did not execute because it would overwrite existing file. (' outputFileName ')'], parametersStructure);
+        RevasWarning(['FindSaccadesAndDrifts() did not execute because it would overwrite existing file. (' outputFilePath ')'], parametersStructure);
         return;
     else
-        RevasWarning(['FindSaccadesAndDrifts() is proceeding and overwriting an existing file. (' outputFileName ')'], parametersStructure);
+        RevasWarning(['FindSaccadesAndDrifts() is proceeding and overwriting an existing file. (' outputFilePath ')'], parametersStructure);
     end
 end
 
@@ -309,7 +309,7 @@ drifts = GetDriftProperties(eyePositionTraces,timeArray,driftOnsets,driftOffsets
 
 %% Save to output mat file.
 if writeResult
-    save(outputFileName, 'saccades', 'drifts','parametersStructure');
+    save(outputFilePath, 'saccades', 'drifts','parametersStructure');
 end
 
 %% Verbosity for Results.

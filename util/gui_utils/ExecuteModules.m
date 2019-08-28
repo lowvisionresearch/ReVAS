@@ -9,7 +9,7 @@ if ~isdeployed
 end
 
 global abortTriggered;
-originalInputVideoPath = inputPath(1:end-4);
+[inputDir, originalInputFileName, originalInputExt] = fileparts(inputPath);
 
 % parfor does not support global variables.
 % cannot abort when run in parallel.
@@ -111,7 +111,7 @@ end
 if (logical(handles.config.togValues('coarse')) ...
         || logical(handles.config.togValues('fine')) ...
         || logical(handles.config.togValues('strip'))) && ~logical(abortTriggered)
-    RevasMessage(['Identifying blink frames in ' originalInputVideoPath], parametersStructure);
+    RevasMessage(['Identifying blink frames in ' inputPath], parametersStructure);
     parametersStructure.overwrite = handles.config.coarseOverwrite && ...
         handles.config.fineOverwrite && ...
         handles.config.stripOverwrite;
@@ -206,22 +206,22 @@ if logical(handles.config.togValues('strip')) && ~logical(abortTriggered)
     % Load a fine ref if we didn't run the previous module in this
     % session.
     if ~exist('fineRefFrame', 'var')
-        if ~isempty(strfind(originalInputVideoPath, '_dwt')) %#ok<*STREMP>
-            rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_dwt')-1);
-        elseif ~isempty(strfind(originalInputVideoPath, '_nostim'))
-            rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_nostim')-1);
-        elseif ~isempty(strfind(originalInputVideoPath, '_gamscaled'))
-            rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_gamscaled')-1);
-        elseif ~isempty(strfind(originalInputVideoPath, '_bandfilt'))
-            rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_bandfilt')-1);
+        if ~isempty(strfind(originalInputFileName, '_dwt')) %#ok<*STREMP>
+            rawVideoFileName = originalInputFileName(1:strfind(originalInputFileName, '_dwt')-1);
+        elseif ~isempty(strfind(originalInputFileName, '_nostim'))
+            rawVideoFileName = originalInputFileName(1:strfind(originalInputFileName, '_nostim')-1);
+        elseif ~isempty(strfind(originalInputFileName, '_gamscaled'))
+            rawVideoFileName = originalInputFileName(1:strfind(originalInputFileName, '_gamscaled')-1);
+        elseif ~isempty(strfind(originalInputFileName, '_bandfilt'))
+            rawVideoFileName = originalInputFileName(1:strfind(originalInputFileName, '_bandfilt')-1);
         else
-            rawVideoPath = originalInputVideoPath;
+            rawVideoFileName = originalInputFileName;
         end
             
         % Try to identify a fine ref to use from file.
-        fineRefFrames = dir([rawVideoPath '*refframe.mat']);
+        fineRefFrames = dir([rawVideoFileName '*refframe.mat']);
         % Try to identify a coarse ref to use from file.
-        coarseRefFrames = dir([rawVideoPath '*coarseref.mat']);
+        coarseRefFrames = dir([rawVideoFileName '*coarseref.mat']);
         
         if logical(handles.config.togValues('coarse'))
            % Use coarse ref frame if fine ref module disabled and if
@@ -253,10 +253,10 @@ if logical(handles.config.togValues('strip')) && ~logical(abortTriggered)
                end
            end
            RevasMessage(['Loading coarse reference frame from: ' longestFileName], parametersStructure);
-           load(fullfile(fileparts(rawVideoPath),longestFileName), 'coarseRefFrame');
+           load(fullfile(fileparts(rawVideoFileName),longestFileName), 'coarseRefFrame');
            fineRefFrame = coarseRefFrame;
         else
-           RevasError(originalInputVideoPath, ...
+           RevasError(originalInputFileName, ...
                'No reference frame available for strip analysis.', ...
                parametersStructure);
            return;
@@ -320,22 +320,22 @@ elseif logical(handles.config.togValues('reref')) && ~logical(abortTriggered)
     % Load a fine ref if we didn't run the previous module in this
     % session.
     if ~exist('fineRefFrame', 'var')
-        if ~isempty(strfind(originalInputVideoPath, '_dwt'))%JG replaced ~isempty(strfind(
-            rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_dwt')-1);
-        elseif ~isempty(strfind(originalInputVideoPath, '_nostim'))
-            rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_nostim')-1);
-        elseif ~isempty(strfind(originalInputVideoPath, '_gamscaled'))
-            rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_gamscaled')-1);
-        elseif ~isempty(strfind(originalInputVideoPath, '_bandfilt'))
-            rawVideoPath = originalInputVideoPath(1:strfind(originalInputVideoPath, '_bandfilt')-1);
+        if ~isempty(strfind(originalInputFileName, '_dwt'))%JG replaced ~isempty(strfind(
+            rawVideoFileName = originalInputFileName(1:strfind(originalInputFileName, '_dwt')-1);
+        elseif ~isempty(strfind(originalInputFileName, '_nostim'))
+            rawVideoFileName = originalInputFileName(1:strfind(originalInputFileName, '_nostim')-1);
+        elseif ~isempty(strfind(originalInputFileName, '_gamscaled'))
+            rawVideoFileName = originalInputFileName(1:strfind(originalInputFileName, '_gamscaled')-1);
+        elseif ~isempty(strfind(originalInputFileName, '_bandfilt'))
+            rawVideoFileName = originalInputFileName(1:strfind(originalInputFileName, '_bandfilt')-1);
         else
-            rawVideoPath = originalInputVideoPath;
+            rawVideoFileName = originalInputFileName;
         end
             
         % Try to identify a fine ref to use from file.
-        fineRefFrames = dir([rawVideoPath '*refframe.mat']);
+        fineRefFrames = dir(fullfile(inputDir, [rawVideoFileName '*refframe.mat']));
         % Try to identify a coarse ref to use from file.
-        coarseRefFrames = dir([rawVideoPath '*coarseref.mat']);
+        coarseRefFrames = dir(fullfile(inputDir, [rawVideoFileName '*coarseref.mat']));
         
         if logical(handles.config.togValues('coarse'))
            % Use coarse ref frame if fine ref module disabled and if
@@ -353,7 +353,7 @@ elseif logical(handles.config.togValues('reref')) && ~logical(abortTriggered)
                end
            end
            RevasMessage(['Loading fine reference frame from: ' longestFileName], parametersStructure);
-           load(fullfile(fileparts(rawVideoPath),longestFileName), 'refFrame');
+           load(longestFileName, 'refFrame');
            fineRefFrame = refFrame;
         elseif ~isempty({coarseRefFrames.name})
            % Load a saved coarse ref if available.
@@ -367,10 +367,10 @@ elseif logical(handles.config.togValues('reref')) && ~logical(abortTriggered)
                end
            end
            RevasMessage(['Loading coarse reference frame from: ' longestFileName], parametersStructure);
-           load(fullfile(fileparts(rawVideoPath),longestFileName), 'coarseRefFrame');
+           load(fullfile(inputDir, longestFileName), 'coarseRefFrame');
            fineRefFrame = coarseRefFrame;
         else
-           RevasError(originalInputVideoPath, ...
+           RevasError(originalInputFileName, ...
                'No reference frame available for re-referencing.', ...
                parametersStructure);
            return;
@@ -496,7 +496,7 @@ if logical(handles.config.togValues('sacdrift')) && ~logical(abortTriggered)
     % Call the function
     FindSaccadesAndDrifts(inputPath, parametersStructure);
     
-    inputPath = Filename(inputPath, 'sacsdrift');
+    inputPath = Filename(inputPath, 'sacsdrifts');
     
     % Write output file as csv
     load(inputPath, ...
