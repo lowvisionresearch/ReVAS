@@ -52,19 +52,19 @@ end
 
 %% Handle overwrite scenarios.
 if writeResult
-    outputFileName = Filename(inputVideo, 'fineref');
+    outputFilePath = Filename(inputVideo, 'fineref');
 
-    if ~exist([outputFileName '.mat'], 'file')
+    if ~exist(outputFilePath, 'file')
         % left blank to continue without issuing warning in this case
     elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-        RevasWarning(['FineRef() did not execute because it would overwrite existing file. (' outputFileName ')'], parametersStructure);
-        data = load(outputFileName);
+        RevasWarning(['FineRef() did not execute because it would overwrite existing file. (' outputFilePath ')'], parametersStructure);
+        data = load(outputFilePath);
         newRefFrame = data.refFrame;
         usefulEyePositionTraces = data.eyePositionTraces;
         timeArray = data.timeArray;
         return;
     else
-        RevasWarning(['FineRef() is proceeding and overwriting an existing file. (' outputFileName ')'], parametersStructure);  
+        RevasWarning(['FineRef() is proceeding and overwriting an existing file. (' outputFilePath ')'], parametersStructure);  
     end
 end
 
@@ -101,10 +101,10 @@ else
     % reference frame that was passed in.
     newRefFrame = coarseRefFrame;
     if writeResult
-        outputFileName = inputVideo;
-        outputFileName(end-3:end) = [];
-        outputFileName(end+1:end+9) = '_refframe';
-        save(outputFileName, 'newRefFrame');
+        outputFilePath = inputVideo;
+        outputFilePath(end-3:end) = [];
+        outputFilePath(end+1:end+9) = '_refframe';
+        save(outputFilePath, 'newRefFrame');
     end
 end
 

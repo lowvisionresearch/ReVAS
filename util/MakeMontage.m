@@ -99,10 +99,9 @@ end
 
 %% Identify which frames are bad frames
 if writeResult
-    nameEnd = inputVideo(1:size(inputVideo, 2)-4);
-    blinkFramesPath = [nameEnd '_blinkframes.mat'];
+    blinkFramesPath = Filename(inputVideo, 'blink');
 else
-    blinkFramesPath = '.blinkframes.mat';
+    blinkFramesPath = fullfile(pwd, '.blinkframes.mat');
 end
 
 try

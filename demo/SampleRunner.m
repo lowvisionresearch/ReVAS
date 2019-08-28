@@ -7,8 +7,8 @@ function SampleRunner
 %% Example of running pipeline without writing result after each module.
 
 tic;
-inputVideoPath = 'demo/sample10deg.avi';
-outputVideoPath = 'demo/sampleRunnerResult.avi';
+inputVideoPath = fullfile(pwd, 'demo/sample10deg.avi');
+outputVideoPath = fullfile(pwd, 'demo/sampleRunnerResult.avi');
 
 % Read the input video and pass the matrix into the functions to skip
 % writing intermediate videos to file after each module.
@@ -70,7 +70,7 @@ toc;
 %% Example of running pipeline with result videos written between each module.
 
 tic;
-inputVideoPath = 'demo/sample10deg.avi';
+inputVideoPath = fullfile(pwd, 'demo/sample10deg.avi');
 
 % Run desired modules.
 % Also see example usages in the header comment of each module file.
