@@ -10,7 +10,7 @@ clc
 
 parametersStructure = struct;
 parametersStructure.overwrite = true;
-parametersStructure.adaptiveSearch = true;
+parametersStructure.adaptiveSearch = false;
 
 global abortTriggered;
 abortTriggered = 0;

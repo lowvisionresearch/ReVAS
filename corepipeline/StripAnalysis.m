@@ -83,6 +83,12 @@ function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
 %   axesHandles                     : axes handle for giving feedback. if not
 %                                     provided or empty, new figures are created.
 %                                     (relevant only when enableVerbosity is true)
+%   corrMethod                      : method to use for cross-correlation.
+%                                     you can choose from 'normxcorr' for
+%                                     matlab's built-in normxcorr2, 'mex'
+%                                     for opencv's correlation, or 'fft'
+%                                     for our custom-implemented fast
+%                                     correlation method.
 %
 %   -----------------------------------
 %   Fields of the |subpixelInterpolationParameters|
@@ -348,6 +354,10 @@ else
 end
 enableGPU = (gpuDeviceCount > 0) & enableGPU;
 
+if ~isfield(parametersStructure, 'corrMethod')
+    parametersStructure.corrMethod = 'mex';
+end
+
 %% Handle overwrite scenarios.
 
 outputFileName = [videoInputPath(1:end-4) '_' ...
@@ -487,6 +497,7 @@ isSetView = true;
 % trace values can be plotted as early as possible).
 currFrameNumber = 0;
 reader = VideoReader(videoInputPath);
+cache = struct; % for fft corrmethod
 for stripNumber = (1:numberOfStrips)
 
     if ~abortTriggered
@@ -590,17 +601,41 @@ for stripNumber = (1:numberOfStrips)
             catch
                 upperBound = 1;
                 
+                % Do not re-use cached values here if also performing
+                % adaptive search.
+                if adaptiveSearch
+                    cache = struct;
+                end
+                
                 % It failed or was unacceptable, so use full correlation map.
-                correlationMap = matchTemplateOCV(strip, referenceFrame, true);
+                if isequal(parametersStructure.corrMethod, 'normxcorr')
+                    correlationMap = normxcorr2(strip, referenceFrame);
+                elseif isequal(parametersStructure.corrMethod, 'mex')
+                    correlationMap = matchTemplateOCV(strip, referenceFrame, true);
+                elseif isequal(parametersStructure.corrMethod, 'fft')
+                    [correlationMap, cache] = FastStripCorrelation(strip, referenceFrame, cache);
+                end
                 [xPeak, yPeak, peakValue, secondPeakValue] = ...
                     FindPeak(correlationMap, parametersStructure);
     
                 searchWindowsArray(stripNumber,:) = [NaN NaN];
+                
+                % Do not re-use cached values if also performing
+                % adaptive search.
+                if adaptiveSearch
+                    cache = struct;
+                end
             end
         else
             upperBound = 1;
 
-            correlationMap = matchTemplateOCV(strip, referenceFrame, true);
+            if isequal(parametersStructure.corrMethod, 'normxcorr')
+                correlationMap = normxcorr2(strip, referenceFrame);
+            elseif isequal(parametersStructure.corrMethod, 'mex')
+                correlationMap = matchTemplateOCV(strip, referenceFrame, true);
+            elseif isequal(parametersStructure.corrMethod, 'fft')
+                [correlationMap, cache] = FastStripCorrelation(strip, referenceFrame, cache);
+            end
             [xPeak, yPeak, peakValue, secondPeakValue] = ...
                 FindPeak(correlationMap, parametersStructure);        
         end
@@ -706,10 +741,12 @@ for stripNumber = (1:numberOfStrips)
             % loop to take advantage of vectorization only if they are not
             % performed here, namely, if verbosity is not enabled and this
             % if statement does not execute.
-            rawEyePositionTraces(stripNumber,2) = ...
-                rawEyePositionTraces(stripNumber,2) - (stripHeight - 1);
-            rawEyePositionTraces(stripNumber,1) = ...
-                rawEyePositionTraces(stripNumber,1) - (stripWidth - 1);
+            if ~isequal(parametersStructure.corrMethod, 'fft')
+                rawEyePositionTraces(stripNumber,2) = ...
+                    rawEyePositionTraces(stripNumber,2) - (stripHeight - 1);
+                rawEyePositionTraces(stripNumber,1) = ...
+                    rawEyePositionTraces(stripNumber,1) - (stripWidth - 1);
+            end
 
             % We must subtract back out the expected strip coordinates in order
             % to obtain the net movement (the net difference between no
@@ -745,10 +782,12 @@ end
 % before it was plotted to the eye traces graph. If verbosity was not
 % enabled, then we do it now in order to take advantage of vectorization.
 if ~enableVerbosity
-    rawEyePositionTraces(:,2) = ...
-        rawEyePositionTraces(:,2) - (stripHeight - 1);
-    rawEyePositionTraces(:,1) = ...
-        rawEyePositionTraces(:,1) - (stripWidth - 1);
+    if ~isequal(parametersStructure.corrMethod, 'fft')
+        rawEyePositionTraces(:,2) = ...
+            rawEyePositionTraces(:,2) - (stripHeight - 1);
+        rawEyePositionTraces(:,1) = ...
+            rawEyePositionTraces(:,1) - (stripWidth - 1);
+    end
 
     % We must subtract back out the starting coordinates in order
     % to obtain the net movement (comparing expected strip locations if
