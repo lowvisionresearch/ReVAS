@@ -1,7 +1,7 @@
 function [xPos, yPos] = FastStripAnalysis(pathToVideo, isGPU, isVisualize)
 
 if nargin < 1 || isempty(pathToVideo)
-    pathToVideo = '../demo/sample10deg_nostim_gamscaled_bandfilt 1.avi';
+    pathToVideo = 'demo/sample10deg_dwt_nostim_gamscaled_bandfilt.avi';
 end
 
 if nargin < 2 || isempty(isGPU)
@@ -9,35 +9,37 @@ if nargin < 2 || isempty(isGPU)
 end
 
 if nargin < 3 || isempty(isVisualize)
-    isVisualize = 0;
+    isVisualize = 1;
 end
 
 method = 'fft';
-downSampleFactor = 2;
+downSampleFactor = 1;
 
 % create a video reader object
 videoObj = VideoReader(pathToVideo);
 startTime = videoObj.CurrentTime;
 
 % use the first frame as the reference frame
-reference = imresize(WhereToCompute(single(readFrame(videoObj))/255, isGPU),...
-    1/downSampleFactor);
+%refFrame = imresize(WhereToCompute(single(readFrame(videoObj))/255, isGPU),...
+%    1/downSampleFactor);
+load('demo/sample10deg_dwt_nostim_gamscaled_bandfilt_refframe.mat', 'refFrame');
+refFrame = single(refFrame) / 255;
 
 % rewind back to the beginning of the video
 videoObj.CurrentTime = startTime;
 
 % define strip parameters
-stripHeight = 8/downSampleFactor;
+stripHeight = 15/downSampleFactor;
 stripWidth = videoObj.Width/downSampleFactor;
-numberOfStrips = 4;
-delta = 16;
+numberOfStrips = 18;
+delta = 1;
 stripLocations = round(linspace(delta, ...
-    videoObj.Height - stripHeight - 1, numberOfStrips));
+    videoObj.Height - stripHeight + 1, numberOfStrips));
 
 % precomputed arrays
 mask = WhereToCompute(ones(stripHeight, stripWidth,'single'), isGPU);
-fuv = conv2(reference,mask);
-f2uv = conv2(reference.^2,mask);
+fuv = conv2(refFrame,mask);
+f2uv = conv2(refFrame.^2,mask);
 
 % precision of the computations
 eps = 10^-6;
@@ -50,10 +52,12 @@ euv(euv == 0) = eps;
 % division is more expensive than multiplication.
 ieuv = 1./sqrt(circshift(euv, -[stripHeight stripWidth]+1));
 
+[refFrameHeight, refFrameWidth] = size(refFrame);
+
 % fft of the reference
-cm = stripHeight + videoObj.Height/downSampleFactor - 1;
-cn = stripWidth  + videoObj.Width/downSampleFactor  - 1;
-fr = fft2(reference, cm, cn);
+cm = stripHeight + refFrameHeight/downSampleFactor - 1;
+cn = stripWidth  + refFrameWidth/downSampleFactor  - 1;
+fr = fft2(refFrame, cm, cn);
 
 % preallocate arrays
 xPos = WhereToCompute(nan(videoObj.FrameRate * videoObj.Duration * numberOfStrips,1),...
@@ -89,7 +93,7 @@ while hasFrame(videoObj)
                 
             case 'matlab'
                 % MATLAB's method
-                c = normxcorr2(currentStrip, reference);
+                c = normxcorr2(currentStrip, refFrame);
                 xAdjust = stripWidth;
                 yAdjust = stripHeight;
                 
@@ -110,7 +114,7 @@ while hasFrame(videoObj)
         if isVisualize == 2
             figure(1);
             cla;
-            imagesc(reference);
+            imagesc(refFrame);
             colormap(gray);
             axis image;
             hold on;
