@@ -11,6 +11,7 @@ clc
 parametersStructure = struct;
 parametersStructure.overwrite = true;
 parametersStructure.adaptiveSearch = true;
+parametersStructure.corrMethod = 'fft';
 
 global abortTriggered;
 abortTriggered = 0;
