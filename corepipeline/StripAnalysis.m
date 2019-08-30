@@ -92,9 +92,10 @@ function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
 %   downSampleFactor                : only utilized for corrMethod of
 %                                     'fft'. If > 1, the reference frame
 %                                     and strips are shrunk by that factor
-%                                     prior to correlation. If < 1, pixels
-%                                     are randomly kept with that
-%                                     probability. (default 1)
+%                                     prior to correlation. If < 1, every 
+%                                     other pixel of the reference frame
+%                                     is kept (in a checkerboard-like 
+%                                     pattern). (default 1)
 %
 %   -----------------------------------
 %   Fields of the |subpixelInterpolationParameters|
