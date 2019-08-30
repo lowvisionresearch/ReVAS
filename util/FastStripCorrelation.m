@@ -10,8 +10,8 @@ function [correlationMap, cache] = FastStripCorrelation(strip, referenceFrame, c
 %   downSampleFactor is used to shrink everything during internal
 %   computations. If downSampleFactor > 1, it is the factor to shrink by.
 %   For example, downSampleFactor = 2 means to reduce everything to half
-%   its size. If downSampleFactor < 1, each pixel is kept with that probability
-%   (and otherwise it is zeroed out). (default 1)
+%   its size. If downSampleFactor < 1, every other pixel of the reference
+%   frame is kept (in a checkerboard-like pattern). (default 1)
 %
 %   isGPU should be true if the GPU should be used. (default false)
 
@@ -36,9 +36,14 @@ if downSampleFactor > 1
     referenceFrame = imresize(single(referenceFrame) / 255, 1 / downSampleFactor);
 else
     strip = single(strip) / 255;
-    strip = strip .* (rand(size(strip)) < downSampleFactor);
+    % source: http://matlabtricks.com/post-31/three-ways-to-generate-a-checkerboard-matrix).
+    checkerboard = bsxfun(@xor, mod(1 : size(strip, 1), 2)', mod(1 : size(strip, 2), 2));
+    strip = strip .* checkerboard;
+    
     referenceFrame = single(referenceFrame) / 255;
-    referenceFrame = referenceFrame .* (rand(size(referenceFrame)) < downSampleFactor);
+    % source: http://matlabtricks.com/post-31/three-ways-to-generate-a-checkerboard-matrix).
+    checkerboard = bsxfun(@xor, mod(1 : size(referenceFrame, 1), 2)', mod(1 : size(referenceFrame, 2), 2));
+    referenceFrame = referenceFrame .* checkerboard;
 end
 
 [stripHeight, stripWidth] = size(strip);
