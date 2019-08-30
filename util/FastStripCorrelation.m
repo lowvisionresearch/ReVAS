@@ -8,8 +8,10 @@ function [correlationMap, cache] = FastStripCorrelation(strip, referenceFrame, c
 %   returned for so the user can pass in back in next time. (default empty)
 %
 %   downSampleFactor is used to shrink everything during internal
-%   computations. downSampleFactor = 2 means to reduce everything to half
-%   its size, for example. (default 1)
+%   computations. If downSampleFactor > 1, it is the factor to shrink by.
+%   For example, downSampleFactor = 2 means to reduce everything to half
+%   its size. If downSampleFactor < 1, each pixel is kept with that probability
+%   (and otherwise it is zeroed out). (default 1)
 %
 %   isGPU should be true if the GPU should be used. (default false)
 
@@ -29,11 +31,18 @@ end
 % precision of the computations
 eps = 10^-6;
 
+if downSampleFactor > 1
+    strip = imresize(single(strip) / 255 , 1 / downSampleFactor);
+    referenceFrame = imresize(single(referenceFrame) / 255, 1 / downSampleFactor);
+else
+    strip = single(strip) / 255;
+    strip = strip .* (rand(size(strip)) < downSampleFactor);
+    referenceFrame = single(referenceFrame) / 255;
+    referenceFrame = referenceFrame .* (rand(size(referenceFrame)) < downSampleFactor);
+end
+
 [stripHeight, stripWidth] = size(strip);
 [refHeight, refWidth] = size(referenceFrame);
-
-strip = single(strip) / 255;
-referenceFrame = single(referenceFrame) / 255;
 
 if isempty(fieldnames(cache))
     % precomputed arrays
@@ -50,8 +59,8 @@ if isempty(fieldnames(cache))
     cache.ieuv = 1./sqrt(circshift(euv, -[stripHeight stripWidth]+1));
 
     % fft of the reference
-    cache.cm = stripHeight + refHeight/downSampleFactor - 1;
-    cache.cn = stripWidth  + refWidth/downSampleFactor  - 1;
+    cache.cm = stripHeight + refHeight - 1;
+    cache.cn = stripWidth  + refWidth  - 1;
     cache.fr = fft2(referenceFrame, cache.cm, cache.cn);
 end
 
