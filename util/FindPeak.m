@@ -132,7 +132,7 @@ else
     % Find peak of correlation map
     [~, argmax] = max(correlationMap(:));
     xPeak = ceil(argmax/size(correlationMap, 1));
-    yPeak = mod(argmax, size(correlationMap, 1));
+    yPeak = mod(argmax - 1, size(correlationMap, 1)) + 1;
     
     % If there is a tie for max peak, arbitrarily break it since the
     % second highest peak will be the same and this frame will be
