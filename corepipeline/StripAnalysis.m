@@ -360,8 +360,20 @@ if writeResult
 end
 
 %% Preallocation and variable setup
-[stripIndices, stripsPerFrame] = DivideIntoStrips(inputVideo, parametersStructure);
-numberOfStrips = size(stripIndices, 1);
+
+if writeResult
+    reader = VideoReader(inputVideo);
+    numberOfFrames = reader.FrameRate * reader.Duration;
+    height = reader.Height;
+    parametersStructure.FrameRate = reader.FrameRate;
+else
+    [height, ~, numberOfFrames] = size(inputVideo);
+end
+    
+stripsPerFrame = round(parametersStructure.samplingRate / parametersStructure.FrameRate);
+distanceBetweenStrips = (height - parametersStructure.stripHeight)...
+    / (stripsPerFrame - 1);
+numberOfStrips = stripsPerFrame * numberOfFrames;
 
 % two columns for horizontal and vertical movements
 rawEyePositionTraces = NaN(numberOfStrips, 2);
@@ -396,13 +408,6 @@ if parametersStructure.adaptiveSearch
     scaledDownReferenceFrame = referenceFrame( ...
         1:parametersStructure.scalingFactor:end, ...
         1:parametersStructure.scalingFactor:end);
-    
-    if writeResult
-        reader = VideoReader(inputVideo);
-        numberOfFrames = reader.FrameRate * reader.Duration;
-    else
-        numberOfFrames = size(inputVideo, 3);
-    end
     
     for frameNumber = 1:numberOfFrames
         
@@ -500,13 +505,15 @@ for stripNumber = 1:numberOfStrips
         % Note that only one core should use the GPU at a time.
         % i.e. when processing multiple videos in parallel, only one should
         % use GPU.
-        if parametersStructure.enableGPU
-            stripData = gpuArray(stripIndices(stripNumber,:));
-        else
-            stripData = stripIndices(stripNumber,:);
+        
+        rowNumber = floor(mod(stripNumber - 1, stripsPerFrame) * distanceBetweenStrips + 1);
+        % Edge case for if there is only strip per frame.
+        if isnan(rowNumber) && stripsPerFrame == 1
+            rowNumber = 1;
         end
+        colNumber = 1;
+        frameNumber = floor((stripNumber-1) / stripsPerFrame + 1);
 
-        frameNumber = stripData(1,3);
         if frameNumber > currFrameNumber
             currFrameNumber = frameNumber;
             
@@ -515,10 +522,8 @@ for stripNumber = 1:numberOfStrips
                 if ndims(frame) == 3
                     frame = rgb2gray(frame);
                 end
-                height = reader.Height;
             else
                 frame = inputVideo(1:end, 1:end, currFrameNumber);
-                height = size(inputVideo, 1);
             end
         end
 
@@ -529,11 +534,9 @@ for stripNumber = 1:numberOfStrips
             continue;
         end
 
-        rowStart = stripData(1,1);
-        columnStart = stripData(1,2);
-        rowEnd = rowStart + parametersStructure.stripHeight - 1;
-        columnEnd = columnStart + parametersStructure.stripWidth - 1;
-        strip = frame(rowStart:rowEnd, columnStart:columnEnd);
+        rowEnd = rowNumber + parametersStructure.stripHeight - 1;
+        columnEnd = colNumber + parametersStructure.stripWidth - 1;
+        strip = frame(rowNumber:rowEnd, colNumber:columnEnd);
         
         correlationMap = normxcorr2(strip, referenceFrame);
         parametersStructure.stripNumber = stripNumber;  
@@ -698,6 +701,14 @@ for stripNumber = 1:numberOfStrips
         
         peakValueArray(stripNumber) = peakValue;
         secondPeakValueArray(stripNumber) = secondPeakValue;
+        
+        % We must subtract back out the expected strip coordinates in order
+        % to obtain the net movement (the net difference between no
+        % movement and the movement that was observed).
+        rawEyePositionTraces(stripNumber,1) = ...
+            rawEyePositionTraces(stripNumber,1) - colNumber;
+        rawEyePositionTraces(stripNumber,2) = ...
+            rawEyePositionTraces(stripNumber,2) - rowNumber;
 
         % If verbosity is enabled, also show eye trace plot with points
         % being plotted as they become available.
@@ -715,14 +726,6 @@ for stripNumber = 1:numberOfStrips
                 rawEyePositionTraces(stripNumber,2) - (parametersStructure.stripHeight - 1);
             rawEyePositionTraces(stripNumber,1) = ...
                 rawEyePositionTraces(stripNumber,1) - (parametersStructure.stripWidth - 1);
-
-            % We must subtract back out the expected strip coordinates in order
-            % to obtain the net movement (the net difference between no
-            % movement and the movement that was observed).
-            rawEyePositionTraces(stripNumber,1) = ...
-                rawEyePositionTraces(stripNumber,1) - stripIndices(stripNumber,2);
-            rawEyePositionTraces(stripNumber,2) = ...
-                rawEyePositionTraces(stripNumber,2) - stripIndices(stripNumber,1);
 
             % Negate eye position traces to flip directions.
             rawEyePositionTraces(stripNumber,:) = -rawEyePositionTraces(stripNumber,:);
@@ -754,12 +757,6 @@ if ~parametersStructure.enableVerbosity
         rawEyePositionTraces(:,2) - (parametersStructure.stripHeight - 1);
     rawEyePositionTraces(:,1) = ...
         rawEyePositionTraces(:,1) - (parametersStructure.stripWidth - 1);
-
-    % We must subtract back out the starting coordinates in order
-    % to obtain the net movement (comparing expected strip locations if
-    % there were no movement to observed location).
-    rawEyePositionTraces(:,1) = rawEyePositionTraces(:,1) - stripIndices(:,2);
-    rawEyePositionTraces(:,2) = rawEyePositionTraces(:,2) - stripIndices(:,1);
 
     % Negate eye position traces to flip directions.
     rawEyePositionTraces = -rawEyePositionTraces;
