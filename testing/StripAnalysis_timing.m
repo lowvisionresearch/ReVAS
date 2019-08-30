@@ -12,7 +12,7 @@ parametersStructure = struct;
 parametersStructure.overwrite = true;
 parametersStructure.adaptiveSearch = false;
 parametersStructure.corrMethod = 'fft';
-parametersStructure.downSampleFactor = 0.95;
+parametersStructure.downSampleFactor = 0.5;
 
 global abortTriggered;
 abortTriggered = 0;
