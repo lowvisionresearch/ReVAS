@@ -13,7 +13,7 @@ if nargin < 3 || isempty(isVisualize)
 end
 
 method = 'fft';
-downSampleFactor = 1;
+downSampleFactor = 2;
 
 % create a video reader object
 videoObj = VideoReader(pathToVideo);
@@ -22,19 +22,21 @@ startTime = videoObj.CurrentTime;
 % use the first frame as the reference frame
 %refFrame = imresize(WhereToCompute(single(readFrame(videoObj))/255, isGPU),...
 %    1/downSampleFactor);
+
+% load a reference frame
 load('demo/sample10deg_dwt_nostim_gamscaled_bandfilt_refframe.mat', 'refFrame');
-refFrame = single(refFrame) / 255;
+refFrame = imresize(WhereToCompute(single(refFrame)/255, isGPU), 1/downSampleFactor);
 
 % rewind back to the beginning of the video
 videoObj.CurrentTime = startTime;
 
 % define strip parameters
-stripHeight = 15/downSampleFactor;
-stripWidth = videoObj.Width/downSampleFactor;
+stripHeight = ceil(15/downSampleFactor);
+stripWidth = ceil(videoObj.Width/downSampleFactor);
 numberOfStrips = 18;
 delta = 1;
 stripLocations = round(linspace(delta, ...
-    videoObj.Height - stripHeight + 1, numberOfStrips));
+    videoObj.Height/downSampleFactor - stripHeight + 1, numberOfStrips));
 
 % precomputed arrays
 mask = WhereToCompute(ones(stripHeight, stripWidth,'single'), isGPU);
@@ -55,8 +57,8 @@ ieuv = 1./sqrt(circshift(euv, -[stripHeight stripWidth]+1));
 [refFrameHeight, refFrameWidth] = size(refFrame);
 
 % fft of the reference
-cm = stripHeight + refFrameHeight/downSampleFactor - 1;
-cn = stripWidth  + refFrameWidth/downSampleFactor  - 1;
+cm = stripHeight + refFrameHeight - 1;
+cn = stripWidth  + refFrameWidth  - 1;
 fr = fft2(refFrame, cm, cn);
 
 % preallocate arrays
@@ -69,14 +71,16 @@ sampleCounter = 0;
 t0 = tic;
 while hasFrame(videoObj)
     
-    currentFrame = WhereToCompute(single(readFrame(videoObj))/255, isGPU);
+    currentFrame = imresize( ...
+        WhereToCompute(single(readFrame(videoObj))/255, isGPU), ...
+        1/downSampleFactor);
     
     for i=1:numberOfStrips
         
         % get current strip
-        currentStrip = imresize(...
+        currentStrip = ...
             currentFrame(stripLocations(i):stripLocations(i)+stripHeight-1,...
-            1:stripWidth),1/downSampleFactor);
+            1:stripWidth);
         
         switch method
             case 'fft'
