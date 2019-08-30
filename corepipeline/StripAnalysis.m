@@ -441,7 +441,13 @@ cache = struct;
 
 % Variables for adaptive search:
 loc = (reader.Height / stripsPerFrame) / 2;
-vel = reader.Height / stripsPerFrame;
+
+% remember the last 4 velocities
+historyCapacity = 4;
+% velHistory will act as a circular queue, with the next to be deleted
+% marked by historyIndex.
+historyIndex = 2;
+velHistory = [reader.Height / stripsPerFrame];
 
 for stripNumber = (1:numberOfStrips)
 
@@ -653,14 +659,19 @@ for stripNumber = (1:numberOfStrips)
         % loc was our guess for yPeak. Adjust velocity accordingly.
         % (This is how much we should have jumped from the previous yPeak
         % to land precisely on the correct place.)
-        vel = vel + yPeak - loc;
+        prevIndex = mod(historyIndex-2, historyCapacity) + 1;
+        velHistory(prevIndex) = velHistory(prevIndex) + yPeak - loc;
+        
+        % Replace the oldest velocity with the current average velocity.
+        velHistory(historyIndex) = mean(velHistory);
         
         % Advance to the next loc, based upon vel.
         % (Wrapping back to the top of the frame as necessary.)
-        loc = yPeak + vel;
+        loc = yPeak + velHistory(historyIndex);
         if mod(stripNumber, stripsPerFrame) == 0
             loc = loc - size(referenceFrame, 1);
         end
+        historyIndex = mod(historyIndex, historyCapacity) + 1;
         
         % Show surface plot for this correlation if verbosity enabled
         if enableVerbosity
