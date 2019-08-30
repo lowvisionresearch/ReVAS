@@ -89,6 +89,12 @@ function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
 %                                     for opencv's correlation, or 'fft'
 %                                     for our custom-implemented fast
 %                                     correlation method.
+%   downSampleFactor                : only utilized for corrMethod of
+%                                     'fft'. If > 1, the reference frame
+%                                     and strips are shrunk by that factor
+%                                     prior to correlation. If < 1, pixels
+%                                     are randomly kept with that
+%                                     probability. (default 1)
 %
 %   -----------------------------------
 %   Fields of the |subpixelInterpolationParameters|
@@ -358,6 +364,10 @@ if ~isfield(parametersStructure, 'corrMethod')
     parametersStructure.corrMethod = 'mex';
 end
 
+if ~isfield(parametersStructure, 'downSampleFactor')
+    parametersStructure.downSampleFactor = 1;
+end
+
 %% Handle overwrite scenarios.
 
 outputFileName = [videoInputPath(1:end-4) '_' ...
@@ -497,7 +507,9 @@ isSetView = true;
 % trace values can be plotted as early as possible).
 currFrameNumber = 0;
 reader = VideoReader(videoInputPath);
+
 cache = struct; % for fft corrmethod
+
 for stripNumber = (1:numberOfStrips)
 
     if ~abortTriggered
@@ -613,7 +625,7 @@ for stripNumber = (1:numberOfStrips)
                 elseif isequal(parametersStructure.corrMethod, 'mex')
                     correlationMap = matchTemplateOCV(strip, referenceFrame, true);
                 elseif isequal(parametersStructure.corrMethod, 'fft')
-                    [correlationMap, cache] = FastStripCorrelation(strip, referenceFrame, cache);
+                    [correlationMap, cache] = FastStripCorrelation(strip, referenceFrame, cache, parameterStructure.downSampleFactor);
                 end
                 [xPeak, yPeak, peakValue, secondPeakValue] = ...
                     FindPeak(correlationMap, parametersStructure);
@@ -634,7 +646,7 @@ for stripNumber = (1:numberOfStrips)
             elseif isequal(parametersStructure.corrMethod, 'mex')
                 correlationMap = matchTemplateOCV(strip, referenceFrame, true);
             elseif isequal(parametersStructure.corrMethod, 'fft')
-                [correlationMap, cache] = FastStripCorrelation(strip, referenceFrame, cache);
+                [correlationMap, cache] = FastStripCorrelation(strip, referenceFrame, cache, parametersStructure.downSampleFactor);
             end
             [xPeak, yPeak, peakValue, secondPeakValue] = ...
                 FindPeak(correlationMap, parametersStructure);        
@@ -747,6 +759,14 @@ for stripNumber = (1:numberOfStrips)
                 rawEyePositionTraces(stripNumber,1) = ...
                     rawEyePositionTraces(stripNumber,1) - (stripWidth - 1);
             end
+            
+            % Only scale up if downSampleFactor is > 1, since this means it
+            % was shrunk during correlation.
+            % If downSampleFactor was < 1, the images were thrown against a
+            % bernoulli mask, but remained the same overall dimension.
+            if parametersStructure.downSampleFactor > 1 && isequal(parametersStructure.corrMethod, 'fft')
+               rawEyePositionTraces(stripNumber, :) = rawEyePositionTraces(stripNumber, :) .* parametersStructure.downSampleFactor; 
+            end
 
             % We must subtract back out the expected strip coordinates in order
             % to obtain the net movement (the net difference between no
@@ -787,6 +807,14 @@ if ~enableVerbosity
             rawEyePositionTraces(:,2) - (stripHeight - 1);
         rawEyePositionTraces(:,1) = ...
             rawEyePositionTraces(:,1) - (stripWidth - 1);
+    end
+    
+    % Only scale up if downSampleFactor is > 1, since this means it
+    % was shrunk during correlation.
+    % If downSampleFactor was < 1, the images were thrown against a
+    % bernoulli mask, but remained the same overall dimension.
+    if parametersStructure.downSampleFactor > 1 && isequal(parametersStructure.corrMethod, 'fft')
+       rawEyePositionTraces = rawEyePositionTraces .* parametersStructure.downSampleFactor; 
     end
 
     % We must subtract back out the starting coordinates in order
