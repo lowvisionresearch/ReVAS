@@ -6,30 +6,61 @@ function [interpolatedPixelCoordinates, errorStructure]...
 %
 %   Fields of the |parametersStructure| 
 %   -----------------------------------
-%  neighborhoodSize         :   ???              
-%  subpixelDepth            :   ???
+%   neighborhoodSize                : the length of one of the sides of the
+%                                     neighborhood area over which
+%                                     interpolation is to be performed over
+%                                     in pixels. (default 7)
+%   subpixelDepth                   : the scaling of the desired level of
+%                                     subpixel depth. (default 2)
+
 %% Input Validation
 
-if ~ismatrix(correlationMap2D)
-    error('Invalid Input for interpolation2D (correlationMap2D is not 2 dimensional)');
-elseif true(size(peakCoordinates) ~= [1 2])
-    error('Invalid Input for interpolation2D (peakCoordinates is not 1x2 coordinate pair)');
-elseif ~isfield(parametersStructure, 'neighborhoodSize')
-    error('Invalid Input for interpolation2D (neighborhoodSize is not a field of parametersStructure)');
-elseif ~isfield(parametersStructure, 'subpixelDepth')
-    error('Invalid Input for interpolation2D (subpixelDepth is not a field of parametersStructure)');
-elseif ~isscalar(parametersStructure.neighborhoodSize) || ...
-        mod(parametersStructure.neighborhoodSize, 2) ~= 1
-    error('Invalid Input for interpolation2D (neighborhoodSize is not an odd scalar)');
-elseif ~isscalar(parametersStructure.subpixelDepth)
-    error('Invalid Input for interpolation2D (subpixelDepth is not a scalar)');
+try
+    if ~ismatrix(correlationMap2D)
+        error('Invalid Input for interpolation2D (correlationMap2D is not 2 dimensional)');
+    elseif true(size(peakCoordinates) ~= [1 2])
+        error('Invalid Input for interpolation2D (peakCoordinates is not 1x2 coordinate pair)');
+    elseif ~isfield(parametersStructure, 'neighborhoodSize')
+        error('Invalid Input for interpolation2D (neighborhoodSize is not a field of parametersStructure)');
+    elseif ~isfield(parametersStructure, 'subpixelDepth')
+        error('Invalid Input for interpolation2D (subpixelDepth is not a field of parametersStructure)');
+    elseif ~isscalar(parametersStructure.neighborhoodSize) || ...
+            mod(parametersStructure.neighborhoodSize, 2) ~= 1
+        error('Invalid Input for interpolation2D (neighborhoodSize is not an odd scalar)');
+    elseif ~isscalar(parametersStructure.subpixelDepth)
+        error('Invalid Input for interpolation2D (subpixelDepth is not a scalar)');
+    end
+    
+    errorStructure = struct();
+catch MException
+    errorStructure = struct(MException);
 end
 
 if size(correlationMap2D, 1) == 1 || size(correlationMap2D, 2) == 1
-    RevasWarning('Interpolation not applied this iteration since correlationMap2D dimensions were %d, %d', size(correlationMap2D));
+    RevasWarning(['Interpolation not applied this iteration since correlationMap2D dimensions were ' int2str(size(correlationMap2D, 1)) ' x ' int2str(size(correlationMap2D, 2))]);
     interpolatedPixelCoordinates = peakCoordinates;
-    errorStructure = struct();
     return;
+end
+
+%% Set parameters to defaults if not specified.
+
+if ~isfield(parametersStructure, 'neighborhoodSize')
+   parametersStructure.neighborhoodSize = 7;
+   RevasMessage('using default parameter for neighborhoodSize');
+else
+   parametersStructure.neighborhoodSize = parametersStructure.neighborhoodSize;
+   if ~IsNaturalNumber(parametersStructure.neighborhoodSize)
+       error('neighborhoodSize must be a natural number');
+   end
+end
+if ~isfield(parametersStructure, 'subpixelDepth')
+   parametersStructure.subpixelDepth = 2;
+   RevasMessage('using default parameter for subpixelDepth');
+else
+   parametersStructure.subpixelDepth = parametersStructure.subpixelDepth;
+   if ~IsPositiveRealNumber(parametersStructure.subpixelDepth)
+       error('subpixelDepth must be a positive, real number');
+   end
 end
 
 %% Apply |interp2|
@@ -38,7 +69,6 @@ halfNeighborhoodSize = (parametersStructure.neighborhoodSize - 1) / 2;
 meshgridX = meshgridX + peakCoordinates(1);
 meshgridY = meshgridY + peakCoordinates(2);
 
-% TODO Unsure if subpixelDepth is being interpretted correctly
 % Trimming to neighborhoodSize
 gridSpacing = parametersStructure.subpixelDepth / 100;
 [finerMeshgridX, finerMeshgridY] = ...
@@ -96,8 +126,4 @@ interpolatedPixelCoordinates = ...
 interpolatedPixelCoordinates = interpolatedPixelCoordinates ...
     - 1 - halfNeighborhoodSize + peakCoordinates;
 
-%% TODO Not implemented yet
-errorStructure = struct();
 end
-
-
