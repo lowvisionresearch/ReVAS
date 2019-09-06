@@ -44,6 +44,7 @@ refFrame = CoarseRef(video, parametersStructure);
 [refFrame, ~, ~] = FineRef(refFrame, video, parametersStructure);
 
 parametersStructure.adaptiveSearch = true;
+parametersStructure.enableSubpixelInterpolation = true;
 [~, eyeTraces, timeArray, ~] = StripAnalysis(video, refFrame, parametersStructure);
 
 eyeTraces = FilterEyePosition([eyeTraces timeArray], parametersStructure);
@@ -100,6 +101,7 @@ FineRef(refFramePath, inputVideoPath, parametersStructure);
 refFramePath = Filename(inputVideoPath, 'fineref');
 
 parametersStructure.adaptiveSearch = true;
+parametersStructure.enableSubpixelInterpolation = true;
 StripAnalysis(inputVideoPath, refFramePath, parametersStructure);
 tracesPath = Filename(inputVideoPath, 'usefultraces');
 
