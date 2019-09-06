@@ -75,7 +75,7 @@ function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
 %                                     true) (default 79)
 %   enableSubpixelInterpolation     : set to true to estimate peak
 %                                     coordinates to a subpixel precision
-%                                     through interpolation. (default true)
+%                                     through interpolation. (default false)
 %   subpixelInterpolationParameters : see below. (relevant only if
 %                                     enableSubpixelInterpolation is true)
 %   createStabilizedVideo           : set to true to create a stabilized
@@ -142,14 +142,26 @@ if ischar(referenceFrame)
     % Reference Frame Path is needed because it is written to the file in
     % the end.
     referenceFramePath = referenceFrame;
-    load(referenceFramePath, 'refFrame');
-    load(referenceFramePath, 'coarseRefFrame');
-    if exist('refFrame', 'var')
-        referenceFrame = refFrame;
-    else
-        referenceFrame = coarseRefFrame;
-
+ 
+    success = false;
+    data = load(referenceFramePath, 'refFrame');
+    if isfield(data, 'refFrame')
+        referenceFrame = data.refFrame;
+        success = true;
     end
+    
+    data = load(referenceFramePath, 'coarseRefFrame');
+    if isfield(data, 'coarseRefFrame')
+        referenceFrame = data.coarseRefFrame;
+        success = true;
+    end
+    
+    if ~success
+        error(['No reference frame could be loaded from ' referenceFramePath]);
+    end
+    
+    clear data
+    clear success
 else
     referenceFramePath = '';
 end
@@ -293,14 +305,13 @@ else
     if ~isstruct(parametersStructure.subpixelInterpolationParameters)
        error('subpixelInterpolationParameters must be a struct');
     else
-       parametersStructure.subpixelInterpolationParameters = parametersStructure.subpixelInterpolationParameters;
        if ~isfield(parametersStructure.subpixelInterpolationParameters, 'neighborhoodSize')
            parametersStructure.subpixelInterpolationParameters.neighborhoodSize = 7;
            RevasMessage('using default parameter for neighborhoodSize');
        else
            parametersStructure.subpixelInterpolationParameters.neighborhoodSize = parametersStructure.subpixelInterpolationParameters.neighborhoodSize;
            if ~IsNaturalNumber(parametersStructure.subpixelInterpolationParameters.neighborhoodSize)
-               error('parametersStructure.subpixelInterpolationParameters.neighborhoodSize must be a natural number');
+               error('subpixelInterpolationParameters.neighborhoodSize must be a natural number');
            end
        end
        if ~isfield(parametersStructure.subpixelInterpolationParameters, 'subpixelDepth')
