@@ -1,65 +1,70 @@
-function [xPos, yPos] = FastStripAnalysis(pathToVideo, isGPU, isVisualize)
+function [xPos, yPos] = FastStripAnalysis(pathToVideo, method, isGPU, isVisualize)
 
 if nargin < 1 || isempty(pathToVideo)
     pathToVideo = 'demo/sample10deg_dwt_nostim_gamscaled_bandfilt.avi';
 end
 
-if nargin < 2 || isempty(isGPU)
+if nargin < 2 || isempty(method)
+    method = 'fft';
+end
+
+if nargin < 3 || isempty(isGPU)
     isGPU = false;
 end
 
-if nargin < 3 || isempty(isVisualize)
+if nargin < 4 || isempty(isVisualize)
     isVisualize = 1;
 end
-
-method = 'fft';
-downSampleFactor = 2;
 
 % create a video reader object
 videoObj = VideoReader(pathToVideo);
 startTime = videoObj.CurrentTime;
 
-% use the first frame as the reference frame
-%refFrame = imresize(WhereToCompute(single(readFrame(videoObj))/255, isGPU),...
-%    1/downSampleFactor);
-
 % load a reference frame
 load('demo/sample10deg_dwt_nostim_gamscaled_bandfilt_refframe.mat', 'refFrame');
-refFrame = imresize(WhereToCompute(single(refFrame)/255, isGPU), 1/downSampleFactor);
-
+switch method
+    case {'fft','matlab'}
+        refFrame = ...
+            WhereToCompute(single(refFrame)/255, isGPU);
+    case 'opencv'
+        refFrame = ...
+            WhereToCompute((refFrame), isGPU);
+end
 % rewind back to the beginning of the video
 videoObj.CurrentTime = startTime;
 
 % define strip parameters
-stripHeight = ceil(15/downSampleFactor);
-stripWidth = ceil(videoObj.Width/downSampleFactor);
+stripHeight = ceil(15);
+stripWidth = ceil(videoObj.Width);
 numberOfStrips = 18;
 delta = 1;
 stripLocations = round(linspace(delta, ...
-    videoObj.Height/downSampleFactor - stripHeight + 1, numberOfStrips));
+    videoObj.Height - stripHeight + 1, numberOfStrips));
 
-% precomputed arrays
-mask = WhereToCompute(ones(stripHeight, stripWidth,'single'), isGPU);
-fuv = conv2(refFrame,mask);
-f2uv = conv2(refFrame.^2,mask);
+if contains(method,'fft')
+    % precomputed arrays
+    mask = WhereToCompute(ones(stripHeight, stripWidth,'single'), isGPU);
+    fuv = conv2(refFrame,mask);
+    f2uv = conv2(refFrame.^2,mask);
 
-% precision of the computations
-eps = 10^-6;
+    % precision of the computations
+    eps = 10^-6;
 
-% energy of the reference
-euv = (f2uv - (fuv.^2)/(stripHeight * stripWidth));
-euv(euv == 0) = eps;
+    % energy of the reference
+    euv = (f2uv - (fuv.^2)/(stripHeight * stripWidth));
+    euv(euv == 0) = eps;
 
-% shift, sqrt, and take the reciprocal of euv here for speed up. Note that
-% division is more expensive than multiplication.
-ieuv = 1./sqrt(circshift(euv, -[stripHeight stripWidth]+1));
+    % shift, sqrt, and take the reciprocal of euv here for speed up. Note that
+    % division is more expensive than multiplication.
+    ieuv = 1./sqrt(circshift((euv), -[stripHeight stripWidth]+1));
 
-[refFrameHeight, refFrameWidth] = size(refFrame);
+    [refFrameHeight, refFrameWidth] = size(refFrame);
 
-% fft of the reference
-cm = stripHeight + refFrameHeight - 1;
-cn = stripWidth  + refFrameWidth  - 1;
-fr = fft2(refFrame, cm, cn);
+    % fft of the reference
+    cm = stripHeight + refFrameHeight - 1;
+    cn = stripWidth  + refFrameWidth  - 1;
+    fr = fft2(refFrame, cm, cn);
+end
 
 % preallocate arrays
 xPos = WhereToCompute(nan(videoObj.FrameRate * videoObj.Duration * numberOfStrips,1),...
@@ -71,9 +76,14 @@ sampleCounter = 0;
 t0 = tic;
 while hasFrame(videoObj)
     
-    currentFrame = imresize( ...
-        WhereToCompute(single(readFrame(videoObj))/255, isGPU), ...
-        1/downSampleFactor);
+    switch method
+        case {'fft','matlab'}
+            currentFrame =  ...
+                WhereToCompute(single(readFrame(videoObj))/255, isGPU);
+        case 'opencv'
+            currentFrame =  ...
+                WhereToCompute((readFrame(videoObj)), isGPU);
+    end
     
     for i=1:numberOfStrips
         
@@ -98,6 +108,15 @@ while hasFrame(videoObj)
             case 'matlab'
                 % MATLAB's method
                 c = normxcorr2(currentStrip, refFrame);
+                xAdjust = stripWidth;
+                yAdjust = stripHeight;
+                
+            case 'opencv'
+                if isGPU
+                    c = matchTemplateOCV_GPU(currentStrip, refFrame);
+                else
+                    c = matchTemplateOCV(currentStrip, refFrame, false);
+                end
                 xAdjust = stripWidth;
                 yAdjust = stripHeight;
                 
@@ -138,9 +157,6 @@ fprintf('Elapsed time: %.4f seconds \nTime spent per frame: %.4f\nTime spent per
     elapsedTime, elapsedTime/videoObj.FrameRate*videoObj.Duration, ...
     elapsedTime / length(xPos));
 
-% rescale if downsampled
-xPos = xPos * downSampleFactor;
-yPos = yPos * downSampleFactor;
 
 
 if isGPU
@@ -150,10 +166,13 @@ end
 
 % plot
 if isVisualize
-    figure;
-    plot(xPos,'.');
+    figure(1);
+    subplot(1,2,1)
+    plot(xPos,'.-');
     hold on;
-    plot(yPos,'.');
+    subplot(1,2,2)
+    plot(yPos,'.-');
+    hold on;
     xlabel('time (n)')
     ylabel('position (px)')
     ylim([-100 100])
