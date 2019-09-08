@@ -1,6 +1,6 @@
 clearvars
 close all
-% clc
+clc
 
 
 % p = gcp('nocreate');
@@ -11,9 +11,31 @@ close all
 
 % pathToVideo = '../demo/sample10deg';
 
-tic;
+
 for i=1:1
-    thisFile = 'sample10deg_nostim_gamscaled_bandfilt.avi';
-    [x,y] = FastStripAnalysis(thisFile,false,1);
+    thisFile = 'demo/sample10deg_dwt_nostim_gamscaled_bandfilt.avi';
+    disp('MATLAB normxcorr2 - CPU')
+    [x,y] = FastStripAnalysis(thisFile,'matlab',false,1);
+    
+    disp('MATLAB normxcorr2 - GPU')
+    [x,y] = FastStripAnalysis(thisFile,'matlab',true,1);
+    
+    disp('MATLAB FFT - CPU')
+    [x,y] = FastStripAnalysis(thisFile,'fft',false,1);
+    
+    disp('MATLAB FFT - GPU')
+    [x,y] = FastStripAnalysis(thisFile,'fft',true,1);
+    
+    disp('OPENCV - CPU')
+    [x,y] = FastStripAnalysis(thisFile,'opencv',false,1);
+    
+    disp('OPENCV - GPU')
+    [x,y] = FastStripAnalysis(thisFile,'opencv',true,1);
 end
-toc;
+legend('matlab normxcorr2 CPU', 'matlab normxcorr2 GPU', 'matlab fft CPU',...
+    'matlab fft GPU','opencv CPU','opencv GPU')
+
+
+
+
+
