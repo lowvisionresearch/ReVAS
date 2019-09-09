@@ -28,6 +28,10 @@ if nargin < 5
     isGPU = false;
 end
 
+gpuTask = getCurrentTask;
+strip = WhereToCompute(strip, isGPU);
+referenceFrame = WhereToCompute(referenceFrame, isGPU);
+
 % precision of the computations
 eps = 10^-6;
 
@@ -77,5 +81,8 @@ ft = fft2(currentStripZero, cache.cm, cache.cn);
 %% compute the normalized xcorr
 correlationMap = ifft2(conj(ft).*(cache.fr)) .* cache.ieuv / currentStripEnergy;
 
+if isGPU
+    correlationMap = gather(correlationMap, gpuTask.ID);
 end
 
+end

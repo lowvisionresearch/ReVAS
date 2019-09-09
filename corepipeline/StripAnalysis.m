@@ -423,14 +423,6 @@ searchWindowsArray = NaN(numberOfStrips, 2);
 %% Populate time array
 timeArray = (1:numberOfStrips)' / parametersStructure.samplingRate;
 
-%% GPU Preparation
-% *** TODO: need GPU device to confirm ***
-% Check if a GPU device is connected. If so, run calculations on the GPU
-% (if enabled by the user).
-if parametersStructure.enableGPU
-    referenceFrame = gpuArray(referenceFrame);
-end
-
 %% Allow for aborting if not parallel processing
 global abortTriggered;
 
@@ -448,6 +440,11 @@ isSetView = true;
 % vectorization (that is, if verbosity is not enabled since if it was, then
 % these operations must be computed immediately so that the correct eye
 % trace values can be plotted as early as possible).
+
+if parametersStructure.enableGPU
+    referenceFrame = gpuArray(referenceFrame);
+end
+
 currFrameNumber = 0;
 
 if writeResult
@@ -458,6 +455,7 @@ end
 
 % Variable for fft corrmethod
 cache = struct; 
+cacheAdaptive = struct; 
 
 % Variables for adaptive search:
 loc = (height / stripsPerFrame) / 2;
@@ -508,7 +506,12 @@ for stripNumber = 1:numberOfStrips
 
         rowEnd = rowNumber + parametersStructure.stripHeight - 1;
         columnEnd = colNumber + parametersStructure.stripWidth - 1;
-        strip = frame(rowNumber:rowEnd, colNumber:columnEnd);
+        
+        if ~parametersStructure.enableGPU
+            strip = frame(rowNumber:rowEnd, colNumber:columnEnd);
+        else
+            strip = gpuArray(frame(rowNumber:rowEnd, colNumber:columnEnd));
+        end
         
         parametersStructure.stripNumber = stripNumber;  
         parametersStructure.stripsPerFrame = stripsPerFrame;
@@ -524,10 +527,27 @@ for stripNumber = 1:numberOfStrips
                lowerBound = size(referenceFrame, 1);
                upperBound = lowerBound - parametersStructure.searchWindowHeight + 1;
             end
-
-            adaptedCorrelationMap = matchTemplateOCV( ...
-                strip, ...
-                referenceFrame(upperBound:lowerBound, 1:end));
+            
+            if isequal(parametersStructure.corrMethod, 'normxcorr')
+                adaptedCorrelationMap = normxcorr2(strip, referenceFrame);
+            elseif isequal(parametersStructure.corrMethod, 'mex') && ...
+                ~parametersStructure.enableGPU
+                adaptedCorrelationMap = matchTemplateOCV( ...
+                    strip, ...
+                    referenceFrame(upperBound:lowerBound, 1:end));
+            elseif isequal(parametersStructure.corrMethod, 'mex') && ...
+                parametersStructure.enableGPU
+                adaptedCorrelationMap = matchTemplateOCV_GPU( ...
+                    strip, ...
+                    referenceFrame(upperBound:lowerBound, 1:end));
+            elseif isequal(parametersStructure.corrMethod, 'fft')
+                [adaptedCorrelationMap, cacheAdaptive] = FastStripCorrelation( ...
+                    strip, ...
+                    referenceFrame, ...
+                    cacheAdaptive, ...
+                    parameterStructure.downSampleFactor, ...
+                    parametersStructure.enableGPU);
+            end
             
             % Try to use adapted version of correlation map.
             [xPeak, yPeak, peakValue, secondPeakValue] = ...
@@ -572,32 +592,7 @@ for stripNumber = 1:numberOfStrips
                 else
                     isAcceptable = true;
                 end
-                
-                % Do not re-use cached values here if also performing
-                % adaptive search.
-                if parametersStructure.adaptiveSearch
-                    cache = struct;
-                end
-                
-                % It failed or was unacceptable, so use full correlation map.
-                if isequal(parametersStructure.corrMethod, 'normxcorr')
-                    correlationMap = normxcorr2(strip, referenceFrame);
-                elseif isequal(parametersStructure.corrMethod, 'mex')
-                    correlationMap = matchTemplateOCV(strip, referenceFrame);
-                elseif isequal(parametersStructure.corrMethod, 'fft')
-                    [correlationMap, cache] = FastStripCorrelation(strip, referenceFrame, cache, parameterStructure.downSampleFactor);
-                end
-                [xPeak, yPeak, peakValue, secondPeakValue] = ...
-                    FindPeak(correlationMap, parametersStructure);
-    
-                searchWindowsArray(stripNumber,:) = [NaN NaN];
-                
-                % Do not re-use cached values if also performing
-                % adaptive search.
-                if parametersStructure.adaptiveSearch
-                    cache = struct;
-                end
-
+  
                 clear rowFit;
                 clear colFit;
             else
@@ -608,23 +603,35 @@ for stripNumber = 1:numberOfStrips
             searchWindowsArray(stripNumber,:) = [upperBound lowerBound];
         end
         
-        % Either adaptive search failed, the result was unacceptable, or we
-        % didn't want to use adaptive search in the first place.
-        % So we use the full correlation map.
-        if ~parametersStructure.adaptiveSearch || ~isAcceptable
-            upperBound = 1;
+        if ~parametersStructure.adaptiveSearch || ...
+                ~isAcceptable
 
+            % Either adaptive search failed, the result was unacceptable, or we
+            % didn't want to use adaptive search in the first place.
+            % So we use the full correlation map.
+            % It failed or was unacceptable, so use full correlation map.
             if isequal(parametersStructure.corrMethod, 'normxcorr')
                 correlationMap = normxcorr2(strip, referenceFrame);
-            elseif isequal(parametersStructure.corrMethod, 'mex')
+            elseif isequal(parametersStructure.corrMethod, 'mex') && ...
+                    ~parametersStructure.enableGPU
                 correlationMap = matchTemplateOCV(strip, referenceFrame);
+            elseif isequal(parametersStructure.corrMethod, 'mex') && ...
+                parametersStructure.enableGPU
+                correlationMap = matchTemplateOCV_GPU(strip, referenceFrame);
             elseif isequal(parametersStructure.corrMethod, 'fft')
-                [correlationMap, cache] = FastStripCorrelation(strip, referenceFrame, cache, parametersStructure.downSampleFactor);
+                [correlationMap, cache] = FastStripCorrelation( ...
+                    strip, ...
+                    referenceFrame, ...
+                    cache, ...
+                    parameterStructure.downSampleFactor, ...
+                    parametersStructure.enableGPU);
             end
             [xPeak, yPeak, peakValue, secondPeakValue] = ...
                 FindPeak(correlationMap, parametersStructure);
 
             searchWindowsArray(stripNumber,:) = [NaN NaN];
+            
+            upperBound = 1;
         end
 
         % 2D Interpolation if enabled

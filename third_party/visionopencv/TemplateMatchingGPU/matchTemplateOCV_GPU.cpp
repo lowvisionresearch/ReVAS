@@ -106,17 +106,31 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // Convert mxArray inputs into OpenCV types
     cv::Ptr<cv::cuda::GpuMat> templateImgCV = ocvMxGpuArrayToGpuMat_uint8(prhs[0]);
     cv::Ptr<cv::cuda::GpuMat> imgCV         = ocvMxGpuArrayToGpuMat_uint8(prhs[1]);
+    
+    // Pad input image
+    cv::cuda::GpuMat imgCVPadded((int)imgCV->rows + 2*(templateImgCV->rows - 1), 
+            (int)imgCV->cols + 2*(templateImgCV->cols - 1), 
+            CV_32FC1);
+    cv::cuda::copyMakeBorder(*imgCV, 
+            imgCVPadded, 
+            templateImgCV->rows - 1, 
+            templateImgCV->rows - 1,
+            templateImgCV->cols - 1, 
+           templateImgCV->cols - 1, 
+           cv::BORDER_CONSTANT, 0);
 
     // Allocate output matrix
     int outRows = imgCV->rows - templateImgCV->rows + 1;
     int outCols = imgCV->cols - templateImgCV->cols + 1;
-
     cv::cuda::GpuMat outCV((int)outRows, (int)outCols, CV_32FC1);
 
     // Run the OpenCV template matching routine
+    // CV_TM_CCOEFF_NORMED for normalized
+    // CV_TM_CCOEFF for unnormalized
+    // See https://docs.opencv.org/2.4/modules/imgproc/doc/object_detection.html?highlight=matchtemplate#matchtemplate
     cv::Ptr<cv::cuda::TemplateMatching> templateMatcher = cv::cuda::createTemplateMatching(CV_8UC3, CV_TM_CCOEFF_NORMED);
-    templateMatcher->match(*imgCV, *templateImgCV, outCV);
-
+    templateMatcher->match(imgCVPadded, *templateImgCV, outCV);
+    
     // Put the data back into the output MATLAB gpuArray
     plhs[0] = ocvMxGpuArrayFromGpuMat_single(outCV);
 }
