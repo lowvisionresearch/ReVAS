@@ -102,8 +102,8 @@ while hasFrame(videoObj)
                 % compute the normalized xcorr
                 c = ifft2(conj(ft).*(fr)) .* ieuv / currentStripEnergy;
                 
-                xAdjust = -1;
-                yAdjust = -1;
+                xAdjust = 0;
+                yAdjust = 0;
                 
             case 'matlab'
                 % MATLAB's method
@@ -114,11 +114,14 @@ while hasFrame(videoObj)
             case 'opencv'
                 if isGPU
                     c = matchTemplateOCV_GPU(currentStrip, refFrame);
+                    xAdjust = 0;
+                    yAdjust = 0;
                 else
-                    c = matchTemplateOCV(currentStrip, refFrame, false);
+                    c = matchTemplateOCV(currentStrip, refFrame);
+                    xAdjust = stripWidth-1;
+                    yAdjust = stripHeight-1;
                 end
-                xAdjust = stripWidth;
-                yAdjust = stripHeight;
+                
                 
             otherwise
         end
