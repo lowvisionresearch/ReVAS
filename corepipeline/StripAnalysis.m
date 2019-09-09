@@ -73,6 +73,10 @@ function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
 %                                     used for adaptive search in pixels.
 %                                     (relevant only when adaptiveSearch is
 %                                     true) (default 79)
+%   lookBackTime                    : the amount of time in ms to look back
+%                                     on when predicting velocity in adaptive 
+%                                     search (relevant only when adaptiveSearch 
+%                                     is true) (default 10)
 %   enableSubpixelInterpolation     : set to true to estimate peak
 %                                     coordinates to a subpixel precision
 %                                     through interpolation. (default false)
@@ -283,21 +287,33 @@ else
     end
 end
 
-if ~isfield(parametersStructure, 'scalingFactor')
+if parametersStructure.adaptiveSearch && ...
+        ~isfield(parametersStructure, 'scalingFactor')
     parametersStructure.scalingFactor = 10;
     RevasMessage('using default parameter for scalingFactor');
-else
+elseif parametersStructure.adaptiveSearch
     if ~IsPositiveRealNumber(parametersStructure.scalingFactor)
         error('scalingFactor must be a positive, real number');
     end
 end
 
-if ~isfield(parametersStructure, 'searchWindowHeight')
+if parametersStructure.adaptiveSearch && ...
+        ~isfield(parametersStructure, 'searchWindowHeight')
     parametersStructure.searchWindowHeight = 79;
     RevasMessage('using default parameter for searchWindowHeight');
-else
+elseif parametersStructure.adaptiveSearch
     if ~IsNaturalNumber(parametersStructure.searchWindowHeight)
         error('searchWindowHeight must be a natural number');
+    end
+end
+
+if parametersStructure.adaptiveSearch && ...
+        ~isfield(parametersStructure, 'lookBackTime')
+    parametersStructure.lookBackTime = 10;
+    RevasMessage('using default parameter for lookBackTime');
+elseif parametersStructure.adaptiveSearch
+    if ~IsNaturalNumber(parametersStructure.lookBackTime)
+        error('lookBackTime must be a natural number');
     end
 end
 
@@ -453,18 +469,26 @@ else
     
 end
 
-% Variable for fft corrmethod
-cache = struct; 
-cacheAdaptive = struct; 
+% Variables for fft corrmethod
+if isequal(parametersStructure.corrMethod, 'fft')
+    cache = struct;
+
+    if parametersStructure.adaptiveSearch
+        cacheAdaptive = struct;
+    end
+end
 
 % Variables for adaptive search:
-loc = (height / stripsPerFrame) / 2;
-% remember the last 4 velocities
-historyCapacity = 4;
-% velHistory will act as a circular queue, with the next to be deleted
-% marked by historyIndex.
-historyIndex = 2;
-velHistory = [height / stripsPerFrame];
+if parametersStructure.adaptiveSearch
+    loc = (height / stripsPerFrame) / 2;
+    % remember the last few velocities, acording to lookBackTime (no fewer
+    % than 2)
+    historyCapacity = max(2, floor(parametersStructure.lookBackTime / 1000 * parametersStructure.samplingRate));
+    % velHistory will act as a circular queue, with the next to be deleted
+    % marked by historyIndex.
+    historyIndex = 2;
+    velHistory = [height / stripsPerFrame];
+end
 
 for stripNumber = 1:numberOfStrips
 
@@ -545,7 +569,7 @@ for stripNumber = 1:numberOfStrips
                     strip, ...
                     referenceFrame, ...
                     cacheAdaptive, ...
-                    parameterStructure.downSampleFactor, ...
+                    parametersStructure.downSampleFactor, ...
                     parametersStructure.enableGPU);
             end
             
@@ -623,7 +647,7 @@ for stripNumber = 1:numberOfStrips
                     strip, ...
                     referenceFrame, ...
                     cache, ...
-                    parameterStructure.downSampleFactor, ...
+                    parametersStructure.downSampleFactor, ...
                     parametersStructure.enableGPU);
             end
             [xPeak, yPeak, peakValue, secondPeakValue] = ...
@@ -686,23 +710,24 @@ for stripNumber = 1:numberOfStrips
         secondPeakValueArray(stripNumber) = secondPeakValue;
         
         % Update adaptive search variables for next iteration.
-        
-        % loc was our guess for yPeak. Adjust velocity accordingly.
-        % (This is how much we should have jumped from the previous yPeak
-        % to land precisely on the correct place.)
-        prevIndex = mod(historyIndex-2, historyCapacity) + 1;
-        velHistory(prevIndex) = velHistory(prevIndex) + yPeak - loc;
-        
-        % Replace the oldest velocity with the current average velocity.
-        velHistory(historyIndex) = mean(velHistory);
-        
-        % Advance to the next loc, based upon vel.
-        % (Wrapping back to the top of the frame as necessary.)
-        loc = yPeak + velHistory(historyIndex);
-        if mod(stripNumber, stripsPerFrame) == 0
-            loc = loc - size(referenceFrame, 1);
+        if parametersStructure.adaptiveSearch
+            % loc was our guess for yPeak. Adjust velocity accordingly.
+            % (This is how much we should have jumped from the previous yPeak
+            % to land precisely on the correct place.)
+            prevIndex = mod(historyIndex-2, historyCapacity) + 1;
+            velHistory(prevIndex) = velHistory(prevIndex) + yPeak - loc;
+
+            % Replace the oldest velocity with the current average velocity.
+            velHistory(historyIndex) = mean(velHistory);
+
+            % Advance to the next loc, based upon vel.
+            % (Wrapping back to the top of the frame as necessary.)
+            loc = yPeak + velHistory(historyIndex);
+            if mod(stripNumber, stripsPerFrame) == 0
+                loc = loc - size(referenceFrame, 1);
+            end
+            historyIndex = mod(historyIndex, historyCapacity) + 1;
         end
-        historyIndex = mod(historyIndex, historyCapacity) + 1;
         
         % We must subtract back out the expected strip coordinates in order
         % to obtain the net movement (the net difference between no
