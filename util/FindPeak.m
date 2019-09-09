@@ -101,7 +101,9 @@ if enableGaussianFiltering
         correlationMap - gaussianFilteredCorrelation;
 
     % Find peak of correlation map
-    [yPeak, xPeak] = find(gaussianDifferenceCorrelation==max(gaussianDifferenceCorrelation(:)));
+    [~, argmax] = max(gaussianDifferenceCorrelation(:));
+    xPeak = ceil(argmax/size(gaussianDifferenceCorrelation, 1));
+    yPeak = mod(argmax, size(gaussianDifferenceCorrelation, 1));
 
     % If there is a tie for max peak, choose the one closest to the
     % center of the correlation map.
@@ -128,8 +130,10 @@ if enableGaussianFiltering
 
 else
     % Find peak of correlation map
-    [yPeak, xPeak] = find(correlationMap==max(correlationMap(:)));
-
+    [~, argmax] = max(correlationMap(:));
+    xPeak = ceil(argmax/size(correlationMap, 1));
+    yPeak = mod(argmax - 1, size(correlationMap, 1)) + 1;
+    
     % If there is a tie for max peak, arbitrarily break it since the
     % second highest peak will be the same and this frame will be
     % thrown out anyways.
