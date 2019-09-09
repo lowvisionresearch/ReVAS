@@ -1,13 +1,15 @@
-function [outputFileName, saccades, drifts] = ...
-    FindSaccadesAndDrifts(inputEyePositionsFilePath,  parametersStructure)
+function [saccades, drifts] = ...
+    FindSaccadesAndDrifts(inputEyePositions,  parametersStructure)
 %FIND SACCADES AND DRIFTS Records in a mat file an array of structures
 %representing saccades and an array of structures representing drifts.
 %
 %   -----------------------------------
 %   Input
 %   -----------------------------------
-%   |inputEyePositionsFilePath| is the path to the eye positions. The
-%   result is stored with '_sacsdrifts' appended to the input video file name.
+%   |inputEyePositions| is the path to the eye positions or the eye traces
+%   matrix itself with time array. In the former situation, the result is stored with
+%   '_sacsdrifts' appended to the input video file name. No result is saved
+%   in the latter situation; the result is returned.
 %
 %   |parametersStructure| is a struct as specified below.
 %
@@ -61,15 +63,28 @@ function [outputFileName, saccades, drifts] = ...
 %       parametersStructure.detectionMethod = 2;
 %       FindSaccadesAndDrifts(inputPath,  parametersStructure);
 
-%% Handle overwrite scenarios.
-outputFileName = [inputEyePositionsFilePath(1:end-4) '_sacsdrifts'];
-if ~exist([outputFileName '.mat'], 'file')
-    % left blank to continue without issuing warning in this case
-elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-    RevasWarning(['FindSaccadesAndDrifts() did not execute because it would overwrite existing file. (' outputFileName ')'], parametersStructure);
-    return;
+%% Determine inputVideo type.
+if ischar(inputEyePositions)
+    % A path was passed in.
+    % Read and once finished with this module, write the result.
+    writeResult = true;
 else
-    RevasWarning(['FindSaccadesAndDrifts() is proceeding and overwriting an existing file. (' outputFileName ')'], parametersStructure);
+    % A video matrix was passed in.
+    % Do not write the result; return it instead.
+    writeResult = false;
+end
+
+%% Handle overwrite scenarios.
+if writeResult
+    outputFilePath = Filename(inputEyePositions, 'sacsdrifts');
+    if ~exist(outputFilePath, 'file')
+        % left blank to continue without issuing warning in this case
+    elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
+        RevasWarning(['FindSaccadesAndDrifts() did not execute because it would overwrite existing file. (' outputFilePath ')'], parametersStructure);
+        return;
+    else
+        RevasWarning(['FindSaccadesAndDrifts() is proceeding and overwriting an existing file. (' outputFilePath ')'], parametersStructure);
+    end
 end
 
 %% Set parameters to defaults if not specified.
@@ -199,17 +214,15 @@ if axesHandlesFlag
 end
 
 %% Load mat file with output from |StripAnalysis|
-load(inputEyePositionsFilePath,'eyePositionTraces','parametersStructure',...
-    'referenceFramePath','timeArray');
-% Variables that should be loaded now:
-% - eyePositionTraces
-% - parametersStructure
-% - referenceFramePath
-% - timeArray
+if writeResult
+    load(inputEyePositions,'eyePositionTraces', 'timeArray');
+else
+    eyePositionTraces = inputEyePositions(1:end, 1:end-1);
+    timeArray = inputEyePositions(1:end, end:end);
+end
 
 %% Convert eye position traces from pixels to degrees
-eyePositionTraces(:,1) = eyePositionTraces(:,1) * (pixelSize/60);  %#ok<*NODEF>
-eyePositionTraces(:,2) = eyePositionTraces(:,2) * (pixelSize/60);
+eyePositionTraces = eyePositionTraces * (pixelSize/60);  %#ok<*NODEF>
 
 %% Saccade detection algorithm
 % 2 methods to calculate velocity
@@ -295,7 +308,9 @@ end
 drifts = GetDriftProperties(eyePositionTraces,timeArray,driftOnsets,driftOffsets,velocity); 
 
 %% Save to output mat file.
-save(outputFileName, 'saccades', 'drifts','parametersStructure');
+if writeResult
+    save(outputFilePath, 'saccades', 'drifts','parametersStructure');
+end
 
 %% Verbosity for Results.
 if enableVerbosity
