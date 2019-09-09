@@ -72,8 +72,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     cv::Ptr<cv::Mat> templateImgCV = ocvMxArrayToImage_uint8(prhs[0], true);
     cv::Ptr<cv::Mat> imgCV         = ocvMxArrayToImage_uint8(prhs[1], true);
     
-    int outRows, outCols;
-
     // Pad input image
     cv::Mat imgCVPadded((int)imgCV->rows + 2*(templateImgCV->rows - 1), 
             (int)imgCV->cols + 2*(templateImgCV->cols - 1), 
@@ -87,8 +85,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
            cv::BORDER_CONSTANT, 0);
 
     // Allocate output matrix
-    outRows = imgCV->rows - templateImgCV->rows + 1;
-    outCols = imgCV->cols - templateImgCV->cols + 1;
+    int outRows = imgCV->rows - templateImgCV->rows + 1;
+    int outCols = imgCV->cols - templateImgCV->cols + 1;
     cv::Mat outCV((int)outRows, (int)outCols, CV_32FC1);
 
     // Run the OpenCV template matching routine
