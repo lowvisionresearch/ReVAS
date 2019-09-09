@@ -10,9 +10,10 @@ clc
 
 parametersStructure = struct;
 parametersStructure.overwrite = true;
-parametersStructure.adaptiveSearch = false;
-parametersStructure.corrMethod = 'fft';
+parametersStructure.adaptiveSearch = true;
+parametersStructure.corrMethod = 'mex';
 parametersStructure.downSampleFactor = 0.5;
+
 
 global abortTriggered;
 abortTriggered = 0;
