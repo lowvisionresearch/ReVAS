@@ -307,29 +307,27 @@ try
     % between, done manually in a custom helper function.
     [filteredStripIndices1, endNaNs1, beginNaNs1] = FilterStrips(framePositions(:, 1));
     [filteredStripIndices2, endNaNs2, beginNaNs2] = FilterStrips(framePositions(:, 2));
-    try
-        endNaNs = max(endNaNs1, endNaNs2);
-        beginNaNs = max(beginNaNs1, beginNaNs2);
-        if isempty(beginNaNs)
-            beginNaNs = 0;
-        end
-        if isempty(endNaNs)
-            beginNaNs = 0;
-        end
-    catch
-        % just in case 
-        if ~exist('beginNaNs','var')
-              beginNaNs = 0;
-        end
-        if ~exist('endNaNs','var')
-              endNaNs = 0;
-        end
+    
+    endNaNs = max(endNaNs1, endNaNs2);
+    beginNaNs = max(beginNaNs1, beginNaNs2);
+    if isempty(beginNaNs)
+        beginNaNs = 0;
+    end
+    if isempty(endNaNs)
+        beginNaNs = 0;
     end
     
     framePositions = [filteredStripIndices1 filteredStripIndices2];
     save(outputTracesPath, 'framePositions');
 catch
     RevasError(inputVideoPath, 'There were no useful eye position traces. Lower the minimumPeakThreshold and/or raise the maximumPeakRatio.\n', parametersStructure);
+end
+
+if ~exist('beginNaNs','var')
+      beginNaNs = 0;
+end
+if ~exist('endNaNs','var')
+      endNaNs = 0;
 end
 
 %% Scale the coordinates back up.
