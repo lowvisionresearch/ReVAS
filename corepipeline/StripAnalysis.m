@@ -527,7 +527,7 @@ for stripNumber = 1:numberOfStrips
 
             adaptedCorrelationMap = matchTemplateOCV( ...
                 strip, ...
-                referenceFrame(upperBound:lowerBound, 1:end), true);
+                referenceFrame(upperBound:lowerBound, 1:end));
             
             % Try to use adapted version of correlation map.
             [xPeak, yPeak, peakValue, secondPeakValue] = ...
@@ -583,7 +583,7 @@ for stripNumber = 1:numberOfStrips
                 if isequal(parametersStructure.corrMethod, 'normxcorr')
                     correlationMap = normxcorr2(strip, referenceFrame);
                 elseif isequal(parametersStructure.corrMethod, 'mex')
-                    correlationMap = matchTemplateOCV(strip, referenceFrame, true);
+                    correlationMap = matchTemplateOCV(strip, referenceFrame);
                 elseif isequal(parametersStructure.corrMethod, 'fft')
                     [correlationMap, cache] = FastStripCorrelation(strip, referenceFrame, cache, parameterStructure.downSampleFactor);
                 end
@@ -617,7 +617,7 @@ for stripNumber = 1:numberOfStrips
             if isequal(parametersStructure.corrMethod, 'normxcorr')
                 correlationMap = normxcorr2(strip, referenceFrame);
             elseif isequal(parametersStructure.corrMethod, 'mex')
-                correlationMap = matchTemplateOCV(strip, referenceFrame, true);
+                correlationMap = matchTemplateOCV(strip, referenceFrame);
             elseif isequal(parametersStructure.corrMethod, 'fft')
                 [correlationMap, cache] = FastStripCorrelation(strip, referenceFrame, cache, parametersStructure.downSampleFactor);
             end
