@@ -6,6 +6,10 @@ function SampleRunner
 
 %% Example of running pipeline without writing result after each module.
 
+% Ensure abortTriggered is false!
+global abortTriggered
+abortTriggered = false;
+
 tic;
 inputVideoPath = fullfile(pwd, 'demo/sample10deg.avi');
 outputVideoPath = fullfile(pwd, 'demo/sampleRunnerResult.avi');
@@ -69,6 +73,10 @@ close(writer);
 toc;
 
 %% Example of running pipeline with result videos written between each module.
+
+% Ensure abortTriggered is false!
+global abortTriggered
+abortTriggered = false;
 
 tic;
 inputVideoPath = fullfile(pwd, 'demo/sample10deg.avi');
