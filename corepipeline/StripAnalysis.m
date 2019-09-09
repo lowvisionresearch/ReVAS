@@ -472,10 +472,6 @@ end
 % Variables for fft corrmethod
 if isequal(parametersStructure.corrMethod, 'fft')
     cache = struct;
-
-    if parametersStructure.adaptiveSearch
-        cacheAdaptive = struct;
-    end
 end
 
 % Variables for adaptive search:
@@ -541,15 +537,25 @@ for stripNumber = 1:numberOfStrips
         parametersStructure.stripsPerFrame = stripsPerFrame;
         
         if parametersStructure.adaptiveSearch
+            attempts = 2;
+        else
+            attempts = 0;
+        end
 
+        % On the first attempt, we use a window of size searchWindowHeight.
+        % On the second attempt, we use a window twice as large.
+        % If there is a third attempt, we use a window four times as large.
+        % etc.
+        % Zero attempts are made if adaptive search is not enabled.
+        for attemptNum = 1:attempts
             % Cut out a smaller search window from correlation,
             % centered around loc, and searchWindowHeight tall.
-            upperBound = floor(min(max(1, loc - parametersStructure.searchWindowHeight/2)));
-            lowerBound = upperBound + parametersStructure.searchWindowHeight - 1;
+            upperBound = floor(min(max(1, loc - (parametersStructure.searchWindowHeight*(2^(attemptNum-1))/2))));
+            lowerBound = upperBound + parametersStructure.searchWindowHeight*(2^(attemptNum-1)) - 1;
             
             if lowerBound > size(referenceFrame, 1)
                lowerBound = size(referenceFrame, 1);
-               upperBound = lowerBound - parametersStructure.searchWindowHeight + 1;
+               upperBound = lowerBound - parametersStructure.searchWindowHeight*(2^(attemptNum-1)) + 1;
             end
             
             if isequal(parametersStructure.corrMethod, 'normxcorr')
@@ -565,10 +571,10 @@ for stripNumber = 1:numberOfStrips
                     strip, ...
                     referenceFrame(upperBound:lowerBound, 1:end));
             elseif isequal(parametersStructure.corrMethod, 'fft')
-                [adaptedCorrelationMap, cacheAdaptive] = FastStripCorrelation( ...
+                [adaptedCorrelationMap, ~] = FastStripCorrelation( ...
                     strip, ...
                     referenceFrame, ...
-                    cacheAdaptive, ...
+                    struct, ...
                     parametersStructure.downSampleFactor, ...
                     parametersStructure.enableGPU);
             end
@@ -625,6 +631,10 @@ for stripNumber = 1:numberOfStrips
             
             correlationMap = adaptedCorrelationMap;
             searchWindowsArray(stripNumber,:) = [upperBound lowerBound];
+            
+            if isAcceptable
+                break;
+            end
         end
         
         if ~parametersStructure.adaptiveSearch || ...
