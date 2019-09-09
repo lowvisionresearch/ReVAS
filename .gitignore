@@ -5,7 +5,6 @@ documentation/analysis_report/
 documentation/screenshots/
 pseudocode/
 testbench/
-example/
 log.txt
 configurations.mat
 ReRefTesting.m
@@ -13,5 +12,5 @@ Test.m
 util/not_for_release
 demo/*
 !demo/globalRef.tif
-!demo/sample10deg.avi
+*.cpp~
 *.m~
