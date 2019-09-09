@@ -1,4 +1,4 @@
-function [newEyePositionTraces, outputFilePath, params] = ...
+function newEyePositionTraces = ...
     ReReference(positionArgument, localRefArgument, globalRefArgument, parametersStructure)
 %REREFERENCE adds offsets to eye position traces so that all positions are
 %   based on a global reference frame. 
@@ -66,6 +66,17 @@ function [newEyePositionTraces, outputFilePath, params] = ...
 %       parametersStructure.tilts = -5:1:5;
 %       ReReference(inputPath, referenceFrame, ...
 %           globalReferenceFrame, parametersStructure);
+
+%% Determine inputVideo type.
+if ischar(positionArgument)
+    % A path was passed in.
+    % Read and once finished with this module, write the result.
+    writeResult = true;
+else
+    % A video matrix was passed in.
+    % Do not write the result; return it instead.
+    writeResult = false;
+end
 
 %% Handle misusage 
 if nargin<3
@@ -156,8 +167,8 @@ else
 end
 
 %% Handle |positionArgument| scenarios.
-if ischar(positionArgument) % positionArgument is a file path
-    outputFilePath = [positionArgument(1:end-4) '_reref.mat'];
+if writeResult
+    outputFilePath = Filename(positionArgument, 'reref');
     
     % Handle overwrite scenarios
     if ~exist(outputFilePath, 'file')
@@ -179,7 +190,6 @@ if ischar(positionArgument) % positionArgument is a file path
     eyePositionTraces = data.eyePositionTraces;
 
 else % inputArgument is not a file path, but carries the eye position data.
-    outputFilePath = [];
     eyePositionTraces = positionArgument;
 end
 
@@ -268,15 +278,13 @@ else
         SolveTiltIssue(localRef,globalRef,params);
 end
 
-
-
 % adjust eye position traces based on the estimated offsets
-offsetBetweenLocalAndGlobal = [xOffset yOffset ];
+offsetBetweenLocalAndGlobal = [xOffset yOffset];
 newEyePositionTraces = eyePositionTraces...
-    + repmat(offsetBetweenLocalAndGlobal,length(eyePositionTraces),1);
+    + repmat(offsetBetweenLocalAndGlobal,length(eyePositionTraces), 1);
 
 %% Save re-referenced data.
-if ~isempty(outputFilePath) && overwrite
+if writeResult
     data.eyePositionTraces = newEyePositionTraces;
     data.offsetBetweenLocalAndGlobal = offsetBetweenLocalAndGlobal;
     data.peakValue = peakValue;
