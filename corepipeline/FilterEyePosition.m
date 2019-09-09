@@ -1,4 +1,4 @@
-function [filteredEyePosition, outputFilePath, parametersStructure] = ...
+function filteredEyePositions = ...
     FilterEyePosition(inputArgument, parametersStructure)
 %FILTER EYE POSITION fixes temporal gaps in the eye position traces due to
 %   blinks or bad strips, applies a series of filters, and then removes
@@ -38,6 +38,10 @@ function [filteredEyePosition, outputFilePath, parametersStructure] = ...
 %                         in msec. Gaps shorter than this value
 %                         will be interpolated in the final
 %                         traces.
+%   firstPrefilter      : set to true to apply a 30 Hz Notch Filter prior
+%                         to the other filters. (default false)
+%   secondPrefilter     : set to true to apply a 60 Hz Notch Filter prior
+%                         to the other filters. (default false)
 %   filterTypes         : an nx1 cell array of function pointers for
 %                         different types of filters. Any arbitrary
 %                         function can be used. Filtering will be applied
@@ -66,7 +70,18 @@ function [filteredEyePosition, outputFilePath, parametersStructure] = ...
 %   Example usage
 %   -----------------------------------
 %       inputArray = [eyePosition time];
-%       filteredPosition = FilterEyePosition(inputArray, parameterStructure);
+%       filteredPositions = FilterEyePosition(inputArray, parameterStructure);
+
+%% Determine inputVideo type.
+if ischar(inputArgument)
+    % A path was passed in.
+    % Read and once finished with this module, write the result.
+    writeResult = true;
+else
+    % A video matrix was passed in.
+    % Do not write the result; return it instead.
+    writeResult = false;
+end
 
 %% Handle misusage 
 if nargin<1
@@ -83,53 +98,49 @@ end
 
 %% Set parameters to defaults if not specified.
 if ~isfield(parametersStructure,'overwrite')
-    overwrite = false;
-else
-    overwrite = parametersStructure.overwrite;
+    parametersStructure.overwrite = false;
 end
 
 if ~isfield(parametersStructure,'maxGapDurationMs')
-    maxGapDurationMs = 10;
+    parametersStructure.maxGapDurationMs = 10;
     RevasWarning('using default parameter for maxGapDurationMs', parametersStructure);
-else
-    maxGapDurationMs = parametersStructure.maxGapDurationMs;
+end
+
+if ~isfield(parametersStructure,'firstPrefilter')
+    parametersStructure.firstPrefilter = false;
+end
+
+if ~isfield(parametersStructure,'secondPrefilter')
+    parametersStructure.secondPrefilter = false;
 end
 
 if ~isfield(parametersStructure,'filterTypes')
-    filterTypes = {@sgolayfilt};
+    parametersStructure.filterTypes = {@sgolayfilt};
     RevasWarning('using default parameter for filterTypes', parametersStructure);
-else
-    filterTypes = parametersStructure.filterTypes;
 end
 
 if ~isfield(parametersStructure,'filterParameters')
-    filterParameters = {[3 15]};
+    parametersStructure.filterParameters = {[3 15]};
     RevasWarning('using default parameter for filterParameters', parametersStructure);
-else
-    filterParameters = parametersStructure.filterParameters;
 end
 
 if ~isfield(parametersStructure,'enableVerbosity')
-    verbosity = false;
-else
-    verbosity = parametersStructure.enableVerbosity;
+    parametersStructure.verbosity = false;
 end
 
 if ~isfield(parametersStructure,'axesHandles')
-    axesHandles = [];
-else
-    axesHandles = parametersStructure.axesHandles;
+    parametersStructure.axesHandles = [];
 end
 
 %% Handle |inputArgument| scenarios.
-if ischar(inputArgument) % inputArgument is a file path
-    outputFilePath = [inputArgument(1:end-4) '_filtered.mat'];
+if writeResult
+    outputFilePath = Filename(inputArgument, 'filtered');
     
-    % Handle overwrite scenarios
+    % Handle parametersStructure.overwrite scenarios
     if ~exist(outputFilePath, 'file')
         % left blank to continue without issuing warning in this case
-    elseif ~overwrite && exist(outputFilePath, 'file')
-        RevasWarning(['FilterEyePosition() did not execute because it would overwrite existing file. (' outputFilePath ')'], parametersStructure);
+    elseif ~parametersStructure.overwrite && exist(outputFilePath, 'file')
+        RevasWarning(['FilterEyePosition() did not execute because it would parametersStructure.overwrite existing file. (' outputFilePath ')'], parametersStructure);
         return;
     else
         RevasWarning(['FilterEyePosition() is proceeding and overwriting an existing file. (' outputFilePath ')'], parametersStructure);  
@@ -145,12 +156,9 @@ if ischar(inputArgument) % inputArgument is a file path
     eyePositionTraces = data.eyePositionTraces;
     timeArray = data.timeArray;
 
-else % inputArgument is not a file path, but carries the eye position data.
-    outputFilePath = [];
-    
+else % inputArgument is not a file path, but carries the eye position data.    
     eyePositionTraces = inputArgument(:,1:size(inputArgument,2)-1);
     timeArray = inputArgument(:,size(inputArgument,2)); % last column is always 'time'
-    
 end
 
 % if the dimensions of eyePositionTraces are not appropriate, throw error.
@@ -162,7 +170,7 @@ end
 %% Prepare data for filtering.
 % nan values will prevent most filters from working properly. So we
 % interpolate/extrapolate over them before filtering. After filtering, we
-% keep interpolated regions which are shorter than 'maxGapDurationMs'.
+% keep interpolated regions which are shorter than 'parametersStructure.maxGapDurationMs'.
 nanIndices = isnan(sum(eyePositionTraces,2));
 
 for i=1:size(eyePositionTraces,2)
@@ -184,7 +192,7 @@ for i=1:size(eyePositionTraces,2)
 	eyePositionTraces(1:find(~any(isnan(eyePositionTraces),2),1,'first')-1,i)=eyePositionTraces(find(~any(isnan(eyePositionTraces),2),1,'first'),i);
 	eyePositionTraces(find(~any(isnan(eyePositionTraces),2),1,'last')+1:end,i)=eyePositionTraces(find(~any(isnan(eyePositionTraces),2),1,'last'),i);
 end
-if parametersStructure.FirstPrefilter
+if parametersStructure.firstPrefilter
     if ~isfield(parametersStructure,'samplingRate')
         samplingRate = round(1/diff(timeArray(1:2)));
     else
@@ -199,7 +207,7 @@ if parametersStructure.FirstPrefilter
     clear d;
 end
 
-if parametersStructure.SecondPrefilter
+if parametersStructure.secondPrefilter
     d2 = designfilt('bandstopiir','FilterOrder',2, ...
                    'HalfPowerFrequency1',59,'HalfPowerFrequency2',61, ...
                    'DesignMethod','butter','SampleRate',samplingRate);
@@ -215,24 +223,24 @@ end
 % column separately.
 
 % preallocate memory for the filtered position
-filteredEyePosition = eyePositionTraces;
+filteredEyePositions = eyePositionTraces;
 
 % go over each filter type in the order they are given.
-for i=1:length(filterTypes)
+for i=1:length(parametersStructure.filterTypes)
     
-    currentFilter = filterTypes{i}; %#ok<NASGU>
-    currentFilterParameters = filterParameters{i};
+    currentFilter = parametersStructure.filterTypes{i}; %#ok<NASGU>
+    currentparametersStructure.filterParameters = parametersStructure.filterParameters{i};
     
     % construct an expression for filter parameters
     parameterStr = [];
-    for k=1:length(currentFilterParameters)
-        parameterStr = [parameterStr ',' num2str(currentFilterParameters(k))]; %#ok<AGROW>
+    for k=1:length(currentparametersStructure.filterParameters)
+        parameterStr = [parameterStr ',' num2str(currentparametersStructure.filterParameters(k))]; %#ok<AGROW>
     end
     
     % go over each eye position column
     for j=1:size(eyePositionTraces,2)
-        filteredEyePosition(:,j) = eval(...
-            ['currentFilter(filteredEyePosition(:,j)' parameterStr ')']);
+        filteredEyePositions(:,j) = eval(...
+            ['currentFilter(filteredEyePositions(:,j)' parameterStr ')']);
     end
 
 end
@@ -243,7 +251,7 @@ end
 % is tiny, e.g., a few samples long, then we interpolate.. If longer than
 % that, we stitch different parts.
 
-maxNumberOfSamples = round(maxGapDurationMs/(1000*diff(timeArray(1:2)))); % samples
+maxNumberOfSamples = round(parametersStructure.maxGapDurationMs/(1000*diff(timeArray(1:2)))); % samples
 
 % find the interpolated regions
 diffInd = diff([0; nanIndices(1:end-1); 0]);
@@ -259,27 +267,27 @@ end
 
 %% Remove the artifacts.
 % while we are at it, also remove the parts where position is grossly off
-md = nanmedian(filteredEyePosition,1);
-sd = nanstd(filteredEyePosition,[],1);
+md = nanmedian(filteredEyePositions,1);
+sd = nanstd(filteredEyePositions,[],1);
 
 d = 5; % times the standard deviation from median will be removed
-remove = (filteredEyePosition(:,1) > (md(1)+d*sd(1))) | (filteredEyePosition(:,1) < (md(1)-d*sd(1))) |...
-         (filteredEyePosition(:,2) > (md(2)+d*sd(2))) | (filteredEyePosition(:,2) < (md(2)-d*sd(2)));
+remove = (filteredEyePositions(:,1) > (md(1)+d*sd(1))) | (filteredEyePositions(:,1) < (md(1)-d*sd(1))) |...
+         (filteredEyePositions(:,2) > (md(2)+d*sd(2))) | (filteredEyePositions(:,2) < (md(2)-d*sd(2)));
 beforeAfter = round(0.020/diff(timeArray(1:2))); 
 remove = conv(double(remove),ones(beforeAfter,1),'same')>0;
 
 % now remove absolutely unuseful parts
-filteredEyePosition(nanIndices | remove,:) = NaN;
+filteredEyePositions(nanIndices | remove,:) = NaN;
 
 
 %% Save filtered data.
-if ~isempty(outputFilePath)
-    data.eyePositionTraces = filteredEyePosition;
+if writeResult
+    data.eyePositionTraces = filteredEyePositions;
     
     try
         % remove pointers to graphics objects
         parametersStructure = rmfield(parametersStructure,'commandWindowHandle');
-        parametersStructure = rmfield(parametersStructure,'axesHandles');
+        parametersStructure = rmfield(parametersStructure,'parametersStructure.axesHandles');
     catch
     end
     
@@ -288,9 +296,9 @@ if ~isempty(outputFilePath)
 end
 
 %% Give feedback if user requested.
-if verbosity
-   if ishandle(axesHandles)
-       axes(axesHandles(2));
+if parametersStructure.verbosity
+   if ishandle(parametersStructure.axesHandles)
+       axes(parametersStructure.axesHandles(2));
    else
        figure(1453);
        axes(gca);
@@ -300,7 +308,7 @@ if verbosity
    ax.ColorOrderIndex = 1;
    plot(timeArray,eyePositionTraces); hold on;
    ax.ColorOrderIndex = 1;
-   plot(timeArray,filteredEyePosition,'LineWidth',2);
+   plot(timeArray,filteredEyePositions,'LineWidth',2);
    xlabel('Time (sec)');
    ylabel('Eye position');
    legend('Hor','Ver')

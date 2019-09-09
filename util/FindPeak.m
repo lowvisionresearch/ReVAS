@@ -51,7 +51,7 @@ function [xPeak, yPeak, peakValue, secondPeakValue] = ...
 
 if ~isfield(parametersStructure, 'stripHeight')
     stripHeight = 15;
-    warning('using default parameter for stripHeight');
+    RevasMessage('using default parameter for stripHeight');
 else
     stripHeight = parametersStructure.stripHeight;
     if ~IsNaturalNumber(stripHeight)
