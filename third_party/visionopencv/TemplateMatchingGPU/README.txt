@@ -3,7 +3,7 @@ Computing Toolbox.
 
 To run the Template Matching GPU example, follow these steps:
 
-1. Change your current working folder to example/TemplateMatching where 
+1. Change your current working folder to third_party/visionopencv/TemplateMatchingGPU where 
 source file matchTemplateOCV_GPU.cpp is located
 
 2. Create MEX-file from the source file:
