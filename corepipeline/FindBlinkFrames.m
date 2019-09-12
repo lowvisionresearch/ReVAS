@@ -51,15 +51,15 @@ function FindBlinkFrames(inputVideoPath, parametersStructure)
 %       FindBlinkFrames(videoPath, parametersStructure);
 
 %% Handle overwrite scenarios.
-stimLocsMatFileName = [inputVideoPath(1:end-4) '_stimlocs'];
-badFramesMatFileName = [inputVideoPath(1:end-4) '_blinkframes'];
-if ~exist([badFramesMatFileName '.mat'], 'file')
+stimLocsMatFilePath = [inputVideoPath(1:end-4) '_stimlocs'];
+badFramesMatFilePath = [inputVideoPath(1:end-4) '_blinkframes'];
+if ~exist([badFramesMatFilePath '.mat'], 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-    RevasWarning(['FindBadFrames() did not execute because it would overwrite existing file. (' badFramesMatFileName ')'], parametersStructure);
+    RevasWarning(['FindBadFrames() did not execute because it would overwrite existing file. (' badFramesMatFilePath ')'], parametersStructure);
     return;
 else
-    RevasWarning(['FindBadFrames() is proceeding and overwriting an existing file. (' badFramesMatFileName ')'], parametersStructure);
+    RevasWarning(['FindBadFrames() is proceeding and overwriting an existing file. (' badFramesMatFilePath ')'], parametersStructure);
 end
 
 %% Set parameters to defaults if not specified.
@@ -133,6 +133,6 @@ badFrames = find(badFrames);
 badFrames = badFrames(badFrames ~= 0);
 
 %% Save to output mat file
-save(badFramesMatFileName, 'badFrames');
+save(badFramesMatFilePath, 'badFrames');
 
 end
