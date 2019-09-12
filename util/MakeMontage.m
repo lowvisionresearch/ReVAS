@@ -1,12 +1,12 @@
-function [refFrame] = MakeMontage(parametersStructure, fileName)
+function [refFrame] = MakeMontage(parametersStructure, inputVideo)
 % MakeMontage    Reference frame.
-%   MakeMontage(parametersStructure, fileName) generates a reference frame by averaging
+%   MakeMontage(parametersStructure, inputVideo) generates a reference frame by averaging
 %   all the pixel values across all frames in a video.
 %   
 %   -----------------------------------
 %   Input
 %   -----------------------------------
-%   |fileName| is the path to the video.
+%   |inputVideo| is the path to the video, or the video matrix itself.
 %
 %   |parametersStructure| is a struct as specified below.
 %
@@ -34,13 +34,24 @@ function [refFrame] = MakeMontage(parametersStructure, fileName)
 %   -----------------------------------
 %   Example usage
 %   -----------------------------------
-%       inputVideoPath = 'MyVid.avi';
+%       inputVideo = 'MyVid.avi';
 %       load('MyVid_final.mat')
 %       load('MyVid_params.mat')
 %       parametersStructure.positions = eyePositionTraces;
 %       parametersStructure.time = timeArray;
 %       parametersStructure.stripHeight = 15;
-%       referenceFrame = MakeMontage(parametersStructure, inputVideoPath);
+%       referenceFrame = MakeMontage(parametersStructure, inputVideo);
+
+%% Determine inputVideo type.
+if ischar(inputVideo)
+    % A path was passed in.
+    % Read the video and once finished with this module, write the result.
+    writeResult = true;
+else
+    % A video matrix was passed in.
+    % Do not write the result; return it instead.
+    writeResult = false;
+end
 
 %% Set default values. 
 if ~isfield(parametersStructure, 'stripHeight')
@@ -72,44 +83,71 @@ end
 if ~isfield(parametersStructure, 'stabilizeVideo')
     parametersStructure.stabilizeVideo = false;
 end
+
+if ~isfield(parametersStructure, 'enableVerbosity')
+    enableVerbosity = 0;
+else
+    enableVerbosity = parametersStructure.enableVerbosity;
+end
+
+if ~writeResult && ~isfield(parametersStructure, 'FrameRate')
+    FrameRate = 30;
+    RevasWarning('using default parameter for FrameRate', parametersStructure);
+elseif ~writeResult
+    FrameRate = parametersStructure.FrameRate;
+end
+
 %% Identify which frames are bad frames
-nameEnd = fileName(1:size(fileName, 2)-4);
-blinkFramesPath = [nameEnd '_blinkframes.mat'];
+if writeResult
+    blinkFramesPath = Filename(inputVideo, 'blink');
+else
+    blinkFramesPath = fullfile(pwd, '.blinkframes.mat');
+end
+
 try
     load(blinkFramesPath, 'badFrames');
 catch
     badFrames = [];
 end
-
+    
 %% Initialize variables
 stripIndices = parametersStructure.positions;
 t1 = parametersStructure.time;
 
 % Grabbing info about the video and strips
-videoInfo = VideoReader(fileName);
-frameHeight = videoInfo.Height;
-width = videoInfo.Width;
-frameRate = videoInfo.Framerate;
-totalFrames = frameRate * videoInfo.Duration;
-if isfield(parametersStructure, 'stabilizeVideo') && parametersStructure.stabilizeVideo
-    stripsPerFrame = ceil(frameHeight/parametersStructure.newStripHeight);
+if writeResult
+    reader = VideoReader(inputVideo);
+    height = reader.Height;
+    width = reader.Width;
+    FrameRate = reader.Framerate;
+    Duration = reader.Duration;
+    numberOfFrames = FrameRate * Duration;
 else
-    stripsPerFrame = floor(frameHeight/parametersStructure.newStripHeight);
+    % FrameRate set in "Set parameters to default if not specified"
+    % section already.
+    [height, width, numberOfFrames] = size(inputVideo);
+    Duration = numberOfFrames / FrameRate;
+end
+
+if isfield(parametersStructure, 'stabilizeVideo') && parametersStructure.stabilizeVideo
+    stripsPerFrame = ceil(height/parametersStructure.newStripHeight);
+else
+    stripsPerFrame = floor(height/parametersStructure.newStripHeight);
 end
 
 % Set up templates for reference frame and counter array
-counterArray = zeros(frameHeight*3);
-refFrame = zeros(frameHeight*3);
+counterArray = zeros(height*3);
+refFrame = zeros(height*3);
 
 % Prepare a video writer object if user enables option to generate a
 % stabilized video
-if isfield(parametersStructure, 'stabilizeVideo') && ...
+if writeResult && isfield(parametersStructure, 'stabilizeVideo') && ...
         parametersStructure.stabilizeVideo
     
-    stabilizedVideoFilename = fileName;
-    stabilizedVideoFilename(end-3:end) = [];
-    stabilizedVideoFilename(end+1:end+11) = '_stabilized';
-    stabilizedVideo = VideoWriter(stabilizedVideoFilename, 'Grayscale AVI');
+    stabilizedVideoinputVideo = inputVideo;
+    stabilizedVideoinputVideo(end-3:end) = [];
+    stabilizedVideoinputVideo(end+1:end+11) = '_stabilized';
+    stabilizedVideo = VideoWriter(stabilizedVideoinputVideo, 'Grayscale AVI');
     open(stabilizedVideo)
 else
     stabilizedVideo = false;
@@ -117,10 +155,10 @@ end
 
 %% Set up the interpolation
 % Scale the time array to accomodate new strip height
-scalingFactor = ((parametersStructure.stripHeight)/2)/(frameRate*frameHeight);
+scalingFactor = (parametersStructure.stripHeight / 2) / (FrameRate * height);
 t1 = t1 + scalingFactor;
-dt = parametersStructure.newStripHeight / (frameRate * frameHeight);
-t2 = dt:dt:videoInfo.Duration + scalingFactor;
+dt = parametersStructure.newStripHeight / (FrameRate * height);
+t2 = dt:dt:Duration + scalingFactor;
 
 % Make sure that both time arrays have the same dimensions
 if size(t2, 1) ~= size(t1, 1) && size(t2, 2) ~= size(t1, 2)
@@ -215,8 +253,8 @@ interpolatedPositions = round(interpolatedPositions);
 
 % Leftover and skips will be used to correct for rounding errors; see the 
 % for-loop below for details 
-leftover = (frameHeight/parametersStructure.newStripHeight) - ...
-    floor(frameHeight/parametersStructure.newStripHeight);
+leftover = (height/parametersStructure.newStripHeight) - ...
+    floor(height/parametersStructure.newStripHeight);
 leftoverCopy = leftover;
 skips = 0;
 
@@ -224,14 +262,18 @@ skips = 0;
 foundCenter = false;
 
 %% Use interpolatedPositions to generate the reference frame.
-for frameNumber = 1:totalFrames
+for frameNumber = 1:numberOfFrames
     
     % By default, the current frame is not one that needs the correction
     % factor for rounding
     correctionFrame = false;
     
     % Read frame.
-    videoFrame = readFrame(videoInfo);
+    if writeResult
+        frame = readFrame(reader);
+    else
+        frame = inputVideo(1:end, 1:end, frameNumber);
+    end
     
     % get the appropriate strips from stripIndices for each frame
     startFrameStrips = round(1 + ((frameNumber-1)*(stripsPerFrame))) + skips;
@@ -360,7 +402,7 @@ for frameNumber = 1:totalFrames
 
                 foundCenter = true;
                 rowDifference = round(size(refFrame, 1) / 2) - rowIndex ...
-                    - round(frameHeight/2);
+                    - round(height/2);
                 columnDifference = round(size(refFrame, 2) / 2) - columnIndex...
                     - round(width/2);
            end
@@ -378,16 +420,16 @@ for frameNumber = 1:totalFrames
             templateSelectColumn = columnIndex:maxColumn;
             vidStart = ((stripNumber-1)*parametersStructure.newStripHeight)+1;
             vidEnd = stripNumber * parametersStructure.newStripHeight;
-            columnEnd = size(videoFrame, 2);
+            columnEnd = size(frame, 2);
             
             % If the strip extends beyond the frame (i.e., the frame has a
             % height of 512 pixels and strip of height 10 begins at row 511)
             % set the max row of that strip to be the last row of the frame.
             % Also make templateSelectRow smaller to match the dimensions of
             % the new strip
-            if vidEnd > size(videoFrame, 1)
-                difference = vidEnd - size(videoFrame, 1);
-                vidEnd = size(videoFrame, 1);
+            if vidEnd > size(frame, 1)
+                difference = vidEnd - size(frame, 1);
+                vidEnd = size(frame, 1);
                 templateSelectRow = rowIndex:(maxRow-difference);
                 endOfFrame = true;
             end
@@ -427,7 +469,7 @@ for frameNumber = 1:totalFrames
            end
            
             refFrame(templateSelectRow, templateSelectColumn) = refFrame(...
-                templateSelectRow, templateSelectColumn) + double(videoFrame(...
+                templateSelectRow, templateSelectColumn) + double(frame(...
                 vidStart:vidEnd, 1:columnEnd));
             counterArray(templateSelectRow, templateSelectColumn) = counterArray...
                 (templateSelectRow, templateSelectColumn) + 1;
@@ -463,7 +505,7 @@ for frameNumber = 1:totalFrames
                 stabilizedFrame(stabilizedFrame<0) = 0;
                 
                 % crop the black boundaries 
-                hw = round([frameHeight width]*stabilizedVideoSizeMultiplier);
+                hw = round([height width]*stabilizedVideoSizeMultiplier);
                 cropRect = [round((size(stabilizedFrame)-hw)/2) hw];
                 frameToWrite = imcrop(stabilizedFrame,cropRect);
                 
@@ -502,12 +544,15 @@ if isfield(parametersStructure, 'addNoise') && parametersStructure.addNoise == t
         * randn(sum(sum(indices)), 1));
 end
 
-fileName(end-3:end) = [];
-fileName(end+1:end+9) = '_refframe';
-eyePositionTraces = parametersStructure.positions; %#ok<*NASGU>
-timeArray  = parametersStructure.time;
-save(fileName, 'refFrame','eyePositionTraces','timeArray');
-if ~isfield(parametersStructure, 'axesHandles')
+if writeResult
+    inputVideo(end-3:end) = [];
+    inputVideo(end+1:end+9) = '_refframe';
+    eyePositionTraces = parametersStructure.positions; %#ok<*NASGU>
+    timeArray  = parametersStructure.time;
+    save(inputVideo, 'refFrame','eyePositionTraces','timeArray');
+end
+
+if enableVerbosity && ~isfield(parametersStructure, 'axesHandles')
     % Show only if not using GUI.
     figure('Name', 'Reference Frame')
     imshow(refFrame);
