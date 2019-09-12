@@ -1,4 +1,4 @@
-function [correlationMap, cache] = FastStripCorrelation(strip, referenceFrame, cache, downSampleFactor, isGPU)
+function [correlationMap, cache] = FastStripCorrelation(strip, referenceFrame, cache, isGPU)
 %FASTSTRIPCORRELATION Correlation computed using FFT.
 %   strip, referenceFrame are required inputs.
 %
@@ -6,12 +6,6 @@ function [correlationMap, cache] = FastStripCorrelation(strip, referenceFrame, c
 %   function is responsible for ensuring that an old cache is not provided
 %   to a call with a different reference frame. Once finished, the cache is
 %   returned for so the user can pass in back in next time. (default empty)
-%
-%   downSampleFactor is used to shrink everything during internal
-%   computations. If downSampleFactor > 1, it is the factor to shrink by.
-%   For example, downSampleFactor = 2 means to reduce everything to half
-%   its size. If downSampleFactor < 1, every other pixel of the reference
-%   frame is kept (in a checkerboard-like pattern). (default 1)
 %
 %   isGPU should be true if the GPU should be used. (default false)
 
@@ -21,10 +15,6 @@ if nargin < 3
 end
 
 if nargin < 4
-    downSampleFactor = 1;
-end
-
-if nargin < 5
     isGPU = false;
 end
 
@@ -35,20 +25,8 @@ referenceFrame = WhereToCompute(referenceFrame, isGPU);
 % precision of the computations
 eps = 10^-6;
 
-if downSampleFactor > 1
-    strip = imresize(single(strip) / 255 , 1 / downSampleFactor);
-    referenceFrame = imresize(single(referenceFrame) / 255, 1 / downSampleFactor);
-else
-    strip = single(strip) / 255;
-    % source: http://matlabtricks.com/post-31/three-ways-to-generate-a-checkerboard-matrix).
-    checkerboard = bsxfun(@xor, mod(1 : size(strip, 1), 2)', mod(1 : size(strip, 2), 2));
-    strip = strip .* checkerboard;
-    
-    referenceFrame = single(referenceFrame) / 255;
-    % source: http://matlabtricks.com/post-31/three-ways-to-generate-a-checkerboard-matrix).
-    checkerboard = bsxfun(@xor, mod(1 : size(referenceFrame, 1), 2)', mod(1 : size(referenceFrame, 2), 2));
-    referenceFrame = referenceFrame .* checkerboard;
-end
+strip = single(strip) / 255;
+referenceFrame = single(referenceFrame) / 255;
 
 [stripHeight, stripWidth] = size(strip);
 [refHeight, refWidth] = size(referenceFrame);
