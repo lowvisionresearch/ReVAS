@@ -230,69 +230,66 @@ for frameNumber = 1:numberOfFrames
             drawnow;
         end
 
-        if peakValue < stimulusThresholdValue
-            continue;
-        end
+        if peakValue >= stimulusThresholdValue
+            
+            stimulusLocationInEachFrame(frameNumber,:) = [xPeak yPeak];
 
-        stimulusLocationInEachFrame(frameNumber,:) = [xPeak yPeak];
-        
-        % Adjust by stimulus size if necessary.
-        if nargin ~= 3
-           stimulusLocationInEachFrame(frameNumber,1) = ...
-               stimulusLocationInEachFrame(frameNumber,1) + floor((removalAreaSize(2) - size(stimulus, 2)) / 2);
-           stimulusLocationInEachFrame(frameNumber,2) = ...
-               stimulusLocationInEachFrame(frameNumber,2) + floor((removalAreaSize(1) - size(stimulus, 1)) / 2);
-        end
-
-        % If verbosity is enabled, also show stimulus location plot with points
-        % being plotted as they become available.
-        if parametersStructure.enableVerbosity
-
-            % Plotting bottom right corner of box surrounding stimulus.
-            if isfield(parametersStructure, 'axesHandles')
-                axes(parametersStructure.axesHandles(2));
-                colormap(parametersStructure.axesHandles(2), 'default');
-            else
-                figure(2);
+            % Adjust by stimulus size if necessary.
+            if nargin ~= 3
+               stimulusLocationInEachFrame(frameNumber,1) = ...
+                   stimulusLocationInEachFrame(frameNumber,1) + floor((removalAreaSize(2) - size(stimulus, 2)) / 2);
+               stimulusLocationInEachFrame(frameNumber,2) = ...
+                   stimulusLocationInEachFrame(frameNumber,2) + floor((removalAreaSize(1) - size(stimulus, 1)) / 2);
             end
-            plot(timeArray, stimulusLocationInEachFrame);
-            title('Stimulus Locations');
-            xlabel('Time (sec)');
-            ylabel('Stimulus Locations (pixels)');
-            legend('show');
-            legend('Horizontal Location', 'Vertical Location');
+
+            % If verbosity is enabled, also show stimulus location plot with points
+            % being plotted as they become available.
+            if parametersStructure.enableVerbosity
+
+                % Plotting bottom right corner of box surrounding stimulus.
+                if isfield(parametersStructure, 'axesHandles')
+                    axes(parametersStructure.axesHandles(2));
+                    colormap(parametersStructure.axesHandles(2), 'default');
+                else
+                    figure(2);
+                end
+                plot(timeArray, stimulusLocationInEachFrame);
+                title('Stimulus Locations');
+                xlabel('Time (sec)');
+                ylabel('Stimulus Locations (pixels)');
+                legend('show');
+                legend('Horizontal Location', 'Vertical Location');
+            end
+
+            % Find mean and standard deviation of each frame.
+            meanOfEachFrame(frameNumber) = mean2(frame);
+            standardDeviationOfEachFrame(frameNumber) = std2(frame);
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % Remove target / replace it with noise here
+            location = stimulusLocationInEachFrame(frameNumber,:);
+            if ~isnan(location)
+                % Account for removal target at edge of array
+                xLow = location(2)-stimulusSize(1)+1;
+                xHigh = location(2);
+                yLow = location(1)-stimulusSize(2)+1;
+                yHigh = location(1);
+
+                targetArea = frame(max(xLow, 1) :  min(xHigh, height),max(yLow, 1) : min(yHigh, width));
+                targetArea(targetArea > 250) = 0;
+                toBeRemoved = imbinarize(targetArea,0.15) == 0;
+
+                % Generate noise
+                % (this gives noise with mean = 0, sd = 1)
+                noise = randn(sum(toBeRemoved(:)),1);
+
+                % Adjust to the mean and sd of current frame
+                noise = noise * standardDeviationOfEachFrame(frameNumber) + 1.2*meanOfEachFrame(frameNumber);
+                targetArea(toBeRemoved) = noise;
+
+                frame(max(xLow, 1) : min(xHigh, height),max(yLow, 1) : min(yHigh, width)) = targetArea;
+            end
         end
-        
-        % Find mean and standard deviation of each frame.
-        meanOfEachFrame(frameNumber) = mean2(frame);
-        standardDeviationOfEachFrame(frameNumber) = std2(frame);
-        
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        % Remove target / replace it with noise here
-        location = stimulusLocationInEachFrame(frameNumber,:);
-        if isnan(location)
-            continue;
-        end
-
-        % Account for removal target at edge of array
-        xLow = location(2)-stimulusSize(1)+1;
-        xHigh = location(2);
-        yLow = location(1)-stimulusSize(2)+1;
-        yHigh = location(1);
-
-        targetArea = frame(max(xLow, 1) :  min(xHigh, height),max(yLow, 1) : min(yHigh, width));
-        targetArea(targetArea > 250) = 0;
-        toBeRemoved = imbinarize(targetArea,0.15) == 0;
-        
-        % Generate noise
-        % (this gives noise with mean = 0, sd = 1)
-        noise = randn(sum(toBeRemoved(:)),1);
-
-        % Adjust to the mean and sd of current frame
-        noise = noise * standardDeviationOfEachFrame(frameNumber) + 1.2*meanOfEachFrame(frameNumber);
-        targetArea(toBeRemoved) = noise;
-        
-        frame(max(xLow, 1) : min(xHigh, height),max(yLow, 1) : min(yHigh, width)) = targetArea;
         
         if writeResult
             writeVideo(writer, frame);
