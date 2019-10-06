@@ -1,4 +1,4 @@
-function [xPos, yPos] = FastStripAnalysis(pathToVideo, refFrame, method, isGPU, isVisualize)
+function [xPos, yPos, t] = FastStripAnalysis(pathToVideo, refFrame, method, isGPU, isVisualize)
 
 if nargin < 1 || isempty(pathToVideo)
     error('We need a video path!');
@@ -24,9 +24,8 @@ if nargin < 4 || isempty(isGPU)
 end
 
 if nargin < 5 || isempty(isVisualize)
-    isVisualize = 1;
+    isVisualize = 0;
 end
-
 
 switch method
     case {'fft','matlab'}
@@ -46,12 +45,16 @@ startTime = videoObj.CurrentTime;
 videoObj.CurrentTime = startTime;
 
 % define strip parameters
-stripHeight = ceil(15);
+stripHeight = ceil(11);
 stripWidth = ceil(videoObj.Width);
 numberOfStrips = 18;
 delta = 1;
 stripLocations = round(linspace(delta, ...
-    videoObj.Height - stripHeight + 1, numberOfStrips));
+    videoObj.Height - stripHeight + 1, numberOfStrips))';
+
+% contruct time array
+t = linspace(0,videoObj.Duration,numberOfStrips*videoObj.FrameRate*videoObj.Duration)';
+        
 
 if contains(method,'fft')
     % precomputed arrays
@@ -85,7 +88,6 @@ yPos = xPos;
 sampleCounter = 0;
 
 % analyze video
-t0 = tic;
 while hasFrame(videoObj)
     
     switch method
@@ -166,18 +168,16 @@ while hasFrame(videoObj)
     end
     
 end
-elapsedTime = toc(t0);
-
-fprintf('Elapsed time: %.4f seconds \nTime spent per frame: %.4f\nTime spent per strip: %.4f\n\n',...
-    elapsedTime, elapsedTime/videoObj.FrameRate*videoObj.Duration, ...
-    elapsedTime / length(xPos));
-
 
 
 if isGPU
     xPos = gather(xPos);
     yPos = gather(yPos);
 end
+
+
+xPos = -xPos;
+yPos = -yPos;
 
 % plot
 if isVisualize

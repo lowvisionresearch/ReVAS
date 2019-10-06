@@ -112,7 +112,7 @@ close(writer);
 toc;
 
 %% Example of running pipeline with result videos written between each module.
-
+clearvars;
 fprintf('\n\n\n\n *********************************************** \n\n\n');
 
 % Ensure abortTriggered is false!
@@ -122,7 +122,10 @@ abortTriggered = false;
 tic;
 % inputVideoPath = fullfile(pwd, 'demo/sample10deg.avi');
 % inputVideoPath = '/Users/mnagaoglu/Personal/sample tslo video/aoslo/20092L_003.avi';
-inputVideoPath = '/Users/mnagaoglu/Personal/sample tslo video/aoslo/aoslo-short.avi';
+% inputVideoPath = '/Users/mnagaoglu/Personal/sample tslo video/aoslo/aoslo-short.avi';
+inputVideoPath = 'C:\Users\spencer\Desktop\aoslo/aoslo-short_nostim_gamscaled_bandfilt.avi';
+
+
 
 % get a copy of the original video path
 originalVideoPath = inputVideoPath;
@@ -136,6 +139,7 @@ originalVideoPath = inputVideoPath;
 % TrimVideo(inputVideoPath, parametersStructure);
 % inputVideoPath = Filename(inputVideoPath, 'trim');
 
+parametersStructure = struct;
 stimulus = struct;
 stimulus.size = 11;
 stimulus.thickness = 1;
@@ -207,7 +211,8 @@ badFrames = FindBlinkFrames(inputVideoPath, parametersStructure);
 % % refFramePath = Filename(inputVideoPath, 'fineref');
 
 % refFrame = imread('/Users/mnagaoglu/Personal/sample tslo video/aoslo/gk/aoslo-short.jpeg');
-load('/Users/mnagaoglu/Personal/sample tslo video/aoslo/gk/aoslo-short-ref.mat');
+% load('/Users/mnagaoglu/Personal/sample tslo video/aoslo/gk/aoslo-short-ref.mat');
+load('C:\Users\spencer\Desktop\aoslo/gk/aoslo-short-ref.mat');
 refFrame = uint8(referenceimage);
 
 parametersStructure = struct;
@@ -221,15 +226,25 @@ parametersStructure.samplingRate = 540;
 parametersStructure.enableGaussianFiltering = false;
 parametersStructure.maximumPeakRatio = 0.65;
 parametersStructure.minimumPeakThreshold = 0;
-parametersStructure.adaptiveSearch = true;
 parametersStructure.searchWindowHeight = 79;
 parametersStructure.enableSubpixelInterpolation = false;
 parametersStructure.subpixelInterpolationParameters.neighborhoodSize = 7;
 parametersStructure.subpixelInterpolationParameters.subpixelDepth = 2;
 parametersStructure.corrMethod = 'mex';
+if contains(parametersStructure.corrMethod,'fft')
+    parametersStructure.adaptiveSearch = false;
+else
+    parametersStructure.adaptiveSearch = true;
+end
+parametersStructure.enableGPU = false;
+tic;
 [rawEyePositionTraces, usefulEyePositionTraces, timeArray] = ...
-    StripAnalysis(inputVideoPath, refFrame, parametersStructure);
-tracesPath = Filename(inputVideoPath, 'usefultraces');
+    StripAnalysis(inputVideoPath, refFrame, parametersStructure); %#ok<*ASGLU>
+toc;
+tracesPath = Filename(inputVideoPath, 'usefultraces'); %#ok<*NASGU>
+
+[x,y,timeArray2] = FastStripAnalysis(inputVideoPath,refFrame,'opencv',true,0);
+usefulEyePositionTraces2 = [x y];
 
 parametersStructure.createStabilizedVideo = true;
 parametersStructure.newStripHeight = 1;
@@ -248,5 +263,15 @@ StabilizeVideo(originalVideoPath, parametersStructure);
 
 
 toc;
+%%
+
+load('C:\Users\spencer\Desktop\aoslo\gk\aoslo-short_gamscaled_scaled_bandfilt_meanrem_540_hz_7900.mat','timeaxis_secs','frameshifts_strips')
+figure('units','normalized','outerposition',[.1 .1 .3 .4]); 
+plot(timeArray,usefulEyePositionTraces - [0 0],...
+    timeArray2,usefulEyePositionTraces2,...
+    timeaxis_secs,frameshifts_strips - [32 37]); 
+ylim([-100 100])
+legend('xReVAS','yReVAS','xMNA','yMNA','xGK','yGK')
+
 
 end
