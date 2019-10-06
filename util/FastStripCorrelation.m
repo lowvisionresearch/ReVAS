@@ -60,7 +60,7 @@ ft = fft2(currentStripZero, cache.cm, cache.cn);
 correlationMap = ifft2(conj(ft).*(cache.fr)) .* cache.ieuv / currentStripEnergy;
 
 if isGPU
-    correlationMap = gather(correlationMap, gpuTask.ID);
+    correlationMap = gather(correlationMap);
 end
 
 end
