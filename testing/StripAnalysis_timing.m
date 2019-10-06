@@ -8,18 +8,35 @@ function StripAnalysis_timing
 addpath(genpath('..'))
 clc
 
+
+load('/Users/mnagaoglu/Personal/sample tslo video/aoslo/gk/aoslo-short-ref.mat');
+refFrame = uint8(referenceimage);
+
 parametersStructure = struct;
 parametersStructure.overwrite = true;
-parametersStructure.adaptiveSearch = false;
-parametersStructure.corrMethod = 'fft';
-parametersStructure.downSampleFactor = 0.5;
+parametersStructure.enableVerbosity = false;
+parametersStructure.badFrames = [];
+parametersStructure.trim = [0 0];
+parametersStructure.downSampleFactor = 1;
+parametersStructure.stripHeight = 11;
+parametersStructure.stripWidth = 500;
+parametersStructure.samplingRate = 540;
+parametersStructure.enableGaussianFiltering = false;
+parametersStructure.maximumPeakRatio = 0.65;
+parametersStructure.minimumPeakThreshold = 0;
+parametersStructure.adaptiveSearch = true;
+parametersStructure.searchWindowHeight = 79;
+parametersStructure.enableSubpixelInterpolation = false;
+parametersStructure.subpixelInterpolationParameters.neighborhoodSize = 7;
+parametersStructure.subpixelInterpolationParameters.subpixelDepth = 2;
+parametersStructure.corrMethod = 'mex';
 
 global abortTriggered;
 abortTriggered = 0;
 
 f = @() StripAnalysis( ...
-    'demo/sample10deg_dwt_nostim_gamscaled_bandfilt.avi', ...
-    'demo/sample10deg_dwt_nostim_gamscaled_bandfilt_refframe.mat', ...
+    '/Users/mnagaoglu/Personal/sample tslo video/aoslo/aoslo-short_nostim_gamscaled_bandfilt.avi', ...
+    refFrame, ...
     parametersStructure ...
 ); % handle to function
 
