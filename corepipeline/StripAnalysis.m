@@ -691,10 +691,10 @@ for stripNumber = 1:numberOfStrips
 
         % If GPU was used, transfer peak values and peak locations
         if parametersStructure.enableGPU
-            xPeak = gather(xPeak, gpuTask.ID);
-            yPeak = gather(yPeak, gpuTask.ID);
-            peakValue = gather(peakValue, gpuTask.ID);
-            secondPeakValue = gather(secondPeakValue, gpuTask.ID);
+            xPeak = gather(xPeak);
+            yPeak = gather(yPeak);
+            peakValue = gather(peakValue);
+            secondPeakValue = gather(secondPeakValue);
         end
 
         if parametersStructure.enableGaussianFiltering
@@ -761,7 +761,7 @@ for stripNumber = 1:numberOfStrips
         % Show surface plot for this correlation if verbosity enabled
         if parametersStructure.enableVerbosity
             if parametersStructure.enableGPU
-                correlationMap = gather(correlationMap, gpuTask.ID);
+                correlationMap = gather(correlationMap);
             end
             if isfield(parametersStructure, 'axesHandles')
                 axes(parametersStructure.axesHandles(1)); %#ok<*LAXES>
