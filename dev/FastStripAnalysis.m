@@ -1,27 +1,33 @@
-function [xPos, yPos] = FastStripAnalysis(pathToVideo, method, isGPU, isVisualize)
+function [xPos, yPos] = FastStripAnalysis(pathToVideo, refFrame, method, isGPU, isVisualize)
 
 if nargin < 1 || isempty(pathToVideo)
-    pathToVideo = 'demo/sample10deg_dwt_nostim_gamscaled_bandfilt.avi';
+    error('We need a video path!');
 end
 
-if nargin < 2 || isempty(method)
+if nargin < 2 || isempty(refFrame)
+    
+    % try locating based on video path
+    try
+    load([pathToVideo(1:end-4) '_refframe.mat'], 'refFrame');
+    catch
+        disp('''_refframe.mat'' does not exist.')
+        error('We need a reference frame');
+    end
+end
+
+if nargin < 3 || isempty(method)
     method = 'fft';
 end
 
-if nargin < 3 || isempty(isGPU)
+if nargin < 4 || isempty(isGPU)
     isGPU = false;
 end
 
-if nargin < 4 || isempty(isVisualize)
+if nargin < 5 || isempty(isVisualize)
     isVisualize = 1;
 end
 
-% create a video reader object
-videoObj = VideoReader(pathToVideo);
-startTime = videoObj.CurrentTime;
 
-% load a reference frame
-load('demo/sample10deg_dwt_nostim_gamscaled_bandfilt_refframe.mat', 'refFrame');
 switch method
     case {'fft','matlab'}
         refFrame = ...
@@ -30,6 +36,12 @@ switch method
         refFrame = ...
             WhereToCompute((refFrame), isGPU);
 end
+
+% create a video reader object
+videoObj = VideoReader(pathToVideo);
+startTime = videoObj.CurrentTime;
+
+
 % rewind back to the beginning of the video
 videoObj.CurrentTime = startTime;
 
@@ -172,10 +184,15 @@ if isVisualize
     figure(1);
     subplot(1,2,1)
     plot(xPos,'.-');
-    hold on;
+    hold on; grid on;
+    set(gca,'fontsize',14)
+    xlabel('time (n)')
+    ylabel('position (px)')
+    ylim([-100 100])
     subplot(1,2,2)
     plot(yPos,'.-');
-    hold on;
+    hold on; grid on;
+    set(gca,'fontsize',14)
     xlabel('time (n)')
     ylabel('position (px)')
     ylim([-100 100])
