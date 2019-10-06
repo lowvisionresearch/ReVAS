@@ -1,4 +1,4 @@
-function FindBlinkFrames(inputVideoPath, parametersStructure)
+function badFrames = FindBlinkFrames(inputVideoPath, parametersStructure)
 %FIND BLINK FRAMES  Records in a mat file the frames in which a blink
 %                   occurred. Blinks are considered to be frames in which
 %                   the frame's mean pixel value is above or below a 
@@ -51,11 +51,11 @@ function FindBlinkFrames(inputVideoPath, parametersStructure)
 %       FindBlinkFrames(videoPath, parametersStructure);
 
 %% Handle overwrite scenarios.
-stimLocsMatFilePath = [inputVideoPath(1:end-4) '_stimlocs'];
 badFramesMatFilePath = [inputVideoPath(1:end-4) '_blinkframes'];
 if ~exist([badFramesMatFilePath '.mat'], 'file')
     % left blank to continue without issuing warning in this case
 elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
+    load([badFramesMatFilePath '.mat'],'badFrames');
     RevasWarning(['FindBadFrames() did not execute because it would overwrite existing file. (' badFramesMatFilePath ')'], parametersStructure);
     return;
 else
