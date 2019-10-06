@@ -215,7 +215,6 @@ end
 
 % interpolating positions between strips
 interpolatedPositions = interp1(t1, filteredStripIndices, t2, 'linear');
-interpolatedPositions = movmean(interpolatedPositions, 45);
 
 %% Prepare interpolatedPositions for generating the reference frame.
 
@@ -334,7 +333,7 @@ for frameNumber = 1:numberOfFrames
         if ~parametersStructure.stabilizeVideo
             continue
         else
-            writeVideo(stabilizedVideo, refFrame);
+            writeVideo(stabilizedVideo, ones(stabilizedVideo.Height,stabilizedVideo.Width));
         end
     else
         % Add a fourth column to hold the stripNumbers
