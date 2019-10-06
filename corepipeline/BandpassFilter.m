@@ -68,8 +68,8 @@ if ~isfield(parametersStructure, 'smoothing')
     parametersStructure.smoothing = 1; % standard deviation of the gaussian kernel, in pixels
     RevasWarning('using default parameter for smoothing', parametersStructure);
 else
-    if ~IsNaturalNumber(parametersStructure.smoothing)
-        error('smoothing must be a natural number');
+    if ~IsPositiveRealNumber(parametersStructure.smoothing)
+        error('smoothing must be a positive real number');
     end
 end
 
