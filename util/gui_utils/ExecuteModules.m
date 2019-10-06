@@ -30,6 +30,9 @@ else
     parametersStructure.enableGPU = false;
 end
 
+% get a copy of original video name
+originalVideoPath = inputPath;
+
 %% Trim Module
 if logical(handles.config.togValues('trim')) && ~logical(abortTriggered)
     RevasMessage(['[[ Trimming ]] ' inputPath], parametersStructure);
@@ -291,6 +294,16 @@ if logical(handles.config.togValues('strip')) && ~logical(abortTriggered)
         eyePositionTraces, ...
         rawEyePositionTraces, ...
         peakRatios], '-append');
+end
+
+
+%% Create stabilized video if requested
+% uses original video, rather than the highly processed video
+if ~abortTriggered && writeResult && parametersStructure.createStabilizedVideo
+    parametersStructure.positions = eyePositionTraces;
+    parametersStructure.time = timeArray;
+    parametersStructure.newStripHeight = 1;
+    StabilizeVideo(originalVideoPath, parametersStructure);
 end
 
 %% Re-referencing Module
