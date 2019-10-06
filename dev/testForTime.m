@@ -2,36 +2,43 @@ clearvars
 close all
 clc
 
+% TSLO
+refFrame = []; %#ok<*NASGU>
+thisFile = 'demo/sample10deg_dwt_nostim_gamscaled_bandfilt.avi';
 
-% p = gcp('nocreate');
-% if isempty(p)
-%     p = parpool(4);
-% end
+% AOSLO
+% load reference frame
+load('/Users/mnagaoglu/Personal/sample tslo video/aoslo/gk/aoslo-short-ref.mat');
+refFrame = uint8(referenceimage);
 
+% get video path
+thisFile = '/Users/mnagaoglu/Personal/sample tslo video/aoslo/aoslo-short_nostim_gamscaled_bandfilt.avi';
 
-% pathToVideo = '../demo/sample10deg';
+%%
+disp('MATLAB normxcorr2 - CPU')
+[x1,y1] = FastStripAnalysis(thisFile,refFrame,'matlab',false,1); %#ok<*ASGLU>
 
+%%
+disp('MATLAB normxcorr2 - GPU')
+[x2,y2] = FastStripAnalysis(thisFile,refFrame,'matlab',true,1);
 
-for i=1:1
-    thisFile = 'demo/sample10deg_dwt_nostim_gamscaled_bandfilt.avi';
-    disp('MATLAB normxcorr2 - CPU')
-    [x,y] = FastStripAnalysis(thisFile,'matlab',false,1);
-    
-    disp('MATLAB normxcorr2 - GPU')
-    [x,y] = FastStripAnalysis(thisFile,'matlab',true,1);
-    
-    disp('MATLAB FFT - CPU')
-    [x,y] = FastStripAnalysis(thisFile,'fft',false,1);
-    
-    disp('MATLAB FFT - GPU')
-    [x,y] = FastStripAnalysis(thisFile,'fft',true,1);
-    
-    disp('OPENCV - CPU')
-    [x,y] = FastStripAnalysis(thisFile,'opencv',false,1);
-    
-    disp('OPENCV - GPU')
-    [x,y] = FastStripAnalysis(thisFile,'opencv',true,1);
-end
+%%
+disp('MATLAB FFT - CPU')
+[x3,y3] = FastStripAnalysis(thisFile,refFrame,'fft',false,1);
+
+%%
+disp('MATLAB FFT - GPU')
+[x4,y4] = FastStripAnalysis(thisFile,refFrame,'fft',true,1);
+
+%%
+disp('OPENCV - CPU')
+[x5,y5] = FastStripAnalysis(thisFile,refFrame,'opencv',false,1);
+
+%%
+disp('OPENCV - GPU')
+[x6,y6] = FastStripAnalysis(thisFile,refFrame,'opencv',true,1);
+
+%%
 legend('matlab normxcorr2 CPU', 'matlab normxcorr2 GPU', 'matlab fft CPU',...
     'matlab fft GPU','opencv CPU','opencv GPU')
 

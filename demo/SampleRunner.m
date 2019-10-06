@@ -206,7 +206,9 @@ badFrames = FindBlinkFrames(inputVideoPath, parametersStructure);
 % % FineRef(fineref, inputVideoPath, parametersStructure);
 % % refFramePath = Filename(inputVideoPath, 'fineref');
 
-refFrame = imread('/Users/mnagaoglu/Personal/sample tslo video/aoslo/gk/aoslo-short.jpeg');
+% refFrame = imread('/Users/mnagaoglu/Personal/sample tslo video/aoslo/gk/aoslo-short.jpeg');
+load('/Users/mnagaoglu/Personal/sample tslo video/aoslo/gk/aoslo-short-ref.mat');
+refFrame = uint8(referenceimage);
 
 parametersStructure = struct;
 parametersStructure.overwrite = true;
@@ -217,7 +219,7 @@ parametersStructure.stripHeight = 11;
 parametersStructure.stripWidth = 500;
 parametersStructure.samplingRate = 540;
 parametersStructure.enableGaussianFiltering = false;
-parametersStructure.maximumPeakRatio = 0.8;
+parametersStructure.maximumPeakRatio = 0.65;
 parametersStructure.minimumPeakThreshold = 0;
 parametersStructure.adaptiveSearch = true;
 parametersStructure.searchWindowHeight = 79;
