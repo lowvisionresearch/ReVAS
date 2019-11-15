@@ -28,7 +28,13 @@ numberOfFrames = reader.Framerate * reader.Duration;
 video = zeros(reader.Height, reader.Width, numberOfFrames, 'uint8');
 
 for frameNumber = 1:numberOfFrames
-    video(1:end, 1:end, frameNumber) = readFrame(reader);
+	frame = readFrame(reader);
+	[~, ~, numChannels] = size(frame);
+	if numChannels == 1
+		video(1:end, 1:end, frameNumber) = frame;
+	else
+		video(1:end, 1:end, frameNumber) = rgb2gray(frame);
+	end
 end
 
 
