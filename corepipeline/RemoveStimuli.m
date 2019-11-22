@@ -292,8 +292,7 @@ for frameNumber = 1:numberOfFrames
 
                 % We need to replace the entire targetArea, not just the
                 % white part of the image. This is because we can have a
-                % stimulus with a white background and black cross, or a
-                % white cross with no background.
+                % stimulus with a black or white cross.
                 frame(max(xLow, 1) : min(xHigh, height),max(yLow, 1) : min(yHigh, width)) = targetArea;
             end
         end
