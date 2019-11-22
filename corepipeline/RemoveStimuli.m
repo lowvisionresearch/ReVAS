@@ -87,6 +87,10 @@ end
 if ischar(stimulus)
     % Read image from the path
     stimulus = imread(stimulus);
+    [~, ~, numChannels] = size(stimulus);
+    if numChannels == 3
+        stimulus = rgb2gray(stimulus);
+    end
 elseif isstruct(stimulus)
     % Both size and thickness must be odd
     if ~mod(stimulus.size, 2) == 1 || ~mod(stimulus.thickness, 2) == 1
@@ -186,7 +190,7 @@ standardDeviationOfEachFrame = NaN(numberOfFrames, 1);
 
 % Threshold value for detecting stimulus. Any peak value below this
 % threshold will not be marked as a stimulus.
-stimulusThresholdValue = 0.8; % TODO hard-coded threshold.
+stimulusThresholdValue = 0.6; % TODO hard-coded threshold.
 
 for frameNumber = 1:numberOfFrames
     if ~abortTriggered
@@ -277,16 +281,19 @@ for frameNumber = 1:numberOfFrames
 
                 targetArea = frame(max(xLow, 1) :  min(xHigh, height),max(yLow, 1) : min(yHigh, width));
                 targetArea(targetArea > 250) = 0;
-                toBeRemoved = imbinarize(targetArea,0.15) == 0;
 
                 % Generate noise
                 % (this gives noise with mean = 0, sd = 1)
-                noise = randn(sum(toBeRemoved(:)),1);
+                noise = randn(size(targetArea));
 
                 % Adjust to the mean and sd of current frame
                 noise = noise * standardDeviationOfEachFrame(frameNumber) + 1.2*meanOfEachFrame(frameNumber);
-                targetArea(toBeRemoved) = noise;
+                targetArea = noise;
 
+                % We need to replace the entire targetArea, not just the
+                % white part of the image. This is because we can have a
+                % stimulus with a white background and black cross, or a
+                % white cross with no background.
                 frame(max(xLow, 1) : min(xHigh, height),max(yLow, 1) : min(yHigh, width)) = targetArea;
             end
         end
