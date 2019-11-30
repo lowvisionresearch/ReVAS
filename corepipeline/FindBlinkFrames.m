@@ -53,14 +53,17 @@ function [badFrames, varargout] = FindBlinkFrames(inputVideo, parametersStructur
 %  numberOfBins        :   optional--specify number of bins for image 
 %                          histogram. All image stats are computed using
 %                          this histogram. The default value is 256.
+%  meanDifferenceThreshold: minimum mean gray level distance between two
+%                          clusters representing bad and good frames.
 %                          
 %   -----------------------------------
 %   Example usage
 %   -----------------------------------
-%       videoPath = 'MyVid.avi';
+%       videoPath = 'aoslo-blink.avi';
 %       parametersStructure.overwrite = true;
-%       parametersStructure.threhsoldValue = 1.5;
-%       parametersStructure.upperTail = false;
+%       parametersStructure.stitchCriteria = 1;
+%       parametersStructure.numberOfBins = 256;
+%       parametersStructure.meanDifferenceThreshold = 256;
 %       FindBlinkFrames(videoPath, parametersStructure);
 
 %% Determine inputVideo type.
@@ -75,6 +78,10 @@ else
 end
 
 %% Set parameters to defaults if not specified.
+
+if nargin < 2
+    parametersStructure = struct;
+end
 
 if ~isfield(parametersStructure, 'overwrite')
     overwrite = false; 
@@ -95,6 +102,14 @@ if ~isfield(parametersStructure, 'numberOfBins')
 else
     numberOfBins = parametersStructure.numberOfBins;
 end
+
+if ~isfield(parametersStructure, 'meanDifferenceThreshold')
+    meanDifferenceThreshold = 10; % gray levels
+    RevasWarning(['FindBlinkFrames is using default parameter for meanDifferenceThreshold: ' num2str(meanDifferenceThreshold)], parametersStructure);
+else
+    meanDifferenceThreshold = parametersStructure.meanDifferenceThreshold;
+end
+
 
 %% Handle overwrite scenarios.
 if writeResult
@@ -145,6 +160,7 @@ for fr = 1:numberOfFrames
     
     % get a frame
     if writeResult
+        % handle rgb frames
         frame = readFrame(reader);
         if ndims(frame) == 3
             frame = rgb2gray(frame);
@@ -171,7 +187,7 @@ end
 [idx, centroids] = kmeans([means stds skews kurtoses],2);
 
 % if centroids are too close, no blinks found.
-if abs(diff(centroids(:,1))) < 10
+if abs(diff(centroids(:,1))) < meanDifferenceThreshold
     badFrames = [];
 else
     % select the cluster with smaller mean as the bad frames
@@ -181,7 +197,10 @@ else
     % Lump together blinks that are < |stitchCriteria| frames apart
     [st, en] = GetOnsetOffset(badFrames);
     [st, en] = MergeEvents(st, en, stitchCriteria);
-    badFrames = find(GetIndicesFromOnsetOffset(st,en,numberOfFrames));
+    
+    % note that we keep badFrames in a logical array format to preserve the
+    % length of the original video.
+    badFrames = GetIndicesFromOnsetOffset(st,en,numberOfFrames);
 end
 
 

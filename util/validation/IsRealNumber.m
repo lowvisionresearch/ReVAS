@@ -1,11 +1,8 @@
 function result = IsRealNumber(value)
 %IS REAL NUMBER  Checks if value is a real number.
 %   Checks if value is a real number. Returns true if so, else false.
+%
+%  MNA 11/300/19 made it array-compatible
 
-if isnan(value)
-    result = false;
-else
-    result = true;
-end
-    
-end
+result = ~isnan(value);
+

@@ -1,3 +1,3 @@
-function revas
+function REVAS
 
 ReVAS;
