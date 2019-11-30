@@ -94,8 +94,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // CV_TM_CCOEFF for unnormalized
     // See https://docs.opencv.org/2.4/modules/imgproc/doc/object_detection.html?highlight=matchtemplate#matchtemplate
     cv::matchTemplate(imgCVPadded, *templateImgCV, outCV, CV_TM_CCOEFF_NORMED );
+    
+    
+    /// Localizing the best match with minMaxLoc
+   double minVal; double maxVal; 
+   cv::Point minLoc; 
+   cv::Point maxLoc;
+   cv::Point matchLoc;
+
+   cv::minMaxLoc( outCV, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat() );
 
     // Put the data back into the output MATLAB array
     plhs[0] = ocvMxArrayFromImage_single(outCV);
+    plhs[1] = mxCreateDoubleScalar(maxLoc.x + 1);
+    plhs[2] = mxCreateDoubleScalar(maxLoc.y + 1);
+    plhs[3] = mxCreateDoubleScalar(maxVal);
 
 }

@@ -1,4 +1,4 @@
-function [saccades, drifts] = ...
+function [saccades, drifts, labels] = ...
     FindSaccadesAndDrifts(inputEyePositions,  parametersStructure)
 %FIND SACCADES AND DRIFTS Records in a mat file an array of structures
 %representing saccades and an array of structures representing drifts.
@@ -307,9 +307,11 @@ end
 % get drift parameters
 drifts = GetDriftProperties(eyePositionTraces,timeArray,driftOnsets,driftOffsets,velocity); 
 
+labels = ~driftIndices; % 1: saccade, 0: drift
+
 %% Save to output mat file.
 if writeResult
-    save(outputFilePath, 'saccades', 'drifts','parametersStructure');
+    save(outputFilePath, 'saccades', 'drifts', 'labels','parametersStructure');
 end
 
 %% Verbosity for Results.
@@ -330,11 +332,9 @@ if enableVerbosity
     plot(timeArray(driftIndices), eyePositionTraces(driftIndices,2),'.','LineWidth',2); hold on;
     
     % now highlight saccades
-    for i=1:length(onsets)
-        ax.ColorOrderIndex = 1;
-        plot(timeArray(onsets(i):offsets(i)),eyePositionTraces(onsets(i):offsets(i),1),'o',...
-             timeArray(onsets(i):offsets(i)),eyePositionTraces(onsets(i):offsets(i),2),'o'); hold on;
-    end
+    ax.ColorOrderIndex = 1;
+    plot(timeArray(~driftIndices), eyePositionTraces(~driftIndices,1),'o','LineWidth',2); hold on;
+    plot(timeArray(~driftIndices), eyePositionTraces(~driftIndices,2),'o','LineWidth',2); hold on;
     title('Eye position');
     xlabel('Time (sec)');
     ylabel('Eye position (deg)');

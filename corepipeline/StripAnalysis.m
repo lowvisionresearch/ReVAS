@@ -158,6 +158,11 @@ if ischar(referenceFrame)
     % Reference Frame Path is needed because it is written to the file in
     % the end.
     referenceFramePath = referenceFrame;
+    
+    % Disable warnings as we try to load the right reference frame variable
+    % from file.
+    orig_warning_state = warning;
+    warning('off','all')
  
     success = false;
     data = load(referenceFramePath, 'refFrame');
@@ -176,13 +181,20 @@ if ischar(referenceFrame)
         error(['No reference frame could be loaded from ' referenceFramePath]);
     end
     
+    % Restore original warning state
+    warning(orig_warning_state);
+    
     clear data
     clear success
 else
     referenceFramePath = '';
 end
 if ~ismatrix(referenceFrame)
-    error('Invalid Input for referenceFrame (it was not a 2D array)');
+    % MNA 11/25/19
+    % Removed fail and instead allowed StripAnalysis without reference
+    % frame. It simply uses one of the video frames as the reference frames
+    % if reference frame is not provided.
+    %%error('Invalid Input for referenceFrame (it was not a 2D array)');
 end
 
 % Identify which frames are bad frames
@@ -270,7 +282,7 @@ else
 end
 
 if ~isfield(parametersStructure, 'minimumPeakThreshold')
-    parametersStructure.minimumPeakThreshold = 0;
+    parametersStructure.minimumPeakThreshold = 0.3;
     RevasMessage('using default parameter for minimumPeakThreshold');
 else
     if ~IsNonNegativeRealNumber(parametersStructure.minimumPeakThreshold)
@@ -288,7 +300,7 @@ end
 
 if parametersStructure.adaptiveSearch && ...
         ~isfield(parametersStructure, 'scalingFactor')
-    parametersStructure.scalingFactor = 10;
+    parametersStructure.scalingFactor = 1;
     RevasMessage('using default parameter for scalingFactor');
 elseif parametersStructure.adaptiveSearch
     if ~IsPositiveRealNumber(parametersStructure.scalingFactor)
@@ -387,6 +399,10 @@ if ~isfield(parametersStructure, 'downSampleFactor')
     parametersStructure.downSampleFactor = 1;
 end
 
+if ~isfield(parametersStructure, 'trim') 
+    parametersStructure.trim = [0 0]; % top, bottom
+end
+
 %% Handle overwrite scenarios.
 
 if writeResult
@@ -416,6 +432,20 @@ if writeResult
 else
     [height, ~, numberOfFrames] = size(inputVideo);
 end
+
+% MNA 11/25/19
+% To allow StripAnalysis to be used without a reference frame
+if ~ismatrix(referenceFrame) || isempty(referenceFrame)
+    if writeResult
+        referenceFrame = readFrame(reader);
+        if ndims(referenceFrame) == 3
+            referenceFrame = rgb2gray(referenceFrame);
+        end
+    else
+        referenceFrame = inputVideo(1:end, 1:end, 1);
+    end
+end
+% End of MNA 11/25/19
     
 stripsPerFrame = round(parametersStructure.samplingRate / parametersStructure.FrameRate);
 distanceBetweenStrips = (height - parametersStructure.stripHeight)...
@@ -436,7 +466,8 @@ standardDeviationsArray = NaN(numberOfStrips, 2);
 searchWindowsArray = NaN(numberOfStrips, 2);
 
 %% Populate time array
-timeArray = (1:numberOfStrips)' / parametersStructure.samplingRate;
+dtPerScanLine = 1/((height + sum(parametersStructure.trim))*parametersStructure.FrameRate);
+timeArray = nan(numberOfStrips,1);
 
 %% Allow for aborting if not parallel processing
 global abortTriggered;
@@ -503,6 +534,7 @@ for stripNumber = 1:numberOfStrips
         colNumber = 1;
         frameNumber = floor((stripNumber-1) / stripsPerFrame + 1);
 
+        % Iff the frame number has incremented from last iteration, update frame.
         if frameNumber > currFrameNumber
             currFrameNumber = frameNumber;
             
@@ -525,6 +557,11 @@ for stripNumber = 1:numberOfStrips
 
         rowEnd = rowNumber + parametersStructure.stripHeight - 1;
         columnEnd = colNumber + parametersStructure.stripWidth - 1;
+        
+        % get time stamps
+        timeArray(stripNumber) = dtPerScanLine * ...
+            (mean([rowNumber rowEnd]) + parametersStructure.trim(1)) + ...
+            (currFrameNumber-1) / parametersStructure.FrameRate;
         
         if ~parametersStructure.enableGPU
             strip = frame(rowNumber:rowEnd, colNumber:columnEnd);
@@ -556,7 +593,7 @@ for stripNumber = 1:numberOfStrips
             
             if lowerBound > size(referenceFrame, 1)
                lowerBound = size(referenceFrame, 1);
-               upperBound = lowerBound - parametersStructure.searchWindowHeight*(2^(attemptNum-1)) + 1;
+               upperBound = max(1, lowerBound - parametersStructure.searchWindowHeight*(2^(attemptNum-1)) + 1);
             end
             
             if isequal(parametersStructure.corrMethod, 'normxcorr')
@@ -565,7 +602,7 @@ for stripNumber = 1:numberOfStrips
                     Downsample(referenceFrame(upperBound:lowerBound, 1:end), ...
                         parametersStructure.downSampleFactor));
             elseif isequal(parametersStructure.corrMethod, 'mex') && ...
-                ~parametersStructure.enableGPU
+                ~parametersStructure.enableGPU            
                 adaptedCorrelationMap = matchTemplateOCV( ...
                     strip, ...
                     Downsample(referenceFrame(upperBound:lowerBound, 1:end), ...
@@ -773,6 +810,7 @@ for stripNumber = 1:numberOfStrips
                 end
             else
                 figure(1);
+                cla;
             end
             
             [surfX,surfY] = meshgrid( ...
@@ -823,27 +861,37 @@ for stripNumber = 1:numberOfStrips
                rawEyePositionTraces(stripNumber, :) = rawEyePositionTraces(stripNumber, :) .* parametersStructure.downSampleFactor; 
             end
 
-            % We must subtract back out the expected strip coordinates in order
-            % to obtain the net movement (the net difference between no
-            % movement and the movement that was observed).
-            rawEyePositionTraces(stripNumber,1) = ...
-                rawEyePositionTraces(stripNumber,1) - (parametersStructure.stripWidth - 1);
-
             % Negate eye position traces to flip directions.
             rawEyePositionTraces(stripNumber,:) = -rawEyePositionTraces(stripNumber,:);
 
             if isfield(parametersStructure, 'axesHandles')
                 axes(parametersStructure.axesHandles(2));
+                cla;
                 colormap(parametersStructure.axesHandles(2), 'default');
             else
                 figure(2);
+                cla;
             end
-            plot(timeArray, rawEyePositionTraces);
-            title('Raw Eye Position Traces');
-            xlabel('Time (sec)');
-            ylabel('Eye Position Traces (pixels)');
+            
+            plot(timeArray, rawEyePositionTraces(:,1),'-r','linewidth',2); hold on;
+            plot(timeArray, rawEyePositionTraces(:,2),'-b','linewidth',2);
+            title('Raw Eye Position');
+            xlabel('time (sec)');
+            ylabel('eye position (pixels)');
             legend('show');
-            legend('Horizontal Traces', 'Vertical Traces');
+            legend('horizontal', 'vertical');
+            set(gca,'fontsize',14);
+            
+%             figure(3);
+%             cla;
+%             plot(timeArray,peakValueArray,'-','color',[.2 .8 .2],'linewidth',2); hold on;
+%             plot(timeArray,1 - (secondPeakValueArray./peakValueArray),'-','color',[.6 .2 .6],'linewidth',2);
+%             legend('show');
+%             legend('Peak','1-PeakRatio');
+%             ylabel('quality')
+%             set(gca,'fontsize',14);
+%             xlabel('time (sec)')
+            
         end
     end
 end
@@ -933,12 +981,14 @@ if ~abortTriggered && parametersStructure.enableVerbosity
     end
     cla;
     
-    plot(timeArray, statisticsStructure.peakRatios); hold on;
-    plot(timeArray, statisticsStructure.peakValues);
-    title('Sample quality');
-    xlabel('Time (sec)');
+    plot(timeArray,peakValueArray,'-','color',[.2 .8 .2],'linewidth',2); hold on;
+    plot(timeArray,1 - (secondPeakValueArray./peakValueArray),'-','color',[.6 .2 .6],'linewidth',2);
     legend('show');
-    legend('Peak ratio', 'Peak value');
+    legend('Peak','1-PeakRatio');
+    ylabel('quality')
+    set(gca,'fontsize',14);
+    xlabel('time (sec)')
+    title('Sample quality');
     ylim([0 1])
     view(2);
 end
@@ -982,9 +1032,4 @@ if writeResult && ~abortTriggered
     end
 end
 
-%% Create stabilized video if requested
-if ~abortTriggered && parametersStructure.createStabilizedVideo
-    parametersStructure.positions = eyePositionTraces;
-    parametersStructure.time = timeArray;
-    StabilizeVideo(inputVideoPath, parametersStructure);
-end
+
