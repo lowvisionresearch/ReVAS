@@ -29,7 +29,7 @@ function [refFrame] = MakeMontage(parametersStructure, inputVideo)
 %  stabilizeVideo      :   set to true to generate a stabilized video
 %                          (default false)
 %  stabilizedVideoSizeMultiplier : a multiplier to determine the frame size
-%                          of the stabilized video (default 1.25)
+%                          of the stabilized video (default 1.75)
 %
 %   -----------------------------------
 %   Example usage
@@ -73,11 +73,9 @@ else
     parametersStructure.newStripHeight = parametersStructure.stripHeight;
 end
 
-% Size of the stabilized video will be stabilizedVideoSizeMultiplier*frameSize
+% Size of the stabilized video will be stabilizedVideoSizeMultiplier * frameSize
 if ~isfield(parametersStructure,'stabilizedVideoSizeMultiplier') 
-    stabilizedVideoSizeMultiplier = 1.25;
-else
-    stabilizedVideoSizeMultiplier = parametersStructure.stabilizedVideoSizeMultiplier;
+    parametersStructure.stabilizedVideoSizeMultiplier = 1.75;
 end
 
 if ~isfield(parametersStructure, 'stabilizeVideo')
@@ -129,7 +127,7 @@ else
     Duration = numberOfFrames / FrameRate;
 end
 
-if isfield(parametersStructure, 'stabilizeVideo') && parametersStructure.stabilizeVideo
+if parametersStructure.stabilizeVideo
     stripsPerFrame = ceil(height/parametersStructure.newStripHeight);
 else
     stripsPerFrame = floor(height/parametersStructure.newStripHeight);
@@ -141,8 +139,7 @@ refFrame = zeros(height*3);
 
 % Prepare a video writer object if user enables option to generate a
 % stabilized video
-if writeResult && isfield(parametersStructure, 'stabilizeVideo') && ...
-        parametersStructure.stabilizeVideo
+if writeResult && parametersStructure.stabilizeVideo
     
     stabilizedVideoinputVideo = inputVideo;
     stabilizedVideoinputVideo(end-3:end) = [];
@@ -396,8 +393,7 @@ for frameNumber = 1:numberOfFrames
             
             % If generating a stabilized video, center all frames around
             % the first strip
-           if isfield(parametersStructure, 'stabilizeVideo') && ...
-                    parametersStructure.stabilizeVideo && ~foundCenter
+           if parametersStructure.stabilizeVideo && ~foundCenter
 
                 foundCenter = true;
                 rowDifference = round(size(refFrame, 1) / 2) - rowIndex ...
@@ -444,8 +440,7 @@ for frameNumber = 1:numberOfFrames
             
             % If stabilization is enabled, center the frames in the
             % template frame
-           if isfield(parametersStructure, 'stabilizeVideo') && ...
-                    parametersStructure.stabilizeVideo
+            if parametersStructure.stabilizeVideo
                
                 templateSelectRow = templateSelectRow + rowDifference;
                 templateSelectColumn = templateSelectColumn + columnDifference;
@@ -465,7 +460,7 @@ for frameNumber = 1:numberOfFrames
                     templateSelectColumn = templateSelectColumn(1):stabilizeEnd;
                     columnEnd = columnEnd - difference;
                 end
-           end
+            end
            
             refFrame(templateSelectRow, templateSelectColumn) = refFrame(...
                 templateSelectRow, templateSelectColumn) + double(frame(...
@@ -474,38 +469,16 @@ for frameNumber = 1:numberOfFrames
                 (templateSelectRow, templateSelectColumn) + 1;
 
             % Generate a stabilized video if user enables this option
-            if isfield(parametersStructure, 'stabilizeVideo') && ...
-                    parametersStructure.stabilizeVideo && endOfFrame
+            if parametersStructure.stabilizeVideo && endOfFrame
                 
                 stabilizedFrame = refFrame./counterArray;
                 
                 % Convert all NaNs to zeros
                 stabilizedFrame(isnan(stabilizedFrame)) = 0;
                 
-                % Fill in empty strips in the video with random noise
-                columnSum = sum(stabilizedFrame);
-                rowSum = sum(stabilizedFrame, 2);
-                
-                minColumn = find(columnSum, 1, 'first');
-                maxColumn = find(columnSum, 1, 'last');
-                
-                minRow = find(rowSum, 1, 'first');
-                maxRow = find(rowSum, 1, 'last');
-                
-                % Replace black regions within the stabilized frames with
-                % random noise
-                relevantPixels = stabilizedFrame(minRow:maxRow, minColumn:maxColumn);
-                indices = relevantPixels == 0;
-                relevantPixels(indices) = mean(relevantPixels(~indices))...
-                    + (std(relevantPixels(~indices)) * randn(sum(sum(indices)), 1));
-                stabilizedFrame(minRow:maxRow, minColumn:maxColumn) = relevantPixels;
-                
-                % Sometimes random noise will add pixels not within 0
-                stabilizedFrame(stabilizedFrame<0) = 0;
-                
                 % crop the black boundaries 
-                hw = round([height width]*stabilizedVideoSizeMultiplier);
-                cropRect = [round((size(stabilizedFrame)-hw)/2) hw];
+                wh = round([width height] * parametersStructure.stabilizedVideoSizeMultiplier);
+                cropRect = [round(fliplr(size(stabilizedFrame))-wh)/2 wh];
                 frameToWrite = imcrop(stabilizedFrame,cropRect);
                 
                 % Write to a video file
@@ -521,7 +494,7 @@ for frameNumber = 1:numberOfFrames
 end
 
 % If a stabilized video was generated, stop the function here
-if isfield(parametersStructure, 'stabilizeVideo') && parametersStructure.stabilizeVideo 
+if parametersStructure.stabilizeVideo 
     close(stabilizedVideo)
     return
 end

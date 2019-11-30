@@ -209,8 +209,8 @@ handles.reconfig.ForegroundColor = revasColors.pushButtonText;
 % DEFAULT PARAMETERS
 % Trim
 handles.config.trimLeft = 0;
-handles.config.trimRight = 24;
-handles.config.trimTop = 24;
+handles.config.trimRight = 0;
+handles.config.trimTop = 12;
 handles.config.trimBottom = 0;
 handles.config.trimOverwrite = true;
 % Stim
@@ -244,13 +244,13 @@ handles.config.coarseVerbosity = true;
 handles.config.fineOverwrite = true;
 handles.config.fineVerbosity = true;
 handles.config.fineNumIterations = 1;
-handles.config.fineStripHeight = 15;
-handles.config.fineStripWidth = 488;
+handles.config.fineStripHeight = 11;
+handles.config.fineStripWidth = 512;
 handles.config.fineSamplingRate = 540;
-handles.config.fineMaxPeakRatio = 0.8;
-handles.config.fineMinPeakThreshold = 0.2;
-handles.config.fineAdaptiveSearch = false;
-handles.config.fineScalingFactor = 8;
+handles.config.fineMaxPeakRatio = 0.65;
+handles.config.fineMinPeakThreshold = 0.3;
+handles.config.fineAdaptiveSearch = true;
+handles.config.fineScalingFactor = 1;
 handles.config.fineSearchWindowHeight = 79;
 handles.config.fineSubpixelInterp = false;
 handles.config.fineNeighborhoodSize = 7;
@@ -260,18 +260,18 @@ handles.config.stripCreateStabilizedVideo = false;
 handles.config.stripOverwrite = true;
 handles.config.stripVerbosity = true;
 handles.config.stripStripHeight = 15;
-handles.config.stripStripWidth = 488;
+handles.config.stripStripWidth = 512;
 handles.config.stripSamplingRate = 540;
 handles.config.stripEnableGaussFilt = false;
 handles.config.stripDisableGaussFilt = true;
 handles.config.stripGaussSD = 10;
 handles.config.stripSDWindow = 25;
 handles.config.stripMaxPeakRatio = 0.8;
-handles.config.stripMinPeakThreshold = 0;
-handles.config.stripAdaptiveSearch = false;
-handles.config.stripScalingFactor = 8;
+handles.config.stripMinPeakThreshold = 0.2;
+handles.config.stripAdaptiveSearch = true;
+handles.config.stripScalingFactor = 1;
 handles.config.stripSearchWindowHeight = 79;
-handles.config.stripSubpixelInterp = true;
+handles.config.stripSubpixelInterp = false;
 handles.config.stripNeighborhoodSize = 7;
 handles.config.stripSubpixelDepth = 2;
 % Re-Referencing
@@ -865,35 +865,47 @@ guidata(hObject, handles);
 
 % --- Executes on button press in togCoarse.
 function togCoarse_Callback(hObject, eventdata, handles)
-% First check to see if an illegal flip of coarse is taking place (i.e.
-% disabling coarse while fine is still enabled, since a trigger on this
-% callback means that there is an attempt to flip the state of coarse.)
-if handles.config.togValues('coarse') == 1 && ...
-    handles.config.togValues('fine') == 1 && ...
-    handles.radioStrip.Value ~= 1
-    errordlg(...
-        'Make Coarse Reference Frame must be enabled if Make Fine Reference Frame is enabled.', 'Invalid Selection');
-    handles.config.togValues('coarse') = 1;
-else
-    handles = toggle_Callback('coarse', handles);
-end
+
+% MNA 11/25/19 
+% commented out the check for fineRef. CoarseRef is no longer
+% a requirement for fineRef.
+
+% % % First check to see if an illegal flip of coarse is taking place (i.e.
+% % % disabling coarse while fine is still enabled, since a trigger on this
+% % % callback means that there is an attempt to flip the state of coarse.)
+% % if handles.config.togValues('coarse') == 1 && ...
+% %     handles.config.togValues('fine') == 1 && ...
+% %     handles.radioStrip.Value ~= 1
+% %     errordlg(...
+% %         'Make Coarse Reference Frame must be enabled if Make Fine Reference Frame is enabled.', 'Invalid Selection');
+% %     handles.config.togValues('coarse') = 1;
+% % else
+% %     handles = toggle_Callback('coarse', handles);
+% % end
+
+handles = toggle_Callback('coarse', handles);
 
 % Update handles structure
 guidata(hObject, handles);
 
 % --- Executes on button press in togFine.
 function togFine_Callback(hObject, eventdata, handles)
-% First check to see if an illegal flip of fine is taking place (i.e.
-% enabling fine while coarse is still disabled, since a trigger on this
-% callback means that there is an attempt to flip the state of fine.)
-if handles.config.togValues('fine') == 0 && ...
-    handles.config.togValues('coarse') == 0 && ...
-    handles.lastRadio ~= 6
-        warndlg('Make Coarse Reference Frame has been enabled since it must be if Make Fine Reference Frame is enabled.', 'Input Warning');
-        handles.config.togValues('coarse') = 0;
-        togCoarse_Callback(handles.togCoarse, eventdata, handles);
-        handles.config.togValues('coarse') = 1;
-end
+
+% MNA 11/25/19 
+% commented out the check for CoarseRef. It's no longer a requirement.
+
+% % % First check to see if an illegal flip of fine is taking place (i.e.
+% % % enabling fine while coarse is still disabled, since a trigger on this
+% % % callback means that there is an attempt to flip the state of fine.)
+% % if handles.config.togValues('fine') == 0 && ...
+% %     handles.config.togValues('coarse') == 0 && ...
+% %     handles.lastRadio ~= 6
+% %         warndlg('Make Coarse Reference Frame has been enabled since it must be if Make Fine Reference Frame is enabled.', 'Input Warning');
+% %         handles.config.togValues('coarse') = 0;
+% %         togCoarse_Callback(handles.togCoarse, eventdata, handles);
+% %         handles.config.togValues('coarse') = 1;
+% % end
+
 handles = toggle_Callback('fine', handles);
 
 % Update handles structure

@@ -14,11 +14,14 @@ if nargin > 1
     end
 end
 
-% get system color for text
-c = com.mathworks.services.Prefs.getColorPref('Colors_M_Warnings');
-textColor = [get(c,'Red') get(c,'Green') get(c,'Blue')]/255;
+% % get system color for text
+% c = com.mathworks.services.Prefs.getColorPref('Colors_M_Warnings');
+% textColor = [get(c,'Red') get(c,'Green') get(c,'Blue')]/255;
 
 % display the same message via MATLAB command window
-cprintf(textColor,'%s\n',(['(' time ') WARNING: ' message]));
+% cprintf(textColor,'%s\n',(['(' time ') WARNING: ' message]));
+warning('off','backtrace')
+warning('%s\n',(['(' time ') ' message]));
+warning('on','backtrace')
 
 end

@@ -1,12 +1,36 @@
-function badFrames = FindBlinkFrames(inputVideoPath, parametersStructure)
+function [badFrames, varargout] = FindBlinkFrames(inputVideo, parametersStructure)
 %FIND BLINK FRAMES  Records in a mat file the frames in which a blink
 %                   occurred. Blinks are considered to be frames in which
-%                   the frame's mean pixel value is above or below a 
-%                   specified number of standard deviations from the mean
-%                   of the mean pixel values of all frames. 
-%   The result is stored with '_blinkframes' appended to the input video file
-%   name.
+%                   the frame's mean and standard deviation are reduced
+%                   whereas skewness and kurtosis of its histogram are
+%                   increased. We use k-means clustering to find bad frames
+%                   using these four image stats. There is a hard threshold
+%                   for separating the two clusters, i.e., if mean values
+%                   of bad frames and good frames are no different than
+%                   this threshold, we take it as absence of any blinks/bad
+%                   frames.
 %
+%   The result is stored with '_blinkframes' appended to the input video file
+%   name if a |inputVideo| path is provided, and it is also returned by the
+%   function. 
+%
+%   -----------------------------------
+%   Input
+%   -----------------------------------
+%   |inputVideo| is the path to the video or a matrix representation of the
+%   video that is already loaded into memory.
+%
+%   |parametersStructure| is a struct as specified below.
+%
+%
+%   -----------------------------------
+%   Output
+%   -----------------------------------
+%   |badFrames| is index array (logical) where 1s indicate bad frames.
+%
+%   varargout{1} = badFramesMatFilePath
+%   varargout{2} = image statistics extracted from all frames.
+%   varargout{3} = candidate for initial reference frame based on means.
 %
 %
 %   -----------------------------------
@@ -16,20 +40,6 @@ function badFrames = FindBlinkFrames(inputVideoPath, parametersStructure)
 %                          from calling FindBlinkFrames.
 %                          Set to 0 to abort the function call if the
 %                          files exist in the current directory.
-%  thresholdValue      :   the number of standard deviations from the mean
-%                          of the mean frame pixel values above or below
-%                          which a frame is designated a blink frame. This
-%                          can be a decimal number. Defaults to 1.0 if no 
-%                          value is specified.
-%  upperTail           :   set to true if blinks in the video show up as
-%                          brighter than non-blink frames. Set to false if 
-%                          blinks are black frames or darker than non-blink
-%                          frames (this is usually the case). This
-%                          parameter determines whether to flag bad frames
-%                          as those above or below the thresholdValue
-%                          (upperTail set to true flags frames above the
-%                          thresholdValue, upperTail set to false flags
-%                          frames below the thresoldValue).
 %  stitchCriteria      :   optional--specify the maximum distance (in frames)
 %                          between blinks, below which two blinks will be
 %                          marked as one. For example, if badFrames is 
@@ -40,6 +50,9 @@ function badFrames = FindBlinkFrames(inputVideoPath, parametersStructure)
 %                          distance between the blinks [8, 9] and [11, 12]
 %                          are separated by only one frame, which is less
 %                          than the specified stitch criteria.
+%  numberOfBins        :   optional--specify number of bins for image 
+%                          histogram. All image stats are computed using
+%                          this histogram. The default value is 256.
 %                          
 %   -----------------------------------
 %   Example usage
@@ -50,89 +63,154 @@ function badFrames = FindBlinkFrames(inputVideoPath, parametersStructure)
 %       parametersStructure.upperTail = false;
 %       FindBlinkFrames(videoPath, parametersStructure);
 
-%% Handle overwrite scenarios.
-badFramesMatFilePath = [inputVideoPath(1:end-4) '_blinkframes'];
-if ~exist([badFramesMatFilePath '.mat'], 'file')
-    % left blank to continue without issuing warning in this case
-elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-    load([badFramesMatFilePath '.mat'],'badFrames');
-    RevasWarning(['FindBadFrames() did not execute because it would overwrite existing file. (' badFramesMatFilePath ')'], parametersStructure);
-    return;
+%% Determine inputVideo type.
+if ischar(inputVideo)
+    % A path was passed in.
+    % Read the video and once finished with this module, write the result.
+    writeResult = true;
 else
-    RevasWarning(['FindBadFrames() is proceeding and overwriting an existing file. (' badFramesMatFilePath ')'], parametersStructure);
+    % A video matrix was passed in.
+    % Do not write the result; return it instead.
+    writeResult = false;
 end
 
 %% Set parameters to defaults if not specified.
 
-if ~isfield(parametersStructure, 'thresholdValue')
-    thresholdValue = 1.0;
-    RevasWarning('using default parameter for thresholdValue', parametersStructure);
+if ~isfield(parametersStructure, 'overwrite')
+    overwrite = false; 
 else
-    thresholdValue = parametersStructure.thresholdValue;
+    overwrite = parametersStructure.overwrite;
 end
 
-%% Identify bad frames
-v = VideoReader(inputVideoPath);
-means = zeros(1, v.FrameRate*v.Duration);
-frameNumber = 1;
+if ~isfield(parametersStructure, 'stitchCriteria')
+    stitchCriteria = 1; % frame
+    RevasWarning(['FindBlinkFrames is using default parameter for stitchCriteria: ' num2str(stitchCriteria)], parametersStructure);
+else
+    stitchCriteria = parametersStructure.stitchCriteria;
+end
 
-% First find the average pixel value of each individual frame
-% We must compute this again because there is no gaurantee that a
-% |stimlocs| file exists and even if it does, we cannot say for sure that
-% those values are the most updated.
-while hasFrame(v)
-    frame = readFrame(v);
-    if ndims(frame) == 3
-        frame = rgb2gray(frame);
+if ~isfield(parametersStructure, 'numberOfBins')
+    numberOfBins = 256; % gray levels
+    RevasWarning(['FindBlinkFrames is using default parameter for numberOfBins: ' num2str(numberOfBins)], parametersStructure);
+else
+    numberOfBins = parametersStructure.numberOfBins;
+end
+
+%% Handle overwrite scenarios.
+if writeResult
+    badFramesMatFilePath = [inputVideo(1:end-4) '_blinkframes.mat'];
+    if nargout > 1 
+        varargout{1} = badFramesMatFilePath;
     end
-    mean = sum(sum(frame))/(v.Height*v.Width);
-    means(1, frameNumber) = mean;
-    frameNumber = frameNumber + 1;
+    
+    if ~exist(badFramesMatFilePath, 'file')
+        % left blank to continue without issuing warning in this case
+    elseif ~overwrite
+        load(badFramesMatFilePath,'badFrames','imStats','initialRef');
+        if nargout > 2
+            varargout{2} = imStats;
+        end
+        if nargout > 3
+            varargout{3} = initialRef;
+        end
+        RevasWarning(['FindBadFrames() did not execute because it would overwrite existing file. (' badFramesMatFilePath ')'], parametersStructure);
+        return;
+    else
+        RevasWarning(['FindBadFrames() is proceeding and overwriting an existing file. (' badFramesMatFilePath ')'], parametersStructure);
+    end
+    
+    
 end
 
-% Then find the standard deviation of the average pixel values
-standardDeviation = std2(means);
 
-% Mark frames that are beyond our threshold as bad frames
-threshold = thresholdValue * standardDeviation;
-badFrames = zeros(1, size(means, 2));
-lowerBound = mean2(means) - threshold;
-upperBound = mean2(means) + threshold;
 
-for frameNumber = 1:size(means, 2)
-    kthMean = means(1, frameNumber);
-    if parametersStructure.upperTail == true
-        if kthMean > upperBound
-            badFrames(frameNumber) = 1;
+
+
+%% Read in video frames and collect some image statistics
+
+if writeResult
+    reader = VideoReader(inputVideo);
+    numberOfFrames = reader.FrameRate * reader.Duration;
+else
+    [~, ~, numberOfFrames] = size(inputVideo);
+end
+
+means = zeros(numberOfFrames,1);
+stds = zeros(numberOfFrames,1);
+skews = zeros(numberOfFrames,1);
+kurtoses = zeros(numberOfFrames,1);
+
+% go over frames and compute image stats for each frame
+for fr = 1:numberOfFrames
+    
+    % get a frame
+    if writeResult
+        frame = readFrame(reader);
+        if ndims(frame) == 3
+            frame = rgb2gray(frame);
         end
     else
-        if kthMean < lowerBound
-            badFrames(frameNumber) = 1;
-        end
+        frame = inputVideo(:, :, fr);
     end
+    
+    % compute image histogram
+    [counts, bins] = imhist(frame, numberOfBins);
+    
+    % compute image stats from histogram
+    numOfPixels = sum(counts);
+    means(fr) = sum(bins .* counts) / numOfPixels;
+    stds(fr) = sqrt(sum((bins - means(fr)) .^ 2 .* counts) / (numOfPixels-1));
+    skews(fr) = sum((bins - means(fr)) .^ 3 .* counts) / ((numOfPixels - 1) * stds(fr)^3);
+    kurtoses(fr) = sum((bins - means(fr)) .^ 4 .* counts) / ((numOfPixels - 1) * stds(fr)^4);
 end
 
-%% Lump together blinks that are < |stitchCriteria| frames apart
 
-% If the difference between any two marked saccades is less than
-% |stitchCriteria|, then lump them together as one.
-if isfield(parametersStructure, 'stitchCriteria')
-    badFramesIndices = find(badFrames);
-    badFramesDiffs = diff(badFramesIndices);
-    for i = 1:size(badFramesDiffs, 2)
-        if badFramesDiffs(i) > 1 && badFramesDiffs(i) < parametersStructure.stitchCriteria
-            for j = 1:badFramesDiffs(i)
-                badFrames(badFramesIndices(i)+j) = 1;
-            end
-        end
-    end
+%% Identify bad frames
+
+% use all image stats to detect 2 clusters
+[idx, centroids] = kmeans([means stds skews kurtoses],2);
+
+% if centroids are too close, no blinks found.
+if abs(diff(centroids(:,1))) < 10
+    badFrames = [];
+else
+    % select the cluster with smaller mean as the bad frames
+    [~,whichClusterRepresentsBadFrames] = min(centroids(:,2));
+    badFrames = idx == whichClusterRepresentsBadFrames;
+    
+    % Lump together blinks that are < |stitchCriteria| frames apart
+    [st, en] = GetOnsetOffset(badFrames);
+    [st, en] = MergeEvents(st, en, stitchCriteria);
+    badFrames = find(GetIndicesFromOnsetOffset(st,en,numberOfFrames));
 end
 
-%% Filter out leftover 0 padding
-badFrames = find(badFrames);
-badFrames = badFrames(badFrames ~= 0);
+
+
+
+%% Return image stats if user asks for it or results are to be written to a file
+
+if nargout > 2 || writeResult
+    imStats = struct;
+    imStats.means = means;
+    imStats.stds = stds;
+    imStats.skews = skews;
+    imStats.kurtoses = kurtoses;
+    varargout{2} = imStats;
+end
+
+
+%% If user asks for it or results are to be written to a file, get a candidate frame for initial ref
+
+if nargout > 3 || writeResult
+    [~,initialRef] = max(means);
+    varargout{3} = initialRef;
+end
+
 
 %% Save to output mat file
-save(badFramesMatFilePath, 'badFrames');
 
+if writeResult
+    save(badFramesMatFilePath, 'badFrames','imStats','initialRef');
 end
+
+

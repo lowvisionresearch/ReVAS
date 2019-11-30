@@ -15,11 +15,11 @@ function outputVideo = RemoveStimuli(inputVideo, stimulus, parametersStructure, 
 %   '_stimlocs' appeneded to the input video file name, or is simply called
 %   '.stimlocs.mat' if a video matrix was passed in (hidden file).
 %
-%   |stimulus| is a path to a stimulus or a struct containing a |size|
-%   field which is the size of the stimulus in pixels (default 11), and a
-%   |thickness| field which is the thickness of the default cross shape in
-%   pixels (default 1). (default is dynamically generated stimulus with
-%   aforementioned defaults)
+%   |stimulus| is a path to a stimulus, a 2D or 3D (rgb) array, or a struct
+%   containing a |size| field which is the size of the stimulus in pixels
+%   (default 11), and a |thickness| field which is the thickness of the
+%   default cross shape in pixels (default 1). (default is dynamically
+%   generated stimulus with aforementioned defaults)
 %
 %   |parametersStructure| is a struct as specified below.
 %
@@ -84,14 +84,19 @@ end
 % - Path to an image of the stimulus
 % - A struct describing |size| and |thickness| of stimulus
 
-if ischar(stimulus)
+if ischar(stimulus) 
     % Read image from the path
     stimulus = imread(stimulus);
+end
+
+if isnumeric(stimulus)
     [~, ~, numChannels] = size(stimulus);
     if numChannels == 3
         stimulus = rgb2gray(stimulus);
     end
-elseif isstruct(stimulus)
+end
+    
+if isstruct(stimulus)
     % Both size and thickness must be odd
     if ~mod(stimulus.size, 2) == 1 || ~mod(stimulus.thickness, 2) == 1
         error('stimulus.size and stimulus.thickness must be odd');

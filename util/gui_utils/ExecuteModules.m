@@ -145,6 +145,8 @@ if logical(handles.config.togValues('coarse')) && ~logical(abortTriggered)
 
     % Call the function
     coarseRefFrame = CoarseRef(inputPath, parametersStructure);
+else
+    coarseRefFrame = [];
 end
 
 %% Make Fine Reference Frame Module
@@ -176,6 +178,8 @@ if logical(handles.config.togValues('fine')) && ~logical(abortTriggered)
     eyePositionTraces = fineRefEyePositions;
     timeArray = fineRefTimeArray;
     save(Filename(inputPath, 'fineref'),'eyePositionTraces','timeArray','-append');
+else
+    fineRefFrame = [];
 end
 
 %% Strip Analysis Module
@@ -222,9 +226,9 @@ if logical(handles.config.togValues('strip')) && ~logical(abortTriggered)
         end
             
         % Try to identify a fine ref to use from file.
-        fineRefFrames = dir([rawVideoFileName '*refframe.mat']);
+        fineRefFrames = dir(fullfile(inputDir, [rawVideoFileName '*refframe.mat']));
         % Try to identify a coarse ref to use from file.
-        coarseRefFrames = dir([rawVideoFileName '*coarseref.mat']);
+        coarseRefFrames = dir(fullfile(inputDir, [rawVideoFileName '*coarseref.mat']));
         
         if logical(handles.config.togValues('coarse'))
            % Use coarse ref frame if fine ref module disabled and if
@@ -242,7 +246,7 @@ if logical(handles.config.togValues('strip')) && ~logical(abortTriggered)
                end
            end
            RevasMessage(['Loading fine reference frame from: ' longestFileName], parametersStructure);
-           load(longestFileName, 'refFrame');
+           load(fullfile(inputDir, longestFileName), 'refFrame');
            fineRefFrame = refFrame;
         elseif ~isempty({coarseRefFrames.name})
            % Load a saved coarse ref if available.
@@ -256,7 +260,7 @@ if logical(handles.config.togValues('strip')) && ~logical(abortTriggered)
                end
            end
            RevasMessage(['Loading coarse reference frame from: ' longestFileName], parametersStructure);
-           load(fullfile(fileparts(rawVideoFileName),longestFileName), 'coarseRefFrame');
+           load(fullfile(inputDir,longestFileName), 'coarseRefFrame');
            fineRefFrame = coarseRefFrame;
         else
            RevasError(originalInputFileName, ...
@@ -299,7 +303,10 @@ end
 
 %% Create stabilized video if requested
 % uses original video, rather than the highly processed video
-if ~abortTriggered && writeResult && parametersStructure.createStabilizedVideo
+if ~isfield(parametersStructure,'createStabilizedVideo')
+    parametersStructure.createStabilizedVideo = false;
+end
+if ~abortTriggered && parametersStructure.createStabilizedVideo
     parametersStructure.positions = eyePositionTraces;
     parametersStructure.time = timeArray;
     parametersStructure.newStripHeight = 1;
@@ -366,7 +373,7 @@ elseif logical(handles.config.togValues('reref')) && ~logical(abortTriggered)
                end
            end
            RevasMessage(['Loading fine reference frame from: ' longestFileName], parametersStructure);
-           load(longestFileName, 'refFrame');
+           load(fullfile(inputDir, longestFileName), 'refFrame');
            fineRefFrame = refFrame;
         elseif ~isempty({coarseRefFrames.name})
            % Load a saved coarse ref if available.

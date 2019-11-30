@@ -113,6 +113,8 @@ else
 end
 
 if writeResult
+    outputVideo = outputVideoPath;
+    
     % Read, trim, and write frame by frame.
     for frameNumber = 1:numberOfFrames
         if ~abortTriggered

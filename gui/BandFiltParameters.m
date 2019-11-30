@@ -133,8 +133,8 @@ mainHandles = guidata(figureHandle);
 % Validate new configurations
 % smoothing
 smoothing = str2double(handles.smoothing.String);
-if ~IsNaturalNumber(smoothing)
-    errordlg('Smoothing must be a natural number.', 'Invalid Parameter');
+if ~IsPositiveRealNumber(smoothing)
+    errordlg('Smoothing must be a positive real  number.', 'Invalid Parameter');
     return;
 end
 
@@ -185,10 +185,10 @@ figureHandle = findobj(0, 'tag', 'revas');
 mainHandles = guidata(figureHandle);
 value = str2double(hObject.String);
 
-if ~IsNaturalNumber(value) || (value <= 0)
+if ~IsPositiveRealNumber(value) || (value <= 0)
     hObject.BackgroundColor = mainHandles.revasColors.abortButtonBackground;
     hObject.ForegroundColor = mainHandles.revasColors.abortButtonText;
-    hObject.TooltipString = 'Must be a positive, natural number.';
+    hObject.TooltipString = 'Must be a positive, real number.';
 else
     hObject.BackgroundColor = mainHandles.revasColors.background;
     hObject.ForegroundColor = mainHandles.revasColors.text;

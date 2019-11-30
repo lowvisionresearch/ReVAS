@@ -98,7 +98,13 @@ if writeResult
         % left blank to continue without issuing warning in this case
     elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
         RevasWarning(['CoarseRef() did not execute because it would overwrite existing file. (' outputFilePath ')'], parametersStructure);
-        coarseRefFrame = [];
+        try
+            RevasWarning(['Loading ''coarseRefFrame'' from (' outputFilePath ')'], parametersStructure);
+            load(outputFilePath,'coarseRefFrame');
+        catch
+            RevasError(inputVideoPath,'Loading ''coarseRefFrame'' failed. Returning an empty array!!!', parametersStructure);
+            coarseRefFrame = [];
+        end
         return;
     else
         RevasWarning(['CoarseRef() is proceeding and overwriting an existing file. (' outputFilePath ')'], parametersStructure);  
@@ -185,81 +191,113 @@ else
     [height, ~, numberOfFrames] = size(inputVideo);
 end
 
-% First check whether the shrunk video already exists
-try
-    % Since we're not writing files, we should not try to load a shrunk
-    % video. Just skip to the catch block to make a new one.
-    if ~writeResult
-        error
-    end
-    
-    shrunkReader = VideoReader(shrunkFilePath);
-    % If it does exist, check that it's of correct dimensions. If the
-    % shrunk video is not scaled to the desired amount, throw an error to
-    % create a new shrunkVideo in the subsequent catch block.
-    if shrunkReader.Height/reader.Height ~= parametersStructure.scalingFactor
-        error
-    else
-        frameNumber = 1;
-        while hasFrame(shrunkReader)
-            frame = readFrame(shrunkReader);
-            if ndims(frame) == 3
-                frame = rgb2gray(frame);
-            end
-            if frameNumber == parametersStructure.refFrameNumber
-                temporaryRefFrame = frame;
-                break;
-            end
-            frameNumber = frameNumber + 1;
-        end
-    end
-    
-catch
-    if writeResult
-        writer = VideoWriter(shrunkFilePath, 'Grayscale AVI');
-        open(writer);
-    else
-        % preallocate shrunk video
-        shrunkVideo = zeros( ...
-            size(inputVideo, 1) * parametersStructure.scalingFactor, ...
-            size(inputVideo, 2) * parametersStructure.scalingFactor, ...
-            size(inputVideo, 3), ...
-            'uint8');
-    end
-    
-    for frameNumber = 1:numberOfFrames
-        
-        if writeResult
-            frame = readFrame(reader);
-            if ndims(frame) == 3
-                frame = rgb2gray(frame);
-            end
-        else
-            frame = inputVideo(1:end, 1:end, frameNumber);
-        end
-        
-        if rem(frameNumber,parametersStructure.frameIncrement) == 0
-            frame = imresize(frame, parametersStructure.scalingFactor);
+% Use a shrunk video iff scalingFactor is specified to not be 1.
+if parametersStructure.scalingFactor ~= 1
+    try
+        % Try and check whether the shrunk video already exists
 
-            % Sometimes resizing causes numbers to dip below 0 (but just barely)
-            frame(frame<0) = 0;
-            % Similarly, values occasionally exceed 255
-            frame(frame>255) = 255;
+        % Since we're not writing files, we should not try to load a shrunk
+        % video. Just skip to the catch block to make a new one.
+        if ~writeResult
+            error
+        end
+
+        % If overwrite is enabled, do not use a previously made shrunk video.
+        % Make a new one in the catch block below.
+        if parametersStructure.overwrite
+            error
+        end
+
+        shrunkReader = VideoReader(shrunkFilePath);
+        % If it does exist, check that it's of correct dimensions. If the
+        % shrunk video is not scaled to the desired amount, throw an error to
+        % create a new shrunkVideo in the subsequent catch block.
+        if shrunkReader.Height/reader.Height ~= parametersStructure.scalingFactor
+            error
+        else
+            frameNumber = 1;
+            while hasFrame(shrunkReader)
+                frame = readFrame(shrunkReader);
+                if ndims(frame) == 3
+                    frame = rgb2gray(frame);
+                end
+                if frameNumber == parametersStructure.refFrameNumber
+                    temporaryRefFrame = frame;
+                    break;
+                end
+                frameNumber = frameNumber + 1;
+            end
+        end
+
+    catch
+        if writeResult
+            writer = VideoWriter(shrunkFilePath, 'Grayscale AVI');
+            open(writer);
+        else
+            % preallocate shrunk video
+            shrunkVideo = zeros( ...
+                size(inputVideo, 1) * parametersStructure.scalingFactor, ...
+                size(inputVideo, 2) * parametersStructure.scalingFactor, ...
+                size(inputVideo, 3), ...
+                'uint8');
+        end
+
+        for frameNumber = 1:numberOfFrames
 
             if writeResult
-                writeVideo(writer, frame);
+                frame = readFrame(reader);
+                if ndims(frame) == 3
+                    frame = rgb2gray(frame);
+                end
             else
-                shrunkVideo(1:end, 1:end, frameNumber) = frame;
+                frame = inputVideo(1:end, 1:end, frameNumber);
             end
+
+            if rem(frameNumber,parametersStructure.frameIncrement) == 0
+                frame = imresize(frame, parametersStructure.scalingFactor);
+
+                % Sometimes resizing causes numbers to dip below 0 (but just barely)
+                frame(frame<0) = 0;
+                % Similarly, values occasionally exceed 255
+                frame(frame>255) = 255;
+
+                if writeResult
+                    writeVideo(writer, frame);
+                else
+                    shrunkVideo(1:end, 1:end, frameNumber) = frame;
+                end
+            end
+
+            if frameNumber == parametersStructure.refFrameNumber
+                temporaryRefFrame = frame;
+            end        
         end
-        
-        if frameNumber == parametersStructure.refFrameNumber
-            temporaryRefFrame = frame;
-        end        
+
+        if writeResult
+            close(writer);
+        end
     end
     
+else
+    % Even if we do not need a shrunk video, we still need to grab the
+    % user's desired temporary reference frame.
+    
     if writeResult
-        close(writer);
+        for frameNumber = 1:numberOfFrames
+            % Keep reading frames until we hit the user's desired temporary
+            % reference frame number, then break.
+            
+            temporaryRefFrame = readFrame(reader);
+            
+            if frameNumber == parametersStructure.refFrameNumber
+                if ndims(temporaryRefFrame) == 3
+                    temporaryRefFrame = rgb2gray(temporaryRefFrame);
+                end
+                break;
+            end
+        end
+    else
+        temporaryRefFrame = inputVideo(1:end, 1:end, parametersStructure.refFrameNumber);
     end
 end
 
@@ -267,7 +305,11 @@ end
 % a single "strip"
 params = parametersStructure;
 
-if writeResult
+if parametersStructure.scalingFactor == 1
+    % The shrunk video was not made above in this case, since it is the
+    % same as the inputVideo.
+    shrunkVideo = inputVideo;
+elseif writeResult
     shrunkReader = VideoReader(shrunkFilePath);
     params.stripHeight = shrunkReader.Height;
     params.stripWidth = shrunkReader.Width;   
@@ -278,6 +320,8 @@ end
 
 params.samplingRate = parametersStructure.FrameRate;
 params.badFrames = badFrames;
+params.maximumPeakRatio = 0.8;
+params.minimumPeakThreshold = 0.2;
 
 try
     if ndims(temporaryRefFrame) == 3

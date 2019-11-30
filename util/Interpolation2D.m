@@ -70,7 +70,7 @@ meshgridX = meshgridX + peakCoordinates(1);
 meshgridY = meshgridY + peakCoordinates(2);
 
 % Trimming to neighborhoodSize
-gridSpacing = parametersStructure.subpixelDepth / 100;
+gridSpacing = 2^(-parametersStructure.subpixelDepth);
 [finerMeshgridX, finerMeshgridY] = ...
     meshgrid(-halfNeighborhoodSize:gridSpacing:halfNeighborhoodSize);
 finerMeshgridX = finerMeshgridX + peakCoordinates(1);
