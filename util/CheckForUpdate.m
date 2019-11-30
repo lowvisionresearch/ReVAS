@@ -12,7 +12,7 @@ catch err0
     return;
 end
 
-if ~isempty(strfind(cmdout,'error')) 
+if contains(cmdout,'error') 
     msg = sprintf('git fetch failed!\nCheck your git user name and email settings.\n');
     isSuccess = 0;
     

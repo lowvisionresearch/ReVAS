@@ -1,13 +1,9 @@
 function result = IsNaturalNumber(value)
 %IS NATURAL NUMBER  Checks if value is a natural number.
 %   Checks if value is a natural number. Returns true if so, else false.
+%
+%  MNA 11/300/19 made it array-compatible
 
-if isnan(value) || ...
-        value < 0 || ...
-        rem(value,1) ~= 0
-    result = false;
-else
-    result = true;
-end
+result = ~isnan(value) & (value >= 0) & (rem(value,1)==0);
+
     
-end

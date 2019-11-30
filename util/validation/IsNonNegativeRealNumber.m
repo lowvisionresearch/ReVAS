@@ -1,11 +1,7 @@
 function result = IsNonNegativeRealNumber(value)
 %IS NON NEGATIVE REAL NUMBER  Checks if value is a non-negative, real number.
 %   Checks if value is a non-negative, real number. Returns true if so, else false.
+%
+%  MNA 11/300/19 made it array-compatible
 
-if ~IsRealNumber(value) || value < 0
-    result = false;
-else
-    result = true;
-end
-    
-end
+result = IsRealNumber(value) & (value > 0);

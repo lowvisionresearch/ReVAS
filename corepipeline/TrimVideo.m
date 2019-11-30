@@ -1,6 +1,5 @@
 function outputVideo = TrimVideo(inputVideo, parametersStructure)
-%TRIM VIDEO Removes upper and right edge of video.
-%   Removes the upper few rows and right few columns. 
+%TRIM VIDEO Removes boundaries of video. 
 %
 %   -----------------------------------
 %   Input
@@ -28,13 +27,17 @@ function outputVideo = TrimVideo(inputVideo, parametersStructure)
 %                         is provided instead, then that amount will be
 %                         removed from the right and top only.
 %                         (default [0 24 24 0])
+%  badFrames            : specifies blink/bad frames. we can skip those but
+%                         we need to make sure to keep a record of 
+%                         discarded frames.
 %
 %   -----------------------------------
 %   Example usage
 %   -----------------------------------
 %       inputVideo = 'MyVid.avi';
 %       parametersStructure.overwrite = 1;
-%       parametersStructure.borderTrimAmount = [0 24 24 0];
+%       parametersStructure.borderTrimAmount = [0 0 12 0];
+%       parametersStructure.badFrames = false;
 %       TrimVideo(inputVideo, parametersStructure);
 
 %% Determine inputVideo type.
@@ -48,12 +51,49 @@ else
     writeResult = false;
 end
 
+%% Set parameters to defaults if not specified.
+
+if nargin < 2
+    parametersStructure = struct;
+end
+
+if ~isfield(parametersStructure, 'overwrite')
+    overwrite = false; 
+else
+    overwrite = parametersStructure.overwrite;
+end
+
+if ~isfield(parametersStructure, 'borderTrimAmount')
+    borderTrimAmount = [0 0 12 0];
+    RevasWarning(['TrimVideo is using default parameter for borderTrimAmount: ' num2str(borderTrimAmount)], parametersStructure);
+else
+    borderTrimAmount = parametersStructure.borderTrimAmount;
+    if isscalar(borderTrimAmount)
+        parametersStructure.borderTrimAmount = [0 borderTrimAmount borderTrimAmount 0];
+        borderTrimAmount = parametersStructure.borderTrimAmount;
+    end
+    
+    % light error checking
+    if any(~IsNaturalNumber(borderTrimAmount))
+        error('borderTrimAmount must consist of natural numbers');
+    end
+end
+
+if ~isfield(parametersStructure, 'badFrames')
+    badFrames = false;
+    RevasWarning('TrimVideo is using default parameter for badFrames: none.', parametersStructure);
+else
+    badFrames = parametersStructure.badFrames;
+end
+
+
+
 %% Handle overwrite scenarios.
 if writeResult
     outputVideoPath = Filename(inputVideo, 'trim');
     if ~exist(outputVideoPath, 'file')
         % left blank to continue without issuing warning in this case
-    elseif nargin == 1 || ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
+    elseif ~overwrite
         RevasWarning(['TrimVideo() did not execute because it would overwrite existing file. (' outputVideoPath ')'], parametersStructure);    
         return;
     else
@@ -61,22 +101,6 @@ if writeResult
     end
 end
 
-%% Set parameters to defaults if not specified.
-
-if nargin == 1 || ~isfield(parametersStructure, 'borderTrimAmount')
-    parametersStructure.borderTrimAmount = [0 24 24 0];
-    RevasWarning('using default parameter for borderTrimAmount', parametersStructure);
-elseif isscalar(parametersStructure.borderTrimAmount)
-    parametersStructure.borderTrimAmount = [0 parametersStructure.borderTrimAmount ...
-        parametersStructure.borderTrimAmount 0];
-else
-    parametersStructure.borderTrimAmount = parametersStructure.borderTrimAmount;
-end
-for t = parametersStructure.borderTrimAmount
-    if ~IsNaturalNumber(t)
-        error('borderTrimAmount must consist of natural numbers');
-    end
-end
 
 %% Allow for aborting if not parallel processing
 global abortTriggered;
@@ -89,10 +113,10 @@ end
 
 %% Trim the video frame by frame
 
-left = parametersStructure.borderTrimAmount(1);
-right = parametersStructure.borderTrimAmount(2);
-top = parametersStructure.borderTrimAmount(3);
-bottom = parametersStructure.borderTrimAmount(4);
+left = borderTrimAmount(1);
+right = borderTrimAmount(2);
+top = borderTrimAmount(3);
+bottom = borderTrimAmount(4);
 
 if writeResult
     writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
@@ -112,30 +136,52 @@ else
     [height, width, numberOfFrames] = size(inputVideo);
 end
 
+
+%% If badFrames are not provided
+if length(badFrames)==1 && ~badFrames
+    badFrames = false(numberOfFrames,1);
+end
+
+
+%% Write out new video or return a 3D array
+
 if writeResult
     outputVideo = outputVideoPath;
     
     % Read, trim, and write frame by frame.
-    for frameNumber = 1:numberOfFrames
+    for fr = 1:numberOfFrames
         if ~abortTriggered
+            
+            % handle rgb frames
+            frame = readFrame(reader);
+            
+            % if it's a blink frame, skip it.
+            if ~badFrames(fr)
+                continue;
+            end
+            
+            if ndims(frame) == 3
+                frame = rgb2gray(frame);
+            end
+            
+            % trim
+            frame = frame(top+1 : height-bottom, ...
+                left+1 : width-right);
 
-                frame = readFrame(reader);
-
-                if ndims(frame) == 3
-                    frame = rgb2gray(frame);
-                end
-
-                frame = frame(top+1 : height-bottom, ...
-                    left+1 : width-right);
-
-           writeVideo(writer, frame);
+            % write out
+            writeVideo(writer, frame);
         end
     end
     
     close(writer);
+    
+    % if aborted midway through video, delete the partial video.
+    if abortTriggered
+        delete(outputVideoPath)
+    end
 else
     outputVideo = inputVideo(top+1 : height-bottom, ...
                     left+1 : width-right, ...
-                    1 : end);
+                    ~badFrames);
 end
-end
+
