@@ -10,9 +10,11 @@ function [badFrames, varargout] = FindBlinkFrames(inputVideo, parametersStructur
 %                   this threshold, we take it as absence of any blinks/bad
 %                   frames.
 %
-%   The result is stored with '_blinkframes' appended to the input video file
-%   name if a |inputVideo| path is provided, and it is also returned by the
-%   function. 
+%   The result is stored with '_blinkframes' appended to the input video
+%   file name if a |inputVideo| path is provided, and it is also returned
+%   by the function. If the input video is a path, blink frames are written
+%   to a file. Regardless of the input, an index array of |badFrames| is
+%   returned at the first output argument.
 %
 %   -----------------------------------
 %   Input
@@ -40,6 +42,8 @@ function [badFrames, varargout] = FindBlinkFrames(inputVideo, parametersStructur
 %                          from calling FindBlinkFrames.
 %                          Set to 0 to abort the function call if the
 %                          files exist in the current directory.
+%  enableVerbosity     :   set to true to report back plots during execution.
+%                          (default false)
 %  stitchCriteria      :   optional--specify the maximum distance (in frames)
 %                          between blinks, below which two blinks will be
 %                          marked as one. For example, if badFrames is 
@@ -89,6 +93,18 @@ else
     overwrite = parametersStructure.overwrite;
 end
 
+if ~isfield(parametersStructure, 'enableVerbosity')
+    enableVerbosity = false; 
+else
+    enableVerbosity = parametersStructure.enableVerbosity;
+end
+
+if ~isfield(parametersStructure, 'axesHandles')
+    axesHandles = nan; 
+else
+    axesHandles = parametersStructure.axesHandles;
+end
+
 if ~isfield(parametersStructure, 'stitchCriteria')
     stitchCriteria = 1; % frame
     RevasWarning(['FindBlinkFrames is using default parameter for stitchCriteria: ' num2str(stitchCriteria)], parametersStructure);
@@ -133,8 +149,6 @@ if writeResult
     else
         RevasWarning(['FindBadFrames() is proceeding and overwriting an existing file. (' badFramesMatFilePath ')'], parametersStructure);
     end
-    
-    
 end
 
 
@@ -204,8 +218,6 @@ else
 end
 
 
-
-
 %% Return image stats if user asks for it or results are to be written to a file
 
 if nargout > 2 || writeResult
@@ -230,6 +242,34 @@ end
 
 if writeResult
     save(badFramesMatFilePath, 'badFrames','imStats','initialRef');
+end
+
+
+%% if verbosity enabled, show the found blink frames
+
+if enableVerbosity
+    % Plotting bottom right corner of box surrounding stimulus.
+    if all(ishandle(axesHandles))
+        axes(axesHandles(2)); 
+        colormap(axesHandles(2), 'default');
+    else
+        figure(312);
+    end
+    cla;
+    plot(means,'-','linewidth',2); hold on;
+    plot(stds,'-','linewidth',2);
+    plot(skews,'-','linewidth',2);
+    plot(kurtoses,'-','linewidth',2); 
+    plot(badFrames * max(kurtoses),'-k','linewidth',2); hold on;
+    
+    title('Image stats and detected blink frames');
+    xlabel('Frame number');
+    ylabel('Image stats');
+    legend('show');
+    legend('means', 'stds','skews','kurtoses','badFrames');
+    set(gca,'fontsize',14);
+    grid on;
+    drawnow;
 end
 
 
