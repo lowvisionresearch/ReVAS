@@ -16,24 +16,32 @@ end
 origState = warning;
 warning('off','all');
 
-% use default params
-p = struct; 
-p.overwrite = true;
 try
+    %% First test
+    % use default params
+    p = struct; 
+    p.overwrite = true;
+    
     % test with a video path
     outputVideoPath = TrimVideo(inputVideo, p); %#ok<*ASGLU>
     delete(outputVideoPath);
     
+    %% Second test
     % test with a video array
     videoArray = ReadVideoToArray(inputVideo);
+    p.borderTrimAmount = 128*ones(1,4);
     p.badFrames = false(1,size(videoArray,3));
     p.badFrames([1 3 5]) = true;
     outputVideo = TrimVideo(videoArray,p);
+    
+    % check if the difference in number of frames between two videos is
+    % exactly equal to length of badFrames
     if size(videoArray,3) - size(outputVideo,3) ~= sum(p.badFrames)
         success= false;
     else
         success = true;
     end
+    
 catch 
     success = false;
 end

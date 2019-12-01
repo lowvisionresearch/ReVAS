@@ -111,7 +111,7 @@ if isempty(abortTriggered)
     abortTriggered = false;
 end
 
-%% Trim the video frame by frame
+%% Create reader/writer objects and get some info on videos
 
 left = borderTrimAmount(1);
 right = borderTrimAmount(2);
@@ -137,9 +137,16 @@ else
 end
 
 
-%% If badFrames are not provided
-if length(badFrames)==1 && ~badFrames
+%% badFrames handling
+% If badFrames is not provided, use all frames
+if length(badFrames)<=1 && ~badFrames
     badFrames = false(numberOfFrames,1);
+end
+
+% If badFrames are provided but its size don't match the number of frames
+if length(badFrames) ~= numberOfFrames
+    badFrames = false(numberOfFrames,1);
+    RevasWarning(['TrimVideo(): size mismatch between ''badFrames'' and input video. Using all frames for (' outputVideoPath ')'], parametersStructure);  
 end
 
 
@@ -156,7 +163,7 @@ if writeResult
             frame = readFrame(reader);
             
             % if it's a blink frame, skip it.
-            if ~badFrames(fr)
+            if badFrames(fr)
                 continue;
             end
             
@@ -171,7 +178,7 @@ if writeResult
             % write out
             writeVideo(writer, frame);
         end
-    end
+    end % end of video
     
     close(writer);
     

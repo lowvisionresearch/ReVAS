@@ -16,17 +16,25 @@ end
 origState = warning;
 warning('off','all');
 
-% use default params
-p = struct; 
 try
+    %% First test
+    % use default params
+    p = struct; 
+    
     % test with a video path
     [badFrames, outputFilePath, imStats, initialRef] = FindBlinkFrames(inputVideo, p); %#ok<*ASGLU>
     delete(outputFilePath);
     
+    %% Second test
     % test with a video array
+    p.enableVerbosity = true;
     videoArray = ReadVideoToArray(inputVideo);
-    [badFrames, ~, imStats, initialRef] = FindBlinkFrames(videoArray);
+    [badFrames2, ~, imStats, initialRef] = FindBlinkFrames(videoArray,p);
 
+    assert(all(badFrames2 == badFrames));
+    
+    %% Third test
+    
     success = true;
 catch 
     success = false;
