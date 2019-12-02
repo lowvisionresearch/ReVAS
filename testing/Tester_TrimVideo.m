@@ -29,7 +29,7 @@ try
     %% Second test
     % test with a video array
     videoArray = ReadVideoToArray(inputVideo);
-    p.borderTrimAmount = 128*ones(1,4);
+    p.borderTrimAmount = [11 20 30 41];
     p.badFrames = false(1,size(videoArray,3));
     p.badFrames([1 3 5]) = true;
     outputVideo = TrimVideo(videoArray,p);

@@ -26,7 +26,6 @@ try
 
     % test with a video path with default settings (11px white cross)
     [outputVideoPath, matFilePath, stimLocs] = RemoveStimuli(inputVideo, p); %#ok<*ASGLU>
-    delete(outputVideoPath);
     delete(matFilePath);
     
     %% Second test
@@ -58,6 +57,18 @@ try
     
     % check if results identical 
     assert(all(stimLocs3(2,:) == stimLocs2(2,:)));
+    
+    %% Fourth test
+    % test with a video with stimulus already removed
+    clear p;
+    p = struct;
+    p.overwrite = true;
+    [newVideoPath, matFilePath, stimLocs4] = RemoveStimuli(outputVideoPath,p);
+    delete(outputVideoPath);
+    delete(newVideoPath);
+    delete(matFilePath);
+    
+    assert(all(isnan(stimLocs4(:))));
     
     success = true;
 
