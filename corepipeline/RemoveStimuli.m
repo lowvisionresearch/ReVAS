@@ -154,14 +154,16 @@ else
     
     % if it's a path, read the image from the path
     if ischar(stimulus) 
-        stimulus = imread(stimulus);
+        stimulusMatrix = imread(stimulus);
+    else
+        stimulusMatrix = stimulus;
     end
 
     % if it's a numeric array, check if it's RGB
-    if isnumeric(stimulus)
-        [~, ~, numChannels] = size(stimulus);
+    if isnumeric(stimulusMatrix)
+        [~, ~, numChannels] = size(stimulusMatrix);
         if numChannels == 3
-            stimulus = rgb2gray(stimulus);
+            stimulusMatrix = rgb2gray(stimulusMatrix);
         end
     end
 end
@@ -169,11 +171,15 @@ end
 % if stimulus is a struct, construct the matrix assuming that stimulus is a
 % cross (more like a plus sign)
 if isstruct(stimulus)
-    stimulus = MakeStimulusCross(stimulus.size, stimulus.thickness, stimulus.polarity);
+    stimulusMatrix = MakeStimulusCross(stimulus.size, stimulus.thickness, stimulus.polarity);
+    
+    % zeropad for improved matching -- important for making this step
+    % robust against being used for videos with no stimulus.
+    stimulusMatrix = padarray(stimulusMatrix, stimulus.size*[1 1],~(stimulus.polarity),'both');
 end
 
 % make sure to conver stimulus to uint8
-stimulus = uint8(stimulus);
+stimulusMatrix = uint8(stimulusMatrix);
 
 if ~isfield(parametersStructure, 'removalAreaSize')
     removalAreaSize = []; % pixels
@@ -240,6 +246,9 @@ else
     
     % Determine dimensions of video.
     [height, width, numberOfFrames] = size(inputVideo);
+    
+    % preallocate the output video array
+    outputVideo = zeros(height, width, numberOfFrames-sum(badFrames),'uint8');
 end
 
 %% badFrames handling
@@ -265,18 +274,18 @@ rawStimulusLocations = nan(numberOfFrames, 2);
 stimulusLocations = nan(numberOfFrames, 2);
 peakValues = nan(numberOfFrames, 1);
 
-sw = size(stimulus,2);
-sh = size(stimulus,1);
+sw = size(stimulusMatrix,2);
+sh = size(stimulusMatrix,1);
 
 if isempty(removalAreaSize)
     % look at the values in stimulus. if more zeros, than it's most
     % probably a positive polarity target (stimulus is brighter). If not,
     % it's a black target.
-    nCounts = histcounts(stimulus(:),2);
+    nCounts = histcounts(stimulusMatrix(:),2);
     if diff(nCounts) > 0
-        indices = find(~stimulus);
+        indices = find(~stimulusMatrix);
     else
-        indices = find(stimulus);
+        indices = find(stimulusMatrix);
     end
     halfWidth = floor(sw/2);
     halfHeight = floor(sh/2);
@@ -290,6 +299,8 @@ end
     
 for fr = 1:numberOfFrames
     if ~abortTriggered
+        
+        % get next frame
         if writeResult
             frame = readFrame(reader);
             if ndims(frame) == 3
@@ -305,7 +316,7 @@ for fr = 1:numberOfFrames
         end
 
         % locate the stimulus
-        [correlationMap,xPeak,yPeak,peakValues(fr)] = matchTemplateOCV(stimulus, frame); %#ok<ASGLU>
+        [correlationMap,xPeak,yPeak,peakValues(fr)] = matchTemplateOCV(stimulusMatrix, frame); %#ok<ASGLU>
 
         % update stimulus locations
         rawStimulusLocations(fr,:) = [xPeak yPeak] - floor([sw sh]/2);
@@ -357,10 +368,12 @@ for fr = 1:numberOfFrames
             end
         end
 
+        % write out
         if writeResult
             writeVideo(writer, frame);
         else
-            inputVideo(:, :, fr) = frame; 
+            nextFrameNumber = sum(~badFrames(1:fr));
+            outputVideo(:, :, nextFrameNumber) = frame; 
         end
 
 
@@ -382,7 +395,9 @@ for fr = 1:numberOfFrames
     end
 end % end of video
 
-    
+
+%% return results, close up objects
+
 if writeResult
     outputVideo = outputVideoPath;
     

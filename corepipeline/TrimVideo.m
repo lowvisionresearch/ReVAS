@@ -134,6 +134,10 @@ if writeResult
 else
     % Determine dimensions of video.
     [height, width, numberOfFrames] = size(inputVideo);
+    
+    % preallocate the output video array
+    outputVideo = zeros(height-(top+bottom), width-(left+right), ...
+        numberOfFrames-sum(badFrames),'uint8');
 end
 
 
@@ -151,34 +155,45 @@ end
 
 
 %% Write out new video or return a 3D array
-
-if writeResult
-    outputVideo = outputVideoPath;
     
-    % Read, trim, and write frame by frame.
-    for fr = 1:numberOfFrames
-        if ~abortTriggered
-            
-            % handle rgb frames
+% Read, trim, and write frame by frame.
+for fr = 1:numberOfFrames
+    if ~abortTriggered
+
+        % get next frame
+        if writeResult
             frame = readFrame(reader);
-            
-            % if it's a blink frame, skip it.
-            if badFrames(fr)
-                continue;
-            end
-            
             if ndims(frame) == 3
                 frame = rgb2gray(frame);
             end
-            
-            % trim
-            frame = frame(top+1 : height-bottom, ...
-                left+1 : width-right);
-
-            % write out
-            writeVideo(writer, frame);
+        else
+            frame = inputVideo(:,:, fr);
         end
-    end % end of video
+
+        % if it's a blink frame, skip it.
+        if badFrames(fr)
+            continue;
+        end
+
+        % trim
+        frame = frame(top+1 : height-bottom, ...
+            left+1 : width-right);
+
+        % write out
+        if writeResult
+            writeVideo(writer, frame);
+        else
+            nextFrameNumber = sum(~badFrames(1:fr));
+            outputVideo(:, :, nextFrameNumber) = frame; 
+        end
+    end
+end % end of video
+
+
+%% return results, close up objects
+
+if writeResult
+    outputVideo = outputVideoPath;
     
     close(writer);
     
@@ -186,9 +201,6 @@ if writeResult
     if abortTriggered
         delete(outputVideoPath)
     end
-else
-    outputVideo = inputVideo(top+1 : height-bottom, ...
-                    left+1 : width-right, ...
-                    ~badFrames);
 end
+
 

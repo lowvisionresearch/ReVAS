@@ -172,7 +172,7 @@ kurtoses = zeros(numberOfFrames,1);
 % go over frames and compute image stats for each frame
 for fr = 1:numberOfFrames
     
-    % get a frame
+    % get next frame
     if writeResult
         % handle rgb frames
         frame = readFrame(reader);
