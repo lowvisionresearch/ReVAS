@@ -54,6 +54,10 @@ if diff(toneCurve) < 0
     error('GetToneCurve: selected parameters resulted in a nonmonotonic tone curve.!');
 end
 
+if isrow(toneCurve)
+    toneCurve = toneCurve';
+end
+
 % convert to index map
 toneMapper = uint8(toneCurve*255);
 

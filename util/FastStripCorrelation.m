@@ -1,4 +1,5 @@
-function [correlationMap, cache] = FastStripCorrelation(strip, referenceFrame, cache, isGPU)
+function [correlationMap, cache, xPeak, yPeak, peakValue] = ...
+    FastStripCorrelation(strip, referenceFrame, cache, isGPU)
 %FASTSTRIPCORRELATION Correlation computed using FFT.
 %   strip, referenceFrame are required inputs.
 %
@@ -59,8 +60,6 @@ ft = fft2(currentStripZero, cache.cm, cache.cn);
 %% compute the normalized xcorr
 correlationMap = ifft2(conj(ft).*(cache.fr)) .* cache.ieuv / currentStripEnergy;
 
-if isGPU
-    correlationMap = gather(correlationMap);
-end
+%% find peak location and value
+[xPeak, yPeak, peakValue] = FindPeak(correlationMap, isGPU);
 
-end

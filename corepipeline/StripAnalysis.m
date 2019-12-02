@@ -1,6 +1,5 @@
-function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
-    statisticsStructure] = ...
-    StripAnalysis(inputVideo, referenceFrame, parametersStructure)
+function [position, timeSec, rawPosition, statsStruct] = ...
+    StripAnalysis(inputVideo, params)
 %STRIP ANALYSIS Extract eye movements in units of pixels.
 %   Cross-correlation of horizontal strips with a pre-defined
 %   reference frame.
@@ -14,28 +13,66 @@ function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
 %   |referenceFrame| is the path to the reference frame or a matrix representation of the
 %   reference frame.
 %
-%   |parametersStructure| is a struct as specified below.
+%   |params| is a struct as specified below.
 %
 %   -----------------------------------
-%   Fields of the |parametersStructure| 
+%   Fields of the |params| 
 %   -----------------------------------
 %   overwrite                       : set to true to overwrite existing files.
 %                                     Set to false to abort the function call if the
 %                                     files already exist. (default false)
 %   enableVerbosity                 : set to true to report back plots during execution.
 %                                     (default false)
+%   referenceFrame                  : can be a scalar indicating frame number
+%                                     within the video, a full file path to a
+%                                     video, a 2D array. (default 1)
 %   badFrames                       : vector containing the frame numbers of
 %                                     the blink frames. (default [])
 %   stripHeight                     : strip height to be used for strip
-%                                     analysis in pixels. (default 15)
-%   stripWidth                      : strip width to be used for strip
-%                                     analysis in pixels. Should be set to
-%                                     the width of each frame. (default 488)
+%                                     analysis in pixels. (default 11)
 %   samplingRate                    : sampling rate of the video in Hz.
 %                                     (default 540)
+%   minimumPeakThreshold            : the minimum value above which a peak
+%                                     needs to be in order to be considered 
+%                                     a valid correlation. (this applies
+%                                     regardless of enableGaussianFiltering)
+%                                     (default 0.3)
+%   adaptiveSearch                  : set to true to perform search on
+%                                     scaled down versions first in order
+%                                     to potentially improve computation
+%                                     time. (default true)
+%   searchWindowHeight              : the height of the search window to be
+%                                     used for adaptive search in pixels.
+%                                     (relevant only when adaptiveSearch is
+%                                     true) (default 79)
+%   lookBackTime                    : the amount of time in ms to look back
+%                                     on when predicting velocity in adaptive 
+%                                     search (relevant only when adaptiveSearch 
+%                                     is true) (default 10)
+%   enableSubpixelInterpolation     : set to true to estimate peak
+%                                     coordinates to a subpixel precision
+%                                     through interpolation. (default false)
+%   axesHandles                     : axes handle for giving feedback. if not
+%                                     provided, new figures are created.
+%                                     (relevant only when enableVerbosity is true)
+%   corrMethod                      : method to use for cross-correlation.
+%                                     you can choose from 'normxcorr' for
+%                                     matlab's built-in normxcorr2, 'mex'
+%                                     for opencv's correlation, or 'fft'
+%                                     for our custom-implemented fast
+%                                     correlation method. 'cuda' is placed
+%                                     but not implemented yet (default
+%                                     'mex')
+%   downSampleFactor                : If > 1, the reference frame
+%                                     and strips are shrunk by that factor
+%                                     prior to correlation. If < 1, every 
+%                                     other pixel of the reference frame
+%                                     is kept (in a checkerboard-like 
+%                                     pattern). (default 1) (experimental)
 %   enableGaussianFiltering         : set to true to enable Gaussian filtering. 
 %                                     Set to false to disable. (default
-%                                     false)
+%                                     false) (experimental, useful for
+%                                     noisy videos, e.g., videos from AMD patients)
 %   maximumSD                       : maximum standard deviation allowed when
 %                                     a gaussian is fitted around the 
 %                                     identified peak--strips with positions
@@ -49,89 +86,34 @@ function [rawEyePositionTraces, usefulEyePositionTraces, timeArray, ...
 %                                     in pixels. (relevant only when
 %                                     enableGaussianFiltering is true)
 %                                     (default 25)
-%   maximumPeakRatio                : maximum peak ratio allowed between the
-%                                     highest and second-highest peak in a 
-%                                     correlation map--strips with positions
-%                                     that have a peak ratio >
-%                                     maximumPeakRatio will be discarded.
-%                                     (relevant only when
-%                                     enableGaussianFiltering is false)
-%                                     (default 0.8)
-%   minimumPeakThreshold            : the minimum value above which a peak
-%                                     needs to be in order to be considered 
-%                                     a valid correlation. (this applies
-%                                     regardless of enableGaussianFiltering)
-%                                     (default 0)
-%   adaptiveSearch                  : set to true to perform search on
-%                                     scaled down versions first in order
-%                                     to potentially improve computation
-%                                     time. (default false)
-%   scalingFactor                   : the factor to scale down by.
-%                                     (relevant only when adaptiveSearch is
-%                                     true) (default 8)
-%   searchWindowHeight              : the height of the search window to be
-%                                     used for adaptive search in pixels.
-%                                     (relevant only when adaptiveSearch is
-%                                     true) (default 79)
-%   lookBackTime                    : the amount of time in ms to look back
-%                                     on when predicting velocity in adaptive 
-%                                     search (relevant only when adaptiveSearch 
-%                                     is true) (default 10)
-%   enableSubpixelInterpolation     : set to true to estimate peak
-%                                     coordinates to a subpixel precision
-%                                     through interpolation. (default false)
-%   subpixelInterpolationParameters : see below. (relevant only if
-%                                     enableSubpixelInterpolation is true)
-%   createStabilizedVideo           : set to true to create a stabilized
-%                                     videos. (default false)
-%   axesHandles                     : axes handle for giving feedback. if not
-%                                     provided or empty, new figures are created.
-%                                     (relevant only when enableVerbosity is true)
-%   corrMethod                      : method to use for cross-correlation.
-%                                     you can choose from 'normxcorr' for
-%                                     matlab's built-in normxcorr2, 'mex'
-%                                     for opencv's correlation, or 'fft'
-%                                     for our custom-implemented fast
-%                                     correlation method. (default 'mex')
-%   downSampleFactor                : If > 1, the reference frame
-%                                     and strips are shrunk by that factor
-%                                     prior to correlation. If < 1, every 
-%                                     other pixel of the reference frame
-%                                     is kept (in a checkerboard-like 
-%                                     pattern). (default 1)
-%
-%   -----------------------------------
-%   Fields of the |subpixelInterpolationParameters|
-%   -----------------------------------
 %   neighborhoodSize                : the length of one of the sides of the
 %                                     neighborhood area over which
 %                                     interpolation is to be performed over
-%                                     in pixels. (default 7)
-%   subpixelDepth                   : the scaling of the desired level of
-%                                     subpixel depth. (default 2)
+%                                     in pixels. (default 5)
+%   subpixelDepth                   : in octaves, the scaling of the desired level of
+%                                     subpixel depth. (default 2,i.e., 2^-2 = 0.25px)
+%   trim                            : 1x2 array. number of pixels removed from top and
+%                                     bottom of the frame if video was
+%                                     processed in TrimVideo. (default [0
+%                                     0] -- [top, bottom])
 %
 %   -----------------------------------
 %   Example usage
 %   -----------------------------------
-%       inputVideo = 'MyVid.avi';
-%       load('MyVid_refFrame.mat');
-%       parametersStructure.overwrite = true;
-%       parametersStructure.enableVerbosity = true;
-%       parametersStructure.stripHeight = 15;
-%       parametersStructure.stripWidth = 488;
-%       parametersStructure.samplingRate = 540;
-%       parametersStructure.enableGaussianFiltering = false;
-%       parametersStructure.maximumPeakRatio = 0.8;
-%       parametersStructure.minimumPeakThreshold = 0;
-%       parametersStructure.adaptiveSearch = false;
-%       parametersStructure.enableSubpixelInterpolation = true;
-%       parametersStructure.subpixelInterpolationParameters.neighborhoodSize
-%           = 7;
-%       parametersStructure.subpixelInterpolationParameters.subpixelDepth ...
-%           = 2;
-%       parametersStructure.createStabilizedVideo = false;
-%       [rawEyePositionTraces, usefulEyePositionTraces, timeArray, statisticsStructure] = ...
-%           StripAnalysis(inputVideo, referenceFrame, parametersStructure);
+%       inputVideo = 'tslo.avi';
+%       params.overwrite = true;
+%       params.enableVerbosity = false;
+%       params.stripHeight = 11;
+%       params.samplingRate = 540;
+%       params.enableGaussianFiltering = false;
+%       params.minimumPeakThreshold = 0.3;
+%       params.adaptiveSearch = true;
+%       params.enableSubpixelInterpolation = true;
+%       params.subpixelInterpolationParameters.neighborhoodSize = 7;
+%       params.subpixelInterpolationParameters.subpixelDepth = 3;
+%       
+%       [position, timeSec, rawPosition, statsStruct] = ...
+%           StripAnalysis(inputVideo, params);
 
 %% Determine inputVideo type.
 if ischar(inputVideo)
@@ -146,328 +128,163 @@ end
 
 %% Set parameters to defaults if not specified.
 
-% Default frame rate if a matrix representation of the video passed in.
-% Users may also specify custom frame rate via parametersStructure.
-if ~writeResult && ~isfield(parametersStructure, 'FrameRate')
-    parametersStructure.FrameRate = 30;
-    RevasWarning('using default parameter for FrameRate', parametersStructure);
+if nargin < 2 
+    params = struct;
 end
 
-% If referenceFrame is a character array, then a path was passed in.
-if ischar(referenceFrame)
-    % Reference Frame Path is needed because it is written to the file in
-    % the end.
-    referenceFramePath = referenceFrame;
-    
-    % Disable warnings as we try to load the right reference frame variable
-    % from file.
-    orig_warning_state = warning;
-    warning('off','all')
- 
-    success = false;
-    data = load(referenceFramePath, 'refFrame');
-    if isfield(data, 'refFrame')
-        referenceFrame = data.refFrame;
-        success = true;
-    end
-    
-    data = load(referenceFramePath, 'coarseRefFrame');
-    if isfield(data, 'coarseRefFrame')
-        referenceFrame = data.coarseRefFrame;
-        success = true;
-    end
-    
-    if ~success
-        error(['No reference frame could be loaded from ' referenceFramePath]);
-    end
-    
-    % Restore original warning state
-    warning(orig_warning_state);
-    
-    clear data
-    clear success
-else
-    referenceFramePath = '';
-end
-if ~ismatrix(referenceFrame)
-    % MNA 11/25/19
-    % Removed fail and instead allowed StripAnalysis without reference
-    % frame. It simply uses one of the video frames as the reference frames
-    % if reference frame is not provided.
-    %%error('Invalid Input for referenceFrame (it was not a 2D array)');
+[~,callerStr] = fileparts(mfilename);
+
+% logical params
+overwrite               = ValidateArgument(params,'overwrite',false,@islogical,callerStr);
+enableGPU               = ValidateArgument(params,'enableGPU',false,@islogical,callerStr);
+enableVerbosity         = ValidateArgument(params,'enableVerbosity',false,@islogical,callerStr);
+enableSubpixelInterp    = ValidateArgument(params,'enableSubpixelInterp',false,@islogical,callerStr);
+enableGaussianFiltering = ValidateArgument(params,'enableGaussianFiltering',false,@islogical,callerStr);
+corrMethod              = ValidateArgument(params,'corrMethod','mex',@(x) any(contains({'mex','normxcorr','fft','cuda'},x)),callerStr);
+peakValueThreshold      = ValidateArgument(params,'peakValueThreshold',0.6,@(x) isscalar(x) & (x>=0) & (x<=1),callerStr);
+badFrames               = ValidateArgument(params,'badFrames',false,@(x) all(logical(x)),callerStr);
+stripHeight             = ValidateArgument(params,'stripHeight',11,@IsNaturalNumber,callerStr);
+samplingRate            = ValidateArgument(params,'samplingRate',540,@IsNaturalNumber,callerStr);
+minimumPeakThreshold    = ValidateArgument(params,'minimumPeakThreshold',0.3,@IsNonNegativeRealNumber,callerStr);
+adaptiveSearch          = ValidateArgument(params,'adaptiveSearch',true,@islogical,callerStr);
+searchWindowHeight      = ValidateArgument(params,'searchWindowHeight',79,@IsPositiveInteger,callerStr);
+lookBackTime            = ValidateArgument(params,'lookBackTime',10,@(x) IsPositiveRealNumber(x) & (x>=2),callerStr);
+frameRate               = ValidateArgument(params,'frameRate',30,@IsPositiveRealNumber,callerStr);
+downSampleFactor        = ValidateArgument(params,'downSampleFactor',1,@IsPositiveInteger,callerStr);
+axesHandles             = ValidateArgument(params,'axesHandles',nan,@(x) isnan(x) | all(ishandle(x)),callerStr);
+neighborhoodSize        = ValidateArgument(params,'neighborhoodSize',5,@IsPositiveInteger,callerStr);
+subpixelDepth           = ValidateArgument(params,'subpixelDepth',2,@IsPositiveInteger,callerStr);
+maximumSD               = ValidateArgument(params,'maximumSD',10,@IsPositiveRealNumber,callerStr);
+SDWindowSize            = ValidateArgument(params,'SDWindowSize',25,@IsPositiveRealNumber,callerStr);
+trim                    = ValidateArgument(params,'trim',[0 0],@(x) all(IsNaturalNumber(x)) & (length(x)==2),callerStr);
+referenceFrame          = ValidateArgument(params,'referenceFrame',1,...
+    @(x) isscalar(x) | ischar(x) | (isnumeric(x) & size(x,1)>1 & size(x,2)>1),callerStr);
+
+% check if CUDA enabled GPU exists
+if enableGPU && (gpuDeviceCount < 1)
+    enableGPU = false;
+    RevasWarning('No supported GPU available. StripAnalysis is reverting back to CPU', params);
 end
 
-% Identify which frames are bad frames
-% The filename is unknown if a raw array was passed in.
-if ~isfield(parametersStructure, 'badFrames')
-    if writeResult
-        blinkFramesPath = Filename(inputVideo, 'blink');
-    else
-        blinkFramesPath = fullfile(pwd, '.blinkframes.mat');
-    end
-    
-    try
-        load(blinkFramesPath, 'badFrames');
-    catch
-        badFrames = [];
-    end
-else
-   badFrames = parametersStructure.badFrames;
-end
-
-if ~isfield(parametersStructure, 'stripHeight')
-    parametersStructure.stripHeight = 15;
-    RevasMessage('using default parameter for stripHeight');
-else
-    if ~IsNaturalNumber(parametersStructure.stripHeight)
-        error('stripHeight must be a natural number');
-    end
-end
-
-if ~isfield(parametersStructure, 'stripWidth') && writeResult
-    reader = VideoReader(inputVideo);
-    parametersStructure.stripWidth = reader.Width;
-    RevasMessage('using default parameter for stripWidth');
-elseif ~isfield(parametersStructure, 'stripWidth') && ~writeResult
-    parametersStructure.stripWidth = size(inputVideo, 2);
-    RevasMessage('using default parameter for stripWidth');
-else
-    if ~IsNaturalNumber(parametersStructure.stripWidth)
-        error('stripWidth must be a natural number');
-    end
-end
-
-if ~isfield(parametersStructure, 'samplingRate')
-    parametersStructure.samplingRate = 540;
-    RevasMessage('using default parameter for samplingRate');
-else
-    if ~IsNaturalNumber(parametersStructure.samplingRate)
-        error('samplingRate must be a natural number');
-    end
-end
-
-if ~isfield(parametersStructure, 'enableGaussianFiltering')
-    parametersStructure.enableGaussianFiltering = false;
-else
-    if ~islogical(parametersStructure.enableGaussianFiltering)
-        error('enableGaussianFiltering must be a logical');
-    end
-end
-
-if ~isfield(parametersStructure, 'maximumSD')
-    parametersStructure.maximumSD = 10;
-    RevasMessage('using default parameter for maximumSD');
-else
-    if ~IsPositiveRealNumber(parametersStructure.maximumSD)
-        error('maximumSD must be a positive, real number');
-    end
-end
-
-if ~isfield(parametersStructure, 'SDWindowSize')
-    parametersStructure.SDWindowSize = 25;
-    RevasMessage('using default parameter for SDWindowSize');
-else
-    if ~IsNaturalNumber(parametersStructure.SDWindowSize)
-        error('SDWindowSize must be a natural number');
-    end
-end
-
-if ~isfield(parametersStructure, 'maximumPeakRatio')
-    parametersStructure.maximumPeakRatio = 0.8;
-    RevasMessage('using default parameter for maximumPeakRatio');
-else
-    if ~IsPositiveRealNumber(parametersStructure.maximumPeakRatio)
-        error('maximumPeakRatio must be a positive, real number');
-    end
-end
-
-if ~isfield(parametersStructure, 'minimumPeakThreshold')
-    parametersStructure.minimumPeakThreshold = 0.3;
-    RevasMessage('using default parameter for minimumPeakThreshold');
-else
-    if ~IsNonNegativeRealNumber(parametersStructure.minimumPeakThreshold)
-        error('minimumPeakThreshold must be a non-negative, real number');
-    end
-end
-
-if ~isfield(parametersStructure, 'adaptiveSearch')
-    parametersStructure.adaptiveSearch = false;
-else
-    if ~islogical(parametersStructure.adaptiveSearch)
-        error('adaptiveSearch must be a logical');
-    end
-end
-
-if parametersStructure.adaptiveSearch && ...
-        ~isfield(parametersStructure, 'scalingFactor')
-    parametersStructure.scalingFactor = 1;
-    RevasMessage('using default parameter for scalingFactor');
-elseif parametersStructure.adaptiveSearch
-    if ~IsPositiveRealNumber(parametersStructure.scalingFactor)
-        error('scalingFactor must be a positive, real number');
-    end
-end
-
-if parametersStructure.adaptiveSearch && ...
-        ~isfield(parametersStructure, 'searchWindowHeight')
-    parametersStructure.searchWindowHeight = 79;
-    RevasMessage('using default parameter for searchWindowHeight');
-elseif parametersStructure.adaptiveSearch
-    if ~IsNaturalNumber(parametersStructure.searchWindowHeight)
-        error('searchWindowHeight must be a natural number');
-    end
-end
-
-if parametersStructure.adaptiveSearch && ...
-        ~isfield(parametersStructure, 'lookBackTime')
-    parametersStructure.lookBackTime = 10;
-    RevasMessage('using default parameter for lookBackTime');
-elseif parametersStructure.adaptiveSearch
-    if ~IsNaturalNumber(parametersStructure.lookBackTime)
-        error('lookBackTime must be a natural number');
-    end
-end
-
-if ~isfield(parametersStructure, 'enableSubpixelInterpolation')
-    parametersStructure.enableSubpixelInterpolation = false;
-else
-    if ~islogical(parametersStructure.enableSubpixelInterpolation)
-        error('enableSubpixelInterpolation must be a logical');
-    end
-end
-
-if ~isfield(parametersStructure, 'subpixelInterpolationParameters')
-   parametersStructure.subpixelInterpolationParameters = struct;
-   parametersStructure.subpixelInterpolationParameters.neighborhoodSize = 7;
-   parametersStructure.subpixelInterpolationParameters.subpixelDepth = 2;
-   RevasMessage('using default parameter for subpixelInterpolationParameters');
-else
-    if ~isstruct(parametersStructure.subpixelInterpolationParameters)
-       error('subpixelInterpolationParameters must be a struct');
-    else
-       if ~isfield(parametersStructure.subpixelInterpolationParameters, 'neighborhoodSize')
-           parametersStructure.subpixelInterpolationParameters.neighborhoodSize = 7;
-           RevasMessage('using default parameter for neighborhoodSize');
-       else
-           parametersStructure.subpixelInterpolationParameters.neighborhoodSize = parametersStructure.subpixelInterpolationParameters.neighborhoodSize;
-           if ~IsNaturalNumber(parametersStructure.subpixelInterpolationParameters.neighborhoodSize)
-               error('subpixelInterpolationParameters.neighborhoodSize must be a natural number');
-           end
-       end
-       if ~isfield(parametersStructure.subpixelInterpolationParameters, 'subpixelDepth')
-           parametersStructure.subpixelInterpolationParameters.subpixelDepth = 2;
-           RevasMessage('using default parameter for subpixelDepth');
-       else
-           parametersStructure.subpixelInterpolationParameters.subpixelDepth = parametersStructure.subpixelInterpolationParameters.subpixelDepth;
-           if ~IsPositiveRealNumber(parametersStructure.subpixelInterpolationParameters.subpixelDepth)
-               error('subpixelInterpolationParameters.subpixelDepth must be a positive, real number');
-           end
-       end
-    end
-end
-
-if ~isfield(parametersStructure, 'enableVerbosity')
-   parametersStructure.enableVerbosity = false; 
-else
-   if ~islogical(parametersStructure.enableVerbosity)
-        error('enableVerbosity must be a logical');
-   end
-end
-
-if ~isfield(parametersStructure, 'createStabilizedVideo')
-    parametersStructure.createStabilizedVideo = false;
-else
-    if ~islogical(parametersStructure.createStabilizedVideo)
-        error('createStabilizedVideo must be a logical');
-    end
-end
-
-if ~isfield(parametersStructure, 'enableGPU')
-    parametersStructure.enableGPU = false;
-else
-    if ~islogical(parametersStructure.enableGPU)
-        error('enableGPU must be a logical');
-    end
-end
-parametersStructure.enableGPU = (gpuDeviceCount > 0) & parametersStructure.enableGPU;
-
-if ~isfield(parametersStructure, 'corrMethod')
-    parametersStructure.corrMethod = 'mex';
-end
-
-if ~isfield(parametersStructure, 'downSampleFactor')
-    parametersStructure.downSampleFactor = 1;
-end
-
-if ~isfield(parametersStructure, 'trim') 
-    parametersStructure.trim = [0 0]; % top, bottom
-end
 
 %% Handle overwrite scenarios.
 
 if writeResult
-    outputFilePath = Filename(inputVideo, 'usefultraces', parametersStructure.samplingRate);
+    outputFilePath = Filename(inputVideo, 'usefultraces', params.samplingRate);
 
     if ~exist(outputFilePath, 'file')
         % left blank to continue without issuing RevasMessage in this case
-    elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-        RevasMessage(['StripAnalysis() did not execute because it would overwrite existing file. (' outputFilePath ')'], parametersStructure);
-        rawEyePositionTraces = [];
-        usefulEyePositionTraces = [];
-        timeArray = [];
-        statisticsStructure = struct();
+    elseif ~overwrite
+        RevasMessage(['StripAnalysis() did not execute because it would overwrite existing file. (' outputFilePath ')'], params);
+        RevasMessage('StripAnalysis() is returning results from existing file.',params); 
+        
+        % try loading existing file contents
+        load(outputFilePath,'position', 'timeSec', 'rawPosition', 'statsStruct');
         return;
     else
-        RevasMessage(['StripAnalysis() is proceeding and overwriting an existing file. (' outputFilePath ')'], parametersStructure);  
+        RevasMessage(['StripAnalysis() is proceeding and overwriting an existing file. (' outputFilePath ')'], params);  
     end
 end
 
-%% Preallocation and variable setup
+
+%% Create a reader object if needed and get some info on video
 
 if writeResult
     reader = VideoReader(inputVideo);
-    numberOfFrames = reader.FrameRate * reader.Duration;
+    frameRate = reader.FrameRate;
+    width = reader.Width;
     height = reader.Height;
-    parametersStructure.FrameRate = reader.FrameRate;
+    numberOfFrames = reader.FrameRate * reader.Duration;
+    
 else
-    [height, ~, numberOfFrames] = size(inputVideo);
+    [height, width, numberOfFrames] = size(inputVideo);
 end
 
-% MNA 11/25/19
-% To allow StripAnalysis to be used without a reference frame
-if ~ismatrix(referenceFrame) || isempty(referenceFrame)
+
+%% Handle referenceFrame separately 
+
+% if referenceFrame is a scalar, it refers to the frame number within the
+% video that can be used as the initial reference frame
+if isscalar(referenceFrame)
     if writeResult
-        referenceFrame = readFrame(reader);
-        if ndims(referenceFrame) == 3
-            referenceFrame = rgb2gray(referenceFrame);
-        end
+        referenceFrame = ReadSpecificFrame(reader,referenceFrame);
+        reader.CurrentTime = 0; % rewind back current time
     else
-        referenceFrame = inputVideo(1:end, 1:end, 1);
+        referenceFrame = inputVideo(:,:,referenceFrame);
     end
 end
-% End of MNA 11/25/19
-    
-stripsPerFrame = round(parametersStructure.samplingRate / parametersStructure.FrameRate);
-distanceBetweenStrips = (height - parametersStructure.stripHeight)...
-    / (stripsPerFrame - 1);
+
+% if it's a path, read the image from the path
+if ischar(referenceFrame) 
+    referenceFrame = imread(referenceFrame);
+end
+
+% if larger than 1, apply downsampling to reduce size of the images.
+if downSampleFactor > 1
+    referenceFrame = imresize(referenceFrame,1/downSampleFactor);
+    height = round(height / downSampleFactor);
+    stripHeight = max(1,round(stripHeight / downSampleFactor));
+    trim = round(trim / downSampleFactor);
+end
+
+% at this point, referenceFrame should be a 2D array.
+assert(ismatrix(referenceFrame));
+
+
+%% Prepare variables before the big loop
+
+[refHeight, refWidth] = size(referenceFrame);
+stripsPerFrame = round(samplingRate / frameRate);
+rowNumbers = round(linspace(1,(height - stripHeight),stripsPerFrame));
 numberOfStrips = stripsPerFrame * numberOfFrames;
 
 % two columns for horizontal and vertical movements
-rawEyePositionTraces = NaN(numberOfStrips, 2);
+rawPosition = nan(numberOfStrips, 2);
+position = nan(numberOfStrips, 2);
 
-% arrays for peak and second highest peak values
+% arrays for peak values
 peakValueArray = zeros(numberOfStrips, 1);
-secondPeakValueArray = zeros(numberOfStrips, 1);
 
-% array for standard deviations (used for gaussian peaks approach)
-standardDeviationsArray = NaN(numberOfStrips, 2);
+% Populate time array
+dtPerScanLine = 1/((height + sum(trim)) * frameRate);
+timeSec = dtPerScanLine * ...
+    reshape(trim(1) + rowNumbers' + ...
+    (0:(numberOfFrames-1)) * (height + sum(trim)),numberOfStrips,1);
 
-% array for search windows
-searchWindowsArray = NaN(numberOfStrips, 2);
+% if gpu is enabled, move reference frame to gpu memory
+if enableGPU && ~contains(corrMethod,'cuda')
+    referenceFrame = gpuArray(referenceFrame);
+end
 
-%% Populate time array
-dtPerScanLine = 1/((height + sum(parametersStructure.trim))*parametersStructure.FrameRate);
-timeArray = nan(numberOfStrips,1);
+% Variables for fft corrmethod
+if contains(corrMethod, 'fft')
+    cache = struct;
+end
+
+% Variables for adaptive search:
+if adaptiveSearch
+    
+    % within a single frame, assuming no vertical eye motion, strips should
+    % be at the following distance from each other on the reference.
+    verticalIncrement = median(diff(rowNumbers));
+    
+    % remember the last few velocities, according to lookBackTime (no fewer than 2 samples)
+    historyCapacity = floor(lookBackTime / 1000 * samplingRate);
+    
+    if historyCapacity < 2
+        historyCapacity = 2;
+        RevasMessage(['StripAnalysis(): setting historyCapacity to 2. (' outputFilePath ')'], params);  
+    end
+    
+    movementHistory = nan(historyCapacity,1);
+    
+    % set number of attempts. After first attempt with searchWindowHeight,
+    % we'll double the window height. 
+    numOfAttempts = 3; 
+else
+    numOfAttempts = 1;
+end
+
 
 %% Allow for aborting if not parallel processing
 global abortTriggered;
@@ -479,331 +296,178 @@ if isempty(abortTriggered)
 end
 isSetView = true;
 
-%% Normalized cross-correlate each strip
-% Note that calculation for each array value does not end with this loop,
-% the logic below the loop in this section perform remaining operations on
-% the values but are done outside of the loop in order to take advantage of
-% vectorization (that is, if verbosity is not enabled since if it was, then
-% these operations must be computed immediately so that the correct eye
-% trace values can be plotted as early as possible).
 
-if parametersStructure.enableGPU
-    referenceFrame = gpuArray(referenceFrame);
-end
+%% Extract motion by template matching strips to reference frame
 
-currFrameNumber = 0;
-
-if writeResult
-    reader = VideoReader(inputVideo);
-else
-    
-end
-
-% Variables for fft corrmethod
-if isequal(parametersStructure.corrMethod, 'fft')
-    cache = struct;
-end
-
-% Variables for adaptive search:
-if parametersStructure.adaptiveSearch
-    loc = (height / stripsPerFrame) / 2;
-    % remember the last few velocities, acording to lookBackTime (no fewer
-    % than 2)
-    historyCapacity = max(2, floor(parametersStructure.lookBackTime / 1000 * parametersStructure.samplingRate));
-    % velHistory will act as a circular queue, with the next to be deleted
-    % marked by historyIndex.
-    historyIndex = 2;
-    velHistory = [height / stripsPerFrame];
-end
-
-for stripNumber = 1:numberOfStrips
-
+% loop across frames
+for fr = 1:numberOfFrames
     if ~abortTriggered
         
-        gpuTask = getCurrentTask;
-
-        % Note that only one core should use the GPU at a time.
-        % i.e. when processing multiple videos in parallel, only one should
-        % use GPU.
-        
-        rowNumber = floor(mod(stripNumber - 1, stripsPerFrame) * distanceBetweenStrips + 1);
-        % Edge case for if there is only strip per frame.
-        if isnan(rowNumber) && stripsPerFrame == 1
-            rowNumber = 1;
-        end
-        colNumber = 1;
-        frameNumber = floor((stripNumber-1) / stripsPerFrame + 1);
-
-        % Iff the frame number has incremented from last iteration, update frame.
-        if frameNumber > currFrameNumber
-            currFrameNumber = frameNumber;
-            
-            if writeResult
-                frame = readFrame(reader);
-                if ndims(frame) == 3
-                    frame = rgb2gray(frame);
-                end
-            else
-                frame = inputVideo(1:end, 1:end, currFrameNumber);
+        % get next frame
+        if writeResult
+            frame = readFrame(reader);
+            if ndims(frame) == 3
+                frame = rgb2gray(frame);
             end
+        else
+            frame = inputVideo(:,:, fr);
         end
-
-        if ismember(frameNumber, badFrames)
-            rawEyePositionTraces(stripNumber,:) = [NaN NaN];
-            peakValueArray(stripNumber) = NaN;
-            secondPeakValueArray(stripNumber) = NaN;
+        
+        % if it's a blink frame, skip it.
+        if badFrames(fr)
             continue;
         end
-
-        rowEnd = rowNumber + parametersStructure.stripHeight - 1;
-        columnEnd = colNumber + parametersStructure.stripWidth - 1;
         
-        % get time stamps
-        timeArray(stripNumber) = dtPerScanLine * ...
-            (mean([rowNumber rowEnd]) + parametersStructure.trim(1)) + ...
-            (currFrameNumber-1) / parametersStructure.FrameRate;
-        
-        if ~parametersStructure.enableGPU
-            strip = frame(rowNumber:rowEnd, colNumber:columnEnd);
-        else
-            strip = gpuArray(frame(rowNumber:rowEnd, colNumber:columnEnd));
+        % if GPU is enabled, transfer the frame to GPU memory
+        if enableGPU
+            frame = gpuArray(frame);
         end
         
-        strip = Downsample(strip, parametersStructure.downSampleFactor);
-        
-        parametersStructure.stripNumber = stripNumber;  
-        parametersStructure.stripsPerFrame = stripsPerFrame;
-        
-        if parametersStructure.adaptiveSearch
-            attempts = 2;
-        else
-            attempts = 0;
+        % downsample if requested.
+        if downSampleFactor > 1
+            frame = imresize(frame, 1/downSampleFactor);
         end
-
-        % On the first attempt, we use a window of size searchWindowHeight.
-        % On the second attempt, we use a window twice as large.
-        % If there is a third attempt, we use a window four times as large.
-        % etc.
-        % Zero attempts are made if adaptive search is not enabled.
-        for attemptNum = 1:attempts
-            % Cut out a smaller search window from correlation,
-            % centered around loc, and searchWindowHeight tall.
-            upperBound = floor(min(max(1, loc - (parametersStructure.searchWindowHeight*(2^(attemptNum-1))/2))));
-            lowerBound = upperBound + parametersStructure.searchWindowHeight*(2^(attemptNum-1)) - 1;
+        
+        % loop across strips within current frame
+        for sn = 1:stripsPerFrame
             
-            if lowerBound > size(referenceFrame, 1)
-               lowerBound = size(referenceFrame, 1);
-               upperBound = max(1, lowerBound - parametersStructure.searchWindowHeight*(2^(attemptNum-1)) + 1);
-            end
+            thisSample = stripsPerFrame * (fr-1) + sn;
+            thisStrip = frame(rowNumbers(sr) : (rowNumbers(sr)+stripHeight-1),:);
             
-            if isequal(parametersStructure.corrMethod, 'normxcorr')
-                adaptedCorrelationMap = normxcorr2( ...
-                    strip, ...
-                    Downsample(referenceFrame(upperBound:lowerBound, 1:end), ...
-                        parametersStructure.downSampleFactor));
-            elseif isequal(parametersStructure.corrMethod, 'mex') && ...
-                ~parametersStructure.enableGPU            
-                adaptedCorrelationMap = matchTemplateOCV( ...
-                    strip, ...
-                    Downsample(referenceFrame(upperBound:lowerBound, 1:end), ...
-                        parametersStructure.downSampleFactor));
-            elseif isequal(parametersStructure.corrMethod, 'mex') && ...
-                parametersStructure.enableGPU
-                adaptedCorrelationMap = matchTemplateOCV_GPU( ...
-                    strip, ...
-                    Downsample(referenceFrame(upperBound:lowerBound, 1:end), ...
-                        parametersStructure.downSampleFactor));
-            elseif isequal(parametersStructure.corrMethod, 'fft')
-                [adaptedCorrelationMap, ~] = FastStripCorrelation( ...
-                    strip, ...
-                    Downsample(referenceFrame(upperBound:lowerBound, 1:end), ...
-                        parametersStructure.downSampleFactor), ...
-                    struct, ...
-                    parametersStructure.enableGPU);
-            end
-            
-            % Try to use adapted version of correlation map.
-            [xPeak, yPeak, peakValue, secondPeakValue] = ...
-                FindPeak(adaptedCorrelationMap, parametersStructure);
-
-            % See if adapted result is acceptable or not.
-            if ~parametersStructure.enableGaussianFiltering && ...
-                    (peakValue <= 0 || secondPeakValue <= 0 ...
-                    || secondPeakValue / peakValue > parametersStructure.maximumPeakRatio ...
-                    || peakValue < parametersStructure.minimumPeakThreshold)
+            for attempt = 1:numOfAttempts
                 
-                isAcceptable = false;
-                
-            elseif parametersStructure.enableGaussianFiltering % TODO, need to test.
-                % Middle row SDs in column 1, Middle column SDs in column 2.
-                middleRow = ...
-                    adaptedCorrelationMap(max(ceil(yPeak-...
-                        SDWindowSize/2/scalingFactor),...
-                        1): ...
-                    min(floor(yPeak+...
-                        SDWindowSize/2/scalingFactor),...
-                        size(adaptedCorrelationMap,1)), ...
-                        floor(xPeak));
-                middleCol = ...
-                    adaptedCorrelationMap(floor(yPeak), ...
-                    max(ceil(xPeak-...
-                        SDWindowSize/2/scalingFactor),...
-                        1): ...
-                    min(floor(xPeak+SDWindowSize/2/scalingFactor),...
-                        size(adaptedCorrelationMap,2)))';
-                
-                rowFit = fit(((1:size(middleRow,1))-ceil(size(middleRow,1)/2))', middleRow, 'gauss1');
-                colFit = fit(((1:size(middleCol,1))-ceil(size(middleCol,1)/2))', middleCol, 'gauss1');
-                
-                if rowFit.c1 > parametersStructure.maximumSD || ...
-                    colFit.c1 > parametersStructure.maximumSD || ...
-                    peakValue <= 0 || ...
-                    peakValue < parametersStructure.minimumPeakThreshold
-                
-                    isAcceptable = false;
-                    
-                else
-                    isAcceptable = true;
+                % if adaptive search is on, get the most likely place in the
+                % frame that will contain the current strip
+                if adaptiveSearch
+                    % for first sample do full cross-corr.
+                    if sn == 1 && fr == 1
+                        rowStart = 1;
+                        rowEnd = refHeight;
+                    else
+                        % Take the last peak position in the correlation map,
+                        % add one inter-strip vertical displacement, average
+                        % displacement in the moving buffer, and (if this is
+                        % the first strip of a frame other than first frame)
+                        % subtract one frame-stripHeight.
+                        loc =  rawPosition(thisSample-1,2) + ...
+                            (sn ~= 1) * verticalIncrement + ...
+                            nansum([0 nanmean(movementHistory)]) - ...
+                            (sn == 1) * (height - stripHeight);
+                        thisWindowHeight = searchWindowHeight * 2^(attempt-1); 
+                        rowStart = max(1, loc - floor(thisWindowHeight/2));
+                        rowEnd = max(refHeight, loc + floor(thisWindowHeight/2));
+                    end
                 end
-  
-                clear rowFit;
-                clear colFit;
-            else
-                isAcceptable = true;
+                
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                % locate the strip
+                switch corrMethod
+                    case 'mex'
+                        if enableGPU
+                            correlationMap = matchTemplateOCV_GPU(thisStrip, referenceFrame(rowStart:rowEnd,:)); 
+                            [xPeak, yPeak, peakValue] = FindPeak(correlationMap, enableGPU);
+                        else
+                            [correlationMap,xPeak,yPeak,peakValue] = ...
+                                matchTemplateOCV(thisStrip, referenceFrame(rowStart:rowEnd,:)); 
+                        end
+
+                    case 'normxcorr'
+                        correlationMap = normxcorr2(thisStrip, referenceFrame(rowStart:rowEnd,:)); 
+                        [xPeak, yPeak, peakValue] = FindPeak(correlationMap, enableGPU);
+
+                    case 'fft'
+                        [correlationMap, cache,xPeak,yPeak,peakValue] = ...
+                            FastStripCorrelation(thisStrip, referenceFrame(rowStart:rowEnd,:), cache, enableGPU);
+
+                    case 'cuda'
+                        % TO-DO
+
+                    otherwise
+                        error('StripAnalysis: unknown corrMethod.');
+                end
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                
+                
+                % visualization, if requested.
+                if enableVerbosity
+                    
+                end
+                
+                
+                % check if criterion is satisfied, if so break the attempt
+                % loop and continue to the next strip
+                if peakValue >= minimumPeakThreshold
+                    break;
+                end
             end
             
-            correlationMap = adaptedCorrelationMap;
-            searchWindowsArray(stripNumber,:) = [upperBound lowerBound];
+            % update the traces/stats
+            peakValueArray(thisSample) = peakValue;
+            rawPosition(thisSample,:) = [xPeak (yPeak+rowStart-1)];
             
-            if isAcceptable
-                break;
+            if adaptiveSearch
+                movementHistory = circshift(movementHistory,1,1);
+                movementHistory(1) = diff(rawPosition(end-1:end,2));
             end
-        end
-        
-        if ~parametersStructure.adaptiveSearch || ...
-                ~isAcceptable
-
-            % Either adaptive search failed, the result was unacceptable, or we
-            % didn't want to use adaptive search in the first place.
-            % So we use the full correlation map.
-            % It failed or was unacceptable, so use full correlation map.
-            if isequal(parametersStructure.corrMethod, 'normxcorr')
-                correlationMap = normxcorr2( ...
-                    strip, ...
-                    Downsample(referenceFrame, parametersStructure.downSampleFactor));
-            elseif isequal(parametersStructure.corrMethod, 'mex') && ...
-                    ~parametersStructure.enableGPU
-                correlationMap = matchTemplateOCV( ...
-                    strip, ...
-                    Downsample(referenceFrame, parametersStructure.downSampleFactor));
-            elseif isequal(parametersStructure.corrMethod, 'mex') && ...
-                parametersStructure.enableGPU
-                correlationMap = matchTemplateOCV_GPU( ...
-                    strip, ...
-                    Downsample(referenceFrame, parametersStructure.downSampleFactor));
-            elseif isequal(parametersStructure.corrMethod, 'fft')
-                [correlationMap, cache] = FastStripCorrelation( ...
-                    strip, ...
-                    Downsample(referenceFrame, parametersStructure.downSampleFactor), ...
-                    cache, ...
-                    parametersStructure.enableGPU);
-            end
-            [xPeak, yPeak, peakValue, secondPeakValue] = ...
-                FindPeak(correlationMap, parametersStructure);
-
-            searchWindowsArray(stripNumber,:) = [NaN NaN];
             
-            upperBound = 1;
-        end
+        end % end of frame
+    end % abortTriggered
+end % end of video
 
-        % 2D Interpolation if enabled
-        if parametersStructure.enableSubpixelInterpolation
-            [interpolatedPeakCoordinates, statisticsStructure.errorStructure] = ...
-                Interpolation2D(correlationMap, [yPeak, xPeak], ...
-                parametersStructure.subpixelInterpolationParameters);
 
-            xPeak = interpolatedPeakCoordinates(2);
-            yPeak = interpolatedPeakCoordinates(1);      
-        end
 
-        % If GPU was used, transfer peak values and peak locations
-        if parametersStructure.enableGPU
-            xPeak = gather(xPeak);
-            yPeak = gather(yPeak);
-            peakValue = gather(peakValue);
-            secondPeakValue = gather(secondPeakValue);
-        end
 
-        if parametersStructure.enableGaussianFiltering
-            % Fit a gaussian in a pixel window around the identified peak.
-            % The pixel window is of size |parametersStructure.SDWindowSize|
-            %
-            % Take the middle row and the middle column, and fit a one-dimensional
-            % gaussian to both in order to get the standard deviations.
-            % Store results in statisticsStructure for choosing bad frames
-            % later.
 
-            % Middle row SDs in column 1, Middle column SDs in column 2.
-            middleRow = ...
-                correlationMap(max(ceil(yPeak-parametersStructure.SDWindowSize/2), 1): ...
-                min(floor(yPeak+parametersStructure.SDWindowSize/2), size(correlationMap,1)), ...
-                floor(xPeak));
-            middleCol = ...
-                correlationMap(floor(yPeak), ...
-                max(ceil(xPeak-parametersStructure.SDWindowSize/2), 1): ...
-                min(floor(xPeak+parametersStructure.SDWindowSize/2), size(correlationMap,2)))';
-            fitOutput = fit(((1:size(middleRow,1))-ceil(size(middleRow,1)/2))', middleRow, 'gauss1');
-            standardDeviationsArray(stripNumber, 1) = fitOutput.c1;
-            fitOutput = fit(((1:size(middleCol,1))-ceil(size(middleCol,1)/2))', middleCol, 'gauss1');
-            standardDeviationsArray(stripNumber, 2) = fitOutput.c1;
-            clear fitOutput;
-        end
 
-        % If these peaks are in terms of an adapted correlation map, restore it
-        % back to in terms of the full map.
-        yPeak = yPeak + upperBound - 1;
-        rawEyePositionTraces(stripNumber,:) = [xPeak yPeak];
-        
-        peakValueArray(stripNumber) = peakValue;
-        secondPeakValueArray(stripNumber) = secondPeakValue;
-        
-        % Update adaptive search variables for next iteration.
-        if parametersStructure.adaptiveSearch
-            % loc was our guess for yPeak. Adjust velocity accordingly.
-            % (This is how much we should have jumped from the previous yPeak
-            % to land precisely on the correct place.)
-            prevIndex = mod(historyIndex-2, historyCapacity) + 1;
-            velHistory(prevIndex) = velHistory(prevIndex) + yPeak - loc;
 
-            % Replace the oldest velocity with the current average velocity.
-            velHistory(historyIndex) = mean(velHistory);
 
-            % Advance to the next loc, based upon vel.
-            % (Wrapping back to the top of the frame as necessary.)
-            loc = yPeak + velHistory(historyIndex);
-            if mod(stripNumber, stripsPerFrame) == 0
-                loc = loc - size(referenceFrame, 1);
-            end
-            historyIndex = mod(historyIndex, historyCapacity) + 1;
-        end
-        
-        % We must subtract back out the expected strip coordinates in order
-        % to obtain the net movement (the net difference between no
-        % movement and the movement that was observed).
-        rawEyePositionTraces(stripNumber,1) = ...
-            rawEyePositionTraces(stripNumber,1) - colNumber;
-        rawEyePositionTraces(stripNumber,2) = ...
-            rawEyePositionTraces(stripNumber,2) - rowNumber;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%% Normalized cross-correlate each strip
+
         
         % Show surface plot for this correlation if verbosity enabled
-        if parametersStructure.enableVerbosity
-            if parametersStructure.enableGPU
+        if params.enableVerbosity
+            if params.enableGPU
                 correlationMap = gather(correlationMap);
             end
-            if isfield(parametersStructure, 'axesHandles')
-                axes(parametersStructure.axesHandles(1)); %#ok<*LAXES>
+            if isfield(params, 'axesHandles')
+                axes(params.axesHandles(1)); %#ok<*LAXES>
                 cla;
-                colormap(parametersStructure.axesHandles(1), 'default');
+                colormap(params.axesHandles(1), 'default');
                 if isSetView
                     view(3)
                     isSetView = false;
@@ -836,7 +500,7 @@ for stripNumber = 1:numberOfStrips
 
         % If verbosity is enabled, also show eye trace plot with points
         % being plotted as they become available.
-        if parametersStructure.enableVerbosity
+        if params.enableVerbosity
 
             % Adjust for padding offsets added by normalized cross-correlation.
             % If we enable verbosity and demand that we plot the points as we
@@ -846,35 +510,35 @@ for stripNumber = 1:numberOfStrips
             % loop to take advantage of vectorization only if they are not
             % performed here, namely, if verbosity is not enabled and this
             % if statement does not execute.
-            if ~isequal(parametersStructure.corrMethod, 'fft')
-                rawEyePositionTraces(stripNumber,2) = ...
-                    rawEyePositionTraces(stripNumber,2) - (parametersStructure.stripHeight - 1);
-                rawEyePositionTraces(stripNumber,1) = ...
-                    rawEyePositionTraces(stripNumber,1) - (parametersStructure.stripWidth - 1);
+            if ~isequal(params.corrMethod, 'fft')
+                rawPosition(stripNumber,2) = ...
+                    rawPosition(stripNumber,2) - (params.stripHeight - 1);
+                rawPosition(stripNumber,1) = ...
+                    rawPosition(stripNumber,1) - (params.stripWidth - 1);
             end
             
             % Only scale up if downSampleFactor is > 1, since this means it
             % was shrunk during correlation.
             % If downSampleFactor was < 1, the images were thrown against a
             % bernoulli mask, but remained the same overall dimension.
-            if parametersStructure.downSampleFactor > 1
-               rawEyePositionTraces(stripNumber, :) = rawEyePositionTraces(stripNumber, :) .* parametersStructure.downSampleFactor; 
+            if params.downSampleFactor > 1
+               rawPosition(stripNumber, :) = rawPosition(stripNumber, :) .* params.downSampleFactor; 
             end
 
             % Negate eye position traces to flip directions.
-            rawEyePositionTraces(stripNumber,:) = -rawEyePositionTraces(stripNumber,:);
+            rawPosition(stripNumber,:) = -rawPosition(stripNumber,:);
 
-            if isfield(parametersStructure, 'axesHandles')
-                axes(parametersStructure.axesHandles(2));
+            if isfield(params, 'axesHandles')
+                axes(params.axesHandles(2));
                 cla;
-                colormap(parametersStructure.axesHandles(2), 'default');
+                colormap(params.axesHandles(2), 'default');
             else
                 figure(2);
                 cla;
             end
             
-            plot(timeArray, rawEyePositionTraces(:,1),'-r','linewidth',2); hold on;
-            plot(timeArray, rawEyePositionTraces(:,2),'-b','linewidth',2);
+            plot(timeSec, rawPosition(:,1),'-r','linewidth',2); hold on;
+            plot(timeSec, rawPosition(:,2),'-b','linewidth',2);
             title('Raw Eye Position');
             xlabel('time (sec)');
             ylabel('eye position (pixels)');
@@ -893,8 +557,7 @@ for stripNumber = 1:numberOfStrips
 %             xlabel('time (sec)')
             
         end
-    end
-end
+
 
 %% Adjust for padding offsets added by normalized cross-correlation.
 % Do this after the loop to take advantage of vectorization
@@ -902,87 +565,52 @@ end
 % enabled, then these operations were already performed for each point
 % before it was plotted to the eye traces graph. If verbosity was not
 % enabled, then we do it now in order to take advantage of vectorization.
-if ~parametersStructure.enableVerbosity
-    if ~isequal(parametersStructure.corrMethod, 'fft')
-        rawEyePositionTraces(:,2) = ...
-            rawEyePositionTraces(:,2) - (parametersStructure.stripHeight - 1);
-        rawEyePositionTraces(:,1) = ...
-            rawEyePositionTraces(:,1) - (parametersStructure.stripWidth - 1);
+if ~params.enableVerbosity
+    if ~isequal(params.corrMethod, 'fft')
+        rawPosition(:,2) = ...
+            rawPosition(:,2) - (params.stripHeight - 1);
+        rawPosition(:,1) = ...
+            rawPosition(:,1) - (params.stripWidth - 1);
     end
     
     % Only scale up if downSampleFactor is > 1, since this means it
     % was shrunk during correlation.
     % If downSampleFactor was < 1, the images were thrown against a
     % checkboard mask, but remained the same overall dimension.
-    if parametersStructure.downSampleFactor > 1
-       rawEyePositionTraces = rawEyePositionTraces .* parametersStructure.downSampleFactor; 
+    if params.downSampleFactor > 1
+       rawPosition = rawPosition .* params.downSampleFactor; 
     end
 
     % Negate eye position traces to flip directions.
-    rawEyePositionTraces = -rawEyePositionTraces;
+    rawPosition = -rawPosition;
 end
 
-%% Populate statisticsStructure
 
-statisticsStructure.peakValues = peakValueArray;
-statisticsStructure.peakRatios = secondPeakValueArray ./ peakValueArray;
-statisticsStructure.searchWindows = searchWindowsArray;
-statisticsStructure.standardDeviations = standardDeviationsArray;
-
-%% Populate usefulEyePositionTraces
-
-if parametersStructure.enableGaussianFiltering
-    % Criteria for gaussian filtering method is to ensure that:
-    %   * the peak value is above a minimum threshold
-    %   * after a guassian is fitted in a 25x25 pixel window around the
-    %   identified peak, the standard deviation of the curve must be below
-    %   a maximum threshold in both the horizontal and vertical axes.
-    
-    % Determine which eye traces to throw out
-    % 1 = keep, 0 = toss
-    eyeTracesToKeep = (statisticsStructure.standardDeviations(:,1) <= parametersStructure.maximumSD)...
-        & (statisticsStructure.standardDeviations(:,2) <= parametersStructure.maximumSD)...
-        & (statisticsStructure.peakValues >= parametersStructure.minimumPeakThreshold);
-else
-    % Criteria for peak ratio method is to ensure that:
-    %   * the peak value is above a minimum threshold
-    %   * the ratio of the second peak to the first peak is smaller than a
-    %   maximum threshold (they must be sufficiently distinct).
-    
-    % Determine which eye traces to throw out
-    % 1 = keep, 0 = toss
-    eyeTracesToKeep = (statisticsStructure.peakRatios <= parametersStructure.maximumPeakRatio)...
-        & (statisticsStructure.peakValues >= parametersStructure.minimumPeakThreshold);
-end
-
-% multiply each component by 1 to keep eyePositionTraces or by NaN to toss.
-usefulEyePositionTraces = rawEyePositionTraces; % duplicate vector first
-usefulEyePositionTraces(~eyeTracesToKeep,:) = NaN;
 
 %% Plot Useful Eye Traces
-if ~abortTriggered && parametersStructure.enableVerbosity
-    if isfield(parametersStructure, 'axesHandles')
-        axes(parametersStructure.axesHandles(2));
-        colormap(parametersStructure.axesHandles(2), 'gray');
+if ~abortTriggered && params.enableVerbosity
+    if isfield(params, 'axesHandles')
+        axes(params.axesHandles(2));
+        colormap(params.axesHandles(2), 'gray');
     else
         figure(3);
     end
-    plot(timeArray, usefulEyePositionTraces);
+    plot(timeSec, position);
     title('Useful Eye Position Traces');
     xlabel('Time (sec)');
     ylabel('Eye Position Traces (pixels)');
     legend('show');
     legend('Horizontal Traces', 'Vertical Traces');
     
-    if isfield(parametersStructure, 'axesHandles')
-        axes(parametersStructure.axesHandles(1));
+    if isfield(params, 'axesHandles')
+        axes(params.axesHandles(1));
     else
         figure(11);
     end
     cla;
     
-    plot(timeArray,peakValueArray,'-','color',[.2 .8 .2],'linewidth',2); hold on;
-    plot(timeArray,1 - (secondPeakValueArray./peakValueArray),'-','color',[.6 .2 .6],'linewidth',2);
+    plot(timeSec,peakValueArray,'-','color',[.2 .8 .2],'linewidth',2); hold on;
+    plot(timeSec,1 - (secondPeakValueArray./peakValueArray),'-','color',[.6 .2 .6],'linewidth',2);
     legend('show');
     legend('Peak','1-PeakRatio');
     ylabel('quality')
@@ -994,10 +622,10 @@ if ~abortTriggered && parametersStructure.enableVerbosity
 end
 
 %% Plot stimuli on reference frame
-if ~abortTriggered && parametersStructure.enableVerbosity
-    if isfield(parametersStructure, 'axesHandles')
-        axes(parametersStructure.axesHandles(3));
-        colormap(parametersStructure.axesHandles(3), 'gray');
+if ~abortTriggered && params.enableVerbosity
+    if isfield(params, 'axesHandles')
+        axes(params.axesHandles(3));
+        colormap(params.axesHandles(3), 'gray');
     else
         figure(4);
     end
@@ -1006,7 +634,7 @@ if ~abortTriggered && parametersStructure.enableVerbosity
     hold on;
     
     center = fliplr(size(referenceFrame)/2);
-    positionsToBePlotted = repmat(center, length(usefulEyePositionTraces),1) + usefulEyePositionTraces;
+    positionsToBePlotted = repmat(center, length(position),1) + position;
     
     scatter(positionsToBePlotted(:,1), positionsToBePlotted(:,2), 'y', 'o' , 'filled');
     hold off;
@@ -1017,17 +645,17 @@ end
 if writeResult && ~abortTriggered
     
     try
-        parametersStructure = rmfield(parametersStructure,'axesHandles'); 
-        parametersStructure = rmfield(parametersStructure,'commandWindowHandle'); 
+        params = rmfield(params,'axesHandles'); 
+        params = rmfield(params,'commandWindowHandle'); 
     catch
     end
     
     % Save under file labeled 'final'.
     if writeResult
-        eyePositionTraces = usefulEyePositionTraces; 
+        eyePositionTraces = position; 
         peakRatios = statisticsStructure.peakRatios;
         save(outputFilePath, 'eyePositionTraces', 'rawEyePositionTraces', ...
-            'timeArray', 'parametersStructure', 'referenceFramePath', ...
+            'timeArray', 'params', 'referenceFramePath', ...
             'peakRatios');
     end
 end

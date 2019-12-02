@@ -1,5 +1,4 @@
-function [saccades, drifts, labels] = ...
-    FindSaccadesAndDrifts(inputEyePositions,  parametersStructure)
+function [saccades, drifts, labels] = FindSaccadesAndDrifts(inputEyePositions,  params)
 %FIND SACCADES AND DRIFTS Records in a mat file an array of structures
 %representing saccades and an array of structures representing drifts.
 %
@@ -11,10 +10,10 @@ function [saccades, drifts, labels] = ...
 %   '_sacsdrifts' appended to the input video file name. No result is saved
 %   in the latter situation; the result is returned.
 %
-%   |parametersStructure| is a struct as specified below.
+%   |params| is a struct as specified below.
 %
 %   -----------------------------------
-%   Fields of the |parametersStructure| 
+%   Fields of the |params| 
 %   -----------------------------------
 %   overwrite               : set to true to overwrite existing files.
 %                             Set to false to abort the function call if the
@@ -51,17 +50,17 @@ function [saccades, drifts, labels] = ...
 %   Example usage
 %   -----------------------------------
 %       inputPath = 'MyFile.mat';
-%       parametersStructure.overwrite = true;
-%       parametersStructure.enableVerbosity = true;
-%       parametersStructure.pixelSize = 10*60/512;
-%       parametersStructure.thresholdValue = 6;
-%       parametersStructure.secondaryThresholdValue = 3;
-%       parametersStructure.stitchCriteria = 15;
-%       parametersStructure.minAmplitude = 0.05;
-%       parametersStructure.minDuration = 8;
-%       parametersStructure.maxDuration = 100;
-%       parametersStructure.detectionMethod = 2;
-%       FindSaccadesAndDrifts(inputPath,  parametersStructure);
+%       params.overwrite = true;
+%       params.enableVerbosity = true;
+%       params.pixelSize = 10*60/512;
+%       params.thresholdValue = 6;
+%       params.secondaryThresholdValue = 3;
+%       params.stitchCriteria = 15;
+%       params.minAmplitude = 0.05;
+%       params.minDuration = 8;
+%       params.maxDuration = 100;
+%       params.detectionMethod = 2;
+%       FindSaccadesAndDrifts(inputPath,  params);
 
 %% Determine inputVideo type.
 if ischar(inputEyePositions)
@@ -79,138 +78,138 @@ if writeResult
     outputFilePath = Filename(inputEyePositions, 'sacsdrifts');
     if ~exist(outputFilePath, 'file')
         % left blank to continue without issuing warning in this case
-    elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-        RevasWarning(['FindSaccadesAndDrifts() did not execute because it would overwrite existing file. (' outputFilePath ')'], parametersStructure);
+    elseif ~isfield(params, 'overwrite') || ~params.overwrite
+        RevasWarning(['FindSaccadesAndDrifts() did not execute because it would overwrite existing file. (' outputFilePath ')'], params);
         return;
     else
-        RevasWarning(['FindSaccadesAndDrifts() is proceeding and overwriting an existing file. (' outputFilePath ')'], parametersStructure);
+        RevasWarning(['FindSaccadesAndDrifts() is proceeding and overwriting an existing file. (' outputFilePath ')'], params);
     end
 end
 
 %% Set parameters to defaults if not specified.
-if ~isfield(parametersStructure, 'pixelSize')
+if ~isfield(params, 'pixelSize')
     pixelSize = 10*60/512;
-    RevasWarning('using default parameter for pixel size', parametersStructure);
+    RevasWarning('using default parameter for pixel size', params);
 else
-    pixelSize = parametersStructure.pixelSize;
+    pixelSize = params.pixelSize;
 end
 
 % This second method is the EK Algorithm (Engbert & Kliegl, 2003 Vision Research).
-if ~isfield(parametersStructure, 'thresholdValue')
+if ~isfield(params, 'thresholdValue')
     lambda = 6;
-    RevasWarning('using default parameter for lambda', parametersStructure);
+    RevasWarning('using default parameter for lambda', params);
 else
-    lambda = parametersStructure.thresholdValue;
+    lambda = params.thresholdValue;
 end
 
-if ~isfield(parametersStructure, 'secondaryThresholdValue')
+if ~isfield(params, 'secondaryThresholdValue')
     secondaryLambda = 3;
-    RevasWarning('using default parameter for secondaryLambda', parametersStructure);
+    RevasWarning('using default parameter for secondaryLambda', params);
 else
-    secondaryLambda = parametersStructure.secondaryThresholdValue;
+    secondaryLambda = params.secondaryThresholdValue;
 end
 
 % if enabled, instead of a single threshold, we use a running (adaptive)
 % velocity threshold that changes with the variabiltiy of velocity
-if ~isfield(parametersStructure, 'isAdaptive')
+if ~isfield(params, 'isAdaptive')
     isAdaptive = false;
-    RevasWarning('using default parameter for isAdaptive', parametersStructure);
+    RevasWarning('using default parameter for isAdaptive', params);
 else
-    isAdaptive = parametersStructure.isAdaptive;
+    isAdaptive = params.isAdaptive;
 end
 
 % the default form of Engbert & Kliegl algorithm uses median based standard
 % deviation. but here we have the ability to use regular sd.
-if ~isfield(parametersStructure, 'isMedianBased')
+if ~isfield(params, 'isMedianBased')
     isMedianBased = true;
-    RevasWarning('using default parameter for isMedianBased', parametersStructure);
+    RevasWarning('using default parameter for isMedianBased', params);
 else
-    isMedianBased = parametersStructure.isMedianBased;
+    isMedianBased = params.isMedianBased;
 end
 
 
 % units are in milliseconds
-if ~isfield(parametersStructure, 'stitchCriteria')
+if ~isfield(params, 'stitchCriteria')
     stitchCriteria = 15;
-    RevasWarning('using default parameter for stitchCriteria', parametersStructure);
+    RevasWarning('using default parameter for stitchCriteria', params);
 else
-    stitchCriteria = parametersStructure.stitchCriteria;
+    stitchCriteria = params.stitchCriteria;
 end
 
 % units are in degrees
-if ~isfield(parametersStructure, 'minAmplitude')
+if ~isfield(params, 'minAmplitude')
     minAmplitude = 0.1;
-    RevasWarning('using default parameter for minAmplitude', parametersStructure);
+    RevasWarning('using default parameter for minAmplitude', params);
 else
-    minAmplitude = parametersStructure.minAmplitude;
+    minAmplitude = params.minAmplitude;
 end
 
 % units are in milliseconds
-if ~isfield(parametersStructure, 'minDuration')
+if ~isfield(params, 'minDuration')
     minDuration = 8;
-    RevasWarning('using default parameter for minDuration', parametersStructure);
+    RevasWarning('using default parameter for minDuration', params);
 else
-    minDuration = parametersStructure.minDuration;
+    minDuration = params.minDuration;
 end
 
 % units are in milliseconds
-if ~isfield(parametersStructure, 'maxDuration')
+if ~isfield(params, 'maxDuration')
     maxDuration = 100;
-    RevasWarning('using default parameter for maxDuration', parametersStructure);
+    RevasWarning('using default parameter for maxDuration', params);
 else
-    maxDuration = parametersStructure.maxDuration;
+    maxDuration = params.maxDuration;
 end
 
 % Method to use for detection
 % 1 = Hard velocity threshold
 % 2 = Median-based (default)
-if ~isfield(parametersStructure, 'detectionMethod')
+if ~isfield(params, 'detectionMethod')
     detectionMethod = 2;
 else
-    detectionMethod = parametersStructure.detectionMethod;
+    detectionMethod = params.detectionMethod;
 end
 
 % units are in degrees/second
-if ~isfield(parametersStructure, 'hardVelocityThreshold')
+if ~isfield(params, 'hardVelocityThreshold')
     hardVelocityThreshold = 25;
     if detectionMethod == 1
-        RevasWarning('using default parameter for hardVelocityThreshold', parametersStructure);
+        RevasWarning('using default parameter for hardVelocityThreshold', params);
     end
 else
-    hardVelocityThreshold = parametersStructure.hardVelocityThreshold;
+    hardVelocityThreshold = params.hardVelocityThreshold;
 end
 
 % units are in degrees/second
-if ~isfield(parametersStructure, 'hardSecondaryVelocityThreshold')
+if ~isfield(params, 'hardSecondaryVelocityThreshold')
     hardSecondaryVelocityThreshold = 15;
     if detectionMethod == 1
-        RevasWarning('using default parameter for hardSecondaryVelocityThreshold', parametersStructure);
+        RevasWarning('using default parameter for hardSecondaryVelocityThreshold', params);
     end
 else
-    hardSecondaryVelocityThreshold = parametersStructure.hardVelocityThreshold;
+    hardSecondaryVelocityThreshold = params.hardVelocityThreshold;
 end
 
 % Method to use to calculate velocity
 % 1 = using |diff|
 % 2 = (x_(n+1) - x_(n-1)) / 2 delta t)
-if ~isfield(parametersStructure, 'velocityMethod')
+if ~isfield(params, 'velocityMethod')
     velocityMethod = 2;
 else
-    velocityMethod = parametersStructure.velocityMethod;
+    velocityMethod = params.velocityMethod;
 end
 
 % check verbosity field
-if ~isfield(parametersStructure, 'enableVerbosity')
+if ~isfield(params, 'enableVerbosity')
     enableVerbosity = false;
 else
-    enableVerbosity = parametersStructure.enableVerbosity;
+    enableVerbosity = params.enableVerbosity;
 end
 
 % save parameters structure in the environment before loading a different
 % parameters structure
-axesHandlesFlag = isfield(parametersStructure, 'axesHandles');
+axesHandlesFlag = isfield(params, 'axesHandles');
 if axesHandlesFlag
-    axesHandles = parametersStructure.axesHandles;
+    axesHandles = params.axesHandles;
 end
 
 %% Load mat file with output from |StripAnalysis|
@@ -311,7 +310,7 @@ labels = ~driftIndices; % 1: saccade, 0: drift
 
 %% Save to output mat file.
 if writeResult
-    save(outputFilePath, 'saccades', 'drifts', 'labels','parametersStructure');
+    save(outputFilePath, 'saccades', 'drifts', 'labels','params');
 end
 
 %% Verbosity for Results.

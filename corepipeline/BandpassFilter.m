@@ -1,4 +1,4 @@
-function outputVideo = BandpassFilter(inputVideo, parametersStructure)
+function outputVideo = BandpassFilter(inputVideo, params)
 %BANDPASS FILTER Applies bandpass filtering to the video.
 %
 %   -----------------------------------
@@ -9,10 +9,10 @@ function outputVideo = BandpassFilter(inputVideo, parametersStructure)
 %   input file name. In the latter situation, no video is written and
 %   the result is returned.
 %
-%   |parametersStructure| is a struct as specified below.
+%   |params| is a struct as specified below.
 %
 %   -----------------------------------
-%   Fields of the |parametersStructure| 
+%   Fields of the |params| 
 %   -----------------------------------
 %   overwrite                 : set to true to overwrite existing files.
 %                               Set to false to abort the function call if the
@@ -28,15 +28,18 @@ function outputVideo = BandpassFilter(inputVideo, parametersStructure)
 %                               nature of the foveal pit compared to the
 %                               peripheral retina creates these low-freq.
 %                               fluctuations. (default 3)
+%   badFrames                 : specifies blink/bad frames. we can skip those but
+%                               we need to make sure to keep a record of 
+%                               discarded frames. 
 %                             
 %   -----------------------------------
 %   Example usage
 %   -----------------------------------
-%       inputVideo = 'MyVid.avi';
-%       parametersStructure.overwrite = true;
-%       parametersStructure.smoothing = 1;
-%       parametersStructure.lowSpatialFrequencyCutoff = 3;
-%       BandpassFilter(inputVideo, parametersStructure);
+%       inputVideo = 'tslo-dark.avi';
+%       params.overwrite = true;
+%       params.smoothing = 1;
+%       params.lowSpatialFrequencyCutoff = 3;
+%       BandpassFilter(inputVideo, params);
 
 %% Determine inputVideo type.
 if ischar(inputVideo)
@@ -49,38 +52,61 @@ else
     writeResult = false;
 end
 
+
+%% Set parameters to defaults if not specified.
+
+if nargin < 2
+    params = struct;
+end
+
+if ~isfield(params, 'overwrite')
+    overwrite = false; 
+else
+    overwrite = params.overwrite;
+end
+
+if ~isfield(params, 'smoothing')
+    smoothing = 1; % pixels
+    RevasWarning(['BandpassFilter is using default parameter for smoothing: ' num2str(smoothing)] , params);
+else
+    smoothing = params.smoothing;
+    if ~IsPositiveRealNumber(smoothing)
+        error('BandpassFilter: smoothing must be a positive real number');
+    end
+end
+
+if ~isfield(params, 'lowSpatialFrequencyCutoff')
+    lowSpatialFrequencyCutoff = 3; % cycles per image
+    RevasWarning(['BandpassFilter is using default parameter for lowSpatialFrequencyCutoff: ' num2str(lowSpatialFrequencyCutoff)] , params);
+else
+    lowSpatialFrequencyCutoff = params.lowSpatialFrequencyCutoff;
+    if ~IsNonNegativeRealNumber(lowSpatialFrequencyCutoff)
+        error('BandpassFilter: smoothing must be a non-negative real number');
+    end
+end
+
+if ~isfield(params, 'badFrames')
+    badFrames = false;
+    RevasWarning('GammaCorrect is using default parameter for badFrames: none.', params);
+else
+    badFrames = params.badFrames;
+end
+
+
+
 %% Handle overwrite scenarios.
 if writeResult
     outputVideoPath = Filename(inputVideo, 'bandpass');
     if ~exist(outputVideoPath, 'file')
         % left blank to continue without issuing warning in this case
-    elseif ~isfield(parametersStructure, 'overwrite') || ~parametersStructure.overwrite
-        RevasWarning(['BandpassFilter() did not execute because it would overwrite existing file. (' outputVideoPath ')'], parametersStructure);
+    elseif ~overwrite
+        RevasWarning(['BandpassFilter() did not execute because it would overwrite existing file. (' outputVideoPath ')'], params);
         return;
     else
-        RevasWarning(['BandpassFilter() is proceeding and overwriting an existing file. (' outputVideoPath ')'], parametersStructure);  
+        RevasWarning(['BandpassFilter() is proceeding and overwriting an existing file. (' outputVideoPath ')'], params);  
     end
 end
 
-%% Set parameters to defaults if not specified.
-
-if ~isfield(parametersStructure, 'smoothing')
-    parametersStructure.smoothing = 1; % standard deviation of the gaussian kernel, in pixels
-    RevasWarning('using default parameter for smoothing', parametersStructure);
-else
-    if ~IsPositiveRealNumber(parametersStructure.smoothing)
-        error('smoothing must be a positive real number');
-    end
-end
-
-if ~isfield(parametersStructure, 'lowSpatialFrequencyCutoff')
-    parametersStructure.lowSpatialFrequencyCutoff = 3; % cycles per image
-    RevasWarning('using default parameter for lowSpatialFrequencyCutoff', parametersStructure);
-else
-    if ~IsNonNegativeRealNumber(parametersStructure.lowSpatialFrequencyCutoff)
-        error('lowSpatialFrequencyCutoff must be a non-negative real number');
-    end
-end
 
 %% Allow for aborting if not parallel processing
 global abortTriggered;
@@ -91,7 +117,7 @@ if isempty(abortTriggered)
     abortTriggered = false;
 end
 
-%% Bandpass filter frame by frame
+%% Create reader/writer objects and get some info on videos
 
 if writeResult
     % create a video writer object and open it.
@@ -110,7 +136,26 @@ if writeResult
 else
     % Determine dimensions of video.
     [height, width, numberOfFrames] = size(inputVideo);
+    
+    % preallocate the output video array
+    outputVideo = zeros(height, width, numberOfFrames-sum(badFrames),'uint8');
+
 end
+
+%% badFrames handling
+% If badFrames is not provided, use all frames
+if length(badFrames)<=1 && ~badFrames
+    badFrames = false(numberOfFrames,1);
+end
+
+% If badFrames are provided but its size don't match the number of frames
+if length(badFrames) ~= numberOfFrames
+    badFrames = false(numberOfFrames,1);
+    RevasWarning('GammaCorrect(): size mismatch between ''badFrames'' and input video. Using all frames for this video.', params);  
+end
+
+
+%% Bandpass filter
 
 % create pixel position arrays. 
 xVector = (0:width - 1) - floor(width / 2); 
@@ -121,23 +166,30 @@ radiusMatrix = sqrt((repmat(xVector,height,1) .^ 2) + ...
 % create the amplitude response of the high-pass filter (which will remove
 % only the low spatial frequency components in the image such as luminance
 % gradient, darker foveal pit, etc.)
-highPassFilter = double(radiusMatrix > parametersStructure.lowSpatialFrequencyCutoff);
+highPassFilter = double(radiusMatrix > lowSpatialFrequencyCutoff);
 highPassFilter(floor(height/2) + 1, floor(width/2) + 1) = 1;
 
 % Read, apply filters, and write frame by frame.
-for frameNumber = 1:numberOfFrames
+for fr = 1:numberOfFrames
     if ~abortTriggered
+        
+        % get next frame
         if writeResult
             frame = readFrame(reader);
             if ndims(frame) == 3
                 frame = rgb2gray(frame);
             end
-            else
-            frame = inputVideo(1:end, 1:end, frameNumber);
+        else
+            frame = inputVideo(1:end, 1:end, fr);
         end
-    
-        % apply parametersStructure.smoothing
-        I1 = imgaussfilt(frame, parametersStructure.smoothing);
+        
+        % if it's a blink frame, skip it.
+        if badFrames(fr)
+            continue;
+        end
+
+        % apply params.smoothing
+        I1 = imgaussfilt(frame, smoothing);
 
         % remove low spatial frequencies
         I2 = abs(ifft2((fft2(I1)) .* ifftshift(highPassFilter)));
@@ -150,14 +202,22 @@ for frameNumber = 1:numberOfFrames
         if writeResult
             writeVideo(writer, frame);
         else
-            inputVideo(1:end, 1:end, frameNumber) = frame;
+            nextFrameNumber = sum(~badFrames(1:fr));
+            outputVideo(:, :, nextFrameNumber) = frame;
         end
     end
 end
 
+%% return results, close up objects
+
 if writeResult
+    outputVideo = outputVideoPath;
+    
     close(writer);
-else
-    outputVideo = inputVideo;
+    
+    % if aborted midway through video, delete the partial video.
+    if abortTriggered
+        delete(outputVideoPath)
+    end
 end
-end
+
