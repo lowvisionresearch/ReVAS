@@ -26,7 +26,7 @@ try
     gammaCurve = x.^0.6;
     toneCurve = GetToneCurve(x*255, gammaCurve./x, 255);
 
-    assert(all(uint8(255*toneCurve) == uint8(255*gammaCurve)));
+    assert(all(uint8(255*toneCurve) == uint8(255*gammaCurve')));
 
     success = true;
 catch

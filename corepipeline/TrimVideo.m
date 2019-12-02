@@ -1,4 +1,4 @@
-function outputVideo = TrimVideo(inputVideo, parametersStructure)
+function outputVideo = TrimVideo(inputVideo, params)
 %TRIM VIDEO Removes boundaries of video. 
 %
 %   -----------------------------------
@@ -10,10 +10,10 @@ function outputVideo = TrimVideo(inputVideo, parametersStructure)
 %   original file name. In the latter situation, no video is written and
 %   the result is returned.
 %
-%   |parametersStructure| is a struct as specified below.
+%   |params| is a struct as specified below.
 %
 %   -----------------------------------
-%   Fields of the |parametersStructure| 
+%   Fields of the |params| 
 %   -----------------------------------
 %   overwrite           : set to true to overwrite existing files.
 %                         Set to false to abort the function call if the
@@ -35,10 +35,10 @@ function outputVideo = TrimVideo(inputVideo, parametersStructure)
 %   Example usage
 %   -----------------------------------
 %       inputVideo = 'MyVid.avi';
-%       parametersStructure.overwrite = 1;
-%       parametersStructure.borderTrimAmount = [0 0 12 0];
-%       parametersStructure.badFrames = false;
-%       TrimVideo(inputVideo, parametersStructure);
+%       params.overwrite = 1;
+%       params.borderTrimAmount = [0 0 12 0];
+%       params.badFrames = false;
+%       TrimVideo(inputVideo, params);
 
 %% Determine inputVideo type.
 if ischar(inputVideo)
@@ -54,23 +54,23 @@ end
 %% Set parameters to defaults if not specified.
 
 if nargin < 2
-    parametersStructure = struct;
+    params = struct;
 end
 
-if ~isfield(parametersStructure, 'overwrite')
+if ~isfield(params, 'overwrite')
     overwrite = false; 
 else
-    overwrite = parametersStructure.overwrite;
+    overwrite = params.overwrite;
 end
 
-if ~isfield(parametersStructure, 'borderTrimAmount')
+if ~isfield(params, 'borderTrimAmount')
     borderTrimAmount = [0 0 12 0];
-    RevasWarning(['TrimVideo is using default parameter for borderTrimAmount: ' num2str(borderTrimAmount)], parametersStructure);
+    RevasWarning(['TrimVideo is using default parameter for borderTrimAmount: ' num2str(borderTrimAmount)], params);
 else
-    borderTrimAmount = parametersStructure.borderTrimAmount;
+    borderTrimAmount = params.borderTrimAmount;
     if isscalar(borderTrimAmount)
-        parametersStructure.borderTrimAmount = [0 borderTrimAmount borderTrimAmount 0];
-        borderTrimAmount = parametersStructure.borderTrimAmount;
+        params.borderTrimAmount = [0 borderTrimAmount borderTrimAmount 0];
+        borderTrimAmount = params.borderTrimAmount;
     end
     
     % light error checking
@@ -79,11 +79,11 @@ else
     end
 end
 
-if ~isfield(parametersStructure, 'badFrames')
+if ~isfield(params, 'badFrames')
     badFrames = false;
-    RevasWarning('TrimVideo is using default parameter for badFrames: none.', parametersStructure);
+    RevasWarning('TrimVideo is using default parameter for badFrames: none.', params);
 else
-    badFrames = parametersStructure.badFrames;
+    badFrames = params.badFrames;
 end
 
 
@@ -94,10 +94,10 @@ if writeResult
     if ~exist(outputVideoPath, 'file')
         % left blank to continue without issuing warning in this case
     elseif ~overwrite
-        RevasWarning(['TrimVideo() did not execute because it would overwrite existing file. (' outputVideoPath ')'], parametersStructure);    
+        RevasWarning(['TrimVideo() did not execute because it would overwrite existing file. (' outputVideoPath ')'], params);    
         return;
     else
-        RevasWarning(['TrimVideo() is proceeding and overwriting an existing file. (' outputVideoPath ')'], parametersStructure);  
+        RevasWarning(['TrimVideo() is proceeding and overwriting an existing file. (' outputVideoPath ')'], params);  
     end
 end
 
@@ -150,7 +150,7 @@ end
 % If badFrames are provided but its size don't match the number of frames
 if length(badFrames) ~= numberOfFrames
     badFrames = false(numberOfFrames,1);
-    RevasWarning(['TrimVideo(): size mismatch between ''badFrames'' and input video. Using all frames for (' outputVideoPath ')'], parametersStructure);  
+    RevasWarning(['TrimVideo(): size mismatch between ''badFrames'' and input video. Using all frames for (' outputVideoPath ')'], params);  
 end
 
 

@@ -1,4 +1,4 @@
-function [badFrames, varargout] = FindBlinkFrames(inputVideo, parametersStructure)
+function [badFrames, varargout] = FindBlinkFrames(inputVideo, params)
 %FIND BLINK FRAMES  Records in a mat file the frames in which a blink
 %                   occurred. Blinks are considered to be frames in which
 %                   the frame's mean and standard deviation are reduced
@@ -22,7 +22,7 @@ function [badFrames, varargout] = FindBlinkFrames(inputVideo, parametersStructur
 %   |inputVideo| is the path to the video or a matrix representation of the
 %   video that is already loaded into memory.
 %
-%   |parametersStructure| is a struct as specified below.
+%   |params| is a struct as specified below.
 %
 %
 %   -----------------------------------
@@ -36,7 +36,7 @@ function [badFrames, varargout] = FindBlinkFrames(inputVideo, parametersStructur
 %
 %
 %   -----------------------------------
-%   Fields of the |parametersStructure| 
+%   Fields of the |params| 
 %   -----------------------------------
 %  overwrite           :   set to 1 to overwrite existing files resulting 
 %                          from calling FindBlinkFrames.
@@ -64,11 +64,11 @@ function [badFrames, varargout] = FindBlinkFrames(inputVideo, parametersStructur
 %   Example usage
 %   -----------------------------------
 %       videoPath = 'aoslo-blink.avi';
-%       parametersStructure.overwrite = true;
-%       parametersStructure.stitchCriteria = 1;
-%       parametersStructure.numberOfBins = 256;
-%       parametersStructure.meanDifferenceThreshold = 256;
-%       FindBlinkFrames(videoPath, parametersStructure);
+%       params.overwrite = true;
+%       params.stitchCriteria = 1;
+%       params.numberOfBins = 256;
+%       params.meanDifferenceThreshold = 256;
+%       FindBlinkFrames(videoPath, params);
 
 %% Determine inputVideo type.
 if ischar(inputVideo)
@@ -84,46 +84,46 @@ end
 %% Set parameters to defaults if not specified.
 
 if nargin < 2
-    parametersStructure = struct;
+    params = struct;
 end
 
-if ~isfield(parametersStructure, 'overwrite')
+if ~isfield(params, 'overwrite')
     overwrite = false; 
 else
-    overwrite = parametersStructure.overwrite;
+    overwrite = params.overwrite;
 end
 
-if ~isfield(parametersStructure, 'enableVerbosity')
+if ~isfield(params, 'enableVerbosity')
     enableVerbosity = false; 
 else
-    enableVerbosity = parametersStructure.enableVerbosity;
+    enableVerbosity = params.enableVerbosity;
 end
 
-if ~isfield(parametersStructure, 'axesHandles')
+if ~isfield(params, 'axesHandles')
     axesHandles = nan; 
 else
-    axesHandles = parametersStructure.axesHandles;
+    axesHandles = params.axesHandles;
 end
 
-if ~isfield(parametersStructure, 'stitchCriteria')
+if ~isfield(params, 'stitchCriteria')
     stitchCriteria = 1; % frame
-    RevasWarning(['FindBlinkFrames is using default parameter for stitchCriteria: ' num2str(stitchCriteria)], parametersStructure);
+    RevasWarning(['FindBlinkFrames is using default parameter for stitchCriteria: ' num2str(stitchCriteria)], params);
 else
-    stitchCriteria = parametersStructure.stitchCriteria;
+    stitchCriteria = params.stitchCriteria;
 end
 
-if ~isfield(parametersStructure, 'numberOfBins')
+if ~isfield(params, 'numberOfBins')
     numberOfBins = 256; % gray levels
-    RevasWarning(['FindBlinkFrames is using default parameter for numberOfBins: ' num2str(numberOfBins)], parametersStructure);
+    RevasWarning(['FindBlinkFrames is using default parameter for numberOfBins: ' num2str(numberOfBins)], params);
 else
-    numberOfBins = parametersStructure.numberOfBins;
+    numberOfBins = params.numberOfBins;
 end
 
-if ~isfield(parametersStructure, 'meanDifferenceThreshold')
+if ~isfield(params, 'meanDifferenceThreshold')
     meanDifferenceThreshold = 10; % gray levels
-    RevasWarning(['FindBlinkFrames is using default parameter for meanDifferenceThreshold: ' num2str(meanDifferenceThreshold)], parametersStructure);
+    RevasWarning(['FindBlinkFrames is using default parameter for meanDifferenceThreshold: ' num2str(meanDifferenceThreshold)], params);
 else
-    meanDifferenceThreshold = parametersStructure.meanDifferenceThreshold;
+    meanDifferenceThreshold = params.meanDifferenceThreshold;
 end
 
 
@@ -144,10 +144,10 @@ if writeResult
         if nargout > 3
             varargout{3} = initialRef;
         end
-        RevasWarning(['FindBadFrames() did not execute because it would overwrite existing file. (' badFramesMatFilePath ')'], parametersStructure);
+        RevasWarning(['FindBadFrames() did not execute because it would overwrite existing file. (' badFramesMatFilePath ')'], params);
         return;
     else
-        RevasWarning(['FindBadFrames() is proceeding and overwriting an existing file. (' badFramesMatFilePath ')'], parametersStructure);
+        RevasWarning(['FindBadFrames() is proceeding and overwriting an existing file. (' badFramesMatFilePath ')'], params);
     end
 end
 

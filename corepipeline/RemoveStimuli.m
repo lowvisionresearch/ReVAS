@@ -1,4 +1,4 @@
-function [outputVideo, varargout] = RemoveStimuli(inputVideo, parametersStructure)
+function [outputVideo, varargout] = RemoveStimuli(inputVideo, params)
 %REMOVE STIMULI Finds and removes stimuli from each frame. 
 % Stimulus locations are saved in a mat file, and the video with stimuli
 % removed is saved with "_nostim" suffix.
@@ -15,7 +15,7 @@ function [outputVideo, varargout] = RemoveStimuli(inputVideo, parametersStructur
 %   locations file path and array are returned at the 2nd and 3rd output 
 %   arguments.
 %
-%   |parametersStructure| is a struct as specified below.
+%   |params| is a struct as specified below.
 %
 %   -----------------------------------
 %   Output
@@ -28,7 +28,7 @@ function [outputVideo, varargout] = RemoveStimuli(inputVideo, parametersStructur
 %
 %
 %   -----------------------------------
-%   Fields of the |parametersStructure| 
+%   Fields of the |params| 
 %   -----------------------------------
 %   overwrite          : set to true to overwrite existing files.
 %                        Set to false to abort the function call if the
@@ -53,6 +53,11 @@ function [outputVideo, varargout] = RemoveStimuli(inputVideo, parametersStructur
 %                        remove stimulus but include some region around it,
 %                        without needing to specify the exact shape of the
 %                        stimulus. if empty, ignored completely.
+%   minimumPeakThreshold:the minimum value above which a peak
+%                        needs to be in order to be considered 
+%                        a valid correlation. (this applies
+%                        regardless of enableGaussianFiltering)
+%                        (default 0)
 %   badFrames          : specifies blink/bad frames. we can skip those but
 %                        we need to make sure to keep a record of 
 %                        discarded frames. 
@@ -65,16 +70,16 @@ function [outputVideo, varargout] = RemoveStimuli(inputVideo, parametersStructur
 %   Example usage
 %   -----------------------------------
 %       inputVideo = 'tslo.avi';
-%       parametersStructure.enableVerbosity = true;
-%       parametersStructure.overwrite = true;
-%       parametersStructure.stimulus = struct;
-%       parametersStructure.stimulus.size = 11;
-%       parametersStructure.stimulus.thickness = 1;
-%       parametersStructure.stimulus.polarity = 1;
+%       params.enableVerbosity = true;
+%       params.overwrite = true;
+%       params.stimulus = struct;
+%       params.stimulus.size = 11;
+%       params.stimulus.thickness = 1;
+%       params.stimulus.polarity = 1;
 %   OR
-%       parametersStructure.stimulus = <path to an image>;
-%       parametersStructure.removalAreaSize = [11 11];
-%       RemoveStimuli(inputVideo, parametersStructure);
+%       params.stimulus = <path to an image>;
+%       params.removalAreaSize = [11 11];
+%       RemoveStimuli(inputVideo, params);
 
 %% Determine inputVideo type.
 if ischar(inputVideo)
@@ -90,67 +95,67 @@ end
 %% Set parameters to defaults if not specified.
 
 if nargin < 2
-    parametersStructure = struct;
+    params = struct;
 end
 
-if ~isfield(parametersStructure, 'overwrite')
+if ~isfield(params, 'overwrite')
     overwrite = false; 
 else
-    overwrite = parametersStructure.overwrite;
+    overwrite = params.overwrite;
 end
 
-if ~isfield(parametersStructure, 'enableVerbosity')
+if ~isfield(params, 'enableVerbosity')
     enableVerbosity = false; 
 else
-    enableVerbosity = parametersStructure.enableVerbosity;
+    enableVerbosity = params.enableVerbosity;
 end
 
-if ~isfield(parametersStructure, 'axesHandles')
+if ~isfield(params, 'axesHandles')
     axesHandles = nan; 
 else
-    axesHandles = parametersStructure.axesHandles;
+    axesHandles = params.axesHandles;
 end
 
-if ~isfield(parametersStructure, 'peakValueThreshold')
-    peakValueThreshold = 0.6;
-    RevasWarning(['RemoveStimuli is using default parameter for peakValueThreshold: ' num2str(peakValueThreshold)] , parametersStructure);
+if ~isfield(params, 'minimumPeakThreshold')
+    minimumPeakThreshold = 0.6;
+    RevasWarning(['RemoveStimuli is using default parameter for minimumPeakThreshold: ' num2str(minimumPeakThreshold)] , params);
 else
-    peakValueThreshold = parametersStructure.peakValueThreshold;
+    minimumPeakThreshold = params.minimumPeakThreshold;
 end
 
-if ~isfield(parametersStructure, 'frameRate')
+if ~isfield(params, 'frameRate')
     frameRate = 30;
-    RevasWarning(['RemoveStimuli is using default parameter for frameRate: ' num2str(frameRate)] , parametersStructure);
+    RevasWarning(['RemoveStimuli is using default parameter for frameRate: ' num2str(frameRate)] , params);
 else
-    frameRate = parametersStructure.frameRate;
+    frameRate = params.frameRate;
 end
 
-if ~isfield(parametersStructure, 'fillingMethod')
+if ~isfield(params, 'fillingMethod')
     fillingMethod = 'resample';
-    RevasWarning(['RemoveStimuli is using default parameter for fillingMethod: ' fillingMethod] , parametersStructure);
+    RevasWarning(['RemoveStimuli is using default parameter for fillingMethod: ' fillingMethod] , params);
 else
-    fillingMethod = parametersStructure.fillingMethod;
+    fillingMethod = params.fillingMethod;
 end
 
-if ~isfield(parametersStructure, 'badFrames')
+if ~isfield(params, 'badFrames')
     badFrames = false;
-    RevasWarning('RemoveStimuli is using default parameter for badFrames: none.', parametersStructure);
+    RevasWarning('RemoveStimuli is using default parameter for badFrames: none.', params);
 else
-    badFrames = parametersStructure.badFrames;
+    badFrames = params.badFrames;
 end
 
-if ~isfield(parametersStructure, 'stimulus')
+if ~isfield(params, 'stimulus')
     stimulus.size = 11;
     stimulus.thickness = 1;
     stimulus.polarity = 1;
     description = 'Cross: 11px size, 1px thickness, positive polarity'; 
-    RevasWarning(['RemoveStimuli is using default parameter for stimulus: ' description], parametersStructure);
+    RevasWarning(['RemoveStimuli is using default parameter for stimulus: ' description], params);
 else
     % Two stimulus input types are acceptable:
     % - Path to an image of the stimulus
     % - A struct describing |size| and |thickness| of stimulus
 
-    stimulus = parametersStructure.stimulus;
+    stimulus = params.stimulus;
     
     % if it's a path, read the image from the path
     if ischar(stimulus) 
@@ -181,11 +186,11 @@ end
 % make sure to conver stimulus to uint8
 stimulusMatrix = uint8(stimulusMatrix);
 
-if ~isfield(parametersStructure, 'removalAreaSize')
+if ~isfield(params, 'removalAreaSize')
     removalAreaSize = []; % pixels
-    RevasWarning(['RemoveStimuli is using default parameter for removalAreaSize: ' num2str(removalAreaSize)] , parametersStructure);
+    RevasWarning(['RemoveStimuli is using default parameter for removalAreaSize: ' num2str(removalAreaSize)] , params);
 else
-    removalAreaSize = parametersStructure.removalAreaSize;
+    removalAreaSize = params.removalAreaSize;
     if isscalar(removalAreaSize)
         removalAreaSize = removalAreaSize*[1 1];
     end
@@ -211,10 +216,10 @@ if writeResult
             varargout{2} = stimulusLocations;
         end
         
-        RevasWarning('RemoveStimuli() did not execute because it would overwrite existing file.', parametersStructure);
+        RevasWarning('RemoveStimuli() did not execute because it would overwrite existing file.', params);
         return;
     else
-        RevasWarning('RemoveStimuli() is proceeding and overwriting an existing file.', parametersStructure);
+        RevasWarning('RemoveStimuli() is proceeding and overwriting an existing file.', params);
     end
 end
 
@@ -260,7 +265,7 @@ end
 % If badFrames are provided but its size don't match the number of frames
 if length(badFrames) ~= numberOfFrames
     badFrames = false(numberOfFrames,1);
-    RevasWarning('TrimVideo(): size mismatch between ''badFrames'' and input video. Using all frames for this video.', parametersStructure);  
+    RevasWarning('TrimVideo(): size mismatch between ''badFrames'' and input video. Using all frames for this video.', params);  
 end
 
 
@@ -322,7 +327,7 @@ for fr = 1:numberOfFrames
         rawStimulusLocations(fr,:) = [xPeak yPeak] - floor([sw sh]/2);
 
         % assess quality, if satisfied use the sample. otherwise discard.
-        if peakValues(fr) >= peakValueThreshold
+        if peakValues(fr) >= minimumPeakThreshold
             stimulusLocations(fr,:) = rawStimulusLocations(fr,:);
 
             % Remove target / replace it with noise here

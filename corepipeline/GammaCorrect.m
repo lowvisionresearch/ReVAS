@@ -1,4 +1,4 @@
-function outputVideo = GammaCorrect(inputVideo, parametersStructure)
+function outputVideo = GammaCorrect(inputVideo, params)
 %GAMMA CORRECT Applies gamma correction or some other contrast enhancement
 % operation to the video.
 %
@@ -10,9 +10,9 @@ function outputVideo = GammaCorrect(inputVideo, parametersStructure)
 %   input file name. In the latter situation, no video is written and
 %   the result is returned.
 %
-%   |parametersStructure| is a struct as specified below.
+%   |params| is a struct as specified below.
 %
-%   Fields of the |parametersStructure| 
+%   Fields of the |params| 
 %   -----------------------------------
 %   overwrite          : set to true to overwrite existing files.
 %                        Set to false to abort the function call if the
@@ -38,10 +38,10 @@ function outputVideo = GammaCorrect(inputVideo, parametersStructure)
 %                        discarded frames. 
 %   Example usage: 
 %       inputVideo = 'tslo-dark.avi';
-%       parametersStructure.overwrite = true;
-%       parametersStructure.method = 'simpleGamma';
-%       parametersStructure.gammaExponent = 0.6;
-%       GammaCorrect(inputVideo, parametersStructure);
+%       params.overwrite = true;
+%       params.method = 'simpleGamma';
+%       params.gammaExponent = 0.6;
+%       GammaCorrect(inputVideo, params);
 
 %% Determine inputVideo type.
 if ischar(inputVideo)
@@ -57,48 +57,48 @@ end
 %% Set parameters to defaults if not specified.
 
 if nargin < 2
-    parametersStructure = struct;
+    params = struct;
 end
 
-if ~isfield(parametersStructure, 'overwrite')
+if ~isfield(params, 'overwrite')
     overwrite = false; 
 else
-    overwrite = parametersStructure.overwrite;
+    overwrite = params.overwrite;
 end
 
-if ~isfield(parametersStructure, 'method')
+if ~isfield(params, 'method')
     method = 'simpleGamma';
-    RevasWarning(['GammaCorrect is using default parameter for method: ' method] , parametersStructure);
+    RevasWarning(['GammaCorrect is using default parameter for method: ' method] , params);
 else
-    method = parametersStructure.method;
+    method = params.method;
 end
 
-if ~isfield(parametersStructure, 'gammaExponent')
+if ~isfield(params, 'gammaExponent')
     gammaExponent = 0.6;
-    RevasWarning(['GammaCorrect is using default parameter for gammaExponent: ' num2str(gammaExponent)] , parametersStructure);
+    RevasWarning(['GammaCorrect is using default parameter for gammaExponent: ' num2str(gammaExponent)] , params);
 else
-    gammaExponent = parametersStructure.gammaExponent;
+    gammaExponent = params.gammaExponent;
 end
 
-if ~isfield(parametersStructure, 'toneCurve')
+if ~isfield(params, 'toneCurve')
     toneCurve = uint8(0:255); % this does nothing 
-    RevasWarning('GammaCorrect is using default parameter for toneCurve: no correction.' , parametersStructure);
+    RevasWarning('GammaCorrect is using default parameter for toneCurve: no correction.' , params);
 else
-    toneCurve = parametersStructure.toneCurve;
+    toneCurve = params.toneCurve;
 end
 
-if ~isfield(parametersStructure, 'histLevels')
+if ~isfield(params, 'histLevels')
     histLevels = 64;
-    RevasWarning(['GammaCorrect is using default parameter for histLevels: ' num2str(histLevels)], parametersStructure);
+    RevasWarning(['GammaCorrect is using default parameter for histLevels: ' num2str(histLevels)], params);
 else
-    histLevels = parametersStructure.histLevels;
+    histLevels = params.histLevels;
 end
 
-if ~isfield(parametersStructure, 'badFrames')
+if ~isfield(params, 'badFrames')
     badFrames = false;
-    RevasWarning('GammaCorrect is using default parameter for badFrames: none.', parametersStructure);
+    RevasWarning('GammaCorrect is using default parameter for badFrames: none.', params);
 else
-    badFrames = parametersStructure.badFrames;
+    badFrames = params.badFrames;
 end
 
 
@@ -108,10 +108,10 @@ if writeResult
     if ~exist(outputVideoPath, 'file')
         % left blank to continue without issuing warning in this case
     elseif ~overwrite
-        RevasWarning(['GammaCorrect() did not execute because it would overwrite existing file. (' outputVideoPath ')'], parametersStructure);
+        RevasWarning(['GammaCorrect() did not execute because it would overwrite existing file. (' outputVideoPath ')'], params);
         return;
     else
-        RevasWarning(['GammaCorrect() is proceeding and overwriting an existing file. (' outputVideoPath ')'], parametersStructure);
+        RevasWarning(['GammaCorrect() is proceeding and overwriting an existing file. (' outputVideoPath ')'], params);
     end
 end
 
@@ -156,7 +156,7 @@ end
 % If badFrames are provided but its size don't match the number of frames
 if length(badFrames) ~= numberOfFrames
     badFrames = false(numberOfFrames,1);
-    RevasWarning('GammaCorrect(): size mismatch between ''badFrames'' and input video. Using all frames for this video.', parametersStructure);  
+    RevasWarning('GammaCorrect(): size mismatch between ''badFrames'' and input video. Using all frames for this video.', params);  
 end
 
 
