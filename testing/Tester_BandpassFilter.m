@@ -1,23 +1,26 @@
 function success = Tester_BandpassFilter
 
-% the video resides under /testing folder.
-inputVideo = 'tslo-dark.avi';
-
-str = which(inputVideo);
-if isempty(str)
-    success = false;
-    return;
-else
-    [filepath,name,ext] = fileparts(str);
-    inputVideo = [filepath filesep inputVideo];
-end
-
 % suppress warnings
 origState = warning;
 warning('off','all');
 
 
 try
+    %% read in sample video
+    
+    % the video resides under /testing folder.
+    inputVideo = 'tslo-dark.avi';
+
+    str = which(inputVideo);
+    if isempty(str)
+        success = false;
+        return;
+    else
+        [filepath,name,ext] = fileparts(str);
+        inputVideo = [filepath filesep inputVideo];
+    end       
+    
+    
     %% First test
     % use default params
     p = struct; 
