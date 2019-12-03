@@ -1,12 +1,13 @@
 function success = Tester_GetToneCurve
 
-im = imread('cameraman.tif');
-
 % suppress warnings
 origState = warning;
 warning('off','all');
 
 try 
+    %% load image
+    im = imread('cameraman.tif');
+    
     %% First test
     % with default params
     [~, toneMapper] = GetToneCurve;

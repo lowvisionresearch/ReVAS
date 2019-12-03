@@ -3,24 +3,22 @@ function [xPeak, yPeak, peakValue] = FindPeak(correlationMap, isGPU)
 %   Call this function after performing cross-correlation in order to
 %   identify the peak coordinates and value.
 
-if nargin < 2 || isempty(isGPU) || (gpuDeviceCount==0)
+if nargin < 2 || isempty(isGPU) 
     isGPU = false;
+end
+
+if isGPU
+    if (gpuDeviceCount==0)
+        isGPU = false;
+    end
 end
 
 
 %% Find peak
 
 % Find peak of correlation map
-[peakValue, argmax] = max(correlationMap(:));
-xPeak = ceil(argmax/size(correlationMap, 1));
-yPeak = mod(argmax - 1, size(correlationMap, 1)) + 1;
-
-% If there is a tie for max peak, get the one which is closest to the left
-% boundary of the reference frame.
-if size(xPeak,1) > 1
-    [xPeak,ix] = min(xPeak); 
-    yPeak = yPeak(ix);
-end
+peakValue = max(correlationMap(:));
+[yPeak, xPeak] = find(correlationMap == peakValue,1);
 
 % if GPU is enabled, only return the peak location and value not the map.
 if isGPU

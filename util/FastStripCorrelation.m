@@ -26,36 +26,34 @@ referenceFrame = WhereToCompute(referenceFrame, isGPU);
 % precision of the computations
 eps = 10^-6;
 
-strip = single(strip) / 255;
-referenceFrame = single(referenceFrame) / 255;
+strip = single(strip);
+referenceFrame = single(referenceFrame);
 
+% get dimensions
 [stripHeight, stripWidth] = size(strip);
 [refHeight, refWidth] = size(referenceFrame);
 
 if isempty(fieldnames(cache))
     % precomputed arrays
     mask = WhereToCompute(ones(stripHeight, stripWidth,'single'), isGPU);
-    fuv = conv2(referenceFrame, mask);
-    f2uv = conv2(referenceFrame.^2, mask);
+    fuv = conv2(mask, referenceFrame);
+    f2uv = conv2(mask, referenceFrame.^2);
 
     % energy of the reference
-    euv = (f2uv - (fuv.^2)/(stripHeight * stripWidth));
+    euv = f2uv - (fuv.^2)/(stripHeight * stripWidth);
     euv(euv == 0) = eps;
-
-    % shift, sqrt, and take the reciprocal of euv here for speed up. Note that
-    % division is more expensive than multiplication.
-    cache.ieuv = 1./sqrt(circshift(euv, -[stripHeight stripWidth]+1));
+    
+    % shift, sqrt, take reciprocal
+    cache.ieuv = 1./sqrt(circshift(euv,[0 0]));
 
     % fft of the reference
-    cache.cm = stripHeight + refHeight - 1;
-    cache.cn = stripWidth  + refWidth  - 1;
-    cache.fr = fft2(referenceFrame, cache.cm, cache.cn);
+    cache.fr = fft2(padarray(referenceFrame,[stripHeight stripWidth]-1,0,'post'));
 end
 
 %% subtract the mean, compute energy, and fft
 currentStripZero = strip - mean(strip(:));
 currentStripEnergy = sqrt(sum(currentStripZero(:).^2));
-ft = fft2(currentStripZero, cache.cm, cache.cn);
+ft = fft2(padarray(currentStripZero,[refHeight refWidth]-1,0,'pre'));
 
 %% compute the normalized xcorr
 correlationMap = ifft2(conj(ft).*(cache.fr)) .* cache.ieuv / currentStripEnergy;

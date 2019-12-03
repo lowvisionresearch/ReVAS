@@ -1,129 +1,127 @@
-function [interpolatedPixelCoordinates, errorStructure]...
-    = Interpolation2D(correlationMap2D, peakCoordinates, parametersStructure)
+function [xPeakNew, yPeakNew] = ...
+    Interpolation2D(correlationMap2D, xPeak, yPeak, params)
 %2D INTERPOLATION Completes 2D Interpolation on a correlation map.
 %   Completes 2D Interpolation on a correlation map and returns the new
 %   interpolated peak coordinates. Uses the |spline| option in |interp2|.
-%
-%   Fields of the |parametersStructure| 
 %   -----------------------------------
-%   neighborhoodSize                : the length of one of the sides of the
-%                                     neighborhood area over which
-%                                     interpolation is to be performed over
-%                                     in pixels. (default 7)
-%   subpixelDepth                   : the scaling of the desired level of
-%                                     subpixel depth. (default 2)
+%   Input
+%   -----------------------------------
+%   |correlationMap2D| is a 2D array containing the output of normalized
+%   cross-correlation operation.
+%
+%   |xPeak| and |yPeak| are peak coordinates.
+%
+%   |params| is a struct as specified below.
+%
+%   -----------------------------------
+%   Fields of the |params| 
+%   -----------------------------------
+%
+%   'neighborhoodSize' in pixels.
+%
+%   'subpixelDepth' is an integer, intigating how many octave levels deep
+%   we want to interpolate. (default 3, i.e., 2^-3 = 0.125px)
+%
+%   'interpFunc' is a function pointer. e.g., @interp2, OR  @splinterp2
+%
+%   'enableGPU' is a flag used to determine whether the correlation map is 
+%   in GPU memory.
+%
 
-%% Input Validation
 
-try
-    if ~ismatrix(correlationMap2D)
-        error('Invalid Input for interpolation2D (correlationMap2D is not 2 dimensional)');
-    elseif true(size(peakCoordinates) ~= [1 2])
-        error('Invalid Input for interpolation2D (peakCoordinates is not 1x2 coordinate pair)');
-    elseif ~isfield(parametersStructure, 'neighborhoodSize')
-        error('Invalid Input for interpolation2D (neighborhoodSize is not a field of parametersStructure)');
-    elseif ~isfield(parametersStructure, 'subpixelDepth')
-        error('Invalid Input for interpolation2D (subpixelDepth is not a field of parametersStructure)');
-    elseif ~isscalar(parametersStructure.neighborhoodSize) || ...
-            mod(parametersStructure.neighborhoodSize, 2) ~= 1
-        error('Invalid Input for interpolation2D (neighborhoodSize is not an odd scalar)');
-    elseif ~isscalar(parametersStructure.subpixelDepth)
-        error('Invalid Input for interpolation2D (subpixelDepth is not a scalar)');
-    end
-    
-    errorStructure = struct();
-catch MException
-    errorStructure = struct(MException);
+if nargin < 3
+    error('Interpolation2D: insufficient number of input arguments.');
 end
 
-if size(correlationMap2D, 1) == 1 || size(correlationMap2D, 2) == 1
-    RevasWarning(['Interpolation not applied this iteration since correlationMap2D dimensions were ' int2str(size(correlationMap2D, 1)) ' x ' int2str(size(correlationMap2D, 2))]);
-    interpolatedPixelCoordinates = peakCoordinates;
-    return;
+if isempty(correlationMap2D)
+    error('Interpolation2D: correlation map is empty');
+end
+
+if ~all(IsPositiveInteger([xPeak yPeak]))
+    error('Interpolation2D: xPeak and yPeak must be integers.');
 end
 
 %% Set parameters to defaults if not specified.
 
-if ~isfield(parametersStructure, 'neighborhoodSize')
-   parametersStructure.neighborhoodSize = 7;
-   RevasMessage('using default parameter for neighborhoodSize');
+if nargin < 2
+    params = struct;
+end
+
+if ~isfield(params, 'neighborhoodSize')
+    neighborhoodSize = 15; 
 else
-   parametersStructure.neighborhoodSize = parametersStructure.neighborhoodSize;
-   if ~IsNaturalNumber(parametersStructure.neighborhoodSize)
-       error('neighborhoodSize must be a natural number');
-   end
+    neighborhoodSize = params.neighborhoodSize;
 end
-if ~isfield(parametersStructure, 'subpixelDepth')
-   parametersStructure.subpixelDepth = 2;
-   RevasMessage('using default parameter for subpixelDepth');
+
+if ~isfield(params, 'subpixelDepth')
+    subpixelDepth = 2; 
 else
-   parametersStructure.subpixelDepth = parametersStructure.subpixelDepth;
-   if ~IsPositiveRealNumber(parametersStructure.subpixelDepth)
-       error('subpixelDepth must be a positive, real number');
-   end
+    subpixelDepth = params.subpixelDepth;
 end
 
-%% Apply |interp2|
-halfNeighborhoodSize = (parametersStructure.neighborhoodSize - 1) / 2;
-[meshgridX, meshgridY] = meshgrid(-halfNeighborhoodSize:halfNeighborhoodSize);
-meshgridX = meshgridX + peakCoordinates(1);
-meshgridY = meshgridY + peakCoordinates(2);
-
-% Trimming to neighborhoodSize
-gridSpacing = 2^(-parametersStructure.subpixelDepth);
-[finerMeshgridX, finerMeshgridY] = ...
-    meshgrid(-halfNeighborhoodSize:gridSpacing:halfNeighborhoodSize);
-finerMeshgridX = finerMeshgridX + peakCoordinates(1);
-finerMeshgridY = finerMeshgridY + peakCoordinates(2);
-
-% Dealing with if the window defined by neighborhood size is too large
-% because we are at the border of the correlation map.
-trimYLow = (peakCoordinates(1)-1-halfNeighborhoodSize) * -1;
-trimXLow = (peakCoordinates(2)-1-halfNeighborhoodSize) * -1;
-trimYHigh = peakCoordinates(1)+halfNeighborhoodSize - size(correlationMap2D, 1);
-trimXHigh = peakCoordinates(2)+halfNeighborhoodSize - size(correlationMap2D, 2);
-
-% Clear trim variables if no trimming necessary.
-if trimYLow < 1
-    trimYLow = 0;
-end
-if trimXLow < 1
-    trimXLow = 0;
-end
-if trimYHigh < 0
-    trimYHigh = 0;
-end
-if trimXHigh < 0
-    trimXHigh = 0;
+if ~isfield(params, 'interpMethod')
+    interpMethod = 'linear'; 
+else
+    interpMethod = params.interpMethod;
 end
 
-% Apply trimming to meshgrids as necessary.
-meshgridX = meshgridX(trimYLow+1:end-trimYHigh, trimXLow+1:end-trimXHigh);
-meshgridY = meshgridY(trimYLow+1:end-trimYHigh, trimXLow+1:end-trimXHigh);
-finerMeshgridX = finerMeshgridX((trimYLow+1-1)*gridSpacing^-1 + 1:end-((trimYHigh+1-1)*gridSpacing^-1),...
-    (trimXLow+1-1)*gridSpacing^-1 + 1:end-((trimXHigh+1-1)*gridSpacing^-1));
-finerMeshgridY = finerMeshgridY((trimYLow+1-1)*gridSpacing^-1 + 1:end-((trimYHigh+1-1)*gridSpacing^-1),...
-    (trimXLow+1-1)*gridSpacing^-1 + 1:end-((trimXHigh+1-1)*gridSpacing^-1));
-
-correlationMap2D = correlationMap2D(...
-    max(1, peakCoordinates(1)-halfNeighborhoodSize):min(end, peakCoordinates(1)+halfNeighborhoodSize),...
-    max(1, peakCoordinates(2)-halfNeighborhoodSize):min(end, peakCoordinates(2)+halfNeighborhoodSize));
-
-finerCorrelationMap2D = interp2(meshgridX, meshgridY, correlationMap2D,...
-    finerMeshgridX, finerMeshgridY, 'spline');
-
-%% Find new peak of new
-% correlation map and calculate pixel coordinate.
-[ypeak, xpeak] = find(finerCorrelationMap2D==max(finerCorrelationMap2D(:)));
-
-% Scale back down to pixel units
-interpolatedPixelCoordinates = [ypeak xpeak];
-interpolatedPixelCoordinates = ...
-    floor((interpolatedPixelCoordinates - 1) / gridSpacing^-1) + 1 + ...
-    (mod((interpolatedPixelCoordinates - 1), gridSpacing^-1) * gridSpacing);
-
-% Center back around original peak
-interpolatedPixelCoordinates = interpolatedPixelCoordinates ...
-    - 1 - halfNeighborhoodSize + peakCoordinates;
-
+if ~isfield(params, 'enableGPU')
+    enableGPU = false; 
+else
+    enableGPU = params.enableGPU;
 end
+
+%%
+% get sizes
+[refHeight, refWidth] = size(correlationMap2D);
+halfSize = floor(neighborhoodSize/2);
+
+% check if we hit the boundaries of the correlation map
+left = max(1, xPeak - halfSize);
+right = min(refWidth, xPeak + halfSize);
+top = max(1, yPeak - halfSize);
+bottom = min(refHeight, yPeak + halfSize);
+
+% new resolution
+dpx = (2^(-subpixelDepth));
+
+% crop out subsection of the correlation map
+subCorrMap = correlationMap2D(top:bottom,left:right);
+[subHeight, subWidth] = size(subCorrMap);
+
+% if it's in GPU, bring it 
+if enableGPU
+    subCorrMap = gather(subCorrMap);
+end
+
+% create fine meshgrid
+[xq, yq] = meshgrid(1:dpx:subWidth, 1:dpx:subHeight);
+
+% now interpolate
+fineSubCorrMap = interp2(subCorrMap,xq,yq,interpMethod);
+
+% find peak
+[xPeakNew, yPeakNew, peakValueNew] = FindPeak(fineSubCorrMap, false);
+
+% get half size of the finer map
+[fineSubHeight, fineSubWidth] = size(fineSubCorrMap);
+
+
+figure;
+imagesc(fineSubCorrMap); hold on;
+scatter3(xPeakNew,yPeakNew,peakValueNew,50,'r','filled');
+
+% add offset to make coordinates with respect to the full correlation map
+xPeakNew = xPeakNew * (subWidth+1) / (fineSubWidth+1) + left - 1;
+yPeakNew = yPeakNew * (subHeight+1) / (fineSubHeight+1) + top - 1;
+
+figure;
+imagesc(correlationMap2D); hold on;
+scatter3(xPeak,yPeak,max(correlationMap2D(:)),50,'g','filled');
+scatter3(xPeakNew,yPeakNew,peakValueNew,50,'r','filled');
+
+keyboard;
+
+
+
+

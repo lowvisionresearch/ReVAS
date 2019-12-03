@@ -134,30 +134,26 @@ end
 
 [~,callerStr] = fileparts(mfilename);
 
-% logical params
-overwrite               = ValidateArgument(params,'overwrite',false,@islogical,callerStr);
-enableGPU               = ValidateArgument(params,'enableGPU',false,@islogical,callerStr);
-enableVerbosity         = ValidateArgument(params,'enableVerbosity',false,@islogical,callerStr);
-enableSubpixelInterp    = ValidateArgument(params,'enableSubpixelInterp',false,@islogical,callerStr);
-enableGaussianFiltering = ValidateArgument(params,'enableGaussianFiltering',false,@islogical,callerStr);
-corrMethod              = ValidateArgument(params,'corrMethod','mex',@(x) any(contains({'mex','normxcorr','fft','cuda'},x)),callerStr);
-peakValueThreshold      = ValidateArgument(params,'peakValueThreshold',0.6,@(x) isscalar(x) & (x>=0) & (x<=1),callerStr);
-badFrames               = ValidateArgument(params,'badFrames',false,@(x) all(logical(x)),callerStr);
-stripHeight             = ValidateArgument(params,'stripHeight',11,@IsNaturalNumber,callerStr);
-samplingRate            = ValidateArgument(params,'samplingRate',540,@IsNaturalNumber,callerStr);
-minimumPeakThreshold    = ValidateArgument(params,'minimumPeakThreshold',0.3,@IsNonNegativeRealNumber,callerStr);
-adaptiveSearch          = ValidateArgument(params,'adaptiveSearch',true,@islogical,callerStr);
-searchWindowHeight      = ValidateArgument(params,'searchWindowHeight',79,@IsPositiveInteger,callerStr);
-lookBackTime            = ValidateArgument(params,'lookBackTime',10,@(x) IsPositiveRealNumber(x) & (x>=2),callerStr);
-frameRate               = ValidateArgument(params,'frameRate',30,@IsPositiveRealNumber,callerStr);
-downSampleFactor        = ValidateArgument(params,'downSampleFactor',1,@IsPositiveInteger,callerStr);
-axesHandles             = ValidateArgument(params,'axesHandles',nan,@(x) isnan(x) | all(ishandle(x)),callerStr);
-neighborhoodSize        = ValidateArgument(params,'neighborhoodSize',5,@IsPositiveInteger,callerStr);
-subpixelDepth           = ValidateArgument(params,'subpixelDepth',2,@IsPositiveInteger,callerStr);
-maximumSD               = ValidateArgument(params,'maximumSD',10,@IsPositiveRealNumber,callerStr);
-SDWindowSize            = ValidateArgument(params,'SDWindowSize',25,@IsPositiveRealNumber,callerStr);
-trim                    = ValidateArgument(params,'trim',[0 0],@(x) all(IsNaturalNumber(x)) & (length(x)==2),callerStr);
-referenceFrame          = ValidateArgument(params,'referenceFrame',1,...
+% validate params
+overwrite          = ValidateArgument(params,'overwrite',false,@islogical,callerStr);
+enableGPU          = ValidateArgument(params,'enableGPU',false,@islogical,callerStr);
+enableVerbosity    = ValidateArgument(params,'enableVerbosity',false,@islogical,callerStr);
+enableSubpixel     = ValidateArgument(params,'enableSubpixel',false,@islogical,callerStr);
+corrMethod         = ValidateArgument(params,'corrMethod','mex',@(x) any(contains({'mex','normxcorr','fft','cuda'},x)),callerStr);
+badFrames          = ValidateArgument(params,'badFrames',false,@(x) all(logical(x)),callerStr);
+stripHeight        = ValidateArgument(params,'stripHeight',11,@IsNaturalNumber,callerStr);
+samplingRate       = ValidateArgument(params,'samplingRate',540,@IsNaturalNumber,callerStr);
+minPeakThreshold   = ValidateArgument(params,'minPeakThreshold',0.3,@IsNonNegativeRealNumber,callerStr);
+adaptiveSearch     = ValidateArgument(params,'adaptiveSearch',true,@islogical,callerStr);
+searchWindowHeight = ValidateArgument(params,'searchWindowHeight',79,@IsPositiveInteger,callerStr);
+lookBackTime       = ValidateArgument(params,'lookBackTime',10,@(x) IsPositiveRealNumber(x) & (x>=2),callerStr);
+frameRate          = ValidateArgument(params,'frameRate',30,@IsPositiveRealNumber,callerStr);
+downSampleFactor   = ValidateArgument(params,'downSampleFactor',1,@IsPositiveInteger,callerStr);
+axesHandles        = ValidateArgument(params,'axesHandles',nan,@(x) isnan(x) | all(ishandle(x)),callerStr);
+neighborhoodSize   = ValidateArgument(params,'neighborhoodSize',5,@IsPositiveInteger,callerStr);
+subpixelDepth      = ValidateArgument(params,'subpixelDepth',2,@IsPositiveInteger,callerStr);
+trim               = ValidateArgument(params,'trim',[0 0],@(x) all(IsNaturalNumber(x)) & (length(x)==2),callerStr);
+referenceFrame     = ValidateArgument(params,'referenceFrame',1,...
     @(x) isscalar(x) | ischar(x) | (isnumeric(x) & size(x,1)>1 & size(x,2)>1),callerStr);
 
 % check if CUDA enabled GPU exists
@@ -299,6 +295,8 @@ isSetView = true;
 
 %% Extract motion by template matching strips to reference frame
 
+% the big loop. :)
+
 % loop across frames
 for fr = 1:numberOfFrames
     if ~abortTriggered
@@ -354,6 +352,8 @@ for fr = 1:numberOfFrames
                             nansum([0 nanmean(movementHistory)]) - ...
                             (sn == 1) * (height - stripHeight);
                         thisWindowHeight = searchWindowHeight * 2^(attempt-1); 
+                        
+                        % check for out of referenceFrame bounds
                         rowStart = max(1, loc - floor(thisWindowHeight/2));
                         rowEnd = max(refHeight, loc + floor(thisWindowHeight/2));
                     end
@@ -396,11 +396,29 @@ for fr = 1:numberOfFrames
                 
                 % check if criterion is satisfied, if so break the attempt
                 % loop and continue to the next strip
-                if peakValue >= minimumPeakThreshold
+                if peakValue >= minPeakThreshold
                     break;
                 end
             end
             
+            % if subpixel estimation is requested
+            if enableSubpixel
+                [xPeak, yPeak] = Interpolation2D(correlationMap, xPeak, yPeak, params);
+            end
+            
+%             % 2D Interpolation if enabled                                            <                                                                                    -
+% 720         if parametersStructure.enableSubpixelInterpolation                       <                                                                                    -
+% 721             [interpolatedPeakCoordinates, statisticsStructure.errorStructure] =  <                                                                                    -
+% 722                 Interpolation2D(correlationMap, [yPeak, xPeak], ...              <                                                                                    -
+% 723                 parametersStructure.subpixelInterpolationParameters);            <                                                                                    -
+% 724                                                                                  .                                                                                  431
+% 725             xPeak = interpolatedPeakCoordinates(2);                              <                                                                                    -
+% 726             yPeak = interpolatedPeakCoordinates(1);                              <                                                                                    -
+% 727         end  
+            
+
+
+
             % update the traces/stats
             peakValueArray(thisSample) = peakValue;
             rawPosition(thisSample,:) = [xPeak (yPeak+rowStart-1)];
