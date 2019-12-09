@@ -1,5 +1,6 @@
-function [xPeakNew, yPeakNew] = ...
-    Interpolation2D(correlationMap2D, xPeak, yPeak, params)
+function [xPeakNew, yPeakNew, peakValueNew] = ...
+    Interpolation2D(correlationMap2D, xPeak, yPeak, neighborhoodSize, ...
+        subpixelDepth, interpMethod, enableGPU)
 %2D INTERPOLATION Completes 2D Interpolation on a correlation map.
 %   Completes 2D Interpolation on a correlation map and returns the new
 %   interpolated peak coordinates. Uses the |spline| option in |interp2|.
@@ -10,12 +11,6 @@ function [xPeakNew, yPeakNew] = ...
 %   cross-correlation operation.
 %
 %   |xPeak| and |yPeak| are peak coordinates.
-%
-%   |params| is a struct as specified below.
-%
-%   -----------------------------------
-%   Fields of the |params| 
-%   -----------------------------------
 %
 %   'neighborhoodSize' in pixels.
 %
@@ -43,44 +38,32 @@ end
 
 %% Set parameters to defaults if not specified.
 
-if nargin < 2
-    params = struct;
+if nargin < 4 || isempty(neighborhoodSize)
+    neighborhoodSize = 5; 
 end
 
-if ~isfield(params, 'neighborhoodSize')
-    neighborhoodSize = 15; 
-else
-    neighborhoodSize = params.neighborhoodSize;
-end
-
-if ~isfield(params, 'subpixelDepth')
+if nargin < 5 || isempty(subpixelDepth)
     subpixelDepth = 2; 
-else
-    subpixelDepth = params.subpixelDepth;
 end
 
-if ~isfield(params, 'interpMethod')
-    interpMethod = 'linear'; 
-else
-    interpMethod = params.interpMethod;
+if nargin < 5 || isempty(interpMethod)
+    interpMethod = 'spline'; 
 end
 
-if ~isfield(params, 'enableGPU')
+if nargin < 5 || isempty(enableGPU)
     enableGPU = false; 
-else
-    enableGPU = params.enableGPU;
 end
+
 
 %%
 % get sizes
 [refHeight, refWidth] = size(correlationMap2D);
-halfSize = floor(neighborhoodSize/2);
 
 % check if we hit the boundaries of the correlation map
-left = max(1, xPeak - halfSize);
-right = min(refWidth, xPeak + halfSize);
-top = max(1, yPeak - halfSize);
-bottom = min(refHeight, yPeak + halfSize);
+left = max(1, xPeak - neighborhoodSize);
+right = min(refWidth, xPeak + neighborhoodSize);
+top = max(1, yPeak - neighborhoodSize);
+bottom = min(refHeight, yPeak + neighborhoodSize);
 
 % new resolution
 dpx = (2^(-subpixelDepth));
@@ -106,21 +89,10 @@ fineSubCorrMap = interp2(subCorrMap,xq,yq,interpMethod);
 % get half size of the finer map
 [fineSubHeight, fineSubWidth] = size(fineSubCorrMap);
 
-
-figure;
-imagesc(fineSubCorrMap); hold on;
-scatter3(xPeakNew,yPeakNew,peakValueNew,50,'r','filled');
-
 % add offset to make coordinates with respect to the full correlation map
 xPeakNew = xPeakNew * (subWidth+1) / (fineSubWidth+1) + left - 1;
 yPeakNew = yPeakNew * (subHeight+1) / (fineSubHeight+1) + top - 1;
 
-figure;
-imagesc(correlationMap2D); hold on;
-scatter3(xPeak,yPeak,max(correlationMap2D(:)),50,'g','filled');
-scatter3(xPeakNew,yPeakNew,peakValueNew,50,'r','filled');
-
-keyboard;
 
 
 
