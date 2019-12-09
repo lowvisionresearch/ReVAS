@@ -10,7 +10,7 @@ configurations.mat
 ReRefTesting.m
 Test.m
 util/not_for_release
-demo/*
+demo/*.avi
 !demo/globalRef.tif
 *.cpp~
 *.m~
