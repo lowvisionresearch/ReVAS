@@ -45,13 +45,11 @@ try
     assert(size(videoArray,3) - size(outputVideo,3) == sum((p.badFrames)));
     
     %% Third test
-    p.badFrames = true(15,1); % intentionally out of bounds
-    p.badFrames([2 4 6]) = false;
+    p.badFrames = false(7,1); % intentionally out of bounds
+    p.badFrames([2 4 6]) = true;
     p.method = 'toneMapping';
     [toneCurve, p.toneCurve] = GetToneCurve(31,1.6,200);
     outputVideo2 = GammaCorrect(videoArray,p);
-    
-    assert(size(outputVideo2,3) == size(videoArray,3));
     
     success = true;
     

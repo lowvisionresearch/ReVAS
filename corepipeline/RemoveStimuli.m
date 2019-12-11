@@ -18,16 +18,6 @@ function [outputVideo, varargout] = RemoveStimuli(inputVideo, params)
 %   |params| is a struct as specified below.
 %
 %   -----------------------------------
-%   Output
-%   -----------------------------------
-%   |outputVideo| is either the path to the video, or the video matrix
-%   itself after stimulus removal. 
-%
-%   varargout{1} = matFilePath
-%   varargout{2} = stimulus locations.
-%
-%
-%   -----------------------------------
 %   Fields of the |params| 
 %   -----------------------------------
 %   overwrite          : set to true to overwrite existing files.
@@ -39,12 +29,12 @@ function [outputVideo, varargout] = RemoveStimuli(inputVideo, params)
 %                        provided or empty, new figures are created.
 %                        (relevant only when enableVerbosity is true)
 %   stimulus           : is a path to a stimulus image, a 2D or 3D (rgb) array, 
-%                        or a struct containing a |size| field which is the
-%                        size of the stimulus in pixels (default 11), and a
-%                        |thickness| field which is the thickness of the
-%                        default cross shape in pixels (default 1). (default
-%                        is dynamically generated stimulus with
-%                        aforementioned defaults)
+%                        or empty. 
+%   stimulusSize       : size of the stimulus in pixels (default 11), 
+%   stimulusThickness  : thickness of the default cross shape in pixels 
+%                        (default 1). 
+%   stimulusPolarity   : 1 or 0, or true or false. If true or 1, stimulus
+%                        is a white cross on a black background.
 %   removalAreaSize    : is the size of the rectangle to remove from the
 %                        video, centered around the identified stimulus
 %                        location. The format is [width length], given in
@@ -53,7 +43,7 @@ function [outputVideo, varargout] = RemoveStimuli(inputVideo, params)
 %                        remove stimulus but include some region around it,
 %                        without needing to specify the exact shape of the
 %                        stimulus. if empty, ignored completely.
-%   minimumPeakThreshold:the minimum value above which a peak
+%   minPeakThreshold   :the minimum value above which a peak
 %                        needs to be in order to be considered 
 %                        a valid correlation. (this applies
 %                        regardless of enableGaussianFiltering)
@@ -66,16 +56,27 @@ function [outputVideo, varargout] = RemoveStimuli(inputVideo, params)
 %                        sampling pixels from the frame itself (produces
 %                        better filling in).
 %
+%
+%   -----------------------------------
+%   Output
+%   -----------------------------------
+%   |outputVideo| is either the path to the video, or the video matrix
+%   itself after stimulus removal. 
+%
+%   varargout{1} = matFilePath
+%   varargout{2} = stimulus locations.
+%   varargout{3} = params.
+%
 %   -----------------------------------
 %   Example usage
 %   -----------------------------------
 %       inputVideo = 'tslo.avi';
 %       params.enableVerbosity = true;
 %       params.overwrite = true;
-%       params.stimulus = struct;
-%       params.stimulus.size = 11;
-%       params.stimulus.thickness = 1;
-%       params.stimulus.polarity = 1;
+%       params.stimulus = [];
+%       params.stimuluSize = 11;
+%       params.stimuluThickness = 1;
+%       params.stimuluPolarity = 1;
 %   OR
 %       params.stimulus = <path to an image>;
 %       params.removalAreaSize = [11 11];
@@ -98,122 +99,50 @@ if nargin < 2
     params = struct;
 end
 
-if ~isfield(params, 'overwrite')
-    overwrite = false; 
-else
-    overwrite = params.overwrite;
-end
+% validate params
+[~,callerStr] = fileparts(mfilename);
+[default, validate] = GetDefaults(callerStr);
+params = ValidateField(params,default,validate,callerStr);
 
-if ~isfield(params, 'enableVerbosity')
-    enableVerbosity = false; 
-else
-    enableVerbosity = params.enableVerbosity;
-end
+%% Handle verbosity 
 
-if ~isfield(params, 'axesHandles')
-    axesHandles = nan; 
-else
-    axesHandles = params.axesHandles;
-end
-
-if ~isfield(params, 'minimumPeakThreshold')
-    minimumPeakThreshold = 0.6;
-    RevasWarning(['RemoveStimuli is using default parameter for minimumPeakThreshold: ' num2str(minimumPeakThreshold)] , params);
-else
-    minimumPeakThreshold = params.minimumPeakThreshold;
-end
-
-if ~isfield(params, 'frameRate')
-    frameRate = 30;
-    RevasWarning(['RemoveStimuli is using default parameter for frameRate: ' num2str(frameRate)] , params);
-else
-    frameRate = params.frameRate;
-end
-
-if ~isfield(params, 'fillingMethod')
-    fillingMethod = 'resample';
-    RevasWarning(['RemoveStimuli is using default parameter for fillingMethod: ' fillingMethod] , params);
-else
-    fillingMethod = params.fillingMethod;
-end
-
-if ~isfield(params, 'badFrames')
-    badFrames = false;
-    RevasWarning('RemoveStimuli is using default parameter for badFrames: none.', params);
-else
-    badFrames = params.badFrames;
-end
-
-if ~isfield(params, 'stimulus')
-    stimulus.size = 11;
-    stimulus.thickness = 1;
-    stimulus.polarity = 1;
-    description = 'Cross: 11px size, 1px thickness, positive polarity'; 
-    RevasWarning(['RemoveStimuli is using default parameter for stimulus: ' description], params);
-else
-    % Two stimulus input types are acceptable:
-    % - Path to an image of the stimulus
-    % - A struct describing |size| and |thickness| of stimulus
-
-    stimulus = params.stimulus;
-    
-    % if it's a path, read the image from the path
-    if ischar(stimulus) 
-        stimulusMatrix = imread(stimulus);
-    else
-        stimulusMatrix = stimulus;
-    end
-
-    % if it's a numeric array, check if it's RGB
-    if isnumeric(stimulusMatrix)
-        [~, ~, numChannels] = size(stimulusMatrix);
-        if numChannels == 3
-            stimulusMatrix = rgb2gray(stimulusMatrix);
-        end
+% check if axes handles are provided, if not, create axes.
+if params.enableVerbosity && isempty(params.axesHandles)
+    fh = figure(2020);
+    set(fh,'units','normalized','outerposition',[0.16 0.053 0.67 0.51]);
+    params.axesHandles(1) = subplot(2,3,[1 2 4 5]);
+    params.axesHandles(2) = subplot(2,3,3);
+    params.axesHandles(3) = subplot(2,3,6);
+    for i=1:3
+        cla(params.axesHandles(i));
     end
 end
 
-% if stimulus is a struct, construct the matrix assuming that stimulus is a
-% cross (more like a plus sign)
-if isstruct(stimulus)
-    stimulusMatrix = MakeStimulusCross(stimulus.size, stimulus.thickness, stimulus.polarity);
-    
-    % zeropad for improved matching -- important for making this step
-    % robust against being used for videos with no stimulus.
-    stimulusMatrix = padarray(stimulusMatrix, stimulus.size*[1 1],~(stimulus.polarity),'both');
-end
-
-% make sure to conver stimulus to uint8
-stimulusMatrix = uint8(stimulusMatrix);
-
-if ~isfield(params, 'removalAreaSize')
-    removalAreaSize = []; % pixels
-    RevasWarning(['RemoveStimuli is using default parameter for removalAreaSize: ' num2str(removalAreaSize)] , params);
-else
-    removalAreaSize = params.removalAreaSize;
-    if isscalar(removalAreaSize)
-        removalAreaSize = removalAreaSize*[1 1];
-    end
-end
 
 %% Handle overwrite scenarios.
 
 if writeResult
     outputVideoPath = Filename(inputVideo, 'removestim');
     matFilePath = Filename(inputVideo, 'stimlocs');
+    params.outputVideoPath = outputVideoPath;
+    params.matFilePath = matFilePath;
+    
     if nargout > 1
         varargout{1} = matFilePath;
     end
     
     if ~exist(matFilePath, 'file') && ~exist(outputVideoPath, 'file')
         % left blank to continue without issuing warning in this case
-    elseif ~overwrite
+    elseif ~params.overwrite
         
         % if file exists and overwrite is set to false, then read the file
         % contents and return that.
-        load(matFilePath,'stimulusLocations');
+        load(matFilePath,'stimulusLocations','params');
         if nargout > 2
             varargout{2} = stimulusLocations;
+        end
+        if nargout > 3
+            varargout{3} = params;
         end
         
         RevasWarning('RemoveStimuli() did not execute because it would overwrite existing file.', params);
@@ -223,16 +152,40 @@ if writeResult
     end
 end
 
+%% Handle stimulus separately
 
-
-%% Allow for aborting if not parallel processing
-global abortTriggered;
-
-% parfor does not support global variables.
-% cannot abort when run in parallel.
-if isempty(abortTriggered)
-    abortTriggered = false;
+% if it's a path, read the image from the path
+if ischar(params.stimulus) 
+    stimulusMatrix = imread(params.stimulus);
+else
+    stimulusMatrix = params.stimulus;
 end
+
+% if it's a numeric array, check if it's RGB
+if isnumeric(stimulusMatrix)
+    numChannels = size(stimulusMatrix,3);
+    if numChannels == 3
+        stimulusMatrix = rgb2gray(stimulusMatrix);
+    end
+end
+
+
+% if stimulus is empty, construct the matrix assuming that stimulus is a
+% cross (more like a plus sign)
+if isempty(params.stimulus)
+    stimulusMatrix = MakeStimulusCross(params.stimulusSize, params.stimulusThickness, params.stimulusPolarity);
+    
+    % zeropad for improved matching -- important for making this step
+    % robust against being used for videos with no stimulus.
+    stimulusMatrix = padarray(stimulusMatrix, params.stimulusSize*[1 1],~(params.stimulusPolarity),'both');
+end
+
+% make sure to conver stimulus to uint8
+stimulusMatrix = uint8(stimulusMatrix);
+
+% at this point, stimulusMatrix should be a 2D array.
+assert(ismatrix(stimulusMatrix));
+
 
 %% Create reader/writer objects and get some info on videos
 
@@ -242,7 +195,7 @@ if writeResult
 
     % Determine dimensions of video.
     reader = VideoReader(inputVideo);
-    frameRate = reader.FrameRate;
+    params.frameRate = reader.FrameRate;
     width = reader.Width;
     height = reader.Height;
     numberOfFrames = reader.FrameRate * reader.Duration;
@@ -253,26 +206,21 @@ else
     [height, width, numberOfFrames] = size(inputVideo);
     
     % preallocate the output video array
-    outputVideo = zeros(height, width, numberOfFrames-sum(badFrames),'uint8');
+    outputVideo = zeros(height, width, numberOfFrames-sum(params.badFrames),'uint8');
 end
 
 %% badFrames handling
-% If badFrames is not provided, use all frames
-if length(badFrames)<=1 && ~badFrames
-    badFrames = false(numberOfFrames,1);
-end
-
-% If badFrames are provided but its size don't match the number of frames
-if length(badFrames) ~= numberOfFrames
-    badFrames = false(numberOfFrames,1);
-    RevasWarning('TrimVideo(): size mismatch between ''badFrames'' and input video. Using all frames for this video.', params);  
-end
+params = HandleBadFrames(numberOfFrames, params, callerStr);
 
 
 %% Some preparation/preallocation before for-loop
 
 % Populate time array
-timeArray = (1:numberOfFrames)' / frameRate;   
+if length(params.badFrames) > numberOfFrames
+    timeSec = (find(~params.badFrames)-1)' / params.frameRate;   
+else
+    timeSec = (0:(numberOfFrames-1))' / params.frameRate;   
+end
 
 % preallocate two columns for horizontal and vertical movements
 rawStimulusLocations = nan(numberOfFrames, 2);
@@ -282,7 +230,7 @@ peakValues = nan(numberOfFrames, 1);
 sw = size(stimulusMatrix,2);
 sh = size(stimulusMatrix,1);
 
-if isempty(removalAreaSize)
+if isempty(params.removalAreaSize)
     % look at the values in stimulus. if more zeros, than it's most
     % probably a positive polarity target (stimulus is brighter). If not,
     % it's a black target.
@@ -295,8 +243,17 @@ if isempty(removalAreaSize)
     halfWidth = floor(sw/2);
     halfHeight = floor(sh/2);
 else
-    halfWidth = floor(removalAreaSize(1)/2);
-    halfHeight = floor(removalAreaSize(2)/2);
+    halfWidth = floor(params.removalAreaSize(1)/2);
+    halfHeight = floor(params.removalAreaSize(2)/2);
+end
+
+%% Allow for aborting if not parallel processing
+global abortTriggered;
+
+% parfor does not support global variables.
+% cannot abort when run in parallel.
+if isempty(abortTriggered)
+    abortTriggered = false;
 end
 
 
@@ -316,7 +273,7 @@ for fr = 1:numberOfFrames
         end
 
         % if it's a blink frame, skip it.
-        if badFrames(fr)
+        if params.skipFrame(fr)
             continue;
         end
 
@@ -327,7 +284,7 @@ for fr = 1:numberOfFrames
         rawStimulusLocations(fr,:) = [xPeak yPeak] - floor([sw sh]/2);
 
         % assess quality, if satisfied use the sample. otherwise discard.
-        if peakValues(fr) >= minimumPeakThreshold
+        if peakValues(fr) >= params.minPeakThreshold
             stimulusLocations(fr,:) = rawStimulusLocations(fr,:);
 
             % Remove target / replace it with noise here
@@ -341,14 +298,14 @@ for fr = 1:numberOfFrames
 
                 % fill in the stimulus area with either noise or resampled
                 % pixels
-                switch fillingMethod
+                switch params.fillingMethod
                     case 'noise'
                         % compute image stats
                         stdev = rms(frame(:));
                         md = double(median(frame(:)));
                         
                         % Generate noise
-                        if isempty(removalAreaSize)
+                        if isempty(params.removalAreaSize)
                             subFrame = frame(ySt:yEn, xSt:xEn);
                             subFrame(indices) = randn(length(indices),1) * stdev + 1.2*md;
                         else
@@ -357,7 +314,7 @@ for fr = 1:numberOfFrames
                         end
                     case 'resample'
                         % Generate noise
-                        if isempty(removalAreaSize)
+                        if isempty(params.removalAreaSize)
                             subFrame = frame(ySt:yEn, xSt:xEn);
                             subFrame(indices) = frame(randi(height*width,length(indices),1));
                         else
@@ -365,6 +322,7 @@ for fr = 1:numberOfFrames
                             subFrame = frame(randi(height*width,(yEn-ySt+1),(xEn-xSt+1)));
                         end
                     otherwise 
+                        error('RemoveStimuli: unknown filling method');
                 end
 
 
@@ -377,27 +335,52 @@ for fr = 1:numberOfFrames
         if writeResult
             writeVideo(writer, frame);
         else
-            nextFrameNumber = sum(~badFrames(1:fr));
+            nextFrameNumber = sum(~params.badFrames(1:fr));
             outputVideo(:, :, nextFrameNumber) = frame; 
         end
 
 
-        % Show the filled frame if verbosity enabled
-        if enableVerbosity
-            if all(ishandle(axesHandles))
-                axes(axesHandles(1)); %#ok<LAXES>
-                colormap(axesHandles(1), 'default');
-            else
-                figure(432);
-            end
-            cla;
-            imagesc(frame); axis image; hold on;
-            title([num2str(fr) ' out of ' num2str(numberOfFrames)]);
-            colormap(gray(256));
-            colorbar;
-            caxis([0 255]);
+        % visualization, if requested.
+        if params.enableVerbosity > 1
+
+            % show cross-correlation output
+            axes(params.axesHandles(1)); %#ok<LAXES>
+            imagesc(frame);
+            axis(params.axesHandles(1),'image');
+            title(params.axesHandles(1),[num2str(fr) ' out of ' num2str(numberOfFrames)]);
+            colormap(params.axesHandles(1),gray(256));
+            caxis(params.axesHandles(1),[0 255]);
+            
+            % show peak values
+            plot(params.axesHandles(2),timeSec,peakValues,'-','linewidth',2); 
+            hold(params.axesHandles(2),'on');
+            plot(params.axesHandles(2),timeSec([1 end]),params.minPeakThreshold*ones(1,2),'--','color',.7*[1 1 1],'linewidth',2);
+            set(params.axesHandles(2),'fontsize',14);
+            xlabel(params.axesHandles(2),'time (sec)');
+            ylabel(params.axesHandles(2),'peak value');
+            ylim(params.axesHandles(2),[0 1]);
+            xlim(params.axesHandles(2),[0 max(timeSec)]);
+            hold(params.axesHandles(2),'off');
+            grid(params.axesHandles(2),'on');
+
+            % show raw output traces
+            plot(params.axesHandles(3),timeSec,rawStimulusLocations,'-','linewidth',2);
+            set(params.axesHandles(3),'fontsize',14);
+            xlabel(params.axesHandles(3),'time (sec)');
+            ylabel(params.axesHandles(3),'stimulus location (px)');
+            legend(params.axesHandles(3),{'hor','ver'});
+            yMin = max([1, prctile(stimulusLocations,5,'all')-10]);
+            yMax = min([max([height width]), prctile(stimulusLocations,95,'all')+10]);
+            ylim(params.axesHandles(3),[yMin yMax]);
+            xlim(params.axesHandles(3),[0 max(timeSec)]);
+            hold(params.axesHandles(3),'off');
+            grid(params.axesHandles(3),'on');
+
+            drawnow; % maybe needed in GUI mode.
         end
-    end
+        
+        
+    end % end of abort
 end % end of video
 
 
@@ -423,33 +406,34 @@ if nargout > 2
     varargout{2} = stimulusLocations;
 end
 
+%% return the params structure if requested
+if nargout > 3
+    varargout{3} = params;
+end
+
 %% Save to output mat file
 
 if writeResult
-    save(matFilePath, 'stimulusLocations', 'stimulus', 'peakValues',...
-        'rawStimulusLocations');
+    save(matFilePath, 'stimulusLocations', 'params', 'peakValues',...
+        'rawStimulusLocations','timeSec');
 end
 
 %% if verbosity enabled, show the extracted stimulus locations
 
-if enableVerbosity
-    % Plotting bottom right corner of box surrounding stimulus.
-    if all(ishandle(axesHandles))
-        axes(axesHandles(2)); 
-        colormap(axesHandles(2), 'default');
-    else
-        figure(123);
-    end
-    cla;
-    plot(timeArray, stimulusLocations,'-','linewidth',2); hold on;
-    title('Stimulus Locations');
-    xlabel('Time (sec)');
-    ylabel('Stimulus Locations (pixels)');
-    legend('show');
-    legend('Horizontal', 'Vertical');
-    set(gca,'fontsize',14);
-    grid on;
-    drawnow;
+if ~abortTriggered && params.enableVerbosity
+    
+    % show useful stimulus locations traces
+    plot(params.axesHandles(3),timeSec,stimulusLocations,'-','linewidth',2);
+    set(params.axesHandles(3),'fontsize',14);
+    xlabel(params.axesHandles(3),'time (sec)');
+    ylabel(params.axesHandles(3),'stimulus location (px)');
+    legend(params.axesHandles(3),{'hor','ver'});
+    yMin = max([1, prctile(stimulusLocations,5,'all')-10]);
+    yMax = min([max([height width]), prctile(stimulusLocations,95,'all')+10]);
+    ylim(params.axesHandles(3),[yMin yMax]);
+    xlim(params.axesHandles(3),[0 max(timeSec)]);
+    hold(params.axesHandles(3),'off');
+    grid(params.axesHandles(3),'on');
 end
 
 

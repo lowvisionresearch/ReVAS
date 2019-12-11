@@ -24,6 +24,30 @@ function [badFrames, varargout] = FindBlinkFrames(inputVideo, params)
 %
 %   |params| is a struct as specified below.
 %
+%   -----------------------------------
+%   Fields of the |params| 
+%   -----------------------------------
+%   overwrite           :   set to 1 to overwrite existing files resulting 
+%                           from calling FindBlinkFrames.
+%                           Set to 0 to abort the function call if the
+%                           files exist in the current directory.
+%   enableVerbosity     :   set to true to report back plots during execution.
+%                           (default false)
+%   stitchCriteria      :   optional--specify the maximum distance (in frames)
+%                           between blinks, below which two blinks will be
+%                           marked as one. For example, if badFrames is 
+%                           [8, 9, 11, 12], this represents two blinks, one
+%                           at frames 8 and 9, and the other at frames 
+%                           11 and 12. If stitchCriteria is 2, then 
+%                           badFrames becomes [8, 9, 10, 11, 12] because the
+%                           distance between the blinks [8, 9] and [11, 12]
+%                           are separated by only one frame, which is less
+%                           than the specified stitch criteria.
+%   numberOfBins        :   optional--specify number of bins for image 
+%                           histogram. All image stats are computed using
+%                           this histogram. The default value is 256.
+%   meanDifferenceThreshold: minimum mean gray level distance between two
+%                           clusters representing bad and good frames.
 %
 %   -----------------------------------
 %   Output
@@ -33,32 +57,8 @@ function [badFrames, varargout] = FindBlinkFrames(inputVideo, params)
 %   varargout{1} = badFramesMatFilePath
 %   varargout{2} = image statistics extracted from all frames.
 %   varargout{3} = candidate for initial reference frame based on means.
+%   varargout{4} = params.
 %
-%
-%   -----------------------------------
-%   Fields of the |params| 
-%   -----------------------------------
-%  overwrite           :   set to 1 to overwrite existing files resulting 
-%                          from calling FindBlinkFrames.
-%                          Set to 0 to abort the function call if the
-%                          files exist in the current directory.
-%  enableVerbosity     :   set to true to report back plots during execution.
-%                          (default false)
-%  stitchCriteria      :   optional--specify the maximum distance (in frames)
-%                          between blinks, below which two blinks will be
-%                          marked as one. For example, if badFrames is 
-%                          [8, 9, 11, 12], this represents two blinks, one
-%                          at frames 8 and 9, and the other at frames 
-%                          11 and 12. If stitchCriteria is 2, then 
-%                          badFrames becomes [8, 9, 10, 11, 12] because the
-%                          distance between the blinks [8, 9] and [11, 12]
-%                          are separated by only one frame, which is less
-%                          than the specified stitch criteria.
-%  numberOfBins        :   optional--specify number of bins for image 
-%                          histogram. All image stats are computed using
-%                          this histogram. The default value is 256.
-%  meanDifferenceThreshold: minimum mean gray level distance between two
-%                          clusters representing bad and good frames.
 %                          
 %   -----------------------------------
 %   Example usage
@@ -87,62 +87,42 @@ if nargin < 2
     params = struct;
 end
 
-if ~isfield(params, 'overwrite')
-    overwrite = false; 
-else
-    overwrite = params.overwrite;
-end
+% validate params
+[~,callerStr] = fileparts(mfilename);
+[default, validate] = GetDefaults(callerStr);
+params = ValidateField(params,default,validate,callerStr);
 
-if ~isfield(params, 'enableVerbosity')
-    enableVerbosity = false; 
-else
-    enableVerbosity = params.enableVerbosity;
-end
+%% Handle verbosity 
 
-if ~isfield(params, 'axesHandles')
-    axesHandles = nan; 
-else
-    axesHandles = params.axesHandles;
-end
-
-if ~isfield(params, 'stitchCriteria')
-    stitchCriteria = 1; % frame
-    RevasWarning(['FindBlinkFrames is using default parameter for stitchCriteria: ' num2str(stitchCriteria)], params);
-else
-    stitchCriteria = params.stitchCriteria;
-end
-
-if ~isfield(params, 'numberOfBins')
-    numberOfBins = 256; % gray levels
-    RevasWarning(['FindBlinkFrames is using default parameter for numberOfBins: ' num2str(numberOfBins)], params);
-else
-    numberOfBins = params.numberOfBins;
-end
-
-if ~isfield(params, 'meanDifferenceThreshold')
-    meanDifferenceThreshold = 10; % gray levels
-    RevasWarning(['FindBlinkFrames is using default parameter for meanDifferenceThreshold: ' num2str(meanDifferenceThreshold)], params);
-else
-    meanDifferenceThreshold = params.meanDifferenceThreshold;
+% check if axes handles are provided, if not, create axes.
+if params.enableVerbosity && isempty(params.axesHandles)
+    fh = figure(2020);
+    set(fh,'units','normalized','outerposition',[0.35 0.053 0.3 0.51]);
+    params.axesHandles(1) = axes;
+    cla(params.axesHandles(1));
 end
 
 
 %% Handle overwrite scenarios.
 if writeResult
     badFramesMatFilePath = [inputVideo(1:end-4) '_blinkframes.mat'];
+    params.badFramesMatFilePath = badFramesMatFilePath;
     if nargout > 1 
         varargout{1} = badFramesMatFilePath;
     end
     
     if ~exist(badFramesMatFilePath, 'file')
         % left blank to continue without issuing warning in this case
-    elseif ~overwrite
+    elseif ~params.overwrite
         load(badFramesMatFilePath,'badFrames','imStats','initialRef');
         if nargout > 2
             varargout{2} = imStats;
         end
         if nargout > 3
             varargout{3} = initialRef;
+        end
+        if nargout > 4
+            varargout{4} = params;
         end
         RevasWarning(['FindBadFrames() did not execute because it would overwrite existing file. (' badFramesMatFilePath ')'], params);
         return;
@@ -184,7 +164,7 @@ for fr = 1:numberOfFrames
     end
     
     % compute image histogram
-    [counts, bins] = imhist(frame, numberOfBins);
+    [counts, bins] = imhist(frame, params.numberOfBins);
     
     % compute image stats from histogram
     numOfPixels = sum(counts);
@@ -201,7 +181,7 @@ end
 [idx, centroids] = kmeans([means stds skews kurtoses],2);
 
 % if centroids are too close, no blinks found.
-if abs(diff(centroids(:,1))) < meanDifferenceThreshold
+if abs(diff(centroids(:,1))) < params.meanDifferenceThreshold
     badFrames = [];
 else
     % select the cluster with smaller mean as the bad frames
@@ -210,7 +190,7 @@ else
     
     % Lump together blinks that are < |stitchCriteria| frames apart
     [st, en] = GetOnsetOffset(badFrames);
-    [st, en] = MergeEvents(st, en, stitchCriteria);
+    [st, en] = MergeEvents(st, en, params.stitchCriteria);
     
     % note that we keep badFrames in a logical array format to preserve the
     % length of the original video.
@@ -237,38 +217,41 @@ if nargout > 3 || writeResult
     varargout{3} = initialRef;
 end
 
+if nargout > 4 || writeResult
+    varargout{4} = params;
+end
+
 
 %% Save to output mat file
 
 if writeResult
-    save(badFramesMatFilePath, 'badFrames','imStats','initialRef');
+    save(badFramesMatFilePath, 'badFrames','imStats','initialRef','params');
 end
 
 
 %% if verbosity enabled, show the found blink frames
 
-if enableVerbosity
-    % Plotting bottom right corner of box surrounding stimulus.
-    if all(ishandle(axesHandles))
-        axes(axesHandles(2)); 
-        colormap(axesHandles(2), 'default');
-    else
-        figure(312);
-    end
-    cla;
-    plot(means,'-','linewidth',2); hold on;
-    plot(stds,'-','linewidth',2);
-    plot(skews,'-','linewidth',2);
-    plot(kurtoses,'-','linewidth',2); 
-    plot(badFrames * max(kurtoses),'-k','linewidth',2); hold on;
+if params.enableVerbosity
     
-    title('Image stats and detected blink frames');
-    xlabel('Frame number');
-    ylabel('Image stats');
-    legend('show');
-    legend('means', 'stds','skews','kurtoses','badFrames');
-    set(gca,'fontsize',14);
-    grid on;
+    badFrameNumbers = find(badFrames);
+    p = [];
+    mSize = 200;
+    p(1) = plot(params.axesHandles(1),means,'-','linewidth',2); 
+    hold(params.axesHandles(1),'on');
+    p(2) = plot(params.axesHandles(1),stds,'-','linewidth',2);
+    p(3) = plot(params.axesHandles(1),skews,'-','linewidth',2);
+    p(4) = plot(params.axesHandles(1),kurtoses,'-','linewidth',2); 
+    scatter(params.axesHandles(1),badFrameNumbers, means(badFrames),mSize,get(p(1),'color'),'filled'); 
+    scatter(params.axesHandles(1),badFrameNumbers, stds(badFrames),mSize,get(p(2),'color'),'filled'); 
+    scatter(params.axesHandles(1),badFrameNumbers, skews(badFrames),mSize,get(p(3),'color'),'filled'); 
+    scatter(params.axesHandles(1),badFrameNumbers, kurtoses(badFrames),mSize,get(p(4),'color'),'filled'); 
+    
+    title(params.axesHandles(1),'Image stats and detected blink frames');
+    xlabel(params.axesHandles(1),'Frame number');
+    ylabel(params.axesHandles(1),'Image stats');
+    legend(params.axesHandles(1),{'means', 'stds','skews','kurtoses','badFrames'});
+    set(params.axesHandles(1),'fontsize',14);
+    grid(params.axesHandles(1),'on');
     drawnow;
 end
 

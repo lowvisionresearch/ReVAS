@@ -42,6 +42,8 @@ try
     p.overwrite = true;
     p.enableVerbosity = 1;
     p.adaptiveSearch = false;
+    p.badFrames = false(32,1);
+    p.badFrames([2 6]) = true;
     p.corrMethod = 'fft';
     [position2, timeSec, rawPosition, peakValueArray, p] = ...
         StripAnalysis(inputVideo, p); %#ok<*ASGLU>
@@ -51,7 +53,7 @@ try
     
     
     success = true;
-catch err
+catch 
     success = false;
 end
 

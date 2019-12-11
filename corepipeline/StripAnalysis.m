@@ -121,13 +121,16 @@ end
 params = ValidateField(params,default,validate,callerStr);
 
 
-%% Handle GPU and verbosity
+%% Handle GPU 
 
 % check if CUDA enabled GPU exists
 if params.enableGPU && (gpuDeviceCount < 1)
     params.enableGPU = false;
     RevasWarning('No supported GPU available. StripAnalysis is reverting back to CPU', params);
 end
+
+
+%% Handle verbosity 
 
 % check if axes handles are provided, if not, create axes.
 if params.enableVerbosity && isempty(params.axesHandles)
@@ -136,6 +139,9 @@ if params.enableVerbosity && isempty(params.axesHandles)
     params.axesHandles(1) = subplot(2,3,[1 2 4 5]);
     params.axesHandles(2) = subplot(2,3,3);
     params.axesHandles(3) = subplot(2,3,6);
+    for i=1:3
+        cla(params.axesHandles(i));
+    end
 end
 
 
@@ -179,16 +185,7 @@ end
 
 
 %% badFrames handling
-% If badFrames is not provided, use all frames
-if length(params.badFrames)<=1 && ~params.badFrames
-    params.badFrames = false(numberOfFrames,1);
-end
-
-% If badFrames are provided but its size don't match the number of frames
-if length(params.badFrames) ~= numberOfFrames
-    params.badFrames = false(numberOfFrames,1);
-    RevasWarning('StripAnalysis(): size mismatch between ''badFrames'' and input video. Using all frames for this video.', params);  
-end
+params = HandleBadFrames(numberOfFrames, params, callerStr);
 
 
 %% Handle referenceFrame separately 
@@ -212,8 +209,6 @@ end
 % at this point, referenceFrame should be a 2D array.
 assert(ismatrix(params.referenceFrame));
 
-
-
 %% Prepare variables before the big loop
 
 [refHeight, refWidth] = size(params.referenceFrame); %#ok<ASGLU>
@@ -231,9 +226,14 @@ peakValueArray = zeros(numberOfStrips, 1);
 
 % Populate time array
 dtPerScanLine = 1/((height + sum(params.trim)) * params.frameRate);
+if length(params.badFrames) > numberOfFrames
+    absoluteFrameNo = (find(~params.badFrames)-1)';
+else
+    absoluteFrameNo = (0:(numberOfFrames-1));
+end
 timeSec = dtPerScanLine * ...
     reshape(params.trim(1) + rowNumbers' + ...
-    (0:(numberOfFrames-1)) * (height + sum(params.trim)),numberOfStrips,1);
+    absoluteFrameNo * (height + sum(params.trim)),numberOfStrips,1);
 
 % if gpu is enabled, move reference frame to gpu memory
 if params.enableGPU && ~contains(params.corrMethod,'cuda')
@@ -298,7 +298,7 @@ for fr = 1:numberOfFrames
         end
         
         % if it's a blink frame, skip it.
-        if params.badFrames(fr)
+        if params.skipFrame(fr)
             continue;
         end
         
@@ -465,6 +465,7 @@ if ~abortTriggered && params.enableVerbosity
     center = fliplr(size(params.referenceFrame)/2);
     positionsToBePlotted = repmat(center, size(position,1),1) + position;
     
+    % plot stimulus motion on the retina
     axes(params.axesHandles(1));
     imagesc(params.referenceFrame);
     colormap(params.axesHandles(1),gray(256));
@@ -488,8 +489,9 @@ if ~abortTriggered && params.enableVerbosity
     ylim(params.axesHandles(2),[0 1]);
     xlim(params.axesHandles(2),[0 max(timeSec)]);
     hold(params.axesHandles(2),'off');
-    grid(params.axesHandles(2),'on');
-    
+    grid(params.axesHandles(2),'on');% all peak values already plotted, so we skip.
+
+    % plot useful position traces.
     plot(params.axesHandles(3),timeSec,position,'-','linewidth',2);
     set(params.axesHandles(3),'fontsize',14);
     xlabel(params.axesHandles(3),'time (sec)');
@@ -524,6 +526,7 @@ end
 
 
 %% return the params structure if requested
+
 if nargout > 4
     varargout{1} = params;
 end

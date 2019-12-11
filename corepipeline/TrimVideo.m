@@ -1,4 +1,4 @@
-function outputVideo = TrimVideo(inputVideo, params)
+function [outputVideo, varargout] = TrimVideo(inputVideo, params)
 %TRIM VIDEO Removes boundaries of video. 
 %
 %   -----------------------------------
@@ -32,6 +32,16 @@ function outputVideo = TrimVideo(inputVideo, params)
 %                         discarded frames.
 %
 %   -----------------------------------
+%   Output
+%   -----------------------------------
+%   |outputVideo| is path to new video if 'inputVideo' is also a path. If
+%   'inputVideo' is a 3D array, |outputVideo| is also a 3D array.
+%
+%   |varargout| is a variable output argument holder. Used to return the 
+%   'params' structure. 
+%
+%
+%   -----------------------------------
 %   Example usage
 %   -----------------------------------
 %       inputVideo = 'MyVid.avi';
@@ -57,44 +67,25 @@ if nargin < 2
     params = struct;
 end
 
-if ~isfield(params, 'overwrite')
-    overwrite = false; 
-else
-    overwrite = params.overwrite;
-end
-
-if ~isfield(params, 'borderTrimAmount')
-    borderTrimAmount = [0 0 12 0];
-    RevasWarning(['TrimVideo is using default parameter for borderTrimAmount: ' num2str(borderTrimAmount)], params);
-else
-    borderTrimAmount = params.borderTrimAmount;
-    if isscalar(borderTrimAmount)
-        params.borderTrimAmount = [0 borderTrimAmount borderTrimAmount 0];
-        borderTrimAmount = params.borderTrimAmount;
-    end
-    
-    % light error checking
-    if any(~IsNaturalNumber(borderTrimAmount))
-        error('borderTrimAmount must consist of natural numbers');
-    end
-end
-
-if ~isfield(params, 'badFrames')
-    badFrames = false;
-    RevasWarning('TrimVideo is using default parameter for badFrames: none.', params);
-else
-    badFrames = params.badFrames;
-end
-
+% validate params
+[~,callerStr] = fileparts(mfilename);
+[default, validate] = GetDefaults(callerStr);
+params = ValidateField(params,default,validate,callerStr);
 
 
 %% Handle overwrite scenarios.
 if writeResult
     outputVideoPath = Filename(inputVideo, 'trim');
+    params.outputVideoPath = outputVideoPath;
+    
     if ~exist(outputVideoPath, 'file')
         % left blank to continue without issuing warning in this case
-    elseif ~overwrite
+    elseif ~params.overwrite
         RevasWarning(['TrimVideo() did not execute because it would overwrite existing file. (' outputVideoPath ')'], params);    
+        
+        if nargout > 2
+            varargout{1} = params;
+        end
         return;
     else
         RevasWarning(['TrimVideo() is proceeding and overwriting an existing file. (' outputVideoPath ')'], params);  
@@ -113,10 +104,10 @@ end
 
 %% Create reader/writer objects and get some info on videos
 
-left = borderTrimAmount(1);
-right = borderTrimAmount(2);
-top = borderTrimAmount(3);
-bottom = borderTrimAmount(4);
+left = params.borderTrimAmount(1);
+right = params.borderTrimAmount(2);
+top = params.borderTrimAmount(3);
+bottom = params.borderTrimAmount(4);
 
 if writeResult
     writer = VideoWriter(outputVideoPath, 'Grayscale AVI');
@@ -137,21 +128,12 @@ else
     
     % preallocate the output video array
     outputVideo = zeros(height-(top+bottom), width-(left+right), ...
-        numberOfFrames-sum(badFrames),'uint8');
+        numberOfFrames-sum(params.badFrames),'uint8');
 end
 
 
 %% badFrames handling
-% If badFrames is not provided, use all frames
-if length(badFrames)<=1 && ~badFrames
-    badFrames = false(numberOfFrames,1);
-end
-
-% If badFrames are provided but its size don't match the number of frames
-if length(badFrames) ~= numberOfFrames
-    badFrames = false(numberOfFrames,1);
-    RevasWarning(['TrimVideo(): size mismatch between ''badFrames'' and input video. Using all frames for (' outputVideoPath ')'], params);  
-end
+params = HandleBadFrames(numberOfFrames, params, callerStr);
 
 
 %% Write out new video or return a 3D array
@@ -171,7 +153,7 @@ for fr = 1:numberOfFrames
         end
 
         % if it's a blink frame, skip it.
-        if badFrames(fr)
+        if params.skipFrame(fr)
             continue;
         end
 
@@ -183,7 +165,7 @@ for fr = 1:numberOfFrames
         if writeResult
             writeVideo(writer, frame);
         else
-            nextFrameNumber = sum(~badFrames(1:fr));
+            nextFrameNumber = sum(~params.badFrames(1:fr));
             outputVideo(:, :, nextFrameNumber) = frame; 
         end
     end
@@ -203,4 +185,8 @@ if writeResult
     end
 end
 
+%% return the params structure if requested
+if nargout > 2
+    varargout{1} = params;
+end
 

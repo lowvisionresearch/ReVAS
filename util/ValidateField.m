@@ -15,7 +15,7 @@ for i=1:length(fields)
         RevasWarning([callerStr ' is using default parameter for ' fields{i} ': ' num2str(params.(fields{i}))], params);
     else
         if ~validate.(fields{i})(params.(fields{i}))
-            error([callerStr ': ' fields{i} 'must satisfy ' func2str(validate.(fields{i}))]);
+            error([callerStr ': ' fields{i} ' must satisfy ' func2str(validate.(fields{i}))]);
         end
     end
 

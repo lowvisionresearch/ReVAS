@@ -1,4 +1,4 @@
-function outputVideo = BandpassFilter(inputVideo, params)
+function [outputVideo, varargout] = BandpassFilter(inputVideo, params)
 %BANDPASS FILTER Applies bandpass filtering to the video.
 %
 %   -----------------------------------
@@ -33,6 +33,15 @@ function outputVideo = BandpassFilter(inputVideo, params)
 %                               discarded frames. 
 %                             
 %   -----------------------------------
+%   Output
+%   -----------------------------------
+%   |outputVideo| is path to new video if 'inputVideo' is also a path. If
+%   'inputVideo' is a 3D array, |outputVideo| is also a 3D array.
+%
+%   |varargout| is a variable output argument holder. Used to return the 
+%   'params' structure. 
+%
+%   -----------------------------------
 %   Example usage
 %   -----------------------------------
 %       inputVideo = 'tslo-dark.avi';
@@ -59,47 +68,20 @@ if nargin < 2
     params = struct;
 end
 
-if ~isfield(params, 'overwrite')
-    overwrite = false; 
-else
-    overwrite = params.overwrite;
-end
-
-if ~isfield(params, 'smoothing')
-    smoothing = 1; % pixels
-    RevasWarning(['BandpassFilter is using default parameter for smoothing: ' num2str(smoothing)] , params);
-else
-    smoothing = params.smoothing;
-    if ~IsPositiveRealNumber(smoothing)
-        error('BandpassFilter: smoothing must be a positive real number');
-    end
-end
-
-if ~isfield(params, 'lowSpatialFrequencyCutoff')
-    lowSpatialFrequencyCutoff = 3; % cycles per image
-    RevasWarning(['BandpassFilter is using default parameter for lowSpatialFrequencyCutoff: ' num2str(lowSpatialFrequencyCutoff)] , params);
-else
-    lowSpatialFrequencyCutoff = params.lowSpatialFrequencyCutoff;
-    if ~IsNonNegativeRealNumber(lowSpatialFrequencyCutoff)
-        error('BandpassFilter: smoothing must be a non-negative real number');
-    end
-end
-
-if ~isfield(params, 'badFrames')
-    badFrames = false;
-    RevasWarning('GammaCorrect is using default parameter for badFrames: none.', params);
-else
-    badFrames = params.badFrames;
-end
-
+% validate params
+[~,callerStr] = fileparts(mfilename);
+[default, validate] = GetDefaults(callerStr);
+params = ValidateField(params,default,validate,callerStr);
 
 
 %% Handle overwrite scenarios.
 if writeResult
     outputVideoPath = Filename(inputVideo, 'bandpass');
+    params.outputVideoPath = outputVideoPath;
+    
     if ~exist(outputVideoPath, 'file')
         % left blank to continue without issuing warning in this case
-    elseif ~overwrite
+    elseif ~params.overwrite
         RevasWarning(['BandpassFilter() did not execute because it would overwrite existing file. (' outputVideoPath ')'], params);
         return;
     else
@@ -125,7 +107,7 @@ if writeResult
     reader = VideoReader(inputVideo);
     % some videos are not 30fps, we need to keep the same framerate as
     % the source video.
-    writer.FrameRate=reader.Framerate;
+    writer.FrameRate = reader.Framerate;
     open(writer);
 
     % Determine dimensions of video.
@@ -138,21 +120,12 @@ else
     [height, width, numberOfFrames] = size(inputVideo);
     
     % preallocate the output video array
-    outputVideo = zeros(height, width, numberOfFrames-sum(badFrames),'uint8');
+    outputVideo = zeros(height, width, numberOfFrames-sum(params.badFrames),'uint8');
 
 end
 
 %% badFrames handling
-% If badFrames is not provided, use all frames
-if length(badFrames)<=1 && ~badFrames
-    badFrames = false(numberOfFrames,1);
-end
-
-% If badFrames are provided but its size don't match the number of frames
-if length(badFrames) ~= numberOfFrames
-    badFrames = false(numberOfFrames,1);
-    RevasWarning('GammaCorrect(): size mismatch between ''badFrames'' and input video. Using all frames for this video.', params);  
-end
+params = HandleBadFrames(numberOfFrames, params, callerStr);
 
 
 %% Bandpass filter
@@ -166,7 +139,7 @@ radiusMatrix = sqrt((repmat(xVector,height,1) .^ 2) + ...
 % create the amplitude response of the high-pass filter (which will remove
 % only the low spatial frequency components in the image such as luminance
 % gradient, darker foveal pit, etc.)
-highPassFilter = double(radiusMatrix > lowSpatialFrequencyCutoff);
+highPassFilter = double(radiusMatrix > params.lowSpatialFrequencyCutoff);
 highPassFilter(floor(height/2) + 1, floor(width/2) + 1) = 1;
 
 % Read, apply filters, and write frame by frame.
@@ -184,12 +157,12 @@ for fr = 1:numberOfFrames
         end
         
         % if it's a blink frame, skip it.
-        if badFrames(fr)
+        if params.skipFrame(fr)
             continue;
         end
 
         % apply params.smoothing
-        I1 = imgaussfilt(frame, smoothing);
+        I1 = imgaussfilt(frame, params.smoothing);
 
         % remove low spatial frequencies
         I2 = abs(ifft2((fft2(I1)) .* ifftshift(highPassFilter)));
@@ -202,7 +175,7 @@ for fr = 1:numberOfFrames
         if writeResult
             writeVideo(writer, frame);
         else
-            nextFrameNumber = sum(~badFrames(1:fr));
+            nextFrameNumber = sum(~params.badFrames(1:fr));
             outputVideo(:, :, nextFrameNumber) = frame;
         end
     end
