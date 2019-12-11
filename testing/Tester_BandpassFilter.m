@@ -47,8 +47,8 @@ try
     assert(size(videoArray,3) - size(outputVideo,3) == sum((p.badFrames)));
     
     %% Third test
-    p.badFrames = true(15,1); % intentionally out of bounds
-    p.badFrames([2 4 6]) = false;
+    p.badFrames = false(3,1); % intentionally 3 frames
+    p.badFrames([2 3]) = true;
     outputVideo2 = BandpassFilter(videoArray,p);
     
     assert(size(outputVideo2,3) == size(videoArray,3));
@@ -58,7 +58,7 @@ try
     %% cleanup
     delete(outputVideoPath);
 
-catch 
+catch err
     success = false;
 end
 

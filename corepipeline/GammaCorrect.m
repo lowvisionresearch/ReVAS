@@ -1,4 +1,4 @@
-function outputVideo = GammaCorrect(inputVideo, params)
+function [outputVideo, varargout] = GammaCorrect(inputVideo, params)
 %GAMMA CORRECT Applies gamma correction or some other contrast enhancement
 % operation to the video.
 %
@@ -36,6 +36,17 @@ function outputVideo = GammaCorrect(inputVideo, params)
 %   badFrames          : specifies blink/bad frames. we can skip those but
 %                        we need to make sure to keep a record of 
 %                        discarded frames. 
+%
+%
+%   -----------------------------------
+%   Output
+%   -----------------------------------
+%   |outputVideo| is path to new video if 'inputVideo' is also a path. If
+%   'inputVideo' is a 3D array, |outputVideo| is also a 3D array.
+%
+%   |varargout| is a variable output argument holder. Used to return the 
+%   'params' structure. 
+%
 %   Example usage: 
 %       inputVideo = 'tslo-dark.avi';
 %       params.overwrite = true;
@@ -60,55 +71,25 @@ if nargin < 2
     params = struct;
 end
 
-if ~isfield(params, 'overwrite')
-    overwrite = false; 
-else
-    overwrite = params.overwrite;
-end
-
-if ~isfield(params, 'method')
-    method = 'simpleGamma';
-    RevasWarning(['GammaCorrect is using default parameter for method: ' method] , params);
-else
-    method = params.method;
-end
-
-if ~isfield(params, 'gammaExponent')
-    gammaExponent = 0.6;
-    RevasWarning(['GammaCorrect is using default parameter for gammaExponent: ' num2str(gammaExponent)] , params);
-else
-    gammaExponent = params.gammaExponent;
-end
-
-if ~isfield(params, 'toneCurve')
-    toneCurve = uint8(0:255); % this does nothing 
-    RevasWarning('GammaCorrect is using default parameter for toneCurve: no correction.' , params);
-else
-    toneCurve = params.toneCurve;
-end
-
-if ~isfield(params, 'histLevels')
-    histLevels = 64;
-    RevasWarning(['GammaCorrect is using default parameter for histLevels: ' num2str(histLevels)], params);
-else
-    histLevels = params.histLevels;
-end
-
-if ~isfield(params, 'badFrames')
-    badFrames = false;
-    RevasWarning('GammaCorrect is using default parameter for badFrames: none.', params);
-else
-    badFrames = params.badFrames;
-end
+% validate params
+[~,callerStr] = fileparts(mfilename);
+[default, validate] = GetDefaults(callerStr);
+params = ValidateField(params,default,validate,callerStr);
 
 
 %% Handle overwrite scenarios.
 if writeResult
     outputVideoPath = Filename(inputVideo, 'gamma');
+    params.outputVideoPath = outputVideoPath;
+    
     if ~exist(outputVideoPath, 'file')
         % left blank to continue without issuing warning in this case
-    elseif ~overwrite
+    elseif ~params.overwrite
         RevasWarning(['GammaCorrect() did not execute because it would overwrite existing file. (' outputVideoPath ')'], params);
+        
+        if nargout > 2
+            varargout{1} = params;
+        end
         return;
     else
         RevasWarning(['GammaCorrect() is proceeding and overwriting an existing file. (' outputVideoPath ')'], params);
@@ -143,27 +124,18 @@ else
     [height, width, numberOfFrames] = size(inputVideo);
     
     % preallocate the output video array
-    outputVideo = zeros(height, width, numberOfFrames-sum(badFrames),'uint8');
+    outputVideo = zeros(height, width, numberOfFrames-sum(params.badFrames),'uint8');
 
 end
 
 %% badFrames handling
-% If badFrames is not provided, use all frames
-if length(badFrames)<=1 && ~badFrames
-    badFrames = false(numberOfFrames,1);
-end
-
-% If badFrames are provided but its size don't match the number of frames
-if length(badFrames) ~= numberOfFrames
-    badFrames = false(numberOfFrames,1);
-    RevasWarning('GammaCorrect(): size mismatch between ''badFrames'' and input video. Using all frames for this video.', params);  
-end
+params = HandleBadFrames(numberOfFrames, params, callerStr);
 
 
 %% Contrast enhancement
 
-if strcmpi(method,'simpleGamma')
-    simpleGammaToneCurve = uint8((linspace(0,1,256).^gammaExponent)*255);
+if strcmpi(params.method,'simpleGamma')
+    simpleGammaToneCurve = uint8((linspace(0,1,256).^params.gammaExponent)*255);
 end
 
 % Read, do contrast enhancement, and write frame by frame.
@@ -181,20 +153,20 @@ for fr = 1:numberOfFrames
         end
 
         % if it's a blink frame, skip it.
-        if badFrames(fr)
+        if params.skipFrame(fr)
             continue;
         end
 
         % apple contrast enhancement here
-        switch method
+        switch params.method
             case 'simpleGamma'
                 frame = simpleGammaToneCurve(frame+1);
                 
             case 'toneMapping'
-                frame = toneCurve(frame+1);
+                frame = params.toneCurve(frame+1);
                 
             case 'histEq'
-                frame = uint8(histeq(frame, histLevels));
+                frame = uint8(histeq(frame, params.histLevels));
                 
             otherwise
                 error('unknown method type for contrast GammaCorrect().');
@@ -204,7 +176,7 @@ for fr = 1:numberOfFrames
         if writeResult
             writeVideo(writer, frame);
         else
-            nextFrameNumber = sum(~badFrames(1:fr));
+            nextFrameNumber = sum(~params.badFrames(1:fr));
             outputVideo(:, :, nextFrameNumber) = frame; 
         end
     end

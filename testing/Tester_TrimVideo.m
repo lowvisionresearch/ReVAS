@@ -46,7 +46,7 @@ try
         success = true;
     end
     
-catch 
+catch
     success = false;
 end
 

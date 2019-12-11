@@ -31,7 +31,7 @@ try
     % test with a video array
     p.enableVerbosity = true;
     videoArray = ReadVideoToArray(inputVideo);
-    [badFrames2, ~, imStats, initialRef] = FindBlinkFrames(videoArray,p);
+    [badFrames2, ~, imStats, initialRef,params] = FindBlinkFrames(videoArray,p);
 
     assert(all(badFrames2 == badFrames));
     

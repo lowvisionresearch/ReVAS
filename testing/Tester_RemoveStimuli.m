@@ -24,7 +24,7 @@ try
     % use default params
     p = struct; 
     p.overwrite = true;
-    p.removalAreaSize = 87;
+    p.removalAreaSize = [87 87];
 
     % test with a video path with default settings (11px white cross)
     [outputVideoPath, matFilePath, stimLocs] = RemoveStimuli(inputVideo, p); %#ok<*ASGLU>
@@ -51,9 +51,9 @@ try
     assert(all(stimLocs(2,:)-1 == stimLocs2(2,:)));
     
     %% Third test
-    p.enableVerbosity = true;
-    p.badFrames = true(15,1); % intentionally out of bounds
-    p.badFrames([2 4 6]) = false;
+    p.enableVerbosity = 2;
+    p.badFrames = false(11,1); % intentionally 2 frames more
+    p.badFrames([2 6]) = true;
     p.fillingMethod = 'noise';
     [~, ~, stimLocs3] = RemoveStimuli(videoArray,p);
     
@@ -74,7 +74,7 @@ try
     
     success = true;
 
-catch 
+catch
     success = false;
 end
 
