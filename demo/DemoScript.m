@@ -32,11 +32,13 @@ fprintf('\n\n\n ------------------- DemoScript 1st Example: TSLO ---------------
 
 % get video path. The demo videos must be under /demo folder, i.e., already
 % added to MATLAB path.
-inputVideoPath = 'tslo.avi'; 
+inputVideoPath = 'dam_od_V010.avi'; 
 originalVideoPath = inputVideoPath;
 
 % for loading default params, use an empty struct
 tp = struct;
+tp.overwrite = true;
+tp.enableVerbosity = 1;
 
 %%%%%%%%%%%%%%%%%%%%%%%
 % Run desired modules.
@@ -46,10 +48,12 @@ tp = struct;
 [tp.badFrames, ~, ~, tp.initialRef] = FindBlinkFrames(inputVideoPath, tp);
 
 % Trimming
-inputVideoPath = TrimVideo(inputVideoPath, tp);
+tp.borderTrimAmount = [0 0 12 12];
+[inputVideoPath, tp] = TrimVideo(inputVideoPath, tp);
 
 % Stimulus removal
-tp.stimulus = imread('cross.png');
+% tp.stimulus = imread('cross.png');
+tp.stimulus = MakeStimulusCross(87, 19, 0); 
 inputVideoPath = RemoveStimuli(inputVideoPath, tp);
 
 % Contrast enhancement
@@ -58,16 +62,44 @@ inputVideoPath = GammaCorrect(inputVideoPath, tp);
 % Bandpass filtering
 inputVideoPath = BandpassFilter(inputVideoPath, tp);
 
-% Make a coarse reference frame using whole-frame template matching
-tp.coarseRef = CoarseRef(inputVideoPath, tp);
+% % Make a coarse reference frame using whole-frame template matching
+% tp.coarseRef = CoarseRef(inputVideoPath, tp);
+% 
+% % Make a finer reference frame using strip analysis
+% tp.fineRef = FineRef(inputVideoPath, tp);
 
-% Make a finer reference frame using strip analysis
-tp.fineRef = FineRef(inputVideoPath, tp);
+%%
+tp.adaptiveSearch = true;
+tp.referenceFrame = 1;
+tp.enableVerbosity = 1;
+tp.goodFrameCriterion = .7; 0.9;
+tp.swapFrameCriterion = .7; 0.6;
+tp.lookBackTime = 15;
+tp.trim = tp.borderTrimAmount(3:4);
+samplingRate = [540 540];
+stripHeight = [11 11];
+for i=1:length(stripHeight)
+    % Extract eye motion
+    tp.minPeakThreshold = 0.3;
+    tp.maxMotionThreshold = 0.1;
+    tp.samplingRate = samplingRate(i);
+    tp.stripHeight = stripHeight(i);
+    tp.enableReferenceFrameUpdate = i==1;
+    [position, timeSec, ~, peakValueArray, tp] = StripAnalysis(inputVideoPath, tp); 
 
-% Extract eye motion
-[~,~,~,~,tp] = StripAnalysis(inputVideoPath, tp); 
+    % Make reference
+    tp.oldStripHeight = tp.stripHeight;
+    tp.newStripHeight = tp.stripHeight;
+    tp.positions = position;
+    tp.timeSec = timeSec;
+    tp.peakValues = peakValueArray;
+    tp.maxMotionThreshold = 0.05;
+    tp.minPeakThreshold = 0.5;
+    [referenceFrame, ~, tp] = MakeReference(inputVideoPath, tp);
+    tp.referenceFrame = referenceFrame;
+end
 
-% Generate a stabilized video (optionally, using original video)
+%% Generate a stabilized video (optionally, using original video)
 StabilizeVideo(originalVideoPath, tp);
 
 % Post-processing of eye motion traces
@@ -93,13 +125,14 @@ fprintf('\n\n\n ------------------- DemoScript 2nd Example: AOSLO --------------
 
 % get video path. The demo videos must be under /demo folder, i.e., already
 % added to MATLAB path.
-inputVideoPath2 = 'aoslo.avi'; 
+inputVideoPath2 = '20092L_003.avi'; 
 
 % Read the input video into memory
 videoArray = ReadVideoToArray(inputVideoPath2);
 
 % for loading default params, use an empty struct
 ap = struct;
+ap.enableVerbosity = 1;
 
 %%%%%%%%%%%%%%%%%%%%%%%
 % Run desired modules.
@@ -109,12 +142,14 @@ ap = struct;
 ap.badFrames = FindBlinkFrames(videoArray, ap);
 
 % Trimming
-videoArray = TrimVideo(videoArray, ap);
+% videoArray = TrimVideo(videoArray, ap);
 
 % Make a reference frame. 
-ap.refFrame = FineRef([], videoArray, ap);
+% ap.refFrame = FineRef([], videoArray, ap);
 
 % Extract eye motion
+ap.minPeakThreshold = 0.5;
+ap.adaptiveSearch = false;
 [position, timeSec] = StripAnalysis(videoArray, ap);
 
 % Post-processing of eye motion traces

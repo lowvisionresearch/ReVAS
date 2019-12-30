@@ -36,6 +36,24 @@ try
     assert(all(badFrames2 == badFrames));
     
     %% Third test
+    % video without a blink
+    
+    % the video resides under /testing folder.
+    inputVideo = 'tslo-dark.avi';
+
+    str = which(inputVideo);
+    if isempty(str)
+        success = false;
+        return;
+    else
+        [filepath,name,ext] = fileparts(str);
+        inputVideo = [filepath filesep inputVideo];
+    end 
+    % test with a video path
+    [badFrames, outputFilePath, imStats, initialRef] = FindBlinkFrames(inputVideo, p); %#ok<*ASGLU>
+    delete(outputFilePath);
+    
+    assert(sum(badFrames) == 0);
     
     success = true;
 catch 

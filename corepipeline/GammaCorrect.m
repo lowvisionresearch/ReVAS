@@ -87,7 +87,7 @@ if writeResult
     elseif ~params.overwrite
         RevasWarning(['GammaCorrect() did not execute because it would overwrite existing file. (' outputVideoPath ')'], params);
         
-        if nargout > 2
+        if nargout > 1
             varargout{1} = params;
         end
         return;
@@ -195,4 +195,8 @@ if writeResult
     end
 end
 
+%% return the params structure if requested
+if nargout > 1
+    varargout{1} = params;
+end
 

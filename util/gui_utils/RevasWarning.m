@@ -21,7 +21,7 @@ end
 % display the same message via MATLAB command window
 % cprintf(textColor,'%s\n',(['(' time ') WARNING: ' message]));
 warning('off','backtrace')
-warning('%s\n',(['(' time ') ' message]));
+warning('%s',(['(' time ') ' message]));
 warning('on','backtrace')
 
 end
