@@ -83,6 +83,10 @@ if writeResult
         % left blank to continue without issuing warning in this case
     elseif ~params.overwrite
         RevasWarning(['BandpassFilter() did not execute because it would overwrite existing file. (' outputVideoPath ')'], params);
+        
+        if nargout > 1
+            varargout{1} = params;
+        end
         return;
     else
         RevasWarning(['BandpassFilter() is proceeding and overwriting an existing file. (' outputVideoPath ')'], params);  
@@ -192,5 +196,10 @@ if writeResult
     if abortTriggered
         delete(outputVideoPath)
     end
+end
+
+%% return the params structure if requested
+if nargout > 1
+    varargout{1} = params;
 end
 

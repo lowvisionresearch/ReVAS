@@ -1,4 +1,4 @@
-function success = Tester_StripAnalysis
+function success = Tester_MakeReference
 
 % suppress warnings
 origState = warning;
@@ -23,6 +23,9 @@ try
         inputVideo = [filepath filesep inputVideo];
     end
     
+    % get the strip analysis results
+    stripResults = load('aoslo_demo_pos.mat');
+    
     
     %% First test
     
@@ -30,32 +33,22 @@ try
     p = struct; 
     p.overwrite = true;
     p.enableVerbosity = 1;
-    p.minPeakThreshold = 0.4;
-    p.adaptiveSearch = true;
-    [position1, timeSec, rawPosition, peakValueArray, p] = ...
-        StripAnalysis(inputVideo, p); %#ok<*ASGLU>
-    delete(p.outputFilePath);
-    
-    fprintf('\nStripAnalysis: first test is successfully completed.\n')
-    fprintf('Next test will start in 2 seconds...\n')
-    pause(2);
+    p.rowNumbers = stripResults.params.rowNumbers;
+    p.oldStripHeight = stripResults.params.stripHeight;
+    p.positions = stripResults.position;
+    p.timeSec = stripResults.timeSec;
+    p.peakValues = stripResults.peakValueArray;
+    [refFrame, outputFilePath, params] = MakeReference(inputVideo, p);
+    delete(outputFilePath);
     
     %% Second test
     
     % test with a video array
     videoArray = ReadVideoToArray(inputVideo);
     
-    % use fft method
-    p = struct; 
-    p.overwrite = true;
-    p.enableVerbosity = 1;
-    p.minPeakThreshold = 0.4;
-    p.adaptiveSearch = false;
-    p.badFrames = false(32,1);
-    p.badFrames([2 6]) = true;
-    p.corrMethod = 'fft';
-    [position2, timeSec, rawPosition, peakValueArray, p] = ...
-        StripAnalysis(videoArray, p); %#ok<*ASGLU>
+    p.enhanceStrips = false;
+    [refFrame, outputFilePath, params] = MakeReference(videoArray, p);
+
     
     success = true;
 catch 
@@ -63,3 +56,5 @@ catch
 end
 
 warning(origState);
+
+

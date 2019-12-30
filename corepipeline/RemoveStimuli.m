@@ -422,6 +422,27 @@ end
 
 if ~abortTriggered && params.enableVerbosity
     
+    % show cross-correlation output
+    axes(params.axesHandles(1)); 
+    imagesc(frame);
+    axis(params.axesHandles(1),'image');
+    title(params.axesHandles(1),[num2str(fr) ' out of ' num2str(numberOfFrames)]);
+    colormap(params.axesHandles(1),gray(256));
+    caxis(params.axesHandles(1),[0 255]);
+    title(params.axesHandles(1),'stimulus removal example');
+
+    % show peak values
+    plot(params.axesHandles(2),timeSec,peakValues,'-','linewidth',2); 
+    hold(params.axesHandles(2),'on');
+    plot(params.axesHandles(2),timeSec([1 end]),params.minPeakThreshold*ones(1,2),'--','color',.7*[1 1 1],'linewidth',2);
+    set(params.axesHandles(2),'fontsize',14);
+    xlabel(params.axesHandles(2),'time (sec)');
+    ylabel(params.axesHandles(2),'peak value');
+    ylim(params.axesHandles(2),[0 1]);
+    xlim(params.axesHandles(2),[0 max(timeSec)]);
+    hold(params.axesHandles(2),'off');
+    grid(params.axesHandles(2),'on');
+    
     % show useful stimulus locations traces
     plot(params.axesHandles(3),timeSec,stimulusLocations,'-','linewidth',2);
     set(params.axesHandles(3),'fontsize',14);

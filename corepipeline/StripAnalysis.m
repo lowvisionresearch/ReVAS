@@ -1,17 +1,15 @@
 function [position, timeSec, rawPosition, peakValueArray, varargout] = ...
     StripAnalysis(inputVideo, params)
-%STRIP ANALYSIS Extract eye movements in units of pixels.
-%   Cross-correlation of horizontal strips with a pre-defined
-%   reference frame.
+%[position, timeSec, rawPosition, peakValueArray, varargout] = StripAnalysis(inputVideo, params)
+%   
+%   Extract eye movements in units of pixels. Cross-correlation of
+%   horizontal strips with a pre-defined reference frame.
 %
 %   -----------------------------------
 %   Input
 %   -----------------------------------
 %   |inputVideo| is the path to the video or a matrix representation of the
 %   video that is already loaded into memory.
-%
-%   |referenceFrame| is the path to the reference frame or a matrix
-%   representation of the reference frame.
 %
 %   |params| is a struct as specified below.
 %
@@ -26,9 +24,22 @@ function [position, timeSec, rawPosition, peakValueArray, varargout] = ...
 %                       default false)
 %   enableGPU         : a logical. if set to true, use GPU. (works for 
 %                       'mex' method only.
-%   enableSubpixel    : set to true to estimate peak coordinates to a 
-%                       subpixel precision through interpolation. (default
-%                       false)
+%   enableReferenceFrameUpdate: Useful for initial run of StripAnalysis for
+%                       making a reference frame from raw videos. When
+%                       enabled, reference frame is changed on the fly to a
+%                       good quality video frame that is closer in time to
+%                       the current strip. Does not make much difference
+%                       for short videos (e.g., 1sec) but it improves
+%                       quality of extraction quite significantly for long
+%                       videos (e.g., duration>5sec).
+%   goodFrameCriterion: Relevant only when 'enableReferenceFrameUpdate' is
+%                       set to true. It represents the proportion of
+%                       samples from a single frame whose peak value is
+%                       above 'minPeakThreshold' (specified below). (0-1),
+%                       defaults to 0.9. E.g., if number of strips per
+%                       frame is 20, at least 0.9*20=18 samples must
+%                       satisfy the 'minPeakThreshold' for a frame to be
+%                       considered as a candidate reference frame.
 %   corrMethod        : method to use for cross-correlation. you can 
 %                       choose from 'normxcorr' for matlab's built-in
 %                       normxcorr2, 'mex' for opencv's correlation, or 
@@ -46,6 +57,10 @@ function [position, timeSec, rawPosition, peakValueArray, varargout] = ...
 %   minPeakThreshold  : the minimum value above which a peak needs to be 
 %                       in order to be considered a valid correlation.
 %                       (default 0.3)
+%   maxMotionThreshold: Maximum motion between successive strips.
+%                       Specificed in terms of ratio with respect to the
+%                       frame height. Value must be between 0 and 1. E.g.,
+%                       0.05 for a 500px frame, corresponds to 25px motion.
 %   adaptiveSearch    : set to true to perform search on scaled down 
 %                       versions first in order to potentially improve
 %                       computation time. (default true)
@@ -65,7 +80,8 @@ function [position, timeSec, rawPosition, peakValueArray, varargout] = ...
 %                       area over which interpolation is to be performed
 %                       over in pixels. (default 5)
 %   subpixelDepth     : in octaves, the scaling of the desired level of 
-%                       subpixel depth. (default 2,i.e., 2^-2 = 0.25px)
+%                       subpixel depth. (default 2,i.e., 2^-2 = 0.25px).
+%                       defaults to 0 (i.e., no subpixel interpolation)
 %   trim              : 1x2 array. number of pixels removed from top and 
 %                       bottom of the frame if video was processed in
 %                       TrimVideo. (default [0 0] -- [top, bottom]).
@@ -83,7 +99,7 @@ function [position, timeSec, rawPosition, peakValueArray, varargout] = ...
 %   |peakValueArray| is a Nx1 array of peaks of cross-correlation maps.
 %
 %   |varargout| is a variable output argument holder. Used to return the 
-%   'params' structure. 
+%   'params' structure and 'peakPosition'. 
 %
 %   -----------------------------------
 %   Example usage
@@ -136,10 +152,11 @@ end
 if params.enableVerbosity && isempty(params.axesHandles)
     fh = figure(2020);
     set(fh,'units','normalized','outerposition',[0.16 0.053 0.67 0.51]);
-    params.axesHandles(1) = subplot(2,3,[1 2 4 5]);
-    params.axesHandles(2) = subplot(2,3,3);
-    params.axesHandles(3) = subplot(2,3,6);
-    for i=1:3
+    params.axesHandles(1) = subplot(2,3,[1 4]);
+    params.axesHandles(2) = subplot(2,3,2);
+    params.axesHandles(3) = subplot(2,3,3);
+    params.axesHandles(4) = subplot(2,3,[5 6]);
+    for i=1:4
         cla(params.axesHandles(i));
     end
 end
@@ -148,7 +165,7 @@ end
 %% Handle overwrite scenarios.
 
 if writeResult
-    outputFilePath = Filename(inputVideo, 'usefultraces', params.samplingRate);
+    outputFilePath = Filename(inputVideo, 'strip', params.samplingRate);
     params.outputFilePath = outputFilePath;
     
     if ~exist(outputFilePath, 'file')
@@ -158,9 +175,12 @@ if writeResult
         RevasMessage('StripAnalysis() is returning results from existing file.',params); 
         
         % try loading existing file contents
-        load(outputFilePath,'position', 'timeSec', 'rawPosition', 'peakValueArray','params');
+        load(outputFilePath,'position', 'timeSec', 'rawPosition', 'peakValueArray','params','peakPosition');
         if nargout > 4
             varargout{1} = params;
+        end
+        if nargout > 5
+            varargout{2} = peakPosition;
         end
         
         return;
@@ -209,11 +229,15 @@ end
 % at this point, referenceFrame should be a 2D array.
 assert(ismatrix(params.referenceFrame));
 
+% get a copy of the reference frame
+referenceFrame = params.referenceFrame;
+
 %% Prepare variables before the big loop
 
 [refHeight, refWidth] = size(params.referenceFrame); %#ok<ASGLU>
 stripsPerFrame = round(params.samplingRate / params.frameRate);
-rowNumbers = round(linspace(params.stripHeight,(height - 2*params.stripHeight),stripsPerFrame));
+rowNumbers = round(linspace(1,max([1,height - params.stripHeight + 1]),stripsPerFrame));
+params.rowNumbers = rowNumbers;
 numberOfStrips = stripsPerFrame * numberOfFrames;
 
 % two columns for horizontal and vertical movements
@@ -221,13 +245,20 @@ rawPosition = nan(numberOfStrips, 2);
 peakPosition = nan(numberOfStrips, 2);
 position = nan(numberOfStrips, 2);
 
-% arrays for peak values
-peakValueArray = zeros(numberOfStrips, 1);
+% array for position change
+deltaPos = nan(numberOfStrips, 1);
+deltaPos(1) = 0;
+
+% array for peak values
+peakValueArray = nan(numberOfStrips, 1);
 
 % Populate time array
 dtPerScanLine = 1/((height + sum(params.trim)) * params.frameRate);
 if length(params.badFrames) > numberOfFrames
-    absoluteFrameNo = (find(~params.badFrames)-1)';
+    absoluteFrameNo = find(~params.badFrames)-1;
+    if ~isrow(absoluteFrameNo)
+        absoluteFrameNo = absoluteFrameNo';
+    end
 else
     absoluteFrameNo = (0:(numberOfFrames-1));
 end
@@ -263,11 +294,26 @@ if params.adaptiveSearch
     
     % set number of attempts. After first attempt with searchWindowHeight,
     % we'll double the window height. 
-    numOfAttempts = 3; 
+    numOfAttempts = 2; 
+    
+    % check if stripheight is larger than searchWindow
+    if params.stripHeight >= params.searchWindowHeight
+        params.searchWindowHeight = params.stripHeight + 1;
+        RevasWarning(['StripAnalysis(): stripHeight (' num2str(params.stripHeight) ') '...
+            'is larger than searchWindowHeight (' num2str(params.searchWindowHeight) ').'...
+            'Setting searchWindowHeight to ' num2str(params.stripHeight+1)],params);  
+    end
 else
     numOfAttempts = 1;
 end
 
+% needed for reference frame swap operation. if not enabled, offsets are
+% zero.
+offset = [0 0];
+
+% an array to keep track of last frame where a reference frame was
+% swapped.
+lastFrameSwap = nan;
 
 %% Allow for aborting if not parallel processing
 global abortTriggered;
@@ -284,22 +330,29 @@ end
 % the big loop. :)
 
 % loop across frames
-for fr = 1:numberOfFrames
+fr = 1;
+while fr <= numberOfFrames
+
     if ~abortTriggered
-        
-        % get next frame
-        if writeResult
-            frame = readFrame(reader);
-            if ndims(frame) == 3
-                frame = rgb2gray(frame);
-            end
-        else
-            frame = inputVideo(:,:, fr);
-        end
         
         % if it's a blink frame, skip it.
         if params.skipFrame(fr)
+            % adjust the current time to next frame. (this avoid reading
+            % the unused frame)
+            if writeResult
+                reader.CurrentTime = fr/reader.FrameRate;
+            end
             continue;
+        else
+            % get next frame
+            if writeResult
+                frame = readFrame(reader);
+                if ndims(frame) == 3
+                    frame = rgb2gray(frame);
+                end
+            else
+                frame = inputVideo(:,:, fr);
+            end
         end
         
         % if GPU is enabled, transfer the frame to GPU memory
@@ -340,8 +393,8 @@ for fr = 1:numberOfFrames
                         thisWindowHeight = params.searchWindowHeight * 2^(attempt-1); 
                         
                         % check for out of referenceFrame bounds
-                        params.rowStart = max(1, loc - floor(thisWindowHeight/2));
-                        params.rowEnd = min(refHeight, loc + floor(thisWindowHeight/2));
+                        params.rowStart = max(1, round(loc - floor(thisWindowHeight/2)));
+                        params.rowEnd = min(refHeight, round(loc + floor(thisWindowHeight/2)));
                         
                         
                         % check if size is smaller than desired. if
@@ -397,7 +450,7 @@ for fr = 1:numberOfFrames
             end % end of attempts
             
             % if subpixel estimation is requested
-            if params.enableSubpixel
+            if params.subpixelDepth ~= 0
                 [xPeak, yPeak, peakValue] = ...
                     Interpolation2D(correlationMap, xPeak, yPeak, ...
                         params.neighborhoodSize, params.subpixelDepth, [], params.enableGPU);
@@ -407,55 +460,177 @@ for fr = 1:numberOfFrames
             peakValueArray(thisSample) = peakValue;
             peakPosition(thisSample,:) = [xPeak, yPeak - params.stripHeight + params.rowStart - 1];
             rawPosition(thisSample,:) = [xPeak-width ...
-                (yPeak - params.stripHeight - rowNumbers(sn) + params.rowStart - 1)];
+                (yPeak - params.stripHeight - rowNumbers(sn) + params.rowStart - 1)] + offset;
+            
+            % keep a record of amount of motion between successive strips.
+            if thisSample > 1
+                tempDeltaPos = (diff(rawPosition(thisSample-1:thisSample))/height) ./ ...
+                    (diff(timeSec(thisSample-1:thisSample)) / (dtPerScanLine * height / stripsPerFrame));
+                deltaPos(thisSample) = sqrt(sum(tempDeltaPos.^2,2)) * stripsPerFrame;
+            end
             
             % if adaptive search is enabled, circularly shift the buffer to
             % update the last N positions.
-            if params.adaptiveSearch
+            if params.adaptiveSearch 
                 movementHistory = circshift(movementHistory,1,1);
-                if thisSample > 1
+                if thisSample > 1 && ...
+                        all(peakValueArray((thisSample-1):thisSample) >= params.minPeakThreshold) && ...
+                        all(deltaPos((thisSample-1):thisSample) <= params.maxMotionThreshold)
                     movementHistory(1) = diff(rawPosition(thisSample-1:thisSample,2));
                 end
             end
-            
-            % plot peak values and raw traces
-            if params.enableVerbosity > 1
-                % show peak values
-                plot(params.axesHandles(2),timeSec,peakValueArray,'-','linewidth',2); 
-                hold(params.axesHandles(2),'on');
-                plot(params.axesHandles(2),timeSec([1 end]),params.minPeakThreshold*ones(1,2),'--','color',.7*[1 1 1],'linewidth',2);
-                set(params.axesHandles(2),'fontsize',14);
-                xlabel(params.axesHandles(2),'time (sec)');
-                ylabel(params.axesHandles(2),'peak value');
-                ylim(params.axesHandles(2),[0 1]);
-                xlim(params.axesHandles(2),[0 max(timeSec)]);
-                hold(params.axesHandles(2),'off');
-                grid(params.axesHandles(2),'on');
 
-                % show raw output traces
-                plot(params.axesHandles(3),timeSec,rawPosition,'-','linewidth',2);
-                set(params.axesHandles(3),'fontsize',14);
-                xlabel(params.axesHandles(3),'time (sec)');
-                ylabel(params.axesHandles(3),'position (px)');
-                legend(params.axesHandles(3),{'hor','ver'});
-                yMin = max([-100, prctile(rawPosition,5,'all')-10]);
-                yMax = min([100, prctile(rawPosition,95,'all')+10]);
-                ylim(params.axesHandles(3),[yMin yMax]);
-                xlim(params.axesHandles(3),[0 max(timeSec)]);
-                hold(params.axesHandles(3),'off');
-                grid(params.axesHandles(3),'on');
-                
-                drawnow; % maybe needed in GUI mode.
-            end % en of plot
-            
         end % end of frame
+        
+        
+        
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        if params.enableReferenceFrameUpdate
+            lastFrameStrips = thisSample-stripsPerFrame+1 : thisSample;
+            
+            % when some strips within a frame results in peak values below
+            % our criterion level (or all strips above motion threshold) and
+            % when there is already a candidate reference frame, swap the
+            % reference frame and compute the offset needed to re-reference
+            % upcoming strips to the initial reference frame.
+            if fr > 2 && ...
+                    sum((peakValueArray(lastFrameStrips) < params.minPeakThreshold) | ...
+                        (deltaPos(lastFrameStrips) > params.maxMotionThreshold) ) ...
+                    > ((params.swapFrameCriterion) * stripsPerFrame) && ...
+                    exist('lastGoodFrame','var') && ...
+                    lastFrameSwap(end) ~= fr
+
+                % get a strip from the lastGoodFrame based on local
+                % contrast
+                lineContrast = medfilt1(std(double(lastGoodFrame),[],2),31);
+                [~, maxIx] = max(lineContrast);
+                anchorSt = max(1,maxIx - round(height/8));
+                anchorEn = min(height, maxIx + round(height/8));
+                anchorStrip = lastGoodFrame(anchorSt:anchorEn,:);
+                
+                % create a struct for full-reference crosscorr.
+                anchorOp = struct;
+                anchorOp.enableGPU = params.enableGPU;
+                anchorOp.corrMethod = params.corrMethod;
+                anchorOp.adaptiveSearch = false;
+                anchorOp.referenceFrame = params.referenceFrame;
+                anchorOp.rowStart = 1;
+                anchorOp.rowEnd = refHeight;
+
+                % find the anchor strip in current reference frame
+                [cm, xPeakAnchor, yPeakAnchor, ~] = LocateStrip(anchorStrip,anchorOp,struct);
+                
+                % the location of the anchor strip in new reference frame
+                xPeakNew = width;
+                yPeakNew = anchorSt + size(anchorStrip,1) - 1;
+                
+                % offset needed to re-reference the strips to the initial
+                % reference frame
+                thisOffset = [xPeakAnchor yPeakAnchor] - [xPeakNew yPeakNew];
+
+                if any(thisOffset./height > params.maxMotionThreshold)
+                    cmFilt = cm - imgaussfilt(cm,5);
+                    [xPeakAnchor, yPeakAnchor, ~] = FindPeak(cmFilt, params.enableGPU);
+                    thisOffset = [xPeakAnchor yPeakAnchor] - [xPeakNew yPeakNew];
+                end
+                
+                offset = offset + thisOffset;
+                
+                % update the reference frame
+                params.referenceFrame = lastGoodFrame;
+                refHeight = size(lastGoodFrame,1);
+
+                % set a flag so that we don't get stuck here, analyzing the
+                % same frame over and over again.
+                lastFrameSwap = [lastFrameSwap; fr]; %#ok<AGROW>
+
+                % rewind back one frame
+                fr = fr - 1;
+                if writeResult
+                    reader.CurrentTime = (fr)/reader.FrameRate;
+                end
+
+                % give a warning to let user know about the reference frame
+                % update
+                RevasMessage(['StripAnalysis: Reference frame changed at frame ' num2str(fr) '!'],params);
+                
+            end
+        
+            % keep a spare candidate reference frame, in case current one
+            % fails. A frame can be a candidate reference frame only when
+            % a certain proportion of strips within that frame is above
+            % minPeakThreshold.
+            if fr > 1 && ...
+                    sum((peakValueArray(lastFrameStrips) >= params.minPeakThreshold) | ...
+                        (deltaPos(lastFrameStrips) <= params.maxMotionThreshold) ) ...
+                    > (params.goodFrameCriterion * stripsPerFrame)
+                lastGoodFrame = frame;
+            end
+        end
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
+        % plot peak values and raw traces
+        if params.enableVerbosity 
+            % show peak values
+            scatter(params.axesHandles(2),timeSec,peakValueArray,10,'filled'); 
+            hold(params.axesHandles(2),'on');
+            plot(params.axesHandles(2),timeSec([1 end]),params.minPeakThreshold*ones(1,2),'-','linewidth',2);
+            set(params.axesHandles(2),'fontsize',14);
+            xlabel(params.axesHandles(2),'time (sec)');
+            ylabel(params.axesHandles(2),'peak value');
+            ylim(params.axesHandles(2),[0 1]);
+            xlim(params.axesHandles(2),[0 timeSec(thisSample)]);
+            hold(params.axesHandles(2),'off');
+            grid(params.axesHandles(2),'on');
+            
+            % plot motion criterion
+            scatter(params.axesHandles(3),timeSec,100*deltaPos,10,'filled');
+            hold(params.axesHandles(3),'on');
+            plot(params.axesHandles(3),timeSec([1 end]),params.maxMotionThreshold*ones(1,2)*100,'-','linewidth',2);
+            set(params.axesHandles(3),'fontsize',14);
+            xlabel(params.axesHandles(3),'time (sec)');
+            ylabel(params.axesHandles(3),'motion (%/fr)');
+            xlim(params.axesHandles(3),[0 timeSec(thisSample)]);
+            ylim(params.axesHandles(3),[0 min(0.5,max(deltaPos)+0.1)]*100);
+            hold(params.axesHandles(3),'off');
+            grid(params.axesHandles(3),'on');
+            legend(params.axesHandles(3),'off')
+
+            % show useful output traces
+            usefulIx = peakValueArray >= params.minPeakThreshold & ...
+                deltaPos <= params.maxMotionThreshold;
+            tempPos = rawPosition(usefulIx,:);
+            plot(params.axesHandles(4),timeSec(usefulIx),tempPos,'-o','linewidth',1.5,'markersize',2);
+            set(params.axesHandles(4),'fontsize',14);
+            xlabel(params.axesHandles(4),'time (sec)');
+            ylabel(params.axesHandles(4),'position (px)');
+            legend(params.axesHandles(4),{'hor','ver'});
+            yMin = prctile(tempPos,2.5,'all')-20;
+            yMax = prctile(tempPos,97.5,'all')+20;
+            ylim(params.axesHandles(4),[yMin yMax]);
+            xlim(params.axesHandles(4),[0 timeSec(thisSample)]);
+            hold(params.axesHandles(4),'off');
+            grid(params.axesHandles(4),'on');
+
+            drawnow; % maybe needed in GUI mode.
+        end % en of plot
     end % abortTriggered
+    
+    fr = fr + 1;
 end % end of video
 
 
 % good samples
-ix = peakValueArray >= params.minPeakThreshold;
+ix = peakValueArray >= params.minPeakThreshold & ...
+    deltaPos <= params.maxMotionThreshold;
 position(ix,:) = rawPosition(ix,:);
+
+% restore the initial reference frame 
+params.referenceFrame = referenceFrame;
+
+% save the reference frame swap events
+params.lastFrameSwap = lastFrameSwap;
 
 
 %% Plot stimuli on reference frame
@@ -470,39 +645,25 @@ if ~abortTriggered && params.enableVerbosity
     imagesc(params.referenceFrame);
     colormap(params.axesHandles(1),gray(256));
     hold(params.axesHandles(1),'on');
-    scatter(params.axesHandles(1),positionsToBePlotted(:,1), positionsToBePlotted(:,2), 10, parula(length(timeSec)), 'o' , 'filled');
+    scatter(params.axesHandles(1),positionsToBePlotted(:,1), positionsToBePlotted(:,2), ...
+        10,  parula(length(timeSec)), 'o' ,'filled','MarkerFaceAlpha',0.2);
     hold(params.axesHandles(1),'off');
-    cb = colorbar(params.axesHandles(1));
-    cb.Label.String = 'time (sec)';
-    cb.FontSize = 14;
     axis(params.axesHandles(1),'image')
     xlim(params.axesHandles(1),[1 size(params.referenceFrame,2)])
     ylim(params.axesHandles(1),[1 size(params.referenceFrame,1)])
-    
-    % show peak values
-    plot(params.axesHandles(2),timeSec,peakValueArray,'-','linewidth',2); 
-    hold(params.axesHandles(2),'on');
-    plot(params.axesHandles(2),timeSec([1 end]),params.minPeakThreshold*ones(1,2),'--','color',.7*[1 1 1],'linewidth',2);
-    set(params.axesHandles(2),'fontsize',14);
-    xlabel(params.axesHandles(2),'time (sec)');
-    ylabel(params.axesHandles(2),'peak value');
-    ylim(params.axesHandles(2),[0 1]);
-    xlim(params.axesHandles(2),[0 max(timeSec)]);
-    hold(params.axesHandles(2),'off');
-    grid(params.axesHandles(2),'on');% all peak values already plotted, so we skip.
 
     % plot useful position traces.
-    plot(params.axesHandles(3),timeSec,position,'-','linewidth',2);
-    set(params.axesHandles(3),'fontsize',14);
-    xlabel(params.axesHandles(3),'time (sec)');
-    ylabel(params.axesHandles(3),'position (px)');
-    legend(params.axesHandles(3),{'hor','ver'});
-    yMin = max([-100, prctile(position,5,'all')-10]);
-    yMax = min([100, prctile(position,95,'all')+10]);
-    ylim(params.axesHandles(3),[yMin yMax]);
-    xlim(params.axesHandles(3),[0 max(timeSec)]);
-    hold(params.axesHandles(3),'off');
-    grid(params.axesHandles(3),'on');
+    plot(params.axesHandles(4),timeSec,position,'-o','linewidth',1.5,'markersize',2);
+    set(params.axesHandles(4),'fontsize',14);
+    xlabel(params.axesHandles(4),'time (sec)');
+    ylabel(params.axesHandles(4),'position (px)');
+    legend(params.axesHandles(4),{'hor','ver'});
+    yMin = prctile(tempPos,2.5,'all')-20;
+    yMax = prctile(tempPos,97.5,'all')+20;
+    ylim(params.axesHandles(4),[yMin yMax]);
+    xlim(params.axesHandles(4),[0 max(timeSec)]);
+    hold(params.axesHandles(4),'off');
+    grid(params.axesHandles(4),'on');
 end
 
 
@@ -520,7 +681,7 @@ if writeResult && ~abortTriggered
     
     % Save under file labeled 'final'.
     if writeResult
-        save(outputFilePath, 'position', 'rawPosition', 'timeSec', 'params');
+        save(outputFilePath, 'position', 'rawPosition', 'timeSec', 'params','peakValueArray','peakPosition');
     end
 end
 
@@ -530,6 +691,7 @@ end
 if nargout > 4
     varargout{1} = params;
 end
-
-
+if nargout > 5
+    varargout{2} = peakPosition;
+end
 

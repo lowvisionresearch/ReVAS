@@ -1,4 +1,4 @@
-function RevasError(filename, message, parametersStructure)
+function RevasError(filename, message, params)
 %REVAS ERROR  Issues a error message to the GUI's command window text box if possible.
 %   Issues a error message to the GUI's command window text box if possible.
 %   Execution will continue after the error message is printed if using the GUI.
@@ -7,13 +7,13 @@ time = strtrim(datestr(datetime('now'), 'HH:MM:SS PM'));
 
 % if availabe, print the error message to REVAS GUI
 if nargin > 1
-    if isfield(parametersStructure, 'commandWindowHandle')
+    if isfield(params, 'commandWindowHandle')
 
-        parametersStructure.commandWindowHandle.String = ...
+        params.commandWindowHandle.String = ...
             ['(' time ') ERROR: ' ...
             'Error while processing ' filename '. Proceeding to next video.) ' ...
             message; ...
-            parametersStructure.commandWindowHandle.String];
+            params.commandWindowHandle.String];
     end
 end
 

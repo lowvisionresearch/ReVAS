@@ -97,8 +97,8 @@ params = ValidateField(params,default,validate,callerStr);
 % check if axes handles are provided, if not, create axes.
 if params.enableVerbosity && isempty(params.axesHandles)
     fh = figure(2020);
-    set(fh,'units','normalized','outerposition',[0.35 0.053 0.3 0.51]);
-    params.axesHandles(1) = axes;
+    set(fh,'units','normalized','outerposition',[0.16 0.053 0.67 0.51]);
+    params.axesHandles(1) = subplot(1,1,1);
     cla(params.axesHandles(1));
 end
 
@@ -182,7 +182,7 @@ end
 
 % if centroids are too close, no blinks found.
 if abs(diff(centroids(:,1))) < params.meanDifferenceThreshold
-    badFrames = [];
+    badFrames = false(numberOfFrames,1);
 else
     % select the cluster with smaller mean as the bad frames
     [~,whichClusterRepresentsBadFrames] = min(centroids(:,2));
@@ -196,6 +196,10 @@ else
     % length of the original video.
     badFrames = GetIndicesFromOnsetOffset(st,en,numberOfFrames);
 end
+
+% include one frame before and one frame after to really make sure we don't
+% waste time in crappy frames
+badFrames = conv(badFrames,[1 1 1],'same') ~= 0;
 
 
 %% Return image stats if user asks for it or results are to be written to a file
@@ -235,12 +239,14 @@ if params.enableVerbosity
     
     badFrameNumbers = find(badFrames);
     p = [];
-    mSize = 200;
-    p(1) = plot(params.axesHandles(1),means,'-','linewidth',2); 
+    mSize = 40;
+    lt = 1.5
+    p(1) = plot(params.axesHandles(1),means,'-','linewidth',lt); 
     hold(params.axesHandles(1),'on');
-    p(2) = plot(params.axesHandles(1),stds,'-','linewidth',2);
-    p(3) = plot(params.axesHandles(1),skews,'-','linewidth',2);
-    p(4) = plot(params.axesHandles(1),kurtoses,'-','linewidth',2); 
+    p(2) = plot(params.axesHandles(1),stds,'-','linewidth',lt);
+    p(3) = plot(params.axesHandles(1),skews,'-','linewidth',lt);
+    p(4) = plot(params.axesHandles(1),kurtoses,'-','linewidth',lt); 
+    
     scatter(params.axesHandles(1),badFrameNumbers, means(badFrames),mSize,get(p(1),'color'),'filled'); 
     scatter(params.axesHandles(1),badFrameNumbers, stds(badFrames),mSize,get(p(2),'color'),'filled'); 
     scatter(params.axesHandles(1),badFrameNumbers, skews(badFrames),mSize,get(p(3),'color'),'filled'); 

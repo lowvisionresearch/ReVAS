@@ -6,7 +6,7 @@ function [outputVideo, varargout] = TrimVideo(inputVideo, params)
 %   -----------------------------------
 %   |inputVideo| is either the path to the video, or the video matrix itself. 
 %   In the former situation, the result is that the
-%   trimmed version of this video is written with '_dwt' appended to the
+%   trimmed version of this video is written with '_trim' appended to the
 %   original file name. In the latter situation, no video is written and
 %   the result is returned.
 %
@@ -82,8 +82,9 @@ if writeResult
         % left blank to continue without issuing warning in this case
     elseif ~params.overwrite
         RevasWarning(['TrimVideo() did not execute because it would overwrite existing file. (' outputVideoPath ')'], params);    
+        outputVideo = outputVideoPath;
         
-        if nargout > 2
+        if nargout > 1
             varargout{1} = params;
         end
         return;
@@ -186,7 +187,7 @@ if writeResult
 end
 
 %% return the params structure if requested
-if nargout > 2
+if nargout > 1
     varargout{1} = params;
 end
 
