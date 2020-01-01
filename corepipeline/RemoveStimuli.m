@@ -82,6 +82,16 @@ function [outputVideo, varargout] = RemoveStimuli(inputVideo, params)
 %       params.removalAreaSize = [11 11];
 %       RemoveStimuli(inputVideo, params);
 
+%% Allow for aborting if not parallel processing
+global abortTriggered;
+
+% parfor does not support global variables.
+% cannot abort when run in parallel.
+if isempty(abortTriggered)
+    abortTriggered = false;
+end
+
+
 %% Determine inputVideo type.
 if ischar(inputVideo)
     % A path was passed in.
@@ -245,15 +255,6 @@ if isempty(params.removalAreaSize)
 else
     halfWidth = floor(params.removalAreaSize(1)/2);
     halfHeight = floor(params.removalAreaSize(2)/2);
-end
-
-%% Allow for aborting if not parallel processing
-global abortTriggered;
-
-% parfor does not support global variables.
-% cannot abort when run in parallel.
-if isempty(abortTriggered)
-    abortTriggered = false;
 end
 
 

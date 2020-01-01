@@ -13,7 +13,22 @@ for i=1:length(fields)
 
     if ~isfield(params, fields{i})
         params.(fields{i}) = default.(fields{i});
-        RevasWarning([callerStr ' is using default parameter for ' fields{i} ': ' num2str(params.(fields{i}))], params);
+        
+        % every case except for fields with cell type can be handled using
+        % num2str. So we need a special handling of cell fields.
+        thisFieldContents = params.(fields{i});
+        str = [];
+        if iscell(thisFieldContents)
+            for j=1:length(thisFieldContents)
+                str = [str ' -> ' num2str(thisFieldContents{j})]; %#ok<AGROW>
+            end
+        else
+            str = num2str(thisFieldContents);
+        end
+        
+        % inform the user about using default values and show the default
+        % values as well.
+        RevasWarning([callerStr ' is using default parameter for ' fields{i} ': ' str], params);
     end
 
 end

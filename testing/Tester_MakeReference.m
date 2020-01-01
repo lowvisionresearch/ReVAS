@@ -12,16 +12,7 @@ try
     % nonhomogeneities so that cross-correlation will be robust. 
 
     % the video resides under /testing folder.
-    inputVideo = 'aoslo.avi';
-
-    str = which(inputVideo);
-    if isempty(str)
-        success = false;
-        return;
-    else
-        [filepath,name,ext] = fileparts(str);
-        inputVideo = [filepath filesep inputVideo];
-    end
+    inputVideo = FindFile('aoslo.avi');
     
     % get the strip analysis results
     stripResults = load('aoslo_demo_pos.mat');
@@ -35,18 +26,20 @@ try
     p.enableVerbosity = 1;
     p.rowNumbers = stripResults.params.rowNumbers;
     p.oldStripHeight = stripResults.params.stripHeight;
+    p.newStripWidth = 256;
     p.positions = stripResults.position;
     p.timeSec = stripResults.timeSec;
     p.peakValues = stripResults.peakValueArray;
-    [refFrame, outputFilePath, params] = MakeReference(inputVideo, p);
+    [refFrame, outputFilePath, params] = MakeReference(inputVideo, p); %#ok<*ASGLU>
     delete(outputFilePath);
     
     %% Second test
     
     % test with a video array
     videoArray = ReadVideoToArray(inputVideo);
-    
+    p.newStripWidth = [];
     p.enhanceStrips = false;
+    p.enableVerbosity = 2;
     [refFrame, outputFilePath, params] = MakeReference(videoArray, p);
 
     

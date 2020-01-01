@@ -70,6 +70,15 @@ function [badFrames, varargout] = FindBlinkFrames(inputVideo, params)
 %       params.meanDifferenceThreshold = 256;
 %       FindBlinkFrames(videoPath, params);
 
+%% Allow for aborting if not parallel processing
+global abortTriggered;
+
+% parfor does not support global variables.
+% cannot abort when run in parallel.
+if isempty(abortTriggered)
+    abortTriggered = false;
+end
+
 %% Determine inputVideo type.
 if ischar(inputVideo)
     % A path was passed in.
@@ -151,27 +160,28 @@ kurtoses = zeros(numberOfFrames,1);
 
 % go over frames and compute image stats for each frame
 for fr = 1:numberOfFrames
-    
-    % get next frame
-    if writeResult
-        % handle rgb frames
-        frame = readFrame(reader);
-        if ndims(frame) == 3
-            frame = rgb2gray(frame);
+    if ~abortTriggered
+        % get next frame
+        if writeResult
+            % handle rgb frames
+            frame = readFrame(reader);
+            if ndims(frame) == 3
+                frame = rgb2gray(frame);
+            end
+        else
+            frame = inputVideo(:, :, fr);
         end
-    else
-        frame = inputVideo(:, :, fr);
+
+        % compute image histogram
+        [counts, bins] = imhist(frame, params.numberOfBins);
+
+        % compute image stats from histogram
+        numOfPixels = sum(counts);
+        means(fr) = sum(bins .* counts) / numOfPixels;
+        stds(fr) = sqrt(sum((bins - means(fr)) .^ 2 .* counts) / (numOfPixels-1));
+        skews(fr) = sum((bins - means(fr)) .^ 3 .* counts) / ((numOfPixels - 1) * stds(fr)^3);
+        kurtoses(fr) = sum((bins - means(fr)) .^ 4 .* counts) / ((numOfPixels - 1) * stds(fr)^4);
     end
-    
-    % compute image histogram
-    [counts, bins] = imhist(frame, params.numberOfBins);
-    
-    % compute image stats from histogram
-    numOfPixels = sum(counts);
-    means(fr) = sum(bins .* counts) / numOfPixels;
-    stds(fr) = sqrt(sum((bins - means(fr)) .^ 2 .* counts) / (numOfPixels-1));
-    skews(fr) = sum((bins - means(fr)) .^ 3 .* counts) / ((numOfPixels - 1) * stds(fr)^3);
-    kurtoses(fr) = sum((bins - means(fr)) .^ 4 .* counts) / ((numOfPixels - 1) * stds(fr)^4);
 end
 
 
@@ -240,7 +250,7 @@ if params.enableVerbosity
     badFrameNumbers = find(badFrames);
     p = [];
     mSize = 40;
-    lt = 1.5
+    lt = 1.5;
     p(1) = plot(params.axesHandles(1),means,'-','linewidth',lt); 
     hold(params.axesHandles(1),'on');
     p(2) = plot(params.axesHandles(1),stds,'-','linewidth',lt);

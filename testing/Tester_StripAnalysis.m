@@ -12,21 +12,12 @@ try
     % nonhomogeneities so that cross-correlation will be robust. 
 
     % the video resides under /testing folder.
-    inputVideo = 'aoslo.avi';
-
-    str = which(inputVideo);
-    if isempty(str)
-        success = false;
-        return;
-    else
-        [filepath,name,ext] = fileparts(str);
-        inputVideo = [filepath filesep inputVideo];
-    end
+    inputVideo = FindFile('aoslo.avi');
     
     
     %% First test
     
-    % use default params
+    % use fullpath to a video
     p = struct; 
     p.overwrite = true;
     p.enableVerbosity = 1;
@@ -50,6 +41,7 @@ try
     p.overwrite = true;
     p.enableVerbosity = 1;
     p.minPeakThreshold = 0.4;
+    p.stripWidth = 128;
     p.adaptiveSearch = false;
     p.badFrames = false(32,1);
     p.badFrames([2 6]) = true;

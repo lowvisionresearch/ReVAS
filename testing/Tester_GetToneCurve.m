@@ -19,7 +19,8 @@ try
     [~, toneMapper2] = GetToneCurve(31, 1.6, 170);
     imMapped2 = toneMapper2(im);
     
-    figure;
+    figure(2020);
+    cla;
     montage({im,imMapped,imMapped2},'size',[1,3]);
 
     %% Third test
