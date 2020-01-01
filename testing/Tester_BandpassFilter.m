@@ -9,16 +9,7 @@ try
     %% read in sample video
     
     % the video resides under /testing folder.
-    inputVideo = 'tslo-dark.avi';
-
-    str = which(inputVideo);
-    if isempty(str)
-        success = false;
-        return;
-    else
-        [filepath,name,ext] = fileparts(str);
-        inputVideo = [filepath filesep inputVideo];
-    end       
+    inputVideo = FindFile('tslo-dark.avi');    
     
     
     %% First test

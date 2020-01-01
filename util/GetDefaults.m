@@ -103,6 +103,7 @@ switch module
         default.referenceFrame = 1;
         default.badFrames = false;
         default.stripHeight = 11;
+        default.stripWidth = [];
         default.samplingRate = 540;
         default.minPeakThreshold = 0.65;
         default.maxMotionThreshold = 0.12; % proportion of frame size
@@ -125,7 +126,8 @@ switch module
         validate.corrMethod = @(x) any(contains({'mex','normxcorr','fft','cuda'},x));
         validate.referenceFrame = @(x) isscalar(x) | ischar(x) | (isnumeric(x) & size(x,1)>1 & size(x,2)>1);
         validate.badFrames = @(x) all(islogical(x));
-        validate.stripHeight = @IsNaturalNumber;
+        validate.stripHeight = @IsPositiveInteger;
+        validate.stripWidth = @(x) isempty(x) | IsPositiveInteger(x);
         validate.samplingRate = @IsNaturalNumber;
         validate.minPeakThreshold = @IsNonNegativeRealNumber; 
         validate.maxMotionThreshold = @(x) IsPositiveRealNumber(x) & (x<=1);
@@ -151,8 +153,9 @@ switch module
         default.peakValues = []; % fail, if not provided
         default.oldStripHeight = []; % fail, if not provided
         default.newStripHeight = 3;
+        default.newStripWidth = [];
         default.axesHandles = [];
-        default.subpixelDepth = 0;
+        default.subpixelForRef = 0;
         default.minPeakThreshold = 0.5;
         default.maxMotionThreshold = 0.06; % proportion of frame size
         default.trim = [0 0];
@@ -166,14 +169,41 @@ switch module
         validate.positions = @(x) (isnumeric(x) & size(x,1)>=1 & size(x,2)==2);
         validate.timeSec = @(x) (isnumeric(x) & size(x,1)>=1 & size(x,2)==1);
         validate.peakValues = @IsNonNegativeRealNumber;
-        validate.oldStripHeight = @IsNaturalNumber;
-        validate.newStripHeight = @IsNaturalNumber;
+        validate.oldStripHeight = @IsPositiveInteger;
+        validate.newStripHeight = @IsPositiveInteger;
+        validate.newStripWidth = @(x) isempty(x) | IsPositiveInteger(x);
         validate.axesHandles = @(x) isempty(x) | all(ishandle(x));
-        validate.subpixelDepth = @IsNaturalNumber;
+        validate.subpixelForRef = @IsNaturalNumber;
         validate.minPeakThreshold = @IsNonNegativeRealNumber;
         validate.maxMotionThreshold = @(x) IsPositiveRealNumber(x) & (x<=1);
         validate.trim = @(x) all(IsNaturalNumber(x)) & (length(x)==2);
         validate.enhanceStrips = @islogical;
+        
+    case 'FilterEyePosition'
+        
+        % default values
+        default.overwrite = false;
+        default.enableVerbosity = false;
+        default.maxGapDurationMs = 20; % msec
+        default.maxPosition = 10; % deg
+        default.maxVelocity = 500; % deg/sec
+        default.beforeAfterMs = 1; % msec
+        default.filters = {'medfilt1','sgolayfilt','notch','notch'}; 
+        default.filterParams = {7,[3 21],[29 31 2],[59 61 2]};
+        default.outputSamplingRate = [];
+        default.axesHandles = [];
+        
+        % validation functions
+        validate.overwrite = @islogical;
+        validate.enableVerbosity = @(x) islogical(x) | (isscalar(x) & x>=0);
+        validate.maxGapDurationMs = @IsNonNegativeRealNumber;
+        validate.maxPosition = @IsNonNegativeRealNumber;
+        validate.maxVelocity = @IsNonNegativeRealNumber;
+        validate.beforeAfterMs = @IsNonNegativeRealNumber;
+        validate.filters = @(x) all(contains(x,{'notch','medfilt1','sgolayfilt'}));
+        validate.filterParams = @(x) iscell(x); % intentionally left without much control since filters may have any type of params
+        validate.outputSamplingRate = @(x) isempty(x) | IsPositiveInteger(x);
+        validate.axesHandles = @(x) isempty(x) | all(ishandle(x));
         
     otherwise
         error('GetDefaults: unknown module name.');

@@ -29,16 +29,18 @@ function [refFrame, varargout] = MakeReference(inputVideo, params)
 %                       already exist. (default false)
 %   enableVerbosity   : set to true to report back plots during execution.(
 %                       default false)
-%   subpixelDepth     : in octaves, the scaling of the desired level of 
+%   subpixelForRef    : in octaves, the scaling of the desired level of 
 %                       subpixel depth. (default 2,i.e., 2^-2 = 0.25px).
 %                       Even if StripAnalysis was run without subpixel
 %                       option enabled, this setting is still relevant if
 %                       stripHeight (below) for MakeReference is smaller
 %                       than the one used for StripAnalysis.
 %   rowNumbers        : Row numbers for all strips within one video frame.
-%   stripHeight       : strip height to be used for strip analysis in 
+%   oldStripHeight    : strip height to be used for strip analysis in 
 %                       pixels. (default [], i.e., fail -- must come from
 %                       StripAnalysis)
+%   newStripHeight    : strip height to be used for making the reference.
+%   newStripWidth     : strip width for making the reference.
 %   positions         : position traces after compensating for strip
 %                       location within parent frame. Also compensates for
 %                       trim operation, if any. 
@@ -61,7 +63,8 @@ function [refFrame, varargout] = MakeReference(inputVideo, params)
 %                       TrimVideo. (default [0 0] -- [top, bottom]).
 %   enhanceStrips     : set to true to do contrast enhancement to
 %                       individual strips before summation. (defaults to
-%                       true).
+%                       true). We use imadjust function for a simple
+%                       contrast enhancement.
 %
 %   -----------------------------------
 %   Output
@@ -72,6 +75,15 @@ function [refFrame, varargout] = MakeReference(inputVideo, params)
 %   varargout{1} = refFrameFilePath
 %   varargout{2} = params
 %
+
+%% Allow for aborting if not parallel processing
+global abortTriggered;
+
+% parfor does not support global variables.
+% cannot abort when run in parallel.
+if isempty(abortTriggered)
+    abortTriggered = false;
+end
  
 
 %% Determine inputVideo type.
@@ -184,9 +196,9 @@ newUsefulSamples = imresize(double(usefulSamples),size(newTimeSec));
 newPositions = interp1(params.timeSec(usefulSamples), params.positions(usefulSamples,:), newTimeSec, 'linear');
 newPositions(~newUsefulSamples) = nan;
 
-% if subpixel operation is enabled, i.e. subpixelDepth ~= 0, everything
-% needs to upsampled/resized/scaled by 2^subpixelDepth.
-sizeFactor = 2^params.subpixelDepth;
+% if subpixel operation is enabled, i.e. subpixelForRef ~= 0, everything
+% needs to upsampled/resized/scaled by 2^subpixelForRef.
+sizeFactor = 2^params.subpixelForRef;
 
 % create an accumulator and a counter array based on motion.
 minPos = min(params.positions(usefulSamples,:),[],1);
@@ -196,17 +208,44 @@ refHeight = round((maxPos(2) - minPos(2) + height + 1) * sizeFactor);
 accumulator = zeros(refHeight, refWidth);
 counter = zeros(refHeight, refWidth);
 
-
-
-%% Allow for aborting if not parallel processing
-global abortTriggered;
-
-% parfor does not support global variables.
-% cannot abort when run in parallel.
-if isempty(abortTriggered)
-    abortTriggered = false;
+% set strip width to frame width, iff params.stripWidth is empty
+if isempty(params.newStripWidth) || ~IsPositiveInteger(params.newStripWidth)
+    params.newStripWidth = width;
 end
+stripLeft = max(1,round((width - params.newStripWidth)/2));
+stripRight = min(width,round((width + params.newStripWidth)/2)-1);
+stripWidth = stripRight - stripLeft + 1;
 
+
+%% plot peak values and delta motion in advance
+if ~abortTriggered && params.enableVerbosity 
+    
+    % show peak value criterion
+    scatter(params.axesHandles(2),params.timeSec,params.peakValues,10,'filled'); 
+    hold(params.axesHandles(2),'on');
+    plot(params.axesHandles(2),params.timeSec([1 end]),params.minPeakThreshold*ones(1,2),'-','linewidth',2);
+    set(params.axesHandles(2),'fontsize',14);
+    xlabel(params.axesHandles(2),'time (sec)');
+    ylabel(params.axesHandles(2),'peak value');
+    ylim(params.axesHandles(2),[0 1]);
+    xlim(params.axesHandles(2),[0 max(params.timeSec)]);
+    hold(params.axesHandles(2),'off');
+    grid(params.axesHandles(2),'on');
+
+    % plot motion criterion
+    scatter(params.axesHandles(3),params.timeSec,100*deltaPos,10,'filled');
+    hold(params.axesHandles(3),'on');
+    plot(params.axesHandles(3),params.timeSec([1 end]),params.maxMotionThreshold*ones(1,2)*100,'-','linewidth',2);
+    set(params.axesHandles(3),'fontsize',14);
+    xlabel(params.axesHandles(3),'time (sec)');
+    ylabel(params.axesHandles(3),'motion (%/fr)');
+    xlim(params.axesHandles(3),[0 max(params.timeSec)]);
+    ylim(params.axesHandles(3),[0 min(0.5,max(deltaPos)+.1)]*100);
+    hold(params.axesHandles(3),'off');
+    grid(params.axesHandles(3),'on');
+    legend(params.axesHandles(3),'off')
+    
+end
 
 %% Make reference frame
 
@@ -249,7 +288,8 @@ for fr = 1:numberOfFrames
             end
             
             % get new strip
-            thisStrip = imresize((frame(newRowNumbers(sn) : min([height,(newRowNumbers(sn)+params.newStripHeight-1)]),:)),sizeFactor);
+            thisStrip = imresize((frame(newRowNumbers(sn) : min([height,(newRowNumbers(sn)+params.newStripHeight-1)]),...
+                stripLeft:stripRight)),sizeFactor);
             
             % enhance contrast
             if params.enhanceStrips
@@ -261,7 +301,7 @@ for fr = 1:numberOfFrames
             % compute location in ref frame
             xy = round(sizeFactor * (newPositions(thisSample,:) - minPos + 1 + [0 newRowNumbers(sn)]));
             indY = xy(2):(xy(2)+ size(thisStrip,1) - 1);
-            indX = xy(1):(xy(1)+ sizeFactor * width - 1);
+            indX = xy(1):(xy(1)+ sizeFactor * stripWidth - 1);
             
             % accumulate
             accumulator(indY, indX) = accumulator(indY, indX) + thisStrip;
@@ -269,6 +309,21 @@ for fr = 1:numberOfFrames
             % count
             counter(indY, indX) = counter(indY, indX) + 1;
             
+        end
+        
+        
+        %% visualize the reference after every frame
+        if params.enableVerbosity > 1
+            
+            % plot reference frame
+            axes(params.axesHandles(1)); %#ok<LAXES>
+            imagesc(accumulator ./ counter);
+            colormap(params.axesHandles(1),gray(256));
+            hold(params.axesHandles(1),'on');
+            hold(params.axesHandles(1),'off');
+            axis(params.axesHandles(1),'image')
+            title(params.axesHandles(1),['Frame no: ' num2str(fr)]);
+            drawnow;
         end
         
     end
@@ -310,8 +365,6 @@ noise = datasample(refFrame(~zeroInd),sum(zeroInd(:)),'replace',false);
 refFrame(zeroInd) = noise;
 
 
-
-
 %% visualize reference frame
 if ~abortTriggered && params.enableVerbosity 
     % plot reference frame
@@ -324,31 +377,6 @@ if ~abortTriggered && params.enableVerbosity
     xlim(params.axesHandles(1),[1 size(refFrame,2)])
     ylim(params.axesHandles(1),[1 size(refFrame,1)])
     title(params.axesHandles(1),'Reference Frame')
-    
-    % show peak value criterion
-    scatter(params.axesHandles(2),params.timeSec,params.peakValues,10,'filled'); 
-    hold(params.axesHandles(2),'on');
-    plot(params.axesHandles(2),params.timeSec([1 end]),params.minPeakThreshold*ones(1,2),'-','linewidth',2);
-    set(params.axesHandles(2),'fontsize',14);
-    xlabel(params.axesHandles(2),'time (sec)');
-    ylabel(params.axesHandles(2),'peak value');
-    ylim(params.axesHandles(2),[0 1]);
-    xlim(params.axesHandles(2),[0 max(params.timeSec)]);
-    hold(params.axesHandles(2),'off');
-    grid(params.axesHandles(2),'on');
-
-    % plot motion criterion
-    scatter(params.axesHandles(3),params.timeSec,100*deltaPos,10,'filled');
-    hold(params.axesHandles(3),'on');
-    plot(params.axesHandles(3),params.timeSec([1 end]),params.maxMotionThreshold*ones(1,2)*100,'-','linewidth',2);
-    set(params.axesHandles(3),'fontsize',14);
-    xlabel(params.axesHandles(3),'time (sec)');
-    ylabel(params.axesHandles(3),'motion (%/fr)');
-    xlim(params.axesHandles(3),[0 max(params.timeSec)]);
-    ylim(params.axesHandles(3),[0 min(0.5,max(deltaPos)+.1)]*100);
-    hold(params.axesHandles(3),'off');
-    grid(params.axesHandles(3),'on');
-    legend(params.axesHandles(3),'off')
 
 end
 
@@ -365,9 +393,8 @@ if writeResult && ~abortTriggered
     end
     
     % Save under file labeled 'final'.
-    if writeResult
-        save(outputFilePath, 'refFrame','refFrameZero','params');
-    end
+    save(outputFilePath, 'refFrame','refFrameZero','params');
+
 end
 
 

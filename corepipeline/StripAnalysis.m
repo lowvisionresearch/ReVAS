@@ -53,6 +53,8 @@ function [position, timeSec, rawPosition, peakValueArray, varargout] = ...
 %                       frames. (default [])
 %   stripHeight       : strip height to be used for strip analysis in 
 %                       pixels. (default 11)
+%   stripWidth        : strip width in pixels. default []. When empty,
+%                       strip width is set to frame width.
 %   samplingRate      : sampling rate of the video in Hz. (default 540)
 %   minPeakThreshold  : the minimum value above which a peak needs to be 
 %                       in order to be considered a valid correlation.
@@ -113,6 +115,15 @@ function [position, timeSec, rawPosition, peakValueArray, varargout] = ...
 %       
 %       [position, timeSec, rawPosition] = StripAnalysis(inputVideo, params);
 %
+
+%% Allow for aborting if not parallel processing
+global abortTriggered;
+
+% parfor does not support global variables.
+% cannot abort when run in parallel.
+if isempty(abortTriggered)
+    abortTriggered = false;
+end
 
 %% Determine inputVideo type.
 if ischar(inputVideo)
@@ -315,14 +326,13 @@ offset = [0 0];
 % swapped.
 lastFrameSwap = nan;
 
-%% Allow for aborting if not parallel processing
-global abortTriggered;
-
-% parfor does not support global variables.
-% cannot abort when run in parallel.
-if isempty(abortTriggered)
-    abortTriggered = false;
+% set strip width to frame width, iff params.stripWidth is empty
+if isempty(params.stripWidth) || ~IsPositiveInteger(params.stripWidth)
+    params.stripWidth = width;
 end
+stripLeft = max(1,round((width - params.stripWidth)/2));
+stripRight = min(width,round((width + params.stripWidth)/2)-1);
+
 
 
 %% Extract motion by template matching strips to reference frame
@@ -365,7 +375,8 @@ while fr <= numberOfFrames
             
             % get current strip
             thisSample = stripsPerFrame * (fr-1) + sn;
-            thisStrip = frame(rowNumbers(sn) : (rowNumbers(sn)+params.stripHeight-1),:);
+            thisStrip = frame(rowNumbers(sn) : (rowNumbers(sn)+params.stripHeight-1),...
+                stripLeft:stripRight);
             
             for attempt = 1:numOfAttempts
                 
@@ -459,8 +470,8 @@ while fr <= numberOfFrames
             % update the traces/stats
             peakValueArray(thisSample) = peakValue;
             peakPosition(thisSample,:) = [xPeak, yPeak - params.stripHeight + params.rowStart - 1];
-            rawPosition(thisSample,:) = [xPeak-width ...
-                (yPeak - params.stripHeight - rowNumbers(sn) + params.rowStart - 1)] + offset;
+            rawPosition(thisSample,:) = [xPeak-params.stripWidth-stripLeft+1 ...
+                (yPeak - params.stripHeight - rowNumbers(sn) + params.rowStart)] + offset;
             
             % keep a record of amount of motion between successive strips.
             if thisSample > 1
@@ -680,9 +691,7 @@ if writeResult && ~abortTriggered
     end
     
     % Save under file labeled 'final'.
-    if writeResult
-        save(outputFilePath, 'position', 'rawPosition', 'timeSec', 'params','peakValueArray','peakPosition');
-    end
+    save(outputFilePath, 'position', 'rawPosition', 'timeSec', 'params','peakValueArray','peakPosition');
 end
 
 

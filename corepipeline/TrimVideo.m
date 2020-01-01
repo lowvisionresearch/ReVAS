@@ -50,6 +50,16 @@ function [outputVideo, varargout] = TrimVideo(inputVideo, params)
 %       params.badFrames = false;
 %       TrimVideo(inputVideo, params);
 
+%% Allow for aborting if not parallel processing
+global abortTriggered;
+
+% parfor does not support global variables.
+% cannot abort when run in parallel.
+if isempty(abortTriggered)
+    abortTriggered = false;
+end
+
+
 %% Determine inputVideo type.
 if ischar(inputVideo)
     % A path was passed in.
@@ -93,15 +103,6 @@ if writeResult
     end
 end
 
-
-%% Allow for aborting if not parallel processing
-global abortTriggered;
-
-% parfor does not support global variables.
-% cannot abort when run in parallel.
-if isempty(abortTriggered)
-    abortTriggered = false;
-end
 
 %% Create reader/writer objects and get some info on videos
 

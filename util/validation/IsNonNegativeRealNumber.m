@@ -4,4 +4,4 @@ function result = IsNonNegativeRealNumber(value)
 %
 %  MNA 11/30/19 made it array-compatible
 
-result = IsRealNumber(value) & (value > 0);
+result = IsRealNumber(value) & (value >= 0);
