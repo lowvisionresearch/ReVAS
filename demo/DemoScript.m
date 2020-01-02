@@ -32,7 +32,7 @@ fprintf('\n\n\n ------------------- DemoScript 1st Example: TSLO ---------------
 
 % get video path. The demo videos must be under /demo folder, i.e., already
 % added to MATLAB path.
-inputVideoPath = 'dam_od_V010.avi'; 
+inputVideoPath = '20092L_003.avi'; 
 originalVideoPath = inputVideoPath;
 
 % for loading default params, use an empty struct
@@ -52,8 +52,8 @@ tp.borderTrimAmount = [0 0 12 12];
 [inputVideoPath, tp] = TrimVideo(inputVideoPath, tp);
 
 % Stimulus removal
-% tp.stimulus = imread('cross.png');
-tp.stimulus = MakeStimulusCross(87, 19, 0); 
+tp.stimulus = imread('cross.png');
+% tp.stimulus = MakeStimulusCross(87, 19, 0); 
 inputVideoPath = RemoveStimuli(inputVideoPath, tp);
 
 % Contrast enhancement
@@ -76,14 +76,15 @@ tp.goodFrameCriterion = .7; 0.9;
 tp.swapFrameCriterion = .7; 0.6;
 tp.lookBackTime = 15;
 tp.trim = tp.borderTrimAmount(3:4);
-samplingRate = [540 540];
-stripHeight = [11 11];
+samplingRate = [960 540];
+stripHeight = [5 11];
 for i=1:length(stripHeight)
     % Extract eye motion
-    tp.minPeakThreshold = 0.3;
+    tp.minPeakThreshold = 0.75;
     tp.maxMotionThreshold = 0.1;
     tp.samplingRate = samplingRate(i);
     tp.stripHeight = stripHeight(i);
+    tp.stripWidth = 128;
     tp.enableReferenceFrameUpdate = i==1;
     [position, timeSec, ~, peakValueArray, tp] = StripAnalysis(inputVideoPath, tp); 
 
@@ -94,7 +95,7 @@ for i=1:length(stripHeight)
     tp.timeSec = timeSec;
     tp.peakValues = peakValueArray;
     tp.maxMotionThreshold = 0.05;
-    tp.minPeakThreshold = 0.5;
+    tp.minPeakThreshold = 0.85;
     [referenceFrame, ~, tp] = MakeReference(inputVideoPath, tp);
     tp.referenceFrame = referenceFrame;
 end

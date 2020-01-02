@@ -122,7 +122,7 @@ end
 [default, validate] = GetDefaults(callerStr);
 params = ValidateField(params,default,validate,callerStr);
 
-% just one more additional checks
+% just one more additional check
 % it is to make sure each filter has corresponding parameters
 if length(params.filters) ~= length(params.filterParams)
     error('FilterEyePosition: number of filters and number of entries in filterParams do not match.');
@@ -134,9 +134,17 @@ end
 % check if axes handles are provided, if not, create axes.
 if params.enableVerbosity && isempty(params.axesHandles)
     fh = figure(2020);
-    set(fh,'units','normalized','outerposition',[0.16 0.053 0.67 0.51]);
-    params.axesHandles(1) = subplot(1,1,1);
-    cla(params.axesHandles(1));
+    set(fh,'name','Filter Eye Position','units','normalized','outerposition',[0.16 0.053 0.67 0.51]);
+    if params.enableVerbosity == 1
+        params.axesHandles(1) = subplot(1,1,1); % hor and ver
+    else
+        params.axesHandles(1) = subplot(1,2,1); % hor 
+        params.axesHandles(2) = subplot(1,2,2); % ver
+    end
+       
+    for i=1:length(params.axesHandles)
+        cla(params.axesHandles(i));
+    end
 end
 
 
@@ -361,35 +369,40 @@ filteredEyePositions(nanIndices,:) = nan;
 %% visualize results if user requested
 if ~abortTriggered && params.enableVerbosity 
     
-    hold(params.axesHandles(1),'on');
-    plot(params.axesHandles(1), timeSec, eyePositionTraces, '. ');
+    for i=1:length(params.axesHandles)
+        hold(params.axesHandles(i),'on');
+        plot(params.axesHandles(i), timeSec, eyePositionTraces(:,i), '. ');
+    end
     
     % plot all levels of filtering
     if params.enableVerbosity > 1
-        forLegend = {'raw-hor','raw-ver'};
+        forLegend = {'raw'};
         for i=1:length(params.filters)
             tempResult = filteringResults(:,:,i);
             tempResult(nanIndices,:) = nan;
-            plot(params.axesHandles(1), timeSec, tempResult, '-','linewidth',1 + i*.5);
-            forLegend{2*i+1} = [params.filters{i} '-hor'];
-            forLegend{2*i+2} = [params.filters{i} '-ver'];
+            plot(params.axesHandles(1), timeSec, tempResult(:,1), '-','linewidth',1 + i*.5);
+            plot(params.axesHandles(2), timeSec, tempResult(:,2), '-','linewidth',1 + i*.5);
+            forLegend{i+1} = params.filters{i};
         end
         legend(params.axesHandles(1),forLegend,'location','best');
+        title(params.axesHandles(1),'horizontal');
+        title(params.axesHandles(2),'vertical');
         
     else % plot only the overall output
         plot(params.axesHandles(1), timeSec, filteredEyePositions, '-','linewidth',2,'markersize',2);
         legend(params.axesHandles(1),{'raw-hor','raw-ver','filtered-hor','filtered-ver'},'location','best');
-    
     end
     
     % beautify the plot
-    set(params.axesHandles(1),'fontsize',14);
-    xlabel(params.axesHandles(1),'time (sec)');
-    ylabel(params.axesHandles(1),'position (deg)');
-    ylim(params.axesHandles(1),[nanmin(filteredEyePositions(:)) nanmax(filteredEyePositions(:))] * 1.2);
-    xlim(params.axesHandles(1),[0 max(timeSec)]);
-    hold(params.axesHandles(1),'off');
-    grid(params.axesHandles(1),'on');
+    for i=1:length(params.axesHandles)
+        set(params.axesHandles(i),'fontsize',14);
+        xlabel(params.axesHandles(i),'time (sec)');
+        ylabel(params.axesHandles(i),'position (deg)');
+        ylim(params.axesHandles(i),[nanmin(filteredEyePositions(:)) nanmax(filteredEyePositions(:))] * 1.2);
+        xlim(params.axesHandles(i),[0 max(timeSec)]);
+        hold(params.axesHandles(i),'off');
+        grid(params.axesHandles(i),'on');
+    end
 
 end
 

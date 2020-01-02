@@ -36,10 +36,15 @@ function [position, timeSec, rawPosition, peakValueArray, varargout] = ...
 %                       set to true. It represents the proportion of
 %                       samples from a single frame whose peak value is
 %                       above 'minPeakThreshold' (specified below). (0-1),
-%                       defaults to 0.9. E.g., if number of strips per
-%                       frame is 20, at least 0.9*20=18 samples must
+%                       defaults to 0.8. E.g., if number of strips per
+%                       frame is 20, at least 0.8*20=16 samples must
 %                       satisfy the 'minPeakThreshold' for a frame to be
 %                       considered as a candidate reference frame.
+%   swapFrameCriterion: Relevant only when 'enableReferenceFrameUpdate' is
+%                       set to true. Represents the proportion of bad samples
+%                       from a single frame. "bad samples" means peak value
+%                       is below minPeakThreshold and/or motion since
+%                       previous sample is above maxMotionThreshold.
 %   corrMethod        : method to use for cross-correlation. you can 
 %                       choose from 'normxcorr' for matlab's built-in
 %                       normxcorr2, 'mex' for opencv's correlation, or 
@@ -162,7 +167,7 @@ end
 % check if axes handles are provided, if not, create axes.
 if params.enableVerbosity && isempty(params.axesHandles)
     fh = figure(2020);
-    set(fh,'units','normalized','outerposition',[0.16 0.053 0.67 0.51]);
+    set(fh,'name','Strip Analysis','units','normalized','outerposition',[0.16 0.053 0.67 0.51]);
     params.axesHandles(1) = subplot(2,3,[1 4]);
     params.axesHandles(2) = subplot(2,3,2);
     params.axesHandles(3) = subplot(2,3,3);
@@ -338,6 +343,7 @@ stripRight = min(width,round((width + params.stripWidth)/2)-1);
 %% Extract motion by template matching strips to reference frame
 
 % the big loop. :)
+override = false;
 
 % loop across frames
 fr = 1;
@@ -407,15 +413,14 @@ while fr <= numberOfFrames
                         params.rowStart = max(1, round(loc - floor(thisWindowHeight/2)));
                         params.rowEnd = min(refHeight, round(loc + floor(thisWindowHeight/2)));
                         
-                        
                         % check if size is smaller than desired. if
                         % so, enlarge the reference.
                         if params.rowEnd - params.rowStart <= thisWindowHeight
                             if params.rowEnd == height
-                                params.rowStart = params.rowEnd - thisWindowHeight + 1;
+                                params.rowStart = max(1,params.rowEnd - thisWindowHeight + 1);
                             end
                             if params.rowStart == 1
-                                params.rowEnd = params.rowStart + thisWindowHeight - 1;
+                                params.rowEnd = min(refHeight,params.rowStart + thisWindowHeight - 1);
                             end
                         end
                     end
@@ -497,6 +502,10 @@ while fr <= numberOfFrames
         
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %
+        % Dynamic reference frame swapping
+        %
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if params.enableReferenceFrameUpdate
             lastFrameStrips = thisSample-stripsPerFrame+1 : thisSample;
             
@@ -505,12 +514,15 @@ while fr <= numberOfFrames
             % when there is already a candidate reference frame, swap the
             % reference frame and compute the offset needed to re-reference
             % upcoming strips to the initial reference frame.
-            if fr > 2 && ...
+            if (fr > 2 && ...
                     sum((peakValueArray(lastFrameStrips) < params.minPeakThreshold) | ...
                         (deltaPos(lastFrameStrips) > params.maxMotionThreshold) ) ...
                     > ((params.swapFrameCriterion) * stripsPerFrame) && ...
                     exist('lastGoodFrame','var') && ...
-                    lastFrameSwap(end) ~= fr
+                    lastFrameSwap(end) ~= fr) || ...
+                    override
+                
+                override = false;
 
                 % get a strip from the lastGoodFrame based on local
                 % contrast
@@ -518,7 +530,8 @@ while fr <= numberOfFrames
                 [~, maxIx] = max(lineContrast);
                 anchorSt = max(1,maxIx - round(height/8));
                 anchorEn = min(height, maxIx + round(height/8));
-                anchorStrip = lastGoodFrame(anchorSt:anchorEn,:);
+                anchorStrip = lastGoodFrame(anchorSt:anchorEn,...
+                    stripLeft:stripRight);
                 
                 % create a struct for full-reference crosscorr.
                 anchorOp = struct;
@@ -533,39 +546,55 @@ while fr <= numberOfFrames
                 [cm, xPeakAnchor, yPeakAnchor, ~] = LocateStrip(anchorStrip,anchorOp,struct);
                 
                 % the location of the anchor strip in new reference frame
-                xPeakNew = width;
+                xPeakNew = params.stripWidth + stripLeft - 1;
                 yPeakNew = anchorSt + size(anchorStrip,1) - 1;
                 
                 % offset needed to re-reference the strips to the initial
                 % reference frame
                 thisOffset = [xPeakAnchor yPeakAnchor] - [xPeakNew yPeakNew];
 
-                if any(thisOffset./height > params.maxMotionThreshold)
+                % plan B for finding the peak
+                if any(abs(thisOffset./height) > params.maxMotionThreshold)
                     cmFilt = cm - imgaussfilt(cm,5);
                     [xPeakAnchor, yPeakAnchor, ~] = FindPeak(cmFilt, params.enableGPU);
                     thisOffset = [xPeakAnchor yPeakAnchor] - [xPeakNew yPeakNew];
                 end
-                
-                offset = offset + thisOffset;
-                
-                % update the reference frame
-                params.referenceFrame = lastGoodFrame;
-                refHeight = size(lastGoodFrame,1);
+                    
+                    
+                % update only when offset is acceptable
+                if any(abs(thisOffset./height) <= params.maxMotionThreshold)
+                    offset = offset + thisOffset;
 
-                % set a flag so that we don't get stuck here, analyzing the
-                % same frame over and over again.
-                lastFrameSwap = [lastFrameSwap; fr]; %#ok<AGROW>
+                    % update the reference frame
+                    params.referenceFrame = lastGoodFrame;
+                    refHeight = size(lastGoodFrame,1);
 
-                % rewind back one frame
-                fr = fr - 1;
-                if writeResult
-                    reader.CurrentTime = (fr)/reader.FrameRate;
+                    % set a flag so that we don't get stuck here, analyzing the
+                    % same frame over and over again.
+                    lastFrameSwap = [lastFrameSwap; fr]; %#ok<AGROW>
+
+                    % rewind back one frame
+                    fr = fr - 1;
+                    if writeResult
+                        reader.CurrentTime = (fr)/reader.FrameRate;
+                    end
+
+                    % give a warning to let user know about the reference frame
+                    % update
+                    RevasMessage(['StripAnalysis: Reference frame changed at frame ' num2str(fr) '!'],params);
+
+                else
+                    % if re-referencing to new reference results in an
+                    % unacceptable offset, move onto the next frame without
+                    % updating the reference frame. but make sure we go
+                    % into reference frame swap block in the next frame.
+                    % the idea is that current frame might not be good
+                    % enough (maybe a leftover of a blink or a bad frame
+                    % that escaped bad frame detection), so we cannot find
+                    % a good match between its highest contrast strip and
+                    % lastGoodFrame. 
+                    override = true;
                 end
-
-                % give a warning to let user know about the reference frame
-                % update
-                RevasMessage(['StripAnalysis: Reference frame changed at frame ' num2str(fr) '!'],params);
-                
             end
         
             % keep a spare candidate reference frame, in case current one
@@ -580,6 +609,10 @@ while fr <= numberOfFrames
             end
         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
+        
+        
+        
         
         % plot peak values and raw traces
         if params.enableVerbosity 

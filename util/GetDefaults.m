@@ -179,6 +179,31 @@ switch module
         validate.trim = @(x) all(IsNaturalNumber(x)) & (length(x)==2);
         validate.enhanceStrips = @islogical;
         
+        
+    case 'ReReference'
+        
+        % default values
+        default.enableGPU = false;
+        default.corrMethod = 'mex';
+        default.enableVerbosity = false;
+        default.fixTorsion = false;
+        default.tilts = -5:.25:5;
+        default.anchorRowNumber = [];
+        default.anchorStripHeight = 15;
+        default.anchorStripWidth = [];
+        default.axesHandles = [];
+        
+        % validation functions
+        validate.enableGPU = @islogical;
+        validate.corrMethod = @(x) any(contains({'mex','normxcorr','fft','cuda'},x));
+        validate.enableVerbosity = @(x) islogical(x) | (isscalar(x) & x>=0);
+        validate.fixTorsion = @islogical;
+        validate.tilts = @(x) IsRealNumber(x) & isvector(x);
+        validate.anchorStripHeight = @IsPositiveInteger;
+        validate.anchorRowNumber = @(x) isempty(x) | IsPositiveInteger(x);
+        validate.anchorStripWidth = @(x) isempty(x) | IsPositiveInteger(x);
+        validate.axesHandles = @(x) isempty(x) | all(ishandle(x));
+
     case 'FilterEyePosition'
         
         % default values

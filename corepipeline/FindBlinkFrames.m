@@ -106,7 +106,7 @@ params = ValidateField(params,default,validate,callerStr);
 % check if axes handles are provided, if not, create axes.
 if params.enableVerbosity && isempty(params.axesHandles)
     fh = figure(2020);
-    set(fh,'units','normalized','outerposition',[0.16 0.053 0.67 0.51]);
+    set(fh,'name','Find Blink Frames','units','normalized','outerposition',[0.16 0.053 0.67 0.51]);
     params.axesHandles(1) = subplot(1,1,1);
     cla(params.axesHandles(1));
 end
