@@ -1,455 +1,328 @@
-function newEyePositionTraces = ...
-    ReReference(positionArgument, localRefArgument, globalRefArgument, parametersStructure)
-%REREFERENCE adds offsets to eye position traces so that all positions are
-%   based on a global reference frame. 
+function [offset, bestTilt, varargout] = ...
+    ReReference(localRefArgument, globalRefArgument, params)
+%REREFERENCE computes the offsets required to re-reference one reference
+%   onto another.
+%
+%   This function is not meant to be a part of the core pipeline, i.e., it
+%   does not write/modify any files. It's meant to be used as an
+%   intermediate routine. 
 %
 %   -----------------------------------
 %   Input
 %   -----------------------------------
-%   |positionArgument| is an Nx2 array of eyePositionTraces or
-%   a full path to a file containing eyePositionTraces.
 %
-%   |localRefArgument| is a 2D array representing the local ref corresponding to
-%   |positionArgument| or a full path to a file containing |localRef|.
+%   |localRefArgument| is a 2D array representing a local ref or a full
+%   path to a file containing 'referenceFrame' or 'params.referenceFrame'.
 %
-%   |globalRefArgument| is a 2D array representing the global
-%   ref or a full path to a file containing 'globalRef'.
+%   |globalRefArgument| is a 2D array representing a local ref or a full
+%   path to a file containing 'referenceFrame' or 'params.referenceFrame'.
 %
-%   |parametersStructure| is a struct as specified below.
+%   |params| is a struct as specified below.
 %
 %   -----------------------------------
-%   Fields of the 'parametersStructure' structure
+%   Fields of the 'params' structure
 %   --------------------------------
-%   overwrite               : set to true to overwrite existing files.
-%                             Set to false to abort the function call if the
-%                             files already exist. (default false)
-%   enableVerbosity         : set to true to report back plots during execution.
-%                             (default false)
-%   searchZone              : size of the search zone for the peak, in
-%                             terms of fraction of the cross-correlation
-%                             map. e.g., a searchZone of 1 means, the
-%                             entire map will be searched. 0.2 means that
-%                             central (0.5-0.1=)0.4 to (0.5+0.1=)0.6 part
-%                             of the map will be searched. (default 0.5)
-%   findPeakMethod          : set to 1 if you want to find the peak of raw
-%                             cross-correlation map to localize local ref
-%                             on global ref. set to 2 if you want to enable
-%                             subtraction of gaussian-filtered version of
-%                             the cross-correlation map from itself before
-%                             searching for the peak. (default 2)
-%                             (time-consuming).
-%   findPeakKernelSize      : size of the gaussian kernel for median
-%                             filtering. (relevant only when findPeakMethod
-%                             is 2) (default 21)
+%   enableGPU               : a logical. if set to true, use GPU. (works for 
+%                             'mex' method only.
+%   enableVerbosity         : set to true to report back plots during execution. (
+%                             default false)
+%   corrMethod              : method to use for cross-correlation. you can 
+%                             choose from 'normxcorr' for matlab's built-in
+%                             normxcorr2, 'mex' for opencv's correlation, or 
+%                             'fft' for our custom-implemented fast
+%                             correlation method. 'cuda' is placed but not 
+%                             implemented yet (default 'mex').
 %   fixTorsion              : set to true if you want to improve
 %                             cross-correlations by rotating the local ref
 %                             with a range of tilts. (default true)
 %   tilts                   : a 1D array with a set of tilt values.
 %                             (relevant only when fixTorsion is true)
 %                             (default -5:1:5)
-%   axesHandles             : axes handle for giving feedback. if not
-%                             provided or empty, new figures are created.
-%                             (relevant only when enableVerbosity is true)
+%   anchorStripHeight       : height of the strip to be taken from localRef
+%                             for rereferencing. (default 15)
+%   anchorStripWidth        : width of the strip to be taken from localRef
+%                             for rereferencing. if empty, uses localRef 
+%                             width. default empty.
+%   anchorRowNumber         : Row number in pixels from local reference.
+%                             Strip(s) for rereferencing will be extracted
+%                             starting from this index. If left empty,
+%                             ReReference uses line contrasts to decide
+%                             what's most informative strip. (default
+%                             empty)
+%   axesHandles             : axes handle for giving feedback. if not provided, 
+%                             new figures are created. (relevant only when
+%                             enableVerbosity is true)
+%   
+%   -----------------------------------
+%   Output
+%   -----------------------------------
+%
+%   |offset| is position shift (in pixels) required to reference the
+%   position traces onto global ref.
+%
+%   |bestTilt| is the best tilt for localRef to be mapped onto globalRef
+%
+%   varargout{1} : params.
+%   varargout{2} : peakValues.
+%   varargout{3} : cMap for bestTilt
 %
 %   -----------------------------------
 %   Example usage
 %   -----------------------------------
-%       inputPath = 'MyFile.mat';
-%       load('MyVid_refFrame.mat');
-%       load('MyVid_globalRefFrame.mat');
-%       parametersStructure.verbosity = true;
-%       parametersStructure.overwrite = true;
-%       parametersStructure.searchZone = 0.5;
-%       parametersStructure.findPeakMethod = 2;
-%       parametersStructure.findPeakKernelSize = 21;
-%       parametersStructure.fixTorsion = true;
-%       parametersStructure.tilts = -5:1:5;
-%       ReReference(inputPath, referenceFrame, ...
-%           globalReferenceFrame, parametersStructure);
 
-%% Determine inputVideo type.
-if ischar(positionArgument)
-    % A path was passed in.
-    % Read and once finished with this module, write the result.
-    writeResult = true;
-else
-    % A video matrix was passed in.
-    % Do not write the result; return it instead.
-    writeResult = false;
-end
 
-%% Handle misusage 
-if nargin<3
-    error('ReReference needs at least three four arguments.')
-end
+%% Allow for aborting if not parallel processing
+global abortTriggered;
 
-if nargin<4
-    error('parametersStructure is not provided, re-referencing cannot proceed.');
-end 
-
-if ~isstruct(parametersStructure)
-    error('''parametersStructure'' must be a struct.');
+% parfor does not support global variables.
+% cannot abort when run in parallel.
+if isempty(abortTriggered)
+    abortTriggered = false;
 end
 
 %% Set parameters to defaults if not specified.
-if ~isfield(parametersStructure,'overwrite')
-    overwrite = false;
-else
-    overwrite = parametersStructure.overwrite;
-    if ~islogical(overwrite)
-        error('overwrite must be a logical');
-    end
+
+if nargin < 2 
+    params = struct;
 end
 
-if ~isfield(parametersStructure,'fixTorsion')
-    fixTorsion = true;
-    RevasWarning('using default parameter for fixTorsion', fixTorsion);
-else
-    fixTorsion = parametersStructure.fixTorsion;
-    if ~islogical(fixTorsion)
-        error('fixTorsion must be a logical');
-    end
+% validate params
+[~,callerStr] = fileparts(mfilename);
+[default, validate] = GetDefaults(callerStr);
+params = ValidateField(params,default,validate,callerStr);
+
+%% Handle GPU 
+
+% check if CUDA enabled GPU exists
+if params.enableGPU && (gpuDeviceCount < 1)
+    params.enableGPU = false;
+    RevasWarning('No supported GPU available. StripAnalysis is reverting back to CPU', params);
 end
 
-if ~isfield(parametersStructure,'tilts')
-    tilts = -5:1:5;
-    RevasWarning('using default parameter for tilts', parametersStructure);
-else
-    tilts = parametersStructure.tilts;
-    if size(tilts, 2) == 1
-        tilts = tilts';
-    end
-    if ~isnumeric(tilts) && size(tilts, 1) ~= 1
-       error('tilts must be a vector of numbers'); 
-    end
+
+%% Handle verbosity 
+
+% check if axes handles are provided, if not, create axes.
+if params.enableVerbosity && isempty(params.axesHandles)
+    fh = figure(2020);
+    set(fh,'name','Re-reference','units','normalized','outerposition',[0.16 0.053 0.67 0.51]);
+    params.axesHandles(1) = subplot(1,1,1);
 end
 
-if ~isfield(parametersStructure,'findPeakMethod')
-    findPeakMethod = 2;
-else
-    findPeakMethod = parametersStructure.findPeakMethod;
-    if findPeakMethod ~= 1 && findPeakMethod ~= 2
-        error('findPeakMethod must be 1 or 2');
-    end
-end
-
-if ~isfield(parametersStructure,'findPeakKernelSize')
-    findPeakKernelSize = 21;
-else
-    findPeakKernelSize = parametersStructure.findPeakKernelSize;
-    if ~IsOddNaturalNumber(findPeakKernelSize)
-        error('findPeakKernelSize must be an odd, natural number');
-    end
-end
-
-if ~isfield(parametersStructure,'searchZone')
-    searchZone = 0.5;
-else
-    searchZone = parametersStructure.searchZone;
-    if ~IsRealNumber(searchZone) || searchZone < 0 || searchZone > 1
-       error('searchZone must be a real number between 0 and 1 (inclusive)');
-    end
-end
-
-if ~isfield(parametersStructure,'enableVerbosity')
-    enableVerbosity = false;
-else
-    enableVerbosity = parametersStructure.enableVerbosity;
-    if ~islogical(enableVerbosity)
-        error('enableVerbosity must be a logical');
-    end
-end
-
-if ~isfield(parametersStructure,'axesHandles')
-    axesHandles = [];
-else
-    axesHandles = parametersStructure.axesHandles;
-end
-
-%% Handle |positionArgument| scenarios.
-if writeResult
-    outputFilePath = Filename(positionArgument, 'reref');
-    
-    % Handle overwrite scenarios
-    if ~exist(outputFilePath, 'file')
-        % left blank to continue without issuing warning in this case
-    elseif ~overwrite && exist(outputFilePath, 'file')
-        RevasWarning(['ReReference() did not execute because it would overwrite existing file. (' outputFilePath ')'], parametersStructure);
-        return;
-    else
-        RevasWarning(['ReReference() is proceeding and overwriting an existing file. (' outputFilePath ')'], parametersStructure);  
-    end
-    
-    % check if input file exists
-    if ~exist(positionArgument,'file')
-        error('eye position file does not exist!');
-    end
-    
-    % load the data
-    data = load(positionArgument,'eyePositionTraces','timeArray');
-    eyePositionTraces = data.eyePositionTraces;
-
-else % inputArgument is not a file path, but carries the eye position data.
-    eyePositionTraces = positionArgument;
-end
 
 %% Handle |localRefArgument| scenarios.
-if ischar(localRefArgument) % localRefArgument is a file path
 
-    % check if input file exists
-    if ~exist(localRefArgument,'file')
-        error('local ref file does not exist!');
-    end
-    
-    try
-        % load the localRef
-        load(localRefArgument,'refFrame');
-        localRef = refFrame*255;
-    catch
-        try
-            % maybe this is a coarse ref file
-            load(localRefArgument,'coarseRefFrame');
-            localRef = coarseRefFrame*255;
-        catch
-            % maybe this is an image file
-            localRef = im2double(imread(localRefArgument))*255;
-        end
-    end
-
-else % localRefArgument is not a file path, but carries the localRef.
-    if max(localRefArgument(:)) < 1
-        localRef = localRefArgument*255;
-    else
-        localRef = localRefArgument;
-    end
+localRef = HandleInputArgument(localRefArgument);
+if isempty(localRef)
+    error('ReReference: error occured while loading local ref!');
 end
 
 %% Handle |globalRefArgument| scenarios.
-if ischar(globalRefArgument) % globalRefArgument is a file path
 
-    % check if input file exists
-    if ~exist(globalRefArgument,'file')
-        error('global ref file does not exist!');
-    end
-    
-    try
-        % load the globalRef
-        fileContents = load(globalRefArgument);
-        if isfield(fileContents,'globalRef')
-            globalRef = fileContents.globalRef;
-        elseif ~isfield(fileContents,'globalRef') && isfield(fileContents,'refFrame')
-            globalRef = fileContents.refFrame;
-        elseif ~isfield(fileContents,'globalRef') && isfield(fileContents,'coarseRefFrame')
-            globalRef = fileContents.coarseRefFrame;
-        else
-            RevasError(globalRefArgument,...
-                'Neither globalRef nor refFrame nor coarseRefFrame can be found in %s',...
-                parametersStructure);
-        end
-    catch
-        % maybe this is an image file
-        globalRef = imread(globalRefArgument);
-    end
-
-else % globalRefArgument is not a file path, but carries the globalRef.
-    globalRef = globalRefArgument;
+globalRef = HandleInputArgument(globalRefArgument);
+if isempty(globalRef)
+    error('ReReference: error occured while loading global ref!');
 end
 
-%% Re-referencing done here.
-% compute ref centers
-localCenter = size(localRef)/2;
-globalCenter = size(globalRef)/2;
+%% Prepare
+
+% get local ref size
+[lHeight, lWidth] = size(localRef);
+
+% set strip width to frame width, iff params.stripWidth is empty
+if isempty(params.anchorStripWidth) || ~IsPositiveInteger(params.anchorStripWidth)
+    params.anchorStripWidth = lWidth;
+end
+stripLeft = max(1,round((lWidth - params.anchorStripWidth)/2));
+stripRight = min(lWidth,round((lWidth + params.anchorStripWidth)/2)-1);
 
 % remove black edges around the refs, if any
 localRef = PadNoise(localRef);
 globalRef = PadNoise(globalRef);
-    
-% prepare structure for Localize sub-function
-params.findPeakMethod = findPeakMethod;
-params.findPeakKernelSize = findPeakKernelSize;
-params.searchZone = searchZone;
-params.tilts = tilts;
 
-% localize local ref on global ref
-if ~fixTorsion
-    [yOffset, xOffset, peakValue, c, ~, ~] = Localize(localRef,globalRef,params);
+% determine which part of localRef to use for re-referencing. We use
+% params.anchorRowNumber if available. If not, we use the line contrast
+% method: first, compute rms contrast of each scanline within localRef, and
+% second, use the highest contrast region to extract anchoring strips.
+if isempty(params.anchorRowNumber)
+    
+    % get a strip from the localRef based on local contrast
+    lineContrast = medfilt1(std(double(localRef),[],2),31);
+    [~, maxIx] = max(lineContrast);
+    anchorSt = max(1,maxIx - params.anchorStripHeight); % intentionally avoided halving strip height since we are using central half below
+    anchorEn = min(lHeight, maxIx + params.anchorStripHeight);
+    params.anchorRowNumber = anchorSt;
+
 else
-    [localRef, bestTilt, yOffset, xOffset, peakValue, c] = ...
-        SolveTiltIssue(localRef,globalRef,params);
+    anchorSt = params.anchorRowNumber;
+    anchorEn = anchorSt + params.anchorStripHeight - 1;
+end
+anchorStrip = localRef(anchorSt:anchorEn,stripLeft:stripRight);
+
+% create a struct for full-reference crosscorr.
+anchorOp = struct;
+anchorOp.enableGPU = params.enableGPU;
+anchorOp.corrMethod = params.corrMethod;
+anchorOp.adaptiveSearch = false;
+anchorOp.rowStart = 1;
+anchorOp.rowEnd = size(globalRef,1);
+anchorOp.referenceFrame = globalRef;
+
+% if torsional search is enabled, rotate anchor strip before locating on
+% glboal ref
+if ~params.fixTorsion
+    tilts = 0;
+else
+    tilts = params.tilts;
 end
 
-% adjust eye position traces based on the estimated offsets
-offsetBetweenLocalAndGlobal = [xOffset yOffset];
-newEyePositionTraces = eyePositionTraces...
-    + repmat(offsetBetweenLocalAndGlobal,length(eyePositionTraces), 1);
+peakValues = zeros(size(tilts));
 
-%% Save re-referenced data.
-if writeResult
-    data.eyePositionTraces = newEyePositionTraces;
-    data.offsetBetweenLocalAndGlobal = offsetBetweenLocalAndGlobal;
-    data.peakValue = peakValue;
-    
-    try
-        % remove pointers to graphics objects
-        parametersStructure = rmfield(parametersStructure,'commandWindowHandle');
-        parametersStructure = rmfield(parametersStructure,'axesHandles');
-    catch
-    end
-    
-    data.parametersStructure = parametersStructure;
-    if exist('bestTilt','var')
-        data.bestTilt = bestTilt;
-    end
-    save(outputFilePath,'-struct','data');
-end
+anchorStripSize = size(anchorStrip);
+halfStripSize = round(anchorStripSize/2);
 
-%% Give feedback if user requested.
-if enableVerbosity
-    
-    if ishandle(axesHandles)
-        axes(axesHandles(3))
-    else
-        figure(234);
-    end
-    cla;
-    
-    %% the following hack is needed just for plotting!
-    % pre-padding when offsets are negative
-    if xOffset < 1 
-        prepadX = abs(xOffset);
-        xOffset = 1;
-    else
-        prepadX = 0;
-    end
-    
-    if yOffset < 1
-        prepadY = abs(yOffset);
-        yOffset = 1;
-    else
-        prepadY = 0;
-    end
-    tempGlobal = padarray(globalRef,[prepadX prepadY],'pre');
-    
-    
-    % post-padding when the local ref is bigger than the pre-padded global
-    % ref
-    if abs(xOffset) + prepadX + size(localRef,2) > size(tempGlobal,2) 
-        padX = abs(xOffset) + prepadX + size(localRef,2) - size(tempGlobal,2) + 1;
-    else
-        padX = 0;
-    end
-    
-    if abs(yOffset) + prepadY + size(localRef,1) > size(tempGlobal,1)
-        padY = abs(yOffset) + prepadY + size(localRef,1) - size(tempGlobal,1) + 1;
-    else
-        padY = 0;
-    end
-    
-    if padX < 0 
-        padX = 0;
-    end
-    if padY < 0 
-        padY = 0;
-    end
+%% Find tilt
 
-    tempGlobal = padarray(tempGlobal,[padY padX],'post');
-    %% end hack
-    
-    
-    tempGlobal = double(tempGlobal);
-    yind = yOffset:yOffset+size(localRef,1)-1;
-    xind = xOffset:xOffset+size(localRef,2)-1;
-    tempGlobal(yind,xind) = (tempGlobal(yind,xind) + double(localRef))/2;
-    imshow(uint8(tempGlobal));
-    
-end
 
-%% localizer function
-function [yoffset, xoffset, maxVal, c, ypeak, xpeak] = Localize(inp,ref, params)
-% does the cross-correlation and locates the peak. Handles scenarios where
-% inp is larger than the ref.
 
-try
-    N = [0 0];
-    c = normxcorr2(inp,ref);
-catch err1 %#ok<*NASGU>
+% locate strip on global ref
+for i=1:length(tilts)
+    if ~abortTriggered
     
-    % probably complaining about size, so zeropad the ref and see how it
-    % goes. don't forget to control for the additional offsets this causes.
-    N = size(inp)-size(ref);
-    N(N<0) = 0;
-    
-    tempRef = padarray(ref,N,'post');
-    try
-        c = normxcorr2(inp,tempRef);
+        % rotate strip
+        tempStrip = imrotate(anchorStrip, tilts(i),'bilinear');
         
-    catch err2
-        % probably complaining about size
-        yoffset = 0; xoffset = 0; maxVal = 0;
-        return;
+        st = round((size(tempStrip) - halfStripSize)/2);
+        
+        thisStrip = tempStrip(st(1):st(1)+halfStripSize(1)-1, st(2):st(2)+halfStripSize(2)-1);
+
+        % find peak values vs tilt
+        [~,~,~, peakValues(i)] = LocateStrip(thisStrip,anchorOp); 
     end
 end
 
-[ypeak, xpeak, maxVal] = FindPeak(c, params);
-yoffset = ypeak-size(inp,1);
-xoffset = xpeak-size(inp,2);
+% Interpolate for best tilt 
+% if there is more than one tilt, try interpolating for best tilt and
+% recompute the offset at that tilt. if not, simply pass the already
+% computed values.
+if length(tilts) > 1
+    
+    newTilts = min(tilts): 0.05 :max(tilts);
+    newPeakValues = interp1(tilts, peakValues, newTilts, 'spline');
 
-%% peakfinder.  
-function [ypeak, xpeak, maxVal] = FindPeak(c, params)
-
-if params.findPeakMethod == 2
-    tempC = c - imgaussfilt(c,params.findPeakKernelSize);
+    % find best tilt
+    [~, tiltIx] = max(newPeakValues);
+    bestTilt = newTilts(tiltIx);
 else
-    tempC = c;
+    bestTilt = tilts;
+
 end
 
-st = round(size(tempC)*(.5-params.searchZone/2));
-en = round(size(tempC)*(.5+params.searchZone/2));
-tempC = tempC(st(1):en(1),...
-          st(2):en(2));
-maxVal = max(tempC(:));
-[ypeak, xpeak] = find(tempC == maxVal);
+% rotate local ref with best tilt
+correctedLocalRef = PadNoise(imrotate(localRef, bestTilt,'bilinear','crop'));
 
-ypeak = ypeak + st(1) - 1;
-xpeak = xpeak + st(2) - 1;
-maxVal = c(ypeak,xpeak);
 
-%% tilt issue solver
-function [inp, bestTilt, bestYOffset, bestXOffset, peakVal, c, ypeak, xpeak] ...
-    = SolveTiltIssue(inp,ref,params)
+%% now re-reference
 
-tilts = params.tilts;
-yOffset = nan(length(tilts),1);
-xOffset = nan(length(tilts),1);
-maxVal = nan(length(tilts),1);
+% get a strip from corrected localRef
+rereferenceStrip = correctedLocalRef(anchorSt:anchorEn, stripLeft:stripRight);
 
-% rotate the input image, crosscorrelate with ref, and find the peak.
-% Across all tilts, find the best one which results in the max peak.
-% Also rotate the input image based on the bestTilt.
-for j=1:length(tilts)
-    rotated = imrotate(inp,tilts(j),'bilinear','crop');
-    rotated = PadNoise(rotated);
-    [yOffset(j), xOffset(j), maxVal(j)] = Localize(rotated,ref, params);
+% the location of the anchor strip in localRef
+xPeakLocal = params.anchorStripWidth + stripLeft - 1;
+yPeakLocal = anchorSt + size(anchorStrip,1) - 1;
+
+[offset, ~, ~, cMap] = ReReferenceHelper(rereferenceStrip, anchorOp, anchorStripSize, [xPeakLocal yPeakLocal]);
+
+
+
+
+%% Plot stimuli on reference frame
+if ~abortTriggered && params.enableVerbosity 
+    
+    finalLocalRef = imtranslate(correctedLocalRef,offset,'fillvalues',nan);
+    padToSize = max([size(finalLocalRef); size(globalRef)],[],1);
+    paddedGlobalRef = padarray(globalRef, padToSize-size(globalRef),nan,'post');
+    axes(params.axesHandles(1));
+    imshowpair(paddedGlobalRef,finalLocalRef);
+
 end
 
-% now interpolate the peak values
-newTilts = (min(tilts):0.05:max(tilts));
-peaks = interp1(tilts,maxVal,newTilts,'pchip');
 
-% find best tilt
-bestTilt = newTilts(peaks == max(peaks));
+%% return optional outputs
 
-% rotate for the best tilt
-inp = imrotate(inp,bestTilt,'bilinear','crop');
-inp = uint8(PadNoise(inp));
+if nargout > 2
+    varargout{1} = params;
+end
 
-% localize
-[bestYOffset, bestXOffset, peakVal, c, ypeak, xpeak] = Localize(inp,ref, params);
 
-%% add noise to zero-padded regions due to tilt
+if nargout > 3
+    varargout{2} = peakValues;
+end
+
+
+if nargout > 4
+    varargout{3} = cMap;
+end
+
+
+
+function [offset, peakValue, peakLoc, cMap] = ...
+    ReReferenceHelper(thisStrip, anchorOp, anchorStripSize, localPeakLoc)
+
+% find the anchor strip in current reference frame
+[cMap, xPeak, yPeak, peakValue] = LocateStrip(thisStrip,anchorOp,struct);  
+
+% adjust for strip dimensions (will be different for each tilt)
+xPeaksGlobal = xPeak - (size(thisStrip,2) - anchorStripSize(2));
+yPeaksGlobal = yPeak - (size(thisStrip,1) - anchorStripSize(1));
+peakLoc = [xPeaksGlobal yPeaksGlobal];
+
+% offset needed to re-reference the strips from localRef to globalRef
+offset = peakLoc - localPeakLoc;
+
+
+
+% add noise to zero-padded regions due to tilt
 function output = PadNoise(input)
 
-input = double(input);
-padIndices = input < 1.5;
-noiseFrame = padIndices.*(rand(size(padIndices))*20 + mean(input(:)));
-output = double(input) + noiseFrame;
+output = input;
+padIndices = input == 0;
+noisePixels = datasample(input(~padIndices), sum(padIndices(:)), 'replace',true);
+output(padIndices) = noisePixels;
+
+
+% Handle input arguments
+function output = HandleInputArgument(inputArgument)
+
+output = [];
+
+if ischar(inputArgument) % inputArgument is a file path
+
+    % check if input file exists
+    if ~exist(inputArgument,'file')
+        return;
+    end
+    
+    try
+        % load the inputArgument
+        load(inputArgument,'referenceFrame');
+        output = referenceFrame;
+    catch
+        try
+            % maybe this is a field of params in this file
+            load(inputArgument,'params');
+            output = params.referenceFrame;
+        catch
+            % maybe this is an image file
+            output = imread(inputArgument);
+        end
+    end
+
+else % inputArgument is not a file path, but carries the referenceFrame.
+    if max(inputArgument(:)) < 1 &&  ~isa(inputArgument,'uint8')
+        output = uint8(inputArgument*255);
+    else
+        output = inputArgument;
+    end
+end
+

@@ -115,7 +115,7 @@ params = ValidateField(params,default,validate,callerStr);
 % check if axes handles are provided, if not, create axes.
 if params.enableVerbosity && isempty(params.axesHandles)
     fh = figure(2020);
-    set(fh,'units','normalized','outerposition',[0.16 0.053 0.67 0.51]);
+    set(fh,'name','Make Reference','units','normalized','outerposition',[0.16 0.053 0.67 0.51]);
     params.axesHandles(1) = subplot(2,3,[1 2 4 5]);
     params.axesHandles(2) = subplot(2,3,3);
     params.axesHandles(3) = subplot(2,3,6);
@@ -299,13 +299,14 @@ for fr = 1:numberOfFrames
             end
             
             % compute location in ref frame
-            xy = round(sizeFactor * (newPositions(thisSample,:) - minPos + 1 + [0 newRowNumbers(sn)]));
+            xy = round(sizeFactor * (newPositions(thisSample,:) - minPos + [0 newRowNumbers(sn)]) + 1);
             indY = xy(2):(xy(2)+ size(thisStrip,1) - 1);
             indX = xy(1):(xy(1)+ sizeFactor * stripWidth - 1);
             
             % accumulate
             accumulator(indY, indX) = accumulator(indY, indX) + thisStrip;
 
+            
             % count
             counter(indY, indX) = counter(indY, indX) + 1;
             
