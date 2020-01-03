@@ -10,7 +10,7 @@ function [filteredEyePositions, varargout ]= FilterEyePosition(inputArgument, pa
 %   Input
 %   -----------------------------------
 %   |inputArgument| is a file path for the eye position data that has to
-%   have two arrays, |eyePositionTraces| and |timeArray|. Or, if it is not 
+%   have two arrays, |positionDeg| and |timeSec|. Or, if it is not 
 %   a file path, then it must be a nxm double array, where m>=2 and n is
 %   the number of data points. The last column of |inputArgument| is always
 %   treated as the time signal. The other columns are treated as eye
@@ -56,7 +56,7 @@ function [filteredEyePositions, varargout ]= FilterEyePosition(inputArgument, pa
 %                         corresponding filters in "filters". Each
 %                         row of the cell array can contain an array of
 %                         parameters.
-%   outputSamplingRate  : Sampling rate in Hz for output. By default it's
+%   samplingRate        : Sampling rate in Hz for output. By default it's
 %                         empty, i.e., input position is filtered without
 %                         changing sampling rate. If set to any positive
 %                         integer, filtering is done after resampling to
@@ -87,7 +87,8 @@ function [filteredEyePositions, varargout ]= FilterEyePosition(inputArgument, pa
 %   -----------------------------------
 %   Example usage
 %   -----------------------------------
-%       inputArray = [eyePosition time];
+%       params = struct;
+%       inputArray = [eyePositionDeg time];
 %       filteredPositions = FilterEyePosition(inputArray, params);
 
 %% Allow for aborting if not parallel processing
@@ -234,8 +235,8 @@ eyePositionTraces(surroundedSamples) = nan;
 % if not requested, still resample to the sampling rate that is most
 % common in the timeSec since some of the filters below assumes regular
 % temporal sampling.
-if ~isempty(params.outputSamplingRate)
-    interpTimeSec = (min(timeSec) : 1/params.outputSamplingRate : max(timeSec))';
+if ~isempty(params.samplingRate)
+    interpTimeSec = (min(timeSec) : 1/params.samplingRate : max(timeSec))';
 else
     interpTimeSec = (min(timeSec) : dt : max(timeSec))';
 end

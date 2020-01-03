@@ -69,22 +69,22 @@ inputVideoPath = BandpassFilter(inputVideoPath, tp);
 % tp.fineRef = FineRef(inputVideoPath, tp);
 
 %%
-tp.adaptiveSearch = true;
+tp.adaptiveSearch = false;
 tp.referenceFrame = 1;
 tp.enableVerbosity = 1;
-tp.goodFrameCriterion = .7; 0.9;
-tp.swapFrameCriterion = .7; 0.6;
+tp.goodFrameCriterion = 0.9;
+tp.swapFrameCriterion = 0.9;
 tp.lookBackTime = 15;
 tp.trim = tp.borderTrimAmount(3:4);
-samplingRate = [960 540];
-stripHeight = [5 11];
+samplingRate = [540 540];
+stripHeight = [20 11];
 for i=1:length(stripHeight)
     % Extract eye motion
-    tp.minPeakThreshold = 0.75;
-    tp.maxMotionThreshold = 0.1;
+    tp.minPeakThreshold = 0.35;
+    tp.maxMotionThreshold = 0.12;
     tp.samplingRate = samplingRate(i);
     tp.stripHeight = stripHeight(i);
-    tp.stripWidth = 128;
+    tp.stripWidth = [];
     tp.enableReferenceFrameUpdate = i==1;
     [position, timeSec, ~, peakValueArray, tp] = StripAnalysis(inputVideoPath, tp); 
 

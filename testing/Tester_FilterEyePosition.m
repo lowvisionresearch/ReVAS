@@ -7,8 +7,8 @@ warning('off','all');
 try
     %% read in sample position file
 
-    % the video resides under /testing folder.
-    inputFile = FindFile('aoslo_demo_long_pos.mat');
+    % the video resides under /demo folder.
+    inputFile = FindFile('aoslo_demo_pos_960hz.mat');
     
     % load raw position and time
     load(inputFile,'timeSec','position');
@@ -25,6 +25,7 @@ try
     p = struct; 
     p.overwrite = true;
     p.enableVerbosity = 2;
+    p.maxGapDurationMs = 50;
     [~, p] = FilterEyePosition([positionDeg timeSec], p);
     
 
