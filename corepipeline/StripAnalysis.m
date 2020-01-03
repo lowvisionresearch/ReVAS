@@ -344,6 +344,7 @@ stripRight = min(width,round((width + params.stripWidth)/2)-1);
 
 % the big loop. :)
 override = false;
+refractoryPeriod = 0;
 
 % loop across frames
 fr = 1;
@@ -474,7 +475,7 @@ while fr <= numberOfFrames
             
             % update the traces/stats
             peakValueArray(thisSample) = peakValue;
-            peakPosition(thisSample,:) = [xPeak, yPeak - params.stripHeight + params.rowStart - 1];
+            peakPosition(thisSample,:) = [xPeak, yPeak - params.stripHeight + params.rowStart - 1] + offset;
             rawPosition(thisSample,:) = [xPeak-params.stripWidth-stripLeft+1 ...
                 (yPeak - params.stripHeight - rowNumbers(sn) + params.rowStart)] + offset;
             
@@ -519,7 +520,7 @@ while fr <= numberOfFrames
                         (deltaPos(lastFrameStrips) > params.maxMotionThreshold) ) ...
                     > ((params.swapFrameCriterion) * stripsPerFrame) && ...
                     exist('lastGoodFrame','var') && ...
-                    lastFrameSwap(end) ~= fr) || ...
+                    lastFrameSwap(end) ~= fr && refractoryPeriod >= 1) || ...
                     override
                 
                 override = false;
@@ -528,8 +529,8 @@ while fr <= numberOfFrames
                 % contrast
                 lineContrast = medfilt1(std(double(lastGoodFrame),[],2),31);
                 [~, maxIx] = max(lineContrast);
-                anchorSt = max(1,maxIx - round(height/8));
-                anchorEn = min(height, maxIx + round(height/8));
+                anchorSt = max(1,maxIx - round(params.stripHeight*2));
+                anchorEn = min(height, maxIx + round(params.stripHeight*2));
                 anchorStrip = lastGoodFrame(anchorSt:anchorEn,...
                     stripLeft:stripRight);
                 
@@ -562,7 +563,8 @@ while fr <= numberOfFrames
                     
                     
                 % update only when offset is acceptable
-                if any(abs(thisOffset./height) <= params.maxMotionThreshold)
+                if any(abs(thisOffset./height) <= params.maxMotionThreshold) && ...
+                    all(abs(offset + thisOffset) < 200)
                     offset = offset + thisOffset;
 
                     % update the reference frame
@@ -578,6 +580,8 @@ while fr <= numberOfFrames
                     if writeResult
                         reader.CurrentTime = (fr)/reader.FrameRate;
                     end
+                    
+                    refractoryPeriod = 0;
 
                     % give a warning to let user know about the reference frame
                     % update
@@ -616,6 +620,14 @@ while fr <= numberOfFrames
         
         % plot peak values and raw traces
         if params.enableVerbosity 
+            % show current reference frame
+            axes(params.axesHandles(1)); %#ok<LAXES>
+            imshowpair(referenceFrame, params.referenceFrame);
+            colormap(params.axesHandles(1),gray(256));
+            hold(params.axesHandles(1),'off');
+            axis(params.axesHandles(1),'image')
+
+            
             % show peak values
             scatter(params.axesHandles(2),timeSec,peakValueArray,10,'filled'); 
             hold(params.axesHandles(2),'on');
@@ -662,6 +674,7 @@ while fr <= numberOfFrames
     end % abortTriggered
     
     fr = fr + 1;
+    refractoryPeriod = refractoryPeriod + 1;
 end % end of video
 
 

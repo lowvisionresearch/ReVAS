@@ -215,7 +215,7 @@ switch module
         default.beforeAfterMs = 1; % msec
         default.filters = {'medfilt1','sgolayfilt','notch','notch'}; 
         default.filterParams = {7,[3 21],[29 31 2],[59 61 2]};
-        default.outputSamplingRate = [];
+        default.samplingRate = [];
         default.axesHandles = [];
         
         % validation functions
@@ -227,8 +227,40 @@ switch module
         validate.beforeAfterMs = @IsNonNegativeRealNumber;
         validate.filters = @(x) all(contains(x,{'notch','medfilt1','sgolayfilt'}));
         validate.filterParams = @(x) iscell(x); % intentionally left without much control since filters may have any type of params
-        validate.outputSamplingRate = @(x) isempty(x) | IsPositiveInteger(x);
+        validate.samplingRate = @(x) isempty(x) | IsPositiveInteger(x);
         validate.axesHandles = @(x) isempty(x) | all(ishandle(x));
+        
+    case 'FindSaccadesAndDrifts'
+        
+        % default values
+        default.enableVerbosity = false;
+        default.algorithm = 'hybrid';
+        default.velocityMethod = 2;
+        default.axesHandles = [];
+        default.minInterSaccadeInterval = 20; % ms
+        default.minSaccadeAmplitude = 0.03; % deg
+        default.maxSaccadeAmplitude = 10; % deg
+        default.minSaccadeDuration = 6; % ms
+        default.maxSaccadeDuration = 100; % ms
+        default.velocityThreshold = 20; % deg/sec
+        default.lambdaForPeak = 6;
+        default.windowSize = 200; % ms
+        default.lambdaForOnsetOffset = 3;
+        
+        % validation functions
+        validate.enableVerbosity = @(x) islogical(x) | (isscalar(x) & x >= 0);
+        validate.algorithm = @(x) all(contains(x,{'hybrid','ivt','ek'}));
+        validate.velocityMethod = @(x) isa(x,'function_handle') | (isscalar(x) & any([1 2],x));
+        validate.axesHandles = @(x) isempty(x) | all(ishandle(x));
+        validate.minInterSaccadeInterval = @IsNonNegativeRealNumber;
+        validate.minSaccadeAmplitude = @IsNonNegativeRealNumber;
+        validate.maxSaccadeAmplitude = @IsNonNegativeRealNumber;
+        validate.minSaccadeDuration = @IsNonNegativeRealNumber;
+        validate.maxSaccadeDuration = @IsNonNegativeRealNumber;
+        validate.velocityThreshold = @IsNonNegativeRealNumber;
+        validate.lambdaForPeak = @IsNonNegativeRealNumber;
+        validate.windowSize = @IsNonNegativeRealNumber;
+        validate.lambdaForOnsetOffset = @IsNonNegativeRealNumber;
         
     otherwise
         error('GetDefaults: unknown module name.');

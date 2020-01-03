@@ -1,14 +1,56 @@
-function [saccades, drifts, labels] = FindSaccadesAndDrifts(inputEyePositions,  params)
-%FIND SACCADES AND DRIFTS Records in a mat file an array of structures
-%representing saccades and an array of structures representing drifts.
+function [saccades, drifts, labels, varargout] = ...
+    FindSaccadesAndDrifts(inputArgument,  params)
+%FIND SACCADES AND DRIFTS saccade and drift parsing.
+%
+%   Offers multiple algorithms: 
+%         1) I-VT algorithm : simple velocity threshold for saccades, and
+%            the rest is considered drifts (except for samples during
+%            blinks/data loss) 
+%         2) Klielg & Engbert 2003 algorithm. Velocity threshold based on
+%            vectorial sum of median horizontal and vertical velocities.
+%            Usually good for microsaccade detection. May fail with long
+%            recordings.
+%         3) A hybrid of Nyström & Holmqvitz 2010 and Klielg & Engbert 2003
+%            algorithms. Applies EK algorithm in a moving window and after
+%            identifying saccade regions, travels back and forth from
+%            saccade peak to fine-tune boundaries. Based on our experience,
+%            barring the machine learning based ones, this is the best
+%            algorithm for sample-wise saccade detection. Therefore, this
+%            is the default setting.
+%
+%    On top of these algorithms, we also use some heuristics to further
+%    improve sample-to-sample classification accuracy. For instance, if two
+%    saccade events are too close each other in time (e.g., <10ms), most
+%    likely they are part of the same event. Likewise, we use minimum and
+%    maximum allowable saccade amplitudes and durations to do further
+%    cleaning up event labels. If a set of samples are labeled as saccades
+%    but fail to satisfy these requirements, they go into blink/data loss
+%    category. Not a big deal for AOSLO recordings where eye movements are
+%    already small, but it may improve classification a great deal for
+%    larger fov recordings.
+%
+%   Note 1: This function always uses vectorial velocity, i.e., horizontal
+%   and vertical components are vector-summed, regardless of the selected
+%   algorithm. When only one dimension is provided via 'positionDeg', this
+%   function still works.
+%
 %
 %   -----------------------------------
 %   Input
 %   -----------------------------------
-%   |inputEyePositions| is the path to the eye positions or the eye traces
-%   matrix itself with time array. In the former situation, the result is stored with
-%   '_sacsdrifts' appended to the input video file name. No result is saved
-%   in the latter situation; the result is returned.
+%   |inputArgument| is a file path for the eye position data that has to
+%   have two arrays, |positionDeg| and |timeSec|. Or, if it is not 
+%   a file path, then it must be a nxn double array, where m>=2 and n is
+%   the number of data points. The last column of |inputArgument| is always
+%   treated as the time signal. The other columns are treated as eye
+%   position signals, which will be subjected to filtering. Typically, 
+%   |inputArgument| would be an nx3 array, where the first two columns 
+%   represent the horizontal and vertical eye positions, respectively, and
+%   the last column has the time array.
+%   The result is that the filtered version of this file is stored with
+%   '_filtered' appended to the original file name. If |inputArgument| 
+%   is not a file name but actual eye position data, then the filtered 
+%   position data are not stored, and the second output argument is an empty array.
 %
 %   |params| is a struct as specified below.
 %
@@ -20,629 +62,566 @@ function [saccades, drifts, labels] = FindSaccadesAndDrifts(inputEyePositions,  
 %                             files already exist. (default false)
 %   enableVerbosity         : set to true to report back plots during execution.
 %                             (default false)
-%   pixelSize               : pixel size in arcminutes. 
-%   stitchCriteria          : if two consecutive saccades are closer in time
-%                             less than this value (in ms), then they are
-%                             stitched back to back. (default 15)
-%   minAmplitude            : minimum (micro)saccade amplitude in deg (default 0.1)
-%   maxDuration             : maximum saccade duration in ms. (default 100)
-%   minDuration             : minimum saccade duration in ms. (default 8)
-%   velocityMethod          : set to 1 for regular differentiation. set to 2
-%                             for three-point differentiation. (default 2)
-%   detectionMethod         : saccade detection method. set to 1 for using a
-%                             hard velocity threshold. set to 2 for using a
-%                             median-based velocity threshold. (default 2)
-%   hardVelocityThreshold   : in deg/sec. (relevant only when detectionMethod is
-%                             1) (default 25)
-%   hardSecondaryVelocityThreshold : in deg/sec. (relevant only when
-%                            detectionMethod is 1) (default 15)
-%   thresholdValue          : multiplier specifying the median-based velocity
-%                             threshold. (relevant only when detectionMethod
-%                             is 2) (default 6)
-%   secondaryThresholdValue : multiplier specifying a secondary velocity
-%                             threshold for more accurate detection of onset
-%                             and offset of a saccade. (relevant only when
-%                             detectionMethod is 2) (default 3)
+%   algorithm               : Can be 'ivt', 'ek', or 'hybrid', See text
+%                             above for explanation of each
+%                             algorithm. default 'hybrid'.
+%   velocityMethod          : Method to use to calculate velocity. 
+%                               1 = using |diff|, 
+%                               2 = (x_(n+1) - x_(n-1)) / 2 delta t).
+%                 function_handle = a function handle to a custom
+%                             velocity computation function. The function
+%                             must take only timeSec and positionDeg as two
+%                             arguments in that order, and must return
+%                             velocity at the same size as the positionDeg.
+%                             (default 2)
 %   axesHandles             : axes handle for giving feedback. if not
 %                             provided or empty, new figures are created.
-%                             (relevant only when enableVerbosity is true)%
+%                             (relevant only when enableVerbosity is true)
+%
+%   ----- some heuristics --------
+%
+%   minInterSaccadeInterval : if two consecutive saccades are closer in time
+%                             less than this value (in ms), then they are
+%                             stitched back to back. (default 15)
+%   minSaccadeAmplitude     : minimum (micro)saccade amplitude in deg (default 0.1)
+%   maxSaccadeAmplitude     : maximum (micro)saccade amplitude in deg (default 10)
+%   maxSaccadeDuration      : maximum saccade duration in ms. (default 100)
+%   minSaccadeDuration      : minimum saccade duration in ms. (default 6)
+%
+%   ----- for I-VT algorithm  --------
+%
+%   velocityThreshold       : in deg/sec. (default 25)
+%
+%   ----- for Engbert & Kliegl algorithm  --------
+%
+%   lambdaForPeak           : multiplier specifying the median-based velocity
+%                             threshold. Used for finding saccades in this
+%                             algorithm but it is used only for saccade
+%                             peaks if the 'hybrid' option is selected. In
+%                             that case, a secondary lambda value is used
+%                             for fine-tuning onsets and offsets of saccade
+%                             events. (default 6)
+%
+%   ----- for the Hybrid algorithm (NH2010 and EK2003)  --------
+%
+%   windowSize              : Moving window size in ms. Velocity
+%                             threshold is obtained within this video,
+%                             which makes this algorithm adaptive to noise
+%                             in data.
+%   lambdaForOnsetOffset    : multiplier specifying a secondary velocity
+%                             threshold for more accurate detection of onset
+%                             and offset of a saccade. (default 3)
+%   
+%
 %   -----------------------------------
-%   Example usage
+%   Output
 %   -----------------------------------
-%       inputPath = 'MyFile.mat';
-%       params.overwrite = true;
-%       params.enableVerbosity = true;
-%       params.pixelSize = 10*60/512;
-%       params.thresholdValue = 6;
-%       params.secondaryThresholdValue = 3;
-%       params.stitchCriteria = 15;
-%       params.minAmplitude = 0.05;
-%       params.minDuration = 8;
-%       params.maxDuration = 100;
-%       params.detectionMethod = 2;
-%       FindSaccadesAndDrifts(inputPath,  params);
+%   |saccades| is an array of a saccade structure, each of which contains detailed
+%   info about a single saccade.
+%
+%   |drifts| is the same as saccades, except it has info on drift "events". 
+%
+%   |labels| is an array of integers representing event labels. 1: saccade,
+%   2: drift, 3: blink/data loss.
+%
+%   varargout{1} = params.
+%   varargout{2} = st.
+%   varargout{3} = en.
+%   varargout{4} = driftSt.
+%   varargout{5} = driftEn.
 
-%% Determine inputVideo type.
-if ischar(inputEyePositions)
+%% Determine inputType type.
+if ischar(inputArgument)
     % A path was passed in.
     % Read and once finished with this module, write the result.
     writeResult = true;
 else
-    % A video matrix was passed in.
-    % Do not write the result; return it instead.
+    % a position + time array was passed.
+    % Do not write the result; 
     writeResult = false;
 end
 
-%% Handle overwrite scenarios.
-if writeResult
-    outputFilePath = Filename(inputEyePositions, 'sacsdrifts');
-    if ~exist(outputFilePath, 'file')
-        % left blank to continue without issuing warning in this case
-    elseif ~isfield(params, 'overwrite') || ~params.overwrite
-        RevasWarning(['FindSaccadesAndDrifts() did not execute because it would overwrite existing file. (' outputFilePath ')'], params);
-        return;
-    else
-        RevasWarning(['FindSaccadesAndDrifts() is proceeding and overwriting an existing file. (' outputFilePath ')'], params);
-    end
-end
 
 %% Set parameters to defaults if not specified.
-if ~isfield(params, 'pixelSize')
-    pixelSize = 10*60/512;
-    RevasWarning('using default parameter for pixel size', params);
-else
-    pixelSize = params.pixelSize;
+
+if nargin < 2 
+    params = struct;
 end
 
-% This second method is the EK Algorithm (Engbert & Kliegl, 2003 Vision Research).
-if ~isfield(params, 'thresholdValue')
-    lambda = 6;
-    RevasWarning('using default parameter for lambda', params);
-else
-    lambda = params.thresholdValue;
-end
-
-if ~isfield(params, 'secondaryThresholdValue')
-    secondaryLambda = 3;
-    RevasWarning('using default parameter for secondaryLambda', params);
-else
-    secondaryLambda = params.secondaryThresholdValue;
-end
-
-% if enabled, instead of a single threshold, we use a running (adaptive)
-% velocity threshold that changes with the variabiltiy of velocity
-if ~isfield(params, 'isAdaptive')
-    isAdaptive = false;
-    RevasWarning('using default parameter for isAdaptive', params);
-else
-    isAdaptive = params.isAdaptive;
-end
-
-% the default form of Engbert & Kliegl algorithm uses median based standard
-% deviation. but here we have the ability to use regular sd.
-if ~isfield(params, 'isMedianBased')
-    isMedianBased = true;
-    RevasWarning('using default parameter for isMedianBased', params);
-else
-    isMedianBased = params.isMedianBased;
-end
+% validate params
+[~,callerStr] = fileparts(mfilename);
+[default, validate] = GetDefaults(callerStr);
+params = ValidateField(params,default,validate,callerStr);
 
 
-% units are in milliseconds
-if ~isfield(params, 'stitchCriteria')
-    stitchCriteria = 15;
-    RevasWarning('using default parameter for stitchCriteria', params);
-else
-    stitchCriteria = params.stitchCriteria;
-end
+%% Handle verbosity 
 
-% units are in degrees
-if ~isfield(params, 'minAmplitude')
-    minAmplitude = 0.1;
-    RevasWarning('using default parameter for minAmplitude', params);
-else
-    minAmplitude = params.minAmplitude;
-end
-
-% units are in milliseconds
-if ~isfield(params, 'minDuration')
-    minDuration = 8;
-    RevasWarning('using default parameter for minDuration', params);
-else
-    minDuration = params.minDuration;
-end
-
-% units are in milliseconds
-if ~isfield(params, 'maxDuration')
-    maxDuration = 100;
-    RevasWarning('using default parameter for maxDuration', params);
-else
-    maxDuration = params.maxDuration;
-end
-
-% Method to use for detection
-% 1 = Hard velocity threshold
-% 2 = Median-based (default)
-if ~isfield(params, 'detectionMethod')
-    detectionMethod = 2;
-else
-    detectionMethod = params.detectionMethod;
-end
-
-% units are in degrees/second
-if ~isfield(params, 'hardVelocityThreshold')
-    hardVelocityThreshold = 25;
-    if detectionMethod == 1
-        RevasWarning('using default parameter for hardVelocityThreshold', params);
+% check if axes handles are provided, if not, create axes.
+if params.enableVerbosity && isempty(params.axesHandles)
+    fh = figure(2020);
+    set(fh,'name','Find Saccades & Drifts','units','normalized','outerposition',[0.16 0.053 0.67 0.51]);
+    for i=1:2
+        params.axesHandles(i) = subplot(2,1,i); 
+        cla(params.axesHandles(i));
     end
-else
-    hardVelocityThreshold = params.hardVelocityThreshold;
 end
 
-% units are in degrees/second
-if ~isfield(params, 'hardSecondaryVelocityThreshold')
-    hardSecondaryVelocityThreshold = 15;
-    if detectionMethod == 1
-        RevasWarning('using default parameter for hardSecondaryVelocityThreshold', params);
-    end
-else
-    hardSecondaryVelocityThreshold = params.hardVelocityThreshold;
-end
 
-% Method to use to calculate velocity
-% 1 = using |diff|
-% 2 = (x_(n+1) - x_(n-1)) / 2 delta t)
-if ~isfield(params, 'velocityMethod')
-    velocityMethod = 2;
-else
-    velocityMethod = params.velocityMethod;
-end
+%% Handle overwrite scenarios.
 
-% check verbosity field
-if ~isfield(params, 'enableVerbosity')
-    enableVerbosity = false;
-else
-    enableVerbosity = params.enableVerbosity;
-end
-
-% save parameters structure in the environment before loading a different
-% parameters structure
-axesHandlesFlag = isfield(params, 'axesHandles');
-if axesHandlesFlag
-    axesHandles = params.axesHandles;
-end
-
-%% Load mat file with output from |StripAnalysis|
 if writeResult
-    load(inputEyePositions,'eyePositionTraces', 'timeArray');
-else
-    eyePositionTraces = inputEyePositions(1:end, 1:end-1);
-    timeArray = inputEyePositions(1:end, end:end);
-end
-
-%% Convert eye position traces from pixels to degrees
-eyePositionTraces = eyePositionTraces * (pixelSize/60);  %#ok<*NODEF>
-
-%% Saccade detection algorithm
-% 2 methods to calculate velocity
-% (as selected by |inputParametersStructure.velocityMethod|)
-%   - Method 1: v_x(t) = [x(t + \Delta t) - x(t)] / [\Delta t]
-%   - Method 2: v_x(t) = [x(t + \Delta t) - x(t - \Delta t)] / [2 \Delta t]
-if velocityMethod == 1
-    velocity = [0,0; diff(eyePositionTraces) ./ repmat(diff(timeArray),1,2)];
-elseif velocityMethod == 2    
-    len = size(timeArray,1);
-    velocity = ...
-        [0,0; (eyePositionTraces(3:len,:)-eyePositionTraces(1:len-2,:)) ./ ...
-        repmat(timeArray(3:len)-timeArray(1:len-2),1,2); 0,0];
+    outputFilePath = Filename(inputArgument, 'sacsdrifts');
+    params.outputFilePath = outputFilePath;
     
-    % Erasing temporary variable to avoid confusion
-    clear len;
-else
-    error('|inputParametersStructure.velocityMethod| must be 1 or 2');
+    if ~exist(outputFilePath, 'file')
+        % left blank to continue without issuing RevasMessage in this case
+    elseif ~params.overwrite
+        RevasMessage(['FindSaccadesAndDrifts() did not execute because it would overwrite existing file. (' outputFilePath ')'], params);
+        RevasMessage('FindSaccadesAndDrifts() is returning results from existing file.',params); 
+        
+        % try loading existing file contents
+        load(outputFilePath,'saccades','drifts','labels','st','en','driftSt','driftEn');
+        if nargout > 3
+            varargout{1} = params;
+        end
+        if nargout > 4
+            varargout{2} = st;
+        end
+        if nargout > 5
+            varargout{3} = en;
+        end
+        if nargout > 6
+            varargout{4} = driftSt;
+        end
+        if nargout > 7
+            varargout{5} = driftEn;
+        end
+        
+        return;
+    else
+        RevasMessage(['FindSaccadesAndDrifts() is proceeding and overwriting an existing file. (' outputFilePath ')'], params);  
+    end
 end
 
-%% Find saccades.
-% Use the differences in the velocity to identify saccades
+
+%% Handle inputArgument scenarios
+
+if writeResult
+    % check if input file exists
+    if ~exist(inputArgument,'file')
+        error('FindSaccadesAndDrifts: eye position file does not exist!');
+    end
+    
+    % load the data
+    load(inputArgument,'filteredEyePositions','timeSec');
+    positionDeg = filteredEyePositions;
+
+else % inputArgument is not a file path, but carries the eye position data.    
+    positionDeg = inputArgument(:,1:size(inputArgument,2)-1);
+    timeSec = inputArgument(:,size(inputArgument,2)); % last column is always 'time'
+end
+
+% if the dimensions of eyePositionTraces are not appropriate, throw error.
+if size(positionDeg,2) >= size(positionDeg,1)
+    error('FindSaccadesAndDrifts: more columns than rows in eye position traces. Make sure position array is mxn where rows represent samples over time');
+end
+
+% some additional checks for timeSec and positionDeg
+if isempty(timeSec) || isempty(positionDeg) || ~isnumeric(timeSec) || ...
+        ~isnumeric(positionDeg) || size(timeSec,2)~=1 || ...
+        size(timeSec,1)~=size(positionDeg,1)
+    error('FindSaccadesAndDrifts: improper input arguments. Check ''timeSec'' or ''positionDeg''.');
+end
+
+% assume uniform temporal sampling. (eye position traces should be filtered
+% and artifacts should be removed prior to call to this function).
+dt = mode(diff(timeSec,1,1)); 
+
+
+
+%% Compute vectorial velocity
+
+if isa(params.velocityMethod, 'function_handle')
+    velocity = params.velocityMethod(timeSec, positionDeg);
+    
+else
+    % - Method 1: v_x(t) = [x(t + \Delta t) - x(t)] / [\Delta t]
+    if params.velocityMethod == 1
+        velocity = [zeros(1,size(positionDeg,2)); 
+            diff(positionDeg,1,1) / dt];
+
+     % - Method 2: v_x(t) = [x(t + \Delta t) - x(t - \Delta t)] / [2 \Delta t]
+    elseif params.velocityMethod == 2   
+        velocity = [zeros(1,size(positionDeg,2)); 
+            (positionDeg(3:end,:) - positionDeg(1:end-2,:)) / (2 * dt);
+            zeros(1,size(positionDeg,2)) ];
+    else
+        error('FindSaccadesAndDrifts: unknown velocityMethod!');
+    end
+end
+
+% compute vectorial velocity
 vectorialVelocity = sqrt(sum(velocity.^2,2));
 
-if detectionMethod == 1
-    velocityThreshold = hardVelocityThreshold;
-    secondaryVelocityThreshold = hardSecondaryVelocityThreshold;
+% initialize labels
+labels = zeros(size(timeSec));
+labels(isnan(vectorialVelocity)) = 3; % blinks / data losses
+
+
+%% Find saccades.
+
+switch params.algorithm
+    case 'ivt'
+        velocityThreshold = params.velocityThreshold; 
+        
+    case 'ek'
+        sd = mad(vectorialVelocity,1);
+        mu = nanmedian(vectorialVelocity);
+        velocityThreshold = mu + sd * params.lambdaForPeak;
+        
+    case 'hybrid'
+        windowSizeSamples = RoundToOdd(params.windowSize/(1000*dt));
+        sd = movmad(vectorialVelocity, windowSizeSamples,'omitnan');
+        mu = movmedian(vectorialVelocity, windowSizeSamples,'omitnan');
+        velocityThreshold = mu + sd * params.lambdaForPeak;
+        
+    otherwise
+        error('FindSaccadesAndDrifts: unknown classification algorithm');
+end
+
+% mark indices where velocity is above the threshold
+aboveThreshold = velocityThreshold < vectorialVelocity;
+
+if sum(aboveThreshold) == 0
+    labels(labels ~= 3) = 2; 
+    saccades = [];
 else
-    medianVelocity = nanmedian(vectorialVelocity);
-    if isAdaptive
-        sdVelocity = AdaptiveThreshold(vectorialVelocity,timeArray,isMedianBased);
-    else
-        if isMedianBased
-            sdVelocity = sqrt(nanmedian(vectorialVelocity.^2) - medianVelocity.^2);
-        else
-            sdVelocity = nanstd(vectorialVelocity);
-        end
+
+    % compute saccade onset and offset indices
+    [onsets, offsets] = GetEventOnsetsAndOffsets(aboveThreshold);
+
+    % assign timestamps
+    st = timeSec(onsets);
+    en = timeSec(offsets);
+
+    % if using the method of Nystrom & Holmqvitz, find the peak
+    % velocity within each segmented section and travel back and forward to
+    % find the onset/offset timestamps. Use a different (lower) velocity
+    % threshold for this purpose.
+    if contains(params.algorithm, 'hybrid')
+        % first compute the secondary threshold
+        secondaryThreshold = mu + sd * params.lambdaForOnsetOffset;
+
+        % now revise onset/offsets
+        [st, en] = FineTuneOnsetOffset(st,en,timeSec,vectorialVelocity,secondaryThreshold);
     end
-    velocityThreshold = medianVelocity + lambda * sdVelocity;
-    secondaryVelocityThreshold = medianVelocity + secondaryLambda * sdVelocity;
+
+
+    %% Segment into saccade events, given some constraints on min/max durations
+
+    % merge events that are too close to each other in time
+    [st, en] = MergeSaccades(st, en, params.minInterSaccadeInterval/1000);
+
+    % Get saccade properties
+    saccades = GetEventProperties(positionDeg,timeSec,vectorialVelocity,st,en);
+
+    % remove events with duration shorter than minDuration or larger than
+    % maxDuration, also remove really small or large saccades
+    durations = en - st;
+    amplitudes = [saccades.vectorAmplitude]';
+    toRemove = durations < params.minSaccadeDuration/1000 | ...
+        durations > params.maxSaccadeDuration/1000 | ...
+        amplitudes < params.minSaccadeAmplitude | ...
+        amplitudes >= params.maxSaccadeAmplitude;
+
+    % update labels
+    labels(IndicesForRange(st(~toRemove),en(~toRemove),timeSec)) = 1;
+
+    % also get the indices which are marked as part of this event type but did
+    % not satisfy the constraints.
+    labels(IndicesForRange(st(toRemove),en(toRemove),timeSec)) = 3;
+
+    % don't forget to remove the stuff we're supposed to remove.
+    st(toRemove) = [];
+    en(toRemove) = [];
+    saccades(toRemove) = [];
+
+    %% Drifts
+
+    % anything other than blinks/data loss and saccades are considered drifts.
+    labels(labels == 0) = 2; % drifts
+
 end
 
-% commented out by MNA on 11/22/18. 
-% % it's enough to exceed the threshold in one dimension only
-% % saccadeIndices = velocity > velocityThreshold;
-% % saccadeIndices = saccadeIndices(:,1) | saccadeIndices(:,2);
 
-% use vectorial velocity for more robust detection % MNA 11/22/18
-saccadeIndices = vectorialVelocity > velocityThreshold;
+driftIndices = labels == 2;
+if sum(driftIndices) > 0
+    % compute drift onset and offset indices
+    [driftOnsets, driftOffsets] = GetEventOnsetsAndOffsets(driftIndices);
 
-% compute saccade onset and offset indices
-[onsets, offsets] = GetEventOnsetsAndOffsets(saccadeIndices);
+    % assign timestamps
+    driftSt = timeSec(driftOnsets);
+    driftEn = timeSec(driftOffsets);
 
-% remove artifacts
-[onsets, offsets] = RemoveFakeSaccades(timeArray, ...
-    onsets, offsets, stitchCriteria, minDuration, maxDuration, vectorialVelocity);
-
-% Get saccade properties
-saccades = GetSaccadeProperties(eyePositionTraces,timeArray,onsets,offsets,...
-    vectorialVelocity, secondaryVelocityThreshold);
-
-% filter out really small saccades
-toRemove = [saccades.vectorAmplitude] < minAmplitude;
-saccades(toRemove) = [];
-onsets = [saccades.onsetIndex];
-offsets = [saccades.offsetIndex];
-
-%% Find drifts.
-% Anything other than saccades and artifacts, will be drifts.
-driftIndices = true(size(timeArray));
-for i=1:length(onsets)
-    driftIndices(onsets(i):offsets(i)) = false;
-end
-
-% compute drift onsets and offsets
-[driftOnsets, driftOffsets] = GetDriftOnsetsAndOffsets(driftIndices);
-
-% if the temporal gap between two consecutive drifts is less than minimum
-% saccade duration, then stitch.
-[driftOnsets, driftOffsets] = MergeDrifts(driftOnsets,driftOffsets,minDuration,timeArray);
-
-% get drift parameters
-drifts = GetDriftProperties(eyePositionTraces,timeArray,driftOnsets,driftOffsets,velocity); 
-
-labels = ~driftIndices; % 1: saccade, 0: drift
-
-%% Save to output mat file.
-if writeResult
-    save(outputFilePath, 'saccades', 'drifts', 'labels','params');
+    % Get drift properties
+    drifts = GetEventProperties(positionDeg,timeSec,vectorialVelocity,driftSt,driftEn);
+else
+    
+    drifts = [];
+    labels(driftIndices) = 3;
 end
 
 %% Verbosity for Results.
-if enableVerbosity
-    if axesHandlesFlag
-        axes(axesHandles(2));
-        colormap(axesHandles(2), 'default');
-    else
-        figure(1543);
-    end
-    cla;
-    ax = gca;
-    ax.ColorOrderIndex = 1;
-    plot(timeArray, eyePositionTraces(:,1),'-'); hold on;
-    plot(timeArray, eyePositionTraces(:,2),'-'); hold on;
-    ax.ColorOrderIndex = 1;
-    plot(timeArray(driftIndices), eyePositionTraces(driftIndices,1),'.','LineWidth',2); hold on;
-    plot(timeArray(driftIndices), eyePositionTraces(driftIndices,2),'.','LineWidth',2); hold on;
+if params.enableVerbosity
     
-    % now highlight saccades
-    ax.ColorOrderIndex = 1;
-    plot(timeArray(~driftIndices), eyePositionTraces(~driftIndices,1),'o','LineWidth',2); hold on;
-    plot(timeArray(~driftIndices), eyePositionTraces(~driftIndices,2),'o','LineWidth',2); hold on;
-    title('Eye position');
-    xlabel('Time (sec)');
-    ylabel('Eye position (deg)');
-    legend('show');
-    legend('Hor', 'Ver');
-    hold off;
+    sacIx = labels == 1;
+    driftIx = labels == 2;
+    blinkIx = labels == 3;
+    
+    for i=1:2
+        cla(params.axesHandles(i));
+        dataLims = [nanmin(positionDeg(:,i)) nanmax(positionDeg(:,i))];
+        ylims = mean(dataLims) + diff(dataLims) * 1.2 * [-1 1]/2;
+        hold(params.axesHandles(i),'on');
+        plot(params.axesHandles(i), timeSec, positionDeg(:,i), 'linewidth',1.5);
+        scatter(params.axesHandles(i), timeSec(blinkIx), zeros(sum(blinkIx),1),10,'filled');
+        scatter(params.axesHandles(i), timeSec(driftIx), positionDeg(driftIx,i),20,'filled');
+        scatter(params.axesHandles(i), timeSec(sacIx), positionDeg(sacIx,i),40,'filled');
+        set(params.axesHandles(i),'fontsize',14);
+        
+        ylim(params.axesHandles(i), ylims);
+        xlim(params.axesHandles(i),[0 max(timeSec)]);
+        hold(params.axesHandles(i),'off');
+        grid(params.axesHandles(i),'on');
+        
+    end
+    ylabel(params.axesHandles(1),'position (deg)');
+    xlabel(params.axesHandles(2),'time (sec)');
+    legend(params.axesHandles(2),{'position','blink/data loss','drift','saccade'},...
+        'orientation','horizontal','location','south');
+    title(params.axesHandles(1),'horizontal');
+    title(params.axesHandles(2),'vertical');
+    
 end
+
+
+%% Save filtered data
+if writeResult
+    
+    try
+        % remove pointers to graphics objects
+        params = rmfield(params,'commandWindowHandle');
+        params = rmfield(params,'axesHandles');
+    catch
+    end
+    
+    save(outputFilePath,'saccades','drifts','labels','params',...
+        'st','en','driftSt','driftEn');
 end
 
 
+%% return the params structure if requested
 
-% get a running (adaptive) velocity threshold depending on the variability
-% in the velocity
-function sds = AdaptiveThreshold(velocity,timeArray,isMedianBased)
-
-if nargin < 3
-    isMedianBased = 0;
+if nargout > 3
+    varargout{1} = params;
+end
+if nargout > 4
+    varargout{2} = st;
+end
+if nargout > 5
+    varargout{3} = en;
+end
+if nargout > 6
+    varargout{4} = driftSt;
+end
+if nargout > 7
+    varargout{5} = driftEn;
 end
 
-samplingRate = round(1/diff(timeArray(1:2)));
-windowSize = round(1*samplingRate); % 1 second
-stepSize = round(0.1*samplingRate); % 100ms
 
-sds = nan(size(timeArray));
-steps = 1 : stepSize : length(timeArray)-windowSize;
-for i = 1:length(steps)-1
-    ix = steps(i):(steps(i)+windowSize-1);
-    if isMedianBased
-        sds(ix) = sqrt(nanmedian(velocity(ix).^2) - nanmedian(velocity(ix))^2);
-    else
-        sds(ix) = nanstd(velocity(ix));
+end % keep this 'end' since we have some functions below
+
+
+
+%%
+function s = GetEventProperties(pos,t,vel,st,en)
+
+    hor = pos(:,1);
+    ver = pos(:,2);
+
+    % preallocate memory
+    s = repmat(GetEmptyEventStruct, length(st),1);
+
+    for i=1:length(st)
+
+        % extract saccade parameters
+        stIx = find(t == st(i));
+        enIx = find(t == en(i));
+        s(i).onsetTime = st(i);
+        s(i).offsetTime = en(i);
+        s(i).onsetIndex = stIx;
+        s(i).offsetIndex = enIx;
+        s(i).duration = en(i) - st(i);
+        s(i).xStart = hor(stIx);
+        s(i).xEnd = hor(enIx);
+        s(i).yStart = ver(stIx);
+        s(i).yEnd = ver(enIx);
+        s(i).xAmplitude = s(i).xEnd - s(i).xStart;
+        s(i).yAmplitude = s(i).yEnd - s(i).yStart;
+        s(i).vectorAmplitude = sqrt(s(i).xAmplitude.^2 + s(i).yAmplitude.^2);
+        s(i).direction = atan2d(s(i).yAmplitude, s(i).xAmplitude);
+        s(i).peakVelocity = max(vel(stIx:enIx));
+        s(i).meanVelocity = nanmean(vel(stIx:enIx));
+        s(i).maximumExcursion = max(sqrt((hor(stIx:enIx) - hor(stIx)).^2 + (ver(stIx:enIx) - ver(stIx)).^2));
     end
 end
 
-% in case we have nans at the end, replace them with the nearest nonnan
-% value
-lastNonNan = find(~isnan(sds),1,'last');
-sds(lastNonNan:end) = sds(lastNonNan);
+%%
+function eventStruct = GetEmptyEventStruct
+    eventStruct.duration = [];
+    eventStruct.onsetIndex = [];
+    eventStruct.offsetIndex = [];
+    eventStruct.onsetTime = [];
+    eventStruct.offsetTime = [];
+    eventStruct.xStart = [];
+    eventStruct.xEnd = [];
+    eventStruct.yStart = [];
+    eventStruct.yEnd = [];
+    eventStruct.xAmplitude = [];
+    eventStruct.yAmplitude = [];
+    eventStruct.vectorAmplitude = [];
+    eventStruct.direction = [];
+    eventStruct.peakVelocity = [];
+    eventStruct.meanVelocity = [];
+    eventStruct.maximumExcursion = [];
+end
 
+%%
+function [onsets, offsets] = GetEventOnsetsAndOffsets(indices)
 
+    onsetOffset = [0; diff(indices)];
+    onsets = find(onsetOffset == 1);
+    offsets = find(onsetOffset == -1);
+
+    % address missing onset at the beginning
+    if offsets(1) < onsets(1)
+        onsets = [1; onsets];
+    end
+
+    % address missing offset at the end
+    if offsets(end) < onsets(end)
+        offsets = [offsets; onsets(end)];
+    end
 end
 
 
-function [newOnsets, newOffsets] = RemoveFakeSaccades(time, ...
-    onsets, offsets, stitchCriteria, minDuration, maxDuration, velocity)
+%% Round to an odd number
+function n = RoundToOdd(n)
 
-    samplingRate = 1/diff(time(1:2));
-    stitchCriteriaSamples = round(stitchCriteria * samplingRate / 1000);
-    minDurationSamples = round(minDuration * samplingRate / 1000);
-    maxDurationSamples = round(maxDuration * samplingRate / 1000);
-    
-    % if two consecutive saccades are closer than deltaStitch, merge them
-    tempOnsets = onsets;
-    tempOffsets = offsets;
+    n = round(n);
+    ind = mod(n,2) == 0;
+    n(ind) = n(ind)+1;
 
-    % loop until there is no pair of consecutive saccades closer than
-    % stitchCriteria 
-    while true
-        for c=1:min(length(onsets),length(offsets))-1
-            if (onsets(c+1)-offsets(c))<(stitchCriteriaSamples)
-                tempOnsets(c+1) = -1;
-                tempOffsets(c) = -1;
+end
+
+%% Fine-tunes onset/offset labels using a secondary threshold
+function [st, en] = FineTuneOnsetOffset(st,en,t,vel,threshold)
+
+    if length(st) ~= length(en)
+        error('FindSaccadesAndDrifts: onset and offset arrays have different lengths');
+    end
+
+    dt = diff(t(1:2)); % assumes regular sampling
+    searchWindow = round(0.2 / dt); % in samples
+
+    for i=1:length(st)
+        
+        % get the indices for this particular saccade
+        thisSaccade = IndicesForRange(st(i),en(i),t);
+
+        % find where the peak velocity occured in this saccade 
+        [~, ix] = max(vel(thisSaccade));
+
+        % compute the index of peak velocity in the original signal
+        peakVelIndex = thisSaccade(1) + ix - 1;
+
+        % ONSET
+        % now go back in time to find the onset. BUT don't go too much ;)
+        startIndexForSearch = max([1,(peakVelIndex - searchWindow + 1)]);
+        acceleration = [0; diff(vel(startIndexForSearch : peakVelIndex))/dt];
+        newOnsetIndex = find((acceleration < 0) & ...
+            vel(startIndexForSearch : peakVelIndex) < ...
+            threshold(startIndexForSearch : peakVelIndex), 1, 'last') - 1; 
+
+        % search might end up with an empty index if velocity never goes below
+        % threshold. in that case, use the original timestamp
+        if ~isempty(newOnsetIndex)
+            % convert that to timestamp
+            tempSt = t(startIndexForSearch + newOnsetIndex - 1);
+
+            % check if it's within a reasonable temporal distance from peak
+            if abs(tempSt - t(peakVelIndex)) < 0.03
+                st(i) = tempSt;
             end
+        else
+            st(i) = nan;
+            continue;
         end
 
-        s_on = tempOnsets(tempOnsets ~= -1);
-        s_off = tempOffsets(tempOffsets ~= -1);
-        if sum((s_on(2:end)-s_off(1:end-1)) < (stitchCriteriaSamples))==0
+        % OFSET
+        endIndexForSearch = min([length(t),(peakVelIndex + searchWindow)]);
+        newOffsetIndex = find(vel(peakVelIndex : endIndexForSearch) < ...
+             threshold(peakVelIndex : endIndexForSearch),1,'first');
+
+        % search might end up with an empty index if velocity never goes below
+        % threshold. in that case, use the original timestamp
+        if ~isempty(newOffsetIndex)
+            % convert that to timestamp
+            tempEn = t(peakVelIndex + newOffsetIndex - 1);
+
+            % check if it's within a reasonable temporal distance from peak
+            if abs(tempSt - t(peakVelIndex)) < 0.12
+                en(i) = tempEn;
+            end
+        else
+            en(i) = nan;
+        end
+    end
+
+    % remove problematic ones (those that are only partially recorded)
+    ix = isnan(st) | isnan(en);
+    st(ix) = [];
+    en(ix) = [];
+
+end
+
+%% A helper function to get indices for the given list of start and end timestamps
+function ind = IndicesForRange(st,en,t)
+
+    ind = [];
+    for i=1:length(st)
+        ind = [ind; (find(t==st(i)):find(t==en(i)))']; %#ok<AGROW>
+    end
+
+end
+
+
+%% Merge saccades that are too close in time
+function [st, en] = MergeSaccades(st, en, minInterEventInterval)
+
+    % loop until there is no pair of consecutive events closer than
+    % *minInterEventInterval*
+    while true
+        interEventInterval = (st(2:end)-en(1:end-1));
+        toBeMerged = find(interEventInterval < minInterEventInterval);
+        if isempty(toBeMerged)
             break;
         end
-    end
 
-    newOnsets = tempOnsets(tempOnsets ~= -1);
-    newOffsets = tempOffsets(tempOffsets ~= -1);
+        st(toBeMerged+1) = [];
+        en(toBeMerged) = [];
 
-    if ~isempty(newOnsets) && ~isempty(newOffsets)
-        if newOnsets(1)==1
-            newOnsets(1) = 2;
-        end
-
-        if newOffsets(end) == length(time)
-            newOffsets(end) = length(time)-1;
-        end
-    
-    
-        % remove too brief and too long saccades
-        tooBrief = (newOffsets - newOnsets) < minDurationSamples;
-        tooLong = (newOffsets - newOnsets) > maxDurationSamples;
-        nanNeighbors = isnan(sum(velocity(newOffsets+1,:),2)) | isnan(sum(velocity(newOnsets-1,:),2));
-        discardThis = tooBrief | tooLong | nanNeighbors;
-        
-        newOnsets(discardThis) = [];
-        newOffsets(discardThis) = [];
     end
 
 end
 
-function saccades = GetSaccadeProperties(eyePosition,timeArray,onsets,offsets,...
-    velocity,secondaryThreshold)
-
-    hor = eyePosition(:,1);
-    ver = eyePosition(:,2);
-
-    % preallocate memory
-    saccades = repmat(GetEmptySaccadeStruct, length(onsets),1);
-
-    for i=1:length(onsets)
-        [newOnset, newOffset, peakVelocity, meanVelocity] = ...
-            ReviseOnsetOffset(timeArray,onsets(i),offsets(i),velocity,secondaryThreshold);
-
-        if ~(isempty(newOnset) || isempty(newOffset) || isempty(peakVelocity))
-            
-            % extract saccade parameters
-            saccades(i).onsetTime = timeArray(newOnset);
-            saccades(i).offsetTime = timeArray(newOffset);
-            saccades(i).onsetIndex = newOnset;
-            saccades(i).offsetIndex = newOffset;
-            saccades(i).duration = timeArray(newOffset) - timeArray(newOnset);
-            saccades(i).xStart = hor(newOnset);
-            saccades(i).xEnd = hor(newOffset);
-            saccades(i).yStart = ver(newOnset);
-            saccades(i).yEnd = ver(newOffset);
-            saccades(i).xAmplitude = hor(newOffset) - hor(newOnset);
-            saccades(i).yAmplitude = ver(newOffset) - ver(newOnset);
-            saccades(i).vectorAmplitude = sqrt((hor(newOffset) - hor(newOnset)).^2 +...
-                (ver(newOffset) - ver(newOnset)).^2);
-            saccades(i).direction = atan2d((ver(newOffset) - ver(newOnset)), ...
-                (hor(newOffset) - hor(newOnset)));
-            saccades(i).peakVelocity = peakVelocity;
-            saccades(i).meanVelocity = meanVelocity;
-            saccades(i).maximumExcursion = ...
-                max(sqrt((hor(newOnset:newOffset) - repmat(hor(newOnset),newOffset-newOnset+1,1)).^2 +...
-                (ver(newOnset:newOffset) - repmat(ver(newOnset),newOffset-newOnset+1,1)).^2));
-        end
-    end
-end
-
-function saccade = GetEmptySaccadeStruct
-    saccade.duration = [];
-    saccade.onsetIndex = [];
-    saccade.offsetIndex = [];
-    saccade.onsetTime = [];
-    saccade.offsetTime = [];
-    saccade.xStart = [];
-    saccade.xEnd = [];
-    saccade.yStart = [];
-    saccade.yEnd = [];
-    saccade.xAmplitude = [];
-    saccade.yAmplitude = [];
-    saccade.vectorAmplitude = [];
-    saccade.direction = [];
-    saccade.peakVelocity = [];
-    saccade.meanVelocity = [];
-    saccade.maximumExcursion = [];
-end
-
-function drift = GetEmptyDriftStruct
-    drift.duration = [];
-    drift.onsetIndex = [];
-    drift.offsetIndex = [];
-    drift.onsetTime = [];
-    drift.offsetTime = [];
-    drift.xStart = [];
-    drift.xEnd = [];
-    drift.yStart = [];
-    drift.yEnd = [];
-    drift.xAmplitude = [];
-    drift.yAmplitude = [];
-    drift.vectorAmplitude = [];
-    drift.direction = [];
-    drift.peakVelocity = [];
-    drift.meanVelocity = [];
-    drift.maximumExcursion = [];
-end
-
-function [newOnset, newOffset, peakVel, meanVel] = ...
-    ReviseOnsetOffset(timeArray,onset,offset,vectorialVelocity,secondaryThreshold)
-
-    d = 10;
-
-    if onset-d<1
-        onset = 1;
-    else
-        onset = onset - d;
-    end
-    
-    if offset+d>length(timeArray)
-        offset = length(timeArray);
-    else
-        offset = offset+d;
-    end
-
-    %vectorialVelocity = sqrt(sum(velocity(onset:offset,:).^2,2));
-    vectorialVelocity = vectorialVelocity(onset:offset);
-    secondaryThreshold = secondaryThreshold(onset:offset);
-    [peakVel,peakDelta] = max(vectorialVelocity);
-    meanVel = nanmean(vectorialVelocity);
-
-    onsetDelta = find(vectorialVelocity(1:peakDelta)<secondaryThreshold(1:peakDelta),1,'last');
-    offsetDelta = find(vectorialVelocity(peakDelta:end)<secondaryThreshold(peakDelta:end),1,'first');
-
-    newOnset = onset + onsetDelta;
-    newOffset = onset + peakDelta + offsetDelta;
-
-    % handle error cases
-    if isempty(newOffset)
-        newOffset = offset;
-    end
-
-    if isempty(newOnset)
-        newOnset = onset;
-    end
-
-    if newOnset < 0
-        newOnset = 1;
-    end
-    if newOffset > length(timeArray)
-        newOffset = length(timeArray);
-    end
-end
-
-function [onsets, offsets] = GetEventOnsetsAndOffsets(eventIndices)
-
-    % take the difference of indices computed above to find the onset and
-    % offset of the movement
-    dabove = [0; diff(eventIndices)];
-    onsets = find(dabove == 1);
-    offsets = find(dabove == -1);
-
-    % make sure we have an offset for every onset.
-    if length(onsets) > length(offsets)
-        offsets = [offsets; length(eventIndices)];
-    elseif length(onsets) < length(offsets)
-        offsets = offsets(1:end-1);
-    end
-end
-
-function [onsets, offsets] = GetDriftOnsetsAndOffsets(eventIndices)
-
-    % take the difference of indices computed above to find the onset and
-    % offset of the movement
-    dabove = [1; diff(eventIndices)];
-    onsets = find(dabove == 1);
-    offsets = find(dabove == -1);
-
-    % make sure we have an offset for every onset.
-    if length(onsets) > length(offsets)
-        offsets = [offsets; length(eventIndices)];
-    elseif length(onsets) < length(offsets)
-        offsets = offsets(1:end-1);
-    end
-end
-
-function drifts = GetDriftProperties(eyePosition,time,onsets,offsets,velocity)
-
-    hor = eyePosition(:,1);
-    ver = eyePosition(:,2);
-    vectorialVelocity = sqrt(sum(velocity.^2,2));
-
-    % preallocate memory
-    drifts = repmat(GetEmptyDriftStruct, length(onsets),1);
-
-    for i=1:length(onsets)
-        currentOnset = onsets(i);
-        currentOffset = offsets(i);
-        
-        peakVelocity = max(vectorialVelocity(currentOnset:currentOffset));
-        meanVelocity = max(vectorialVelocity(currentOnset:currentOffset));
-            
-        % extract saccade parameters
-        drifts(i).onsetTime = time(currentOnset);
-        drifts(i).offsetTime = time(currentOffset);
-        drifts(i).onsetIndex = currentOnset;
-        drifts(i).offsetIndex = currentOffset;
-        drifts(i).duration = time(currentOffset) - time(currentOnset);
-        drifts(i).xStart = hor(currentOnset);
-        drifts(i).xEnd = hor(currentOffset);
-        drifts(i).yStart = ver(currentOnset);
-        drifts(i).yEnd = ver(currentOffset);
-        drifts(i).xAmplitude = hor(currentOffset) - hor(currentOnset);
-        drifts(i).yAmplitude = ver(currentOffset) - ver(currentOnset);
-        drifts(i).vectorAmplitude = sqrt((hor(currentOffset) - hor(currentOnset)).^2 +...
-            (ver(currentOffset) - ver(currentOnset)).^2);
-        drifts(i).direction = atan2d((ver(currentOffset) - ver(currentOnset)), ...
-            (hor(currentOffset) - hor(currentOnset)));
-        drifts(i).peakVelocity = peakVelocity;
-        drifts(i).meanVelocity = meanVelocity;
-        drifts(i).maximumExcursion = ...
-            max(sqrt((hor(currentOnset:currentOffset) - repmat(hor(currentOnset),currentOffset-currentOnset+1,1)).^2 +...
-            (ver(currentOnset:currentOffset) - repmat(ver(currentOnset),currentOffset-currentOnset+1,1)).^2));
-    end
-end
-
-
-function [driftOnsets, driftOffsets] = MergeDrifts(driftOnsets,driftOffsets,stitchCriteria,time)
-
-    samplingRate = 1/diff(time(1:2));
-    stitchCriteriaSamples = round(stitchCriteria * samplingRate / 1000);
-
-    gaps = driftOnsets(2:end) - driftOffsets(1:end-1);
-    
-    
-    for i=1:length(gaps)
-        if gaps(i) < stitchCriteriaSamples
-            driftOnsets(i+1) = NaN;
-            driftOffsets(i) = NaN;
-        end
-    end
-    
-    driftOnsets(isnan(driftOnsets)) = [];
-    driftOffsets(isnan(driftOffsets)) = [];
-end
