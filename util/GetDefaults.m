@@ -130,7 +130,7 @@ switch module
         validate.stripWidth = @(x) isempty(x) | IsPositiveInteger(x);
         validate.samplingRate = @IsNaturalNumber;
         validate.minPeakThreshold = @IsNonNegativeRealNumber; 
-        validate.maxMotionThreshold = @(x) IsPositiveRealNumber(x) & (x<=1);
+        validate.maxMotionThreshold = @IsPositiveRealNumber;
         validate.adaptiveSearch = @islogical;
         validate.searchWindowHeight = @IsPositiveInteger;
         validate.lookBackTime = @(x) IsPositiveRealNumber(x) & (x>=2);

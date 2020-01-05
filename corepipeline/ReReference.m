@@ -278,7 +278,7 @@ yPeaksGlobal = yPeak - (size(thisStrip,1) - anchorStripSize(1));
 peakLoc = [xPeaksGlobal yPeaksGlobal];
 
 % offset needed to re-reference the strips from localRef to globalRef
-offset = peakLoc - localPeakLoc;
+offset = peakLoc - localPeakLoc + [1 0];
 
 
 
