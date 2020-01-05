@@ -74,6 +74,7 @@ function [refFrame, varargout] = MakeReference(inputVideo, params)
 %   |varargout| is a variable output argument holder.
 %   varargout{1} = refFrameFilePath
 %   varargout{2} = params
+%   varargout{3} = refFrameZero.
 %
 
 %% Allow for aborting if not parallel processing
@@ -145,6 +146,9 @@ if writeResult
         if nargout > 2
             varargout{2} = params;
         end
+        if nargout > 3
+            varargout{3} = refFrameZero;
+        end
         
         return;
     else
@@ -174,9 +178,13 @@ params = HandleBadFrames(numberOfFrames, params, callerStr);
 
 %% Prepare variables before the big loop
 
+% check for duplicate samples
+dupIx = diff(params.timeSec) == 0;
+params.peakValues(dupIx) = [];
+params.timeSec(dupIx) = [];
+params.positions(dupIx,:) = [];
+
 newRowNumbers = 1:params.newStripHeight:(height-params.newStripHeight+1);
-% newRowNumbers = params.rowNumbers;
-% params.newStripHeight = diff(newRowNumbers(1:2));
 stripsPerFrame = length(newRowNumbers);
 newNumberOfStrips = stripsPerFrame * numberOfFrames;
 oldNumberOfStrips = length(params.timeSec) / numberOfFrames;
@@ -188,13 +196,12 @@ deltaPos = [0; sqrt(sum((diff(params.positions,[],1)/height).^2,2))] * oldNumber
 usefulSamples = (params.peakValues >= params.minPeakThreshold) & ...
                 (deltaPos <= params.maxMotionThreshold);
 
-
 % interpolate position for new strip height
 newTimeSec = dtPerScanLine * ...
     reshape((0:(numberOfFrames-1)) * (sum(params.trim) + height) + newRowNumbers', newNumberOfStrips, 1);
-newUsefulSamples = imresize(double(usefulSamples),size(newTimeSec));
+newUsefulSamples = interp1(params.timeSec,double(usefulSamples),newTimeSec) > 0.5;
 newPositions = interp1(params.timeSec(usefulSamples), params.positions(usefulSamples,:), newTimeSec, 'linear');
-newPositions(~newUsefulSamples) = nan;
+newPositions(~newUsefulSamples,:) = nan;
 
 % if subpixel operation is enabled, i.e. subpixelForRef ~= 0, everything
 % needs to upsampled/resized/scaled by 2^subpixelForRef.
@@ -362,7 +369,7 @@ refFrame = uint8(refFrameZero);
 
 %% replace zero-padded regions with noise
 zeroInd = counter == 0;
-noise = datasample(refFrame(~zeroInd),sum(zeroInd(:)),'replace',false);
+noise = datasample(refFrame(~zeroInd),sum(zeroInd(:)),'replace',true);
 refFrame(zeroInd) = noise;
 
 
@@ -407,6 +414,10 @@ end
 if nargout > 2
     varargout{2} = params;
 end
+if nargout > 3
+    varargout{3} = refFrameZero;
+end
+    
 
 
 

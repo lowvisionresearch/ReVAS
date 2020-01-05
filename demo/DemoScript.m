@@ -32,7 +32,7 @@ fprintf('\n\n\n ------------------- DemoScript 1st Example: TSLO ---------------
 
 % get video path. The demo videos must be under /demo folder, i.e., already
 % added to MATLAB path.
-inputVideoPath = '20092L_003.avi'; 
+inputVideoPath = 'jap.avi'; 
 originalVideoPath = inputVideoPath;
 
 % for loading default params, use an empty struct
@@ -69,19 +69,19 @@ inputVideoPath = BandpassFilter(inputVideoPath, tp);
 % tp.fineRef = FineRef(inputVideoPath, tp);
 
 %%
-tp.adaptiveSearch = false;
+tp.adaptiveSearch = true;
 tp.referenceFrame = 1;
 tp.enableVerbosity = 1;
-tp.goodFrameCriterion = 0.9;
-tp.swapFrameCriterion = 0.9;
+tp.goodFrameCriterion = 0.3;
+tp.swapFrameCriterion = 0.7;
 tp.lookBackTime = 15;
 tp.trim = tp.borderTrimAmount(3:4);
-samplingRate = [540 540];
-stripHeight = [20 11];
+samplingRate = [960 540];
+stripHeight = [5 11];
 for i=1:length(stripHeight)
     % Extract eye motion
-    tp.minPeakThreshold = 0.35;
-    tp.maxMotionThreshold = 0.12;
+    tp.minPeakThreshold = 0.3;
+    tp.maxMotionThreshold = 0.15;
     tp.samplingRate = samplingRate(i);
     tp.stripHeight = stripHeight(i);
     tp.stripWidth = [];
@@ -101,7 +101,7 @@ for i=1:length(stripHeight)
 end
 
 %% Generate a stabilized video (optionally, using original video)
-StabilizeVideo(originalVideoPath, tp);
+% StabilizeVideo(originalVideoPath, tp);
 
 % Post-processing of eye motion traces
 [filteredTraces, filteredPath] = FilterEyePosition(tp.outputFilePath, tp);
