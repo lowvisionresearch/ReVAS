@@ -26,7 +26,7 @@ try
     p.overwrite = true;
     p.enableVerbosity = 2;
     p.maxGapDurationMs = 50;
-    [~, p] = FilterEyePosition([positionDeg timeSec], p);
+    [~, ~, p] = FilterEyePosition([positionDeg timeSec], p);
     
 
     %% Second test
@@ -37,21 +37,12 @@ try
     % use a filepath as input and only plot the final output
     save(hiddenFile,'positionDeg','timeSec');
     p.enableVerbosity = 1;
-    [~, p] = FilterEyePosition(hiddenFile, p);
+    [~, ~, p] = FilterEyePosition(hiddenFile, p);
     delete(hiddenFile);
     delete(p.outputFilePath);
     
     
-    %% third test
-    
-    % controlled failure: send in position in pixel units
-    try 
-        FilterEyePosition([position timeSec], p);
-        success = false;
-    catch
-        success = true;
-    end
-
+    success = true;
 catch 
     success = false;
 end

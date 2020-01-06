@@ -78,8 +78,8 @@ tp.goodFrameCriterion = 0.5;
 tp.swapFrameCriterion = 0.5;
 tp.lookBackTime = 15;
 tp.trim = tp.borderTrimAmount(3:4);
-samplingRate = [540 720 960];
-stripHeight = [15 13 11];
+samplingRate = [540 960];
+stripHeight = [15 11];
 for i=1:length(stripHeight)
     % Extract eye motion
     tp.axesHandles = [];
@@ -98,13 +98,13 @@ for i=1:length(stripHeight)
     tp.axesHandles = [];
     tp.filters = {'medfilt1','sgolayfilt'};
     tp.filterParams = {15,[3 15]};
-    [filteredTraces, tp] = FilterEyePosition(tp.outputFilePath, tp);
+    [filteredTraces, timeSec, tp] = FilterEyePosition(tp.outputFilePath, tp);
     
     % Make reference
     tp.axesHandles = [];
     tp.oldStripHeight = tp.stripHeight;
     tp.newStripHeight = tp.stripHeight;
-    tp.positions = position;
+    tp.positions = filteredTraces * -512/5;
     tp.timeSec = timeSec;
     tp.peakValues = peakValueArray;
     tp.maxMotionThreshold = 0.1;
