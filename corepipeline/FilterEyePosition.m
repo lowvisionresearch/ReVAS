@@ -370,9 +370,14 @@ filteredEyePositions(nanIndices,:) = nan;
 %% visualize results if user requested
 if ~abortTriggered && params.enableVerbosity 
     
-    for i=1:length(params.axesHandles)
-        hold(params.axesHandles(i),'on');
-        plot(params.axesHandles(i), timeSec, eyePositionTraces(:,i), '. ');
+    if length(params.axesHandles) > 1
+        for i=1:length(params.axesHandles)
+            hold(params.axesHandles(i),'on');
+            plot(params.axesHandles(i), timeSec, eyePositionTraces(:,i), '. ');
+        end
+    else
+        hold(params.axesHandles(1),'on');
+        plot(params.axesHandles(1), timeSec, eyePositionTraces, '. ');
     end
     
     % plot all levels of filtering

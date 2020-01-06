@@ -438,7 +438,7 @@ while fr <= numberOfFrames
                 
                 
                 % visualization, if requested.
-                if params.enableVerbosity > 1
+                if params.enableVerbosity > 2
                     
                     % show cross-correlation output
                     if params.enableGPU
@@ -619,7 +619,7 @@ while fr <= numberOfFrames
         
         
         % plot peak values and raw traces
-        if params.enableVerbosity 
+        if params.enableVerbosity > 1
             % show current reference frame
             axes(params.axesHandles(1)); %#ok<LAXES>
             imshowpair(referenceFrame, params.referenceFrame);
@@ -708,6 +708,31 @@ if ~abortTriggered && params.enableVerbosity
     axis(params.axesHandles(1),'image')
     xlim(params.axesHandles(1),[1 size(params.referenceFrame,2)])
     ylim(params.axesHandles(1),[1 size(params.referenceFrame,1)])
+    
+    % show peak values
+    scatter(params.axesHandles(2),timeSec,peakValueArray,10,'filled'); 
+    hold(params.axesHandles(2),'on');
+    plot(params.axesHandles(2),timeSec([1 end]),params.minPeakThreshold*ones(1,2),'-','linewidth',2);
+    set(params.axesHandles(2),'fontsize',14);
+    xlabel(params.axesHandles(2),'time (sec)');
+    ylabel(params.axesHandles(2),'peak value');
+    ylim(params.axesHandles(2),[0 1]);
+    xlim(params.axesHandles(2),[0 timeSec(thisSample)]);
+    hold(params.axesHandles(2),'off');
+    grid(params.axesHandles(2),'on');
+
+    % plot motion criterion
+    scatter(params.axesHandles(3),timeSec,100*deltaPos,10,'filled');
+    hold(params.axesHandles(3),'on');
+    plot(params.axesHandles(3),timeSec([1 end]),params.maxMotionThreshold*ones(1,2)*100,'-','linewidth',2);
+    set(params.axesHandles(3),'fontsize',14);
+    xlabel(params.axesHandles(3),'time (sec)');
+    ylabel(params.axesHandles(3),'motion (%/fr)');
+    xlim(params.axesHandles(3),[0 timeSec(thisSample)]);
+    ylim(params.axesHandles(3),[0 min(0.5,max(deltaPos)+0.1)]*100);
+    hold(params.axesHandles(3),'off');
+    grid(params.axesHandles(3),'on');
+    legend(params.axesHandles(3),'off')
 
     % plot useful position traces.
     plot(params.axesHandles(4),timeSec,position,'-o','linewidth',1.5,'markersize',2);
@@ -715,8 +740,8 @@ if ~abortTriggered && params.enableVerbosity
     xlabel(params.axesHandles(4),'time (sec)');
     ylabel(params.axesHandles(4),'position (px)');
     legend(params.axesHandles(4),{'hor','ver'});
-    yMin = prctile(tempPos,2.5,'all')-20;
-    yMax = prctile(tempPos,97.5,'all')+20;
+    yMin = prctile(position(:,2),2.5,'all')-20;
+    yMax = prctile(position(:,2),97.5,'all')+20;
     ylim(params.axesHandles(4),[yMin yMax]);
     xlim(params.axesHandles(4),[0 max(timeSec)]);
     hold(params.axesHandles(4),'off');
