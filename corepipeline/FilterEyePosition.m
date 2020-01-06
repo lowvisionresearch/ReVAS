@@ -1,4 +1,4 @@
-function [filteredEyePositions, varargout ]= FilterEyePosition(inputArgument, params)
+function [filteredEyePositions, timeSec, varargout ]= FilterEyePosition(inputArgument, params)
 %FILTER EYE POSITION fixes temporal gaps in the eye position traces due to
 %   blinks or bad strips, applies a series of filters, and then removes
 %   interpolated regions. Fixing gaps is required for filter functions to work
@@ -71,6 +71,8 @@ function [filteredEyePositions, varargout ]= FilterEyePosition(inputArgument, pa
 %   |filteredEyePositions| is the filtered eye position traces. Rows
 %   represent time in ascending order and columns represent different eye
 %   traces (horizontal, vertical, or multiple traces from different videos.
+%
+%   |timeSec|. time in seconds after required interpolation.
 %
 %   |varargout| is for returning params.
 %
@@ -162,8 +164,8 @@ if writeResult
         RevasMessage('FilterEyePosition() is returning results from existing file.',params); 
         
         % try loading existing file contents
-        load(outputFilePath,'filteredEyePositions');
-        if nargout > 1
+        load(outputFilePath,'filteredEyePositions','timeSec');
+        if nargout > 2
             varargout{1} = params;
         end
         
@@ -196,27 +198,18 @@ if size(eyePositionTraces,2) >= size(eyePositionTraces,1)
     error('FilterEyePosition: more columns than rows in eye position traces. Make sure position array is mxn where rows represent samples over time');
 end
 
-% make sure the input position traces are in visual degrees
-% we're using a heuristic. if absolute value of position traces exceeds
-% 300, it is almost always due to lack of conversion from pixel units to
-% degrees.
-if max(abs(eyePositionTraces(:))) > 300 
-    error(['FilterEyePosition: eye positions are not in visual degrees. ' newline ...
-        'Make sure to do proper scaling and sign flipping (since extracted ' newline ...
-        'traces and actual eye motion are in opposite directions']);
-end
 
-%% Handle blink/bad frame gaps
-
-% look for gaps in timeSec
-deltaT = diff(timeSec);
-dt = mean(deltaT);
-gapIndices = deltaT > 2*dt;
-
-% put a single nan where there is a gap. During interpolation, 
-[timeSec, ix] = sort([timeSec; timeSec(gapIndices)+dt]);
-eyePositionTraces = [eyePositionTraces; nan(sum(gapIndices),size(eyePositionTraces,2))];
-eyePositionTraces = eyePositionTraces(ix,:);
+% %% Handle blink/bad frame gaps
+% 
+% % look for gaps in timeSec
+% deltaT = diff(timeSec);
+% dt = mean(deltaT);
+% gapIndices = deltaT > 2*dt;
+% 
+% % put a single nan where there is a gap. During interpolation, 
+% [timeSec, ix] = sort([timeSec; timeSec(gapIndices)+dt]);
+% eyePositionTraces = [eyePositionTraces; nan(sum(gapIndices),size(eyePositionTraces,2))];
+% eyePositionTraces = eyePositionTraces(ix,:);
 
 
 %% Eliminate "lone wolves"
@@ -227,22 +220,6 @@ surroundedSamples = (conv2(isnan(eyePositionTraces),[1 0 1]','same') == 2 & ...
                     (conv2(isnan(eyePositionTraces),[1 0 0 1]','same') == 2 & ...
                     conv2(isnan(eyePositionTraces),[1 1 1 1]','same') == 2);
 eyePositionTraces(surroundedSamples) = nan;
-
-
-
-%% Resample to desired sampling frequency (if requested)
-
-% if not requested, still resample to the sampling rate that is most
-% common in the timeSec since some of the filters below assumes regular
-% temporal sampling.
-if ~isempty(params.samplingRate)
-    interpTimeSec = (min(timeSec) : 1/params.samplingRate : max(timeSec))';
-else
-    interpTimeSec = (min(timeSec) : dt : max(timeSec))';
-end
-
-eyePositionTraces = interp1(timeSec,eyePositionTraces,interpTimeSec,'linear');
-timeSec = interpTimeSec;
 
 % compute sampling rate
 deltaT = diff(timeSec);
@@ -433,7 +410,7 @@ end
 
 
 %% return the params structure if requested
-if nargout > 1
+if nargout > 2
     varargout{1} = params;
 end
 
