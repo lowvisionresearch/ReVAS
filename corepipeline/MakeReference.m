@@ -139,7 +139,7 @@ if writeResult
         RevasMessage('MakeReference() is returning results from existing file.',params); 
         
         % try loading existing file contents
-        load(outputFilePath,'refFrame','params');
+        load(outputFilePath,'refFrame','params','refFrameZero');
         if nargout > 1
             varargout{1} = outputFilePath;
         end

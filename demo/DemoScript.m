@@ -32,7 +32,7 @@ fprintf('\n\n\n ------------------- DemoScript 1st Example: TSLO ---------------
 
 % get video path. The demo videos must be under /demo folder, i.e., already
 % added to MATLAB path.
-inputVideoPath = 'jap.avi'; 
+inputVideoPath = 'tslo-long.avi'; 
 originalVideoPath = inputVideoPath;
 
 % for loading default params, use an empty struct
@@ -52,8 +52,8 @@ tp.borderTrimAmount = [0 0 12 12];
 [inputVideoPath, tp] = TrimVideo(inputVideoPath, tp);
 
 % Stimulus removal
-tp.stimulus = imread('cross.png');
-% tp.stimulus = MakeStimulusCross(87, 19, 0); 
+% tp.stimulus = imread('cross.png');
+tp.stimulus = MakeStimulusCross(87, 19, 0); 
 inputVideoPath = RemoveStimuli(inputVideoPath, tp);
 
 % Contrast enhancement
@@ -69,44 +69,60 @@ inputVideoPath = BandpassFilter(inputVideoPath, tp);
 % tp.fineRef = FineRef(inputVideoPath, tp);
 
 %%
+clc;
 tp.adaptiveSearch = true;
+tp.axesHandles = [];
 tp.referenceFrame = 1;
 tp.enableVerbosity = 1;
-tp.goodFrameCriterion = 0.3;
-tp.swapFrameCriterion = 0.7;
+tp.goodFrameCriterion = 0.5;
+tp.swapFrameCriterion = 0.5;
 tp.lookBackTime = 15;
 tp.trim = tp.borderTrimAmount(3:4);
-samplingRate = [960 540];
-stripHeight = [5 11];
+samplingRate = [540 720 960];
+stripHeight = [15 13 11];
 for i=1:length(stripHeight)
     % Extract eye motion
-    tp.minPeakThreshold = 0.3;
-    tp.maxMotionThreshold = 0.15;
+    tp.axesHandles = [];
+    tp.minPeakThreshold = 0.4;
+    tp.maxMotionThreshold = 0.3;
     tp.samplingRate = samplingRate(i);
     tp.stripHeight = stripHeight(i);
-    tp.stripWidth = [];
-    tp.enableReferenceFrameUpdate = i==1;
+    tp.stripWidth = [256];
+    tp.enableReferenceFrameUpdate = true;
     [position, timeSec, ~, peakValueArray, tp] = StripAnalysis(inputVideoPath, tp); 
 
+    
+    % Filter eye motion traces
+    positionDeg = -position * 5/512;
+    save(tp.outputFilePath,'-append','positionDeg');
+    tp.axesHandles = [];
+    tp.filters = {'medfilt1','sgolayfilt'};
+    tp.filterParams = {15,[3 15]};
+    [filteredTraces, tp] = FilterEyePosition(tp.outputFilePath, tp);
+    
     % Make reference
+    tp.axesHandles = [];
     tp.oldStripHeight = tp.stripHeight;
     tp.newStripHeight = tp.stripHeight;
     tp.positions = position;
     tp.timeSec = timeSec;
     tp.peakValues = peakValueArray;
-    tp.maxMotionThreshold = 0.05;
-    tp.minPeakThreshold = 0.85;
+    tp.maxMotionThreshold = 0.1;
+    tp.minPeakThreshold = 0.35;
     [referenceFrame, ~, tp] = MakeReference(inputVideoPath, tp);
     tp.referenceFrame = referenceFrame;
 end
 
+% Eye movement classification
+tp.axesHandles = [];
+[saccades, drifts, labels, tp] =  FindSaccadesAndDrifts([filteredTraces timeSec],  tp);
+
 %% Generate a stabilized video (optionally, using original video)
 % StabilizeVideo(originalVideoPath, tp);
 
-% Post-processing of eye motion traces
-[filteredTraces, filteredPath] = FilterEyePosition(tp.outputFilePath, tp);
 
-% Re-reference
+
+%% Re-reference
 tp.globalRef = imread('tslo-global-ref.png');
 [rerefTraces, rerefPath] = ReReference(filteredPath, tp);
 
