@@ -24,7 +24,7 @@ function [position, timeSec, rawPosition, peakValueArray, varargout] = ...
 %                       default false)
 %   enableGPU         : a logical. if set to true, use GPU. (works for 
 %                       'mex' method only.
-%   enableReferenceFrameUpdate: Useful for initial run of StripAnalysis for
+%   dynamicReference  : Useful for initial run of StripAnalysis for
 %                       making a reference frame from raw videos. When
 %                       enabled, reference frame is changed on the fly to a
 %                       good quality video frame that is closer in time to
@@ -32,7 +32,7 @@ function [position, timeSec, rawPosition, peakValueArray, varargout] = ...
 %                       for short videos (e.g., 1sec) but it improves
 %                       quality of extraction quite significantly for long
 %                       videos (e.g., duration>5sec).
-%   goodFrameCriterion: Relevant only when 'enableReferenceFrameUpdate' is
+%   goodFrameCriterion: Relevant only when 'dynamicReference' is
 %                       set to true. It represents the proportion of
 %                       samples from a single frame whose peak value is
 %                       above 'minPeakThreshold' (specified below). (0-1),
@@ -40,7 +40,7 @@ function [position, timeSec, rawPosition, peakValueArray, varargout] = ...
 %                       frame is 20, at least 0.8*20=16 samples must
 %                       satisfy the 'minPeakThreshold' for a frame to be
 %                       considered as a candidate reference frame.
-%   swapFrameCriterion: Relevant only when 'enableReferenceFrameUpdate' is
+%   swapFrameCriterion: Relevant only when 'dynamicReference' is
 %                       set to true. Represents the proportion of bad samples
 %                       from a single frame. "bad samples" means peak value
 %                       is below minPeakThreshold and/or motion since
@@ -344,7 +344,7 @@ stripRight = min(width,round((width + params.stripWidth)/2)-1);
 
 % the big loop. :)
 override = false;
-refractoryPeriod = 0;
+isFirstTimePlotting = true;
 
 % loop across frames
 fr = 1;
@@ -445,13 +445,22 @@ while fr <= numberOfFrames
                         correlationMap = gather(correlationMap);
                     end
                     
-                    axes(params.axesHandles(1)); %#ok<LAXES>
-                    imagesc(correlationMap);
-                    colorbar(params.axesHandles(1));
-                    caxis(params.axesHandles(1),[-1 1]);
-                    hold(params.axesHandles(1),'on');
-                    scatter(params.axesHandles(1),xPeak,yPeak,100,'r');
-                    hold(params.axesHandles(1),'off');
+                    if ~exist('imCorr','var')
+                        axes(params.axesHandles(1)); %#ok<LAXES>
+                        imCorr = imagesc(correlationMap);
+                        colorbar(params.axesHandles(1));
+                        colormap(params.axesHandles(1),hot);
+                        caxis(params.axesHandles(1),[0 1]);
+                        hold(params.axesHandles(1),'on');
+                        sh = scatter(params.axesHandles(1),xPeak,yPeak,200,'g');
+                        hold(params.axesHandles(1),'off');
+                        title('norm. xcorr map')
+                    else
+                        imCorr.CData = correlationMap;
+                        xlim(params.axesHandles(1),[1 size(correlationMap,2)])
+                        ylim(params.axesHandles(1),[1 size(correlationMap,1)])
+                        set(sh,'xdata',xPeak,'ydata',yPeak);
+                    end
                     
                     drawnow; % maybe needed in GUI mode.
                 end
@@ -507,7 +516,7 @@ while fr <= numberOfFrames
         % Dynamic reference frame swapping
         %
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        if params.enableReferenceFrameUpdate
+        if params.dynamicReference
             lastFrameStrips = thisSample-stripsPerFrame+1 : thisSample;
             
             % when some strips within a frame results in peak values below
@@ -520,7 +529,7 @@ while fr <= numberOfFrames
                         (deltaPos(lastFrameStrips) > params.maxMotionThreshold) ) ...
                     > ((params.swapFrameCriterion) * stripsPerFrame) && ...
                     exist('lastGoodFrame','var') && ...
-                    lastFrameSwap(end) ~= fr && refractoryPeriod >= 1) || ...
+                    lastFrameSwap(end) ~= fr) || ...
                     override
                 
                 override = false;
@@ -580,8 +589,6 @@ while fr <= numberOfFrames
                     if writeResult
                         reader.CurrentTime = (fr)/reader.FrameRate;
                     end
-                    
-                    refractoryPeriod = 0;
 
                     % give a warning to let user know about the reference frame
                     % update
@@ -620,61 +627,90 @@ while fr <= numberOfFrames
         
         % plot peak values and raw traces
         if params.enableVerbosity > 1
-            % show current reference frame
-            axes(params.axesHandles(1)); %#ok<LAXES>
-            imshowpair(referenceFrame, params.referenceFrame);
-            colormap(params.axesHandles(1),gray(256));
-            hold(params.axesHandles(1),'off');
-            axis(params.axesHandles(1),'image')
-
             
-            % show peak values
-            scatter(params.axesHandles(2),timeSec,peakValueArray,10,'filled'); 
-            hold(params.axesHandles(2),'on');
-            plot(params.axesHandles(2),timeSec([1 end]),params.minPeakThreshold*ones(1,2),'-','linewidth',2);
-            set(params.axesHandles(2),'fontsize',14);
-            xlabel(params.axesHandles(2),'time (sec)');
-            ylabel(params.axesHandles(2),'peak value');
-            ylim(params.axesHandles(2),[0 1]);
-            xlim(params.axesHandles(2),[0 timeSec(thisSample)]);
-            hold(params.axesHandles(2),'off');
-            grid(params.axesHandles(2),'on');
-            
-            % plot motion criterion
-            scatter(params.axesHandles(3),timeSec,100*deltaPos,10,'filled');
-            hold(params.axesHandles(3),'on');
-            plot(params.axesHandles(3),timeSec([1 end]),params.maxMotionThreshold*ones(1,2)*100,'-','linewidth',2);
-            set(params.axesHandles(3),'fontsize',14);
-            xlabel(params.axesHandles(3),'time (sec)');
-            ylabel(params.axesHandles(3),'motion (%/fr)');
-            xlim(params.axesHandles(3),[0 timeSec(thisSample)]);
-            ylim(params.axesHandles(3),[0 min(0.5,max(deltaPos)+0.1)]*100);
-            hold(params.axesHandles(3),'off');
-            grid(params.axesHandles(3),'on');
-            legend(params.axesHandles(3),'off')
-
-            % show useful output traces
+            % plot only useful samples
             usefulIx = peakValueArray >= params.minPeakThreshold & ...
                 deltaPos <= params.maxMotionThreshold;
             tempPos = rawPosition(usefulIx,:);
-            plot(params.axesHandles(4),timeSec(usefulIx),tempPos,'-o','linewidth',1.5,'markersize',2);
-            set(params.axesHandles(4),'fontsize',14);
-            xlabel(params.axesHandles(4),'time (sec)');
-            ylabel(params.axesHandles(4),'position (px)');
-            legend(params.axesHandles(4),{'hor','ver'});
-            yMin = prctile(tempPos,2.5,'all')-20;
-            yMax = prctile(tempPos,97.5,'all')+20;
-            ylim(params.axesHandles(4),[yMin yMax]);
-            xlim(params.axesHandles(4),[0 timeSec(thisSample)]);
-            hold(params.axesHandles(4),'off');
-            grid(params.axesHandles(4),'on');
+
+            if isFirstTimePlotting
+                
+                % show current reference frame if enableVerbosity is 2
+                if params.enableVerbosity == 2
+                    axes(params.axesHandles(1)); %#ok<LAXES>
+                    im = imshow(params.referenceFrame);
+                    colormap(params.axesHandles(1),gray(256));
+                    hold(params.axesHandles(1),'off');
+                    axis(params.axesHandles(1),'image')
+                    title(params.axesHandles(1),'reference frame');
+                end
+                
+                % show peak values
+                sh21 = scatter(params.axesHandles(2),timeSec,peakValueArray,10,'filled'); 
+                hold(params.axesHandles(2),'on');
+                plot(params.axesHandles(2),timeSec([1 end]),params.minPeakThreshold*ones(1,2),'-','linewidth',2);
+                set(params.axesHandles(2),'fontsize',14);
+                xlabel(params.axesHandles(2),'time (sec)');
+                ylabel(params.axesHandles(2),'peak value');
+                ylim(params.axesHandles(2),[0 1]);
+                xlim(params.axesHandles(2),[0 timeSec(thisSample)]);
+                hold(params.axesHandles(2),'off');
+                grid(params.axesHandles(2),'on');
+
+                % plot motion criterion
+                sh31 = scatter(params.axesHandles(3),timeSec,100*deltaPos,10,'filled');
+                hold(params.axesHandles(3),'on');
+                plot(params.axesHandles(3),timeSec([1 end]),params.maxMotionThreshold*ones(1,2)*100,'-','linewidth',2);
+                set(params.axesHandles(3),'fontsize',14);
+                xlabel(params.axesHandles(3),'time (sec)');
+                ylabel(params.axesHandles(3),'motion (%/fr)');
+                xlim(params.axesHandles(3),[0 timeSec(thisSample)]);
+                ylim(params.axesHandles(3),[0 min(0.5,max(deltaPos)+0.1)]*100);
+                hold(params.axesHandles(3),'off');
+                grid(params.axesHandles(3),'on');
+                legend(params.axesHandles(3),'off')
+
+                % show useful output traces
+                p41 = plot(params.axesHandles(4),timeSec(usefulIx),tempPos,'-o','linewidth',1.5,'markersize',2);
+                set(params.axesHandles(4),'fontsize',14);
+                xlabel(params.axesHandles(4),'time (sec)');
+                ylabel(params.axesHandles(4),'position (px)');
+                legend(params.axesHandles(4),{'hor','ver'});
+                set(params.axesHandles(4),'AutoListeners__', {});
+                setappdata(params.axesHandles(4),'LegendColorbarManualSpace',1);
+                setappdata(params.axesHandles(4),'LegendColorbarReclaimSpace',1);
+                yMin = prctile(tempPos,2.5,'all')-20;
+                yMax = prctile(tempPos,97.5,'all')+20;
+                ylim(params.axesHandles(4),[yMin yMax]);
+                xlim(params.axesHandles(4),[0 timeSec(thisSample)]);
+                hold(params.axesHandles(4),'off');
+                grid(params.axesHandles(4),'on');
+                
+                isFirstTimePlotting = false;
+            else
+                
+                % after first time plotting, only update data (and limits
+                % for some plots).
+                if params.enableVerbosity == 2
+                    im.CData = params.referenceFrame;
+                end
+                set(sh21,'YData',peakValueArray);
+                set(sh31,'YData',100*deltaPos);
+                set(p41(1),'xdata',timeSec(usefulIx),'YData',tempPos(:,1));
+                set(p41(2),'xdata',timeSec(usefulIx),'YData',tempPos(:,2));
+                for j = 1:3
+                    xlim(params.axesHandles(j+1),[0 timeSec(thisSample)]);
+                end
+                yMin = prctile(tempPos,2.5,'all')-20;
+                yMax = prctile(tempPos,97.5,'all')+20;
+                ylim(params.axesHandles(4),[yMin yMax]);
+            end
 
             drawnow; % maybe needed in GUI mode.
         end % en of plot
     end % abortTriggered
     
     fr = fr + 1;
-    refractoryPeriod = refractoryPeriod + 1;
 end % end of video
 
 
@@ -740,8 +776,8 @@ if ~abortTriggered && params.enableVerbosity
     xlabel(params.axesHandles(4),'time (sec)');
     ylabel(params.axesHandles(4),'position (px)');
     legend(params.axesHandles(4),{'hor','ver'});
-    yMin = prctile(position(:,2),2.5,'all')-20;
-    yMax = prctile(position(:,2),97.5,'all')+20;
+    yMin = prctile(position,2.5,'all')-20;
+    yMax = prctile(position,97.5,'all')+20;
     ylim(params.axesHandles(4),[yMin yMax]);
     xlim(params.axesHandles(4),[0 max(timeSec)]);
     hold(params.axesHandles(4),'off');
