@@ -20,7 +20,7 @@ try
     % use fullpath to a video
     p = struct; 
     p.overwrite = true;
-    p.enableVerbosity = 1;
+    p.enableVerbosity = 2;
     p.minPeakThreshold = 0.4;
     p.adaptiveSearch = true;
     [position1, timeSec, rawPosition, peakValueArray, p] = ...
@@ -50,7 +50,7 @@ try
         StripAnalysis(videoArray, p); %#ok<*ASGLU>
     
     success = true;
-catch 
+catch
     success = false;
 end
 

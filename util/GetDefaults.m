@@ -96,7 +96,7 @@ switch module
         default.overwrite = false;
         default.enableGPU = false;
         default.enableVerbosity = false;
-        default.enableReferenceFrameUpdate = true;
+        default.dynamicReference = true;
         default.goodFrameCriterion = 0.8;
         default.swapFrameCriterion = 0.8;
         default.corrMethod = 'mex';
@@ -120,7 +120,7 @@ switch module
         validate.overwrite = @islogical;
         validate.enableGPU = @islogical;
         validate.enableVerbosity = @(x) islogical(x) | (isscalar(x) & x>=0);
-        validate.enableReferenceFrameUpdate = @islogical;
+        validate.dynamicReference = @islogical;
         validate.goodFrameCriterion = @(x) IsPositiveRealNumber(x) & (x<=1);
         validate.swapFrameCriterion = @(x) IsPositiveRealNumber(x) & (x<=1);
         validate.corrMethod = @(x) any(contains({'mex','normxcorr','fft','cuda'},x));

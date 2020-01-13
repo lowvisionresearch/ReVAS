@@ -257,6 +257,7 @@ else
     halfHeight = floor(params.removalAreaSize(2)/2);
 end
 
+isFirstTimePlotting = true;
 
 %% Find stimulus locations
     
@@ -344,40 +345,53 @@ for fr = 1:numberOfFrames
         % visualization, if requested.
         if params.enableVerbosity > 1
 
-            % show cross-correlation output
-            axes(params.axesHandles(1)); %#ok<LAXES>
-            imagesc(frame);
-            axis(params.axesHandles(1),'image');
-            title(params.axesHandles(1),[num2str(fr) ' out of ' num2str(numberOfFrames)]);
-            colormap(params.axesHandles(1),gray(256));
-            caxis(params.axesHandles(1),[0 255]);
-            
-            % show peak values
-            plot(params.axesHandles(2),timeSec,peakValues,'-','linewidth',2); 
-            hold(params.axesHandles(2),'on');
-            plot(params.axesHandles(2),timeSec([1 end]),params.minPeakThreshold*ones(1,2),'--','color',.7*[1 1 1],'linewidth',2);
-            set(params.axesHandles(2),'fontsize',14);
-            xlabel(params.axesHandles(2),'time (sec)');
-            ylabel(params.axesHandles(2),'peak value');
-            ylim(params.axesHandles(2),[0 1]);
-            xlim(params.axesHandles(2),[0 max(timeSec)]);
-            hold(params.axesHandles(2),'off');
-            grid(params.axesHandles(2),'on');
+            if isFirstTimePlotting
+                
+                % show cross-correlation output
+                axes(params.axesHandles(1)); %#ok<LAXES>
+                im = imagesc(frame);
+                axis(params.axesHandles(1),'image');
+                title(params.axesHandles(1),[num2str(fr) ' out of ' num2str(numberOfFrames)]);
+                colormap(params.axesHandles(1),gray(256));
+                caxis(params.axesHandles(1),[0 255]);
 
-            % show raw output traces
-            plot(params.axesHandles(3),timeSec,rawStimulusLocations,'-','linewidth',2);
-            set(params.axesHandles(3),'fontsize',14);
-            xlabel(params.axesHandles(3),'time (sec)');
-            ylabel(params.axesHandles(3),'stimulus location (px)');
-            legend(params.axesHandles(3),{'hor','ver'});
-            yMin = max([1, prctile(stimulusLocations,5,'all')-10]);
-            yMax = min([max([height width]), prctile(stimulusLocations,95,'all')+10]);
-            ylim(params.axesHandles(3),[yMin yMax]);
-            xlim(params.axesHandles(3),[0 max(timeSec)]);
-            hold(params.axesHandles(3),'off');
-            grid(params.axesHandles(3),'on');
+                % show peak values=
+                p21 = plot(params.axesHandles(2),timeSec,peakValues,'-','linewidth',2); 
+                hold(params.axesHandles(2),'on');
+                plot(params.axesHandles(2),timeSec([1 end]),params.minPeakThreshold*ones(1,2),'--','color',.7*[1 1 1],'linewidth',2);
+                set(params.axesHandles(2),'fontsize',14);
+                xlabel(params.axesHandles(2),'time (sec)');
+                ylabel(params.axesHandles(2),'peak value');
+                ylim(params.axesHandles(2),[0 1]);
+                xlim(params.axesHandles(2),[0 max(timeSec)]);
+                hold(params.axesHandles(2),'off');
+                grid(params.axesHandles(2),'on');
+
+
+                % show raw output traces
+                p31 = plot(params.axesHandles(3),timeSec,rawStimulusLocations,'-','linewidth',2);
+                set(params.axesHandles(3),'fontsize',14);
+                xlabel(params.axesHandles(3),'time (sec)');
+                ylabel(params.axesHandles(3),'stimulus location (px)');
+                legend(params.axesHandles(3),{'hor','ver'});
+                yMin = max([1, prctile(stimulusLocations,5,'all')-10]);
+                yMax = min([max([height width]), prctile(stimulusLocations,95,'all')+10]);
+                ylim(params.axesHandles(3),[yMin yMax]);
+                xlim(params.axesHandles(3),[0 max(timeSec)]);
+                hold(params.axesHandles(3),'off');
+                grid(params.axesHandles(3),'on');
+                
+                isFirstTimePlotting = false;
+            else
+                
+                im.CData = frame;
+                set(p21,'YData',peakValues);
+                set(p31(1),'YData',rawStimulusLocations(:,1));
+                set(p31(2),'YData',rawStimulusLocations(:,2));
+            end
 
             drawnow; % maybe needed in GUI mode.
+           
         end
         
         

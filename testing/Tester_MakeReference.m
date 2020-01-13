@@ -23,7 +23,7 @@ try
     % use default params
     p = struct; 
     p.overwrite = true;
-    p.enableVerbosity = 1;
+    p.enableVerbosity = 2;
     p.rowNumbers = stripResults.params.rowNumbers;
     p.oldStripHeight = stripResults.params.stripHeight;
     p.newStripWidth = 256;

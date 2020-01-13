@@ -223,6 +223,7 @@ stripLeft = max(1,round((width - params.newStripWidth)/2));
 stripRight = min(width,round((width + params.newStripWidth)/2)-1);
 stripWidth = stripRight - stripLeft + 1;
 
+isFirstTimePlotting = true;
 
 %% plot peak values and delta motion in advance
 if ~abortTriggered && params.enableVerbosity 
@@ -323,13 +324,21 @@ for fr = 1:numberOfFrames
         %% visualize the reference after every frame
         if params.enableVerbosity > 1
             
-            % plot reference frame
-            axes(params.axesHandles(1)); %#ok<LAXES>
-            imagesc(accumulator ./ counter);
-            colormap(params.axesHandles(1),gray(256));
-            hold(params.axesHandles(1),'on');
-            hold(params.axesHandles(1),'off');
-            axis(params.axesHandles(1),'image')
+            if isFirstTimePlotting
+                % plot reference frame
+                axes(params.axesHandles(1)); %#ok<LAXES>
+                im = imagesc(accumulator ./ counter);
+                colormap(params.axesHandles(1),gray(256));
+                hold(params.axesHandles(1),'on');
+                hold(params.axesHandles(1),'off');
+                axis(params.axesHandles(1),'image');
+                
+                isFirstTimePlotting = false;
+                
+            else
+                im.CData = accumulator ./ counter;
+            end
+            
             title(params.axesHandles(1),['Frame no: ' num2str(fr)]);
             drawnow;
         end
