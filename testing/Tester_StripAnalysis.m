@@ -16,7 +16,7 @@ try
     
     
     %% First test
-    
+   
     % use fullpath to a video
     p = struct; 
     p.overwrite = true;
@@ -26,10 +26,7 @@ try
     [position1, timeSec, rawPosition, peakValueArray, p] = ...
         StripAnalysis(inputVideo, p); %#ok<*ASGLU>
     delete(p.outputFilePath);
-    
-    fprintf('\nStripAnalysis: first test is successfully completed.\n')
-    fprintf('Next test will start in 2 seconds...\n')
-    pause(2);
+  
     
     %% Second test
     
@@ -45,12 +42,27 @@ try
     p.adaptiveSearch = false;
     p.badFrames = false(32,1);
     p.badFrames([2 6]) = true;
+    p.dynamicReference = false;
     p.corrMethod = 'fft';
     [position2, timeSec, rawPosition, peakValueArray, p] = ...
         StripAnalysis(videoArray, p); %#ok<*ASGLU>
+   
     
+    %% Third test
+   
+    % test the CUDA mode, iff there is a CUDA enabled GPU
+    if gpuDeviceCount > 0
+        p = struct;
+        p.dynamicReference = true;
+        p.minPeakThreshold = 0.45;
+        p.corrMethod = 'cuda';
+        p.enableVerbosity = 2;
+        [position2, timeSec, rawPosition, peakValueArray, p] = ...
+            StripAnalysis(videoArray, p); %#ok<*ASGLU>
+    end
+   
     success = true;
-catch
+catch 
     success = false;
 end
 

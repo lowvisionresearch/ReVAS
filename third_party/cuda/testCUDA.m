@@ -2,7 +2,7 @@ clear all
 close all
 clc
 
-
+%%
 g = gpuDevice(1);
 %reset(g);
 % diary('log');
@@ -26,7 +26,7 @@ strip2 = referenceFrame(starty:starty+stripHeight-1,startx:startx+stripWidth-1);
 
 figure(); imshow(strip2,[]);
 %%
-% mexcuda -lcufft cuda_match.cpp helper/convolutionFFT2D.cu helper/cuda_utils.cu
+mexcuda -lcufft cuda_match.cpp helper/convolutionFFT2D.cu helper/cuda_utils.cu
 %%
 cuda_prep(referenceFrame,stripHeight,stripWidth,true)
 %%
@@ -75,7 +75,12 @@ figure; plot(difference,'.');
 nanmean(difference)
 %%
 vid = VideoReader('sample.avi');
-referenceFrame = readFrame(vid);
+referenceFrame = single(readFrame(vid));
+p.stripHeight = 11;
+p.stripWidth = 512;
+
+starty = 30;
+strip1 = referenceFrame(starty:starty+p.stripHeight-1,:);
 
 p.adaptiveSearch = false;
 p.badFrames = false;
@@ -90,8 +95,12 @@ p.rowEnd = size(referenceFrame,1);
 p.enableGPU = true;
 p.copyMap = true;
 p.corrMethod  = 'cuda';
+cuda_prep(p.referenceFrame,p.stripHeight,p.stripWidth,true);
+p.outsize =  size(p.referenceFrame)+[p.stripHeight-1,p.stripWidth-1];
+p.copyMap = true; % note: this slows things down considerably, much faster to just use peaks
+
 [correlationMap, xPeak, yPeak, peakValue, ~] = ...
-          LocateStrip(strip1,params2,struct);
+          LocateStrip(strip1,p,struct);
 %%
 params2 = p;
 params2.corrMethod = 'normxcorr';

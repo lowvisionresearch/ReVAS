@@ -172,7 +172,7 @@ void match(float *kernel, float *correlationMap, int *xPeak, int *yPeak,
     xPeak[0] = (xPeak[0]+fftW/2)%fftH-1; //fftshift
     yPeak[0] = (yPeak[0]+fftW/2)%fftW; //fftshift
     
-    std::cout << xPeak[0] << ", " << yPeak[0] << ": " << peakValue[0] << std::endl;
+    //std::cout << xPeak[0] << ", " << yPeak[0] << ": " << peakValue[0] << std::endl;
    
     // output: correlation map
     if (copyMap){

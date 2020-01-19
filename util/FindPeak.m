@@ -7,12 +7,6 @@ if nargin < 2 || isempty(isGPU)
     isGPU = false;
 end
 
-if isGPU
-    if (gpuDeviceCount==0)
-        isGPU = false;
-    end
-end
-
 
 %% Find peak
 
