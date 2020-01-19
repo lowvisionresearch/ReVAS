@@ -1,7 +1,7 @@
 function params = CreateParamsGUI(callerStr)
 
 if nargin < 1 
-    callerStr = 'StripAnalysis';
+    callerStr = 'RemoveStimuli';
     % error('CreateParamsGUI needs at least one argument (callerStr)!');
 end
 
@@ -24,6 +24,7 @@ paramNames = fieldnames(default);
 
 % remove field that user cannot modify via GUI, e.g., axesHandles
 paramNames(contains(paramNames, 'axesHandles')) = [];
+paramNames(contains(paramNames, 'referenceFrame')) = [];
 paramNames(contains(paramNames, 'peakValues')) = [];
 paramNames(contains(paramNames, 'position')) = [];
 paramNames(contains(paramNames, 'timeSec')) = [];
@@ -31,6 +32,7 @@ paramNames(contains(paramNames, 'rowNumbers')) = [];
 paramNames(contains(paramNames, 'oldStripHeight')) = [];
 paramNames(contains(paramNames, 'badFrames')) = [];
 paramNames(contains(paramNames, 'trim')) = [];
+paramNames(contains(paramNames, 'tilts')) = [];
 paramNames(contains(paramNames, 'toneCurve')) = [];
 numOfParams = length(paramNames);
 
@@ -60,9 +62,9 @@ numericParams = ~logicalParams & ~strParams;
 % read the documentation for the callerStr module.
 filepath = [FindFile(callerStr) '.m'];
 text = fileread(filepath);
-expression = '(?<=\%)(.*?)(?=(\n\s))';
-matchStr = regexp(text,expression,'match');
-helpStr = matchStr{1};
+expression = '(\n{2}?)|(%{2}?)';
+matchStr = regexp(text,expression);
+helpStr = text(1:matchStr(1));
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -88,11 +90,10 @@ gui.fig = figure('units','pixels',...
     'position',[screenSize(3:4)-guiSize guiSize],...
     'menubar','none',...
     'toolbar','none',...
-    'windowstyle','modal',...
     'name',[callerStr ' Parameters'],...
     'numbertitle','off',...
     'resize','off',...
-    'visible','off',...
+    'visible','on',...
     'closerequestfcn',{@CancelCallback});
 
 
@@ -151,6 +152,7 @@ for i=1:length(strParamsIndices)
         'fontsize',fontSize,...
         'string',options{i},...
         'value',thisValue,...
+        'tag',paramNames{strParamsIndices(i)},...
         'tooltip',tooltips{strParamsIndices(i)},...
         'callback',{@StringCallback,validate.(paramNames{strParamsIndices(i)})});
 end
@@ -165,8 +167,8 @@ for i=1:length(numericParamsIndices)
     
     % location of the current uicontrol
     yLoc = guiSize(2) - (i-1 + yStart) * rowSize;
-    labelPos = [1 yLoc-rowSize/4 guiSize(1)*0.6 rowSize];
-    thisPosition = [labelPos(3) labelPos(2)+rowSize/4 guiSize(1)*0.3 labelPos(4)];
+    labelPos = [1 yLoc-rowSize/4 guiSize(1)*0.55 rowSize];
+    thisPosition = [guiSize(1)*0.6 labelPos(2)+rowSize/4 guiSize(1)*0.3 labelPos(4)];
     
     % create the uicontrol
     fld = (paramNames{numericParamsIndices(i)});
@@ -178,6 +180,7 @@ for i=1:length(numericParamsIndices)
         'fontsize',fontSize,...
         'string',num2str(default.(paramNames{numericParamsIndices(i)})),...
         'tooltip',tooltips{numericParamsIndices(i)},...
+        'tag',paramNames{numericParamsIndices(i)},...
         'callback',{@NumericCallback,validate.(paramNames{numericParamsIndices(i)})});
     
     % create the label
@@ -187,6 +190,7 @@ for i=1:length(numericParamsIndices)
         'units','pix',...
         'position',labelPos,...
         'fontsize',fontSize,...
+        'horizontalalignment','right',...
         'string',paramNames{numericParamsIndices(i)});
     
     % now align text/edit box pairs
@@ -246,22 +250,26 @@ uiwait(gui.fig);
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    function LogicalCallback(src,edata,varargin)
-        
-        validateFunc = varargin{3};
-        
+    function LogicalCallback(src,~,varargin)
+        params.(src.String) = src.Value;
     end
 
-    function StringCallback(varargin)
-        
-        validateFunc = varargin{3};
-        
+    function StringCallback(src,~,varargin)
+        params.(src.Tag) = src.String{src.Value};
     end
 
-    function NumericCallback(src,edata,varargin)
+    function NumericCallback(src,~,varargin)
+        value = str2double(src.String);
+        validateFunc = varargin{1};
         
-        validateFunc = varargin{3};
-        
+        if ~validateFunc(value)
+            src.BackgroundColor = [1 .5 .5];
+            pause(0.5);
+            src.BackgroundColor = 0.94 * [1 1 1];
+            src.String = num2str(params.(src.Tag));
+        else
+            params.(src.Tag) = value;
+        end
     end
 
     function OkCallback(varargin)
@@ -275,6 +283,7 @@ uiwait(gui.fig);
     end
     
     function GetHelp(varargin)
+        format compact;
         disp(helpStr)
         helpSize = screenSize(3:4)/2;
         helpPos = [screenSize(3:4)/4 helpSize];
