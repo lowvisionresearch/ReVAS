@@ -19,21 +19,26 @@ if nargin < 4
     isGPU = false;
 end
 
-gpuTask = getCurrentTask;
-strip = WhereToCompute(strip, isGPU);
-referenceFrame = WhereToCompute(referenceFrame, isGPU);
+if isempty(fieldnames(cache))
+    strip = WhereToCompute(strip, isGPU);
+    referenceFrame = WhereToCompute(referenceFrame, isGPU);
+end
 
 % precision of the computations
 eps = 10^-6;
 
 strip = single(strip);
-referenceFrame = single(referenceFrame);
 
-% get dimensions
-[stripHeight, stripWidth] = size(strip);
+% get ref dimensions
 [refHeight, refWidth] = size(referenceFrame);
 
 if isempty(fieldnames(cache))
+    % cast to single
+    referenceFrame = single(referenceFrame);
+    
+    % get strip dims
+    [stripHeight, stripWidth] = size(strip);
+    
     % precomputed arrays
     mask = WhereToCompute(ones(stripHeight, stripWidth,'single'), isGPU);
     fuv = conv2(mask, referenceFrame);
