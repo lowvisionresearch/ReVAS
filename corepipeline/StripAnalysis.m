@@ -264,11 +264,20 @@ referenceFrame = params.referenceFrame;
 
 %% Prepare variables before the big loop
 
+% get dimensions, counts, etc
 [refHeight, refWidth] = size(params.referenceFrame); %#ok<ASGLU>
 stripsPerFrame = round(params.samplingRate / params.frameRate);
 rowNumbers = round(linspace(1,max([1,height - params.stripHeight + 1]),stripsPerFrame));
 params.rowNumbers = rowNumbers;
 numberOfStrips = stripsPerFrame * numberOfFrames;
+
+% set strip width to frame width, iff params.stripWidth is empty
+if isempty(params.stripWidth) || ~IsPositiveInteger(params.stripWidth)
+    params.stripWidth = width;
+end
+stripLeft = max(1,round((width - params.stripWidth)/2));
+stripRight = min(width,stripLeft + params.stripWidth - 1);
+
 
 % two columns for horizontal and vertical movements
 rawPosition = nan(numberOfStrips, 2);
@@ -303,15 +312,16 @@ end
 
 % if CUDA mode is enabled, prepare GPU
 if contains(params.corrMethod,'cuda')
+    params.referenceFrame = single(params.referenceFrame);
     cuda_prep(params.referenceFrame,params.stripHeight,params.stripWidth,true);
     params.outsize =  size(params.referenceFrame)+[params.stripHeight-1,params.stripWidth-1];
     
     % enable correlation map transfer from GPU only when verbosity is set
     % to highest value
     if params.enableVerbosity > 2
-        params.copyMap = true;
+        params.copyMap = 1;
     else
-        params.copyMap = false;
+        params.copyMap = 0;
     end
 end
 
@@ -359,12 +369,6 @@ offset = [0 0];
 % swapped.
 lastFrameSwap = nan;
 
-% set strip width to frame width, iff params.stripWidth is empty
-if isempty(params.stripWidth) || ~IsPositiveInteger(params.stripWidth)
-    params.stripWidth = width;
-end
-stripLeft = max(1,round((width - params.stripWidth)/2));
-stripRight = min(width,round((width + params.stripWidth)/2)-1);
 
 
 
@@ -574,9 +578,9 @@ while fr <= numberOfFrames
                 % create a struct for full-reference crosscorr.
                 anchorOp = struct;
                 anchorOp.enableGPU = params.enableGPU;
-                anchorOp.corrMethod = params.corrMethod;
+                anchorOp.corrMethod = 'mex';
                 anchorOp.adaptiveSearch = false;
-                anchorOp.referenceFrame = params.referenceFrame;
+                anchorOp.referenceFrame = uint8(params.referenceFrame);
                 anchorOp.rowStart = 1;
                 anchorOp.rowEnd = refHeight;
 
@@ -598,7 +602,6 @@ while fr <= numberOfFrames
                     thisOffset = [xPeakAnchor yPeakAnchor] - [xPeakNew yPeakNew];
                 end
                     
-                    
                 % update only when offset is acceptable
                 if any(abs(thisOffset./height) <= params.maxMotionThreshold) && ...
                     all(abs(offset + thisOffset) < height/3)
@@ -616,6 +619,13 @@ while fr <= numberOfFrames
                     fr = fr - 1;
                     if writeResult
                         reader.CurrentTime = (fr)/reader.FrameRate;
+                    end
+                    
+                    % if CUDA is used, we need to prep for new ref
+                    if contains(params.corrMethod,'cuda')
+                        params.referenceFrame = single(params.referenceFrame);
+                        cuda_prep(params.referenceFrame,params.stripHeight,params.stripWidth,true);
+                        params.outsize = size(params.referenceFrame)+[params.stripHeight-1,params.stripWidth-1];
                     end
 
                     % give a warning to let user know about the reference frame
@@ -707,8 +717,8 @@ while fr <= numberOfFrames
                 set(params.axesHandles(4),'AutoListeners__', {});
                 setappdata(params.axesHandles(4),'LegendColorbarManualSpace',1);
                 setappdata(params.axesHandles(4),'LegendColorbarReclaimSpace',1);
-                yMin = prctile(tempPos,2.5,'all')-20;
-                yMax = prctile(tempPos,97.5,'all')+20;
+                yMin = prctile(tempPos(:),2.5,'all')-20;
+                yMax = prctile(tempPos(:),97.5,'all')+20;
                 ylim(params.axesHandles(4),[yMin yMax]);
                 xlim(params.axesHandles(4),[0 timeSec(thisSample)]);
                 hold(params.axesHandles(4),'off');
@@ -729,8 +739,8 @@ while fr <= numberOfFrames
                 for j = 1:3
                     xlim(params.axesHandles(j+1),[0 timeSec(thisSample)]);
                 end
-                yMin = prctile(tempPos,2.5,'all')-20;
-                yMax = prctile(tempPos,97.5,'all')+20;
+                yMin = prctile(tempPos(:),2.5,'all')-20;
+                yMax = prctile(tempPos(:),97.5,'all')+20;
                 ylim(params.axesHandles(4),[yMin yMax]);
             end
 
@@ -804,8 +814,8 @@ if ~abortTriggered && params.enableVerbosity
     xlabel(params.axesHandles(4),'time (sec)');
     ylabel(params.axesHandles(4),'position (px)');
     legend(params.axesHandles(4),{'hor','ver'});
-    yMin = prctile(position,2.5,'all')-20;
-    yMax = prctile(position,97.5,'all')+20;
+    yMin = prctile(position(:),2.5,'all')-20;
+    yMax = prctile(position(:),97.5,'all')+20;
     ylim(params.axesHandles(4),[yMin yMax]);
     xlim(params.axesHandles(4),[0 max(timeSec)]);
     hold(params.axesHandles(4),'off');
