@@ -156,9 +156,23 @@ params = ValidateField(params,default,validate,callerStr);
 %% Handle GPU 
 
 % check if CUDA enabled GPU exists
-if params.enableGPU && (gpuDeviceCount < 1)
+if (params.enableGPU || strcmp(params.corrMethod,'cuda')) && (gpuDeviceCount < 1)
     params.enableGPU = false;
-    RevasWarning('No supported GPU available. StripAnalysis is reverting back to CPU', params);
+    RevasWarning('StripAnalysis: No supported GPU available. Fall back to CPU', params);
+    
+    % if corrMethod was specified as cuda, then we need to change that too.
+    if strcmp(params.corrMethod,'cuda')
+        params.corrMethod = 'mex';
+        RevasWarning('StripAnalysis: CUDA method cannot be used. Fall back to MEX method.', params);
+    end    
+end
+
+% if adaptive search is enabled in cuda mode, issue a warning and fall back
+% to full search.
+if (strcmp(params.corrMethod,'cuda') || strcmp(params.corrMethod,'fft'))...
+        && params.adaptiveSearch
+    params.adaptiveSearch = false;
+    RevasWarning('StripAnalysis: Adaptive search is not supported in CUDA and FFT modes. Fall back to full search.', params);
 end
 
 
@@ -285,6 +299,20 @@ timeSec = dtPerScanLine * ...
 % if gpu is enabled, move reference frame to gpu memory
 if params.enableGPU && ~contains(params.corrMethod,'cuda')
     params.referenceFrame = gpuArray(params.referenceFrame);
+end
+
+% if CUDA mode is enabled, prepare GPU
+if contains(params.corrMethod,'cuda')
+    cuda_prep(params.referenceFrame,params.stripHeight,params.stripWidth,true);
+    params.outsize =  size(params.referenceFrame)+[params.stripHeight-1,params.stripWidth-1];
+    
+    % enable correlation map transfer from GPU only when verbosity is set
+    % to highest value
+    if params.enableVerbosity > 2
+        params.copyMap = true;
+    else
+        params.copyMap = false;
+    end
 end
 
 % Variable for fft corrmethod
@@ -573,7 +601,7 @@ while fr <= numberOfFrames
                     
                 % update only when offset is acceptable
                 if any(abs(thisOffset./height) <= params.maxMotionThreshold) && ...
-                    all(abs(offset + thisOffset) < 200)
+                    all(abs(offset + thisOffset) < height/3)
                     offset = offset + thisOffset;
 
                     % update the reference frame
