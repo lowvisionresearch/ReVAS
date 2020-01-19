@@ -72,7 +72,11 @@ switch params.corrMethod
             FastStripCorrelation(thisStrip, params.referenceFrame(params.rowStart:params.rowEnd,:), cache, params.enableGPU);
         
     case 'cuda'
-        % TO-DO
+        [corrmap,xPeak,yPeak,peakValue,~] = cuda_match(thisStrip,params.copyMap);
+        if params.copyMap
+            correlationMap = fftshift(corrmap);
+            correlationMap = correlationMap(1:params.outsize(1),1:params.outsize(2));
+        end
 
     otherwise
         error('LocateStrip: unknown cross-correlation method.');
