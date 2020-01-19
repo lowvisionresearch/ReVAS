@@ -82,6 +82,7 @@ function [outputVideo, varargout] = RemoveStimuli(inputVideo, params)
 %       params.removalAreaSize = [11 11];
 %       RemoveStimuli(inputVideo, params);
 
+
 %% Allow for aborting if not parallel processing
 global abortTriggered;
 
