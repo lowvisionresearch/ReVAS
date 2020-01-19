@@ -156,12 +156,13 @@ params = ValidateField(params,default,validate,callerStr);
 %% Handle GPU 
 
 % check if CUDA enabled GPU exists
-if (params.enableGPU || strcmp(params.corrMethod,'cuda')) && (gpuDeviceCount < 1)
+isCuda = contains(params.corrMethod,'cuda');
+if (params.enableGPU || isCuda) && (gpuDeviceCount < 1)
     params.enableGPU = false;
     RevasWarning('StripAnalysis: No supported GPU available. Fall back to CPU', params);
     
     % if corrMethod was specified as cuda, then we need to change that too.
-    if strcmp(params.corrMethod,'cuda')
+    if isCuda
         params.corrMethod = 'mex';
         RevasWarning('StripAnalysis: CUDA method cannot be used. Fall back to MEX method.', params);
     end    
@@ -169,7 +170,7 @@ end
 
 % if adaptive search is enabled in cuda mode, issue a warning and fall back
 % to full search.
-if (strcmp(params.corrMethod,'cuda') || strcmp(params.corrMethod,'fft'))...
+if (isCuda || strcmp(params.corrMethod,'fft'))...
         && params.adaptiveSearch
     params.adaptiveSearch = false;
     RevasWarning('StripAnalysis: Adaptive search is not supported in CUDA and FFT modes. Fall back to full search.', params);
@@ -306,12 +307,12 @@ timeSec = dtPerScanLine * ...
     absoluteFrameNo * (height + sum(params.trim)),numberOfStrips,1);
 
 % if gpu is enabled, move reference frame to gpu memory
-if params.enableGPU && ~contains(params.corrMethod,'cuda')
+if params.enableGPU && ~isCuda
     params.referenceFrame = gpuArray(params.referenceFrame);
 end
 
 % if CUDA mode is enabled, prepare GPU
-if contains(params.corrMethod,'cuda')
+if isCuda
     params.referenceFrame = single(params.referenceFrame);
     cuda_prep(params.referenceFrame,params.stripHeight,params.stripWidth,true);
     params.outsize =  size(params.referenceFrame)+[params.stripHeight-1,params.stripWidth-1];
@@ -405,7 +406,7 @@ while fr <= numberOfFrames
         end
         
         % if GPU is enabled, transfer the frame to GPU memory
-        if params.enableGPU
+        if params.enableGPU && ~isCuda
             frame = gpuArray(frame);
         end
         
@@ -473,7 +474,7 @@ while fr <= numberOfFrames
                 if params.enableVerbosity > 2
                     
                     % show cross-correlation output
-                    if params.enableGPU
+                    if params.enableGPU && ~isCuda
                         correlationMap = gather(correlationMap);
                     end
                     
@@ -511,7 +512,7 @@ while fr <= numberOfFrames
             if params.subpixelDepth ~= 0
                 [xPeak, yPeak, peakValue] = ...
                     Interpolation2D(correlationMap, xPeak, yPeak, ...
-                        params.neighborhoodSize, params.subpixelDepth, [], params.enableGPU);
+                        params.neighborhoodSize, params.subpixelDepth, [], params.enableGPU & ~isCuda);
             end
             
             % update the traces/stats
@@ -577,7 +578,7 @@ while fr <= numberOfFrames
                 
                 % create a struct for full-reference crosscorr.
                 anchorOp = struct;
-                anchorOp.enableGPU = params.enableGPU;
+                anchorOp.enableGPU = params.enableGPU & ~isCuda;
                 anchorOp.corrMethod = 'mex';
                 anchorOp.adaptiveSearch = false;
                 anchorOp.referenceFrame = uint8(params.referenceFrame);
@@ -598,7 +599,7 @@ while fr <= numberOfFrames
                 % plan B for finding the peak
                 if any(abs(thisOffset./height) > params.maxMotionThreshold)
                     cmFilt = cm - imgaussfilt(cm,5);
-                    [xPeakAnchor, yPeakAnchor, ~] = FindPeak(cmFilt, params.enableGPU);
+                    [xPeakAnchor, yPeakAnchor, ~] = FindPeak(cmFilt, params.enableGPU & ~isCuda);
                     thisOffset = [xPeakAnchor yPeakAnchor] - [xPeakNew yPeakNew];
                 end
                     
@@ -622,7 +623,7 @@ while fr <= numberOfFrames
                     end
                     
                     % if CUDA is used, we need to prep for new ref
-                    if contains(params.corrMethod,'cuda')
+                    if isCuda
                         params.referenceFrame = single(params.referenceFrame);
                         cuda_prep(params.referenceFrame,params.stripHeight,params.stripWidth,true);
                         params.outsize = size(params.referenceFrame)+[params.stripHeight-1,params.stripWidth-1];
