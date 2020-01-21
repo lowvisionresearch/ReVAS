@@ -11,6 +11,7 @@ for i=1:nTests
     [~,testerFunctionStr] = fileparts(testerFunctions(i).name);
     moduleBeingTested{i} = testerFunctionStr((strfind(testerFunctionStr,'_')+1):end);
     score(i) = eval(testerFunctionStr);
+    close all;
 end
 
 report = table(score,'VariableNames',{'Passed'},'RowNames',moduleBeingTested);

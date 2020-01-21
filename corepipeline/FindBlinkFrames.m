@@ -106,9 +106,16 @@ params = ValidateField(params,default,validate,callerStr);
 % check if axes handles are provided, if not, create axes.
 if params.enableVerbosity && isempty(params.axesHandles)
     fh = figure(2020);
-    set(fh,'name','Find Blink Frames','units','normalized','outerposition',[0.16 0.053 0.67 0.51]);
+    set(fh,'name','Find Blink Frames',...
+           'units','normalized',...
+           'outerposition',[0.16 0.053 0.67 0.51],...
+           'menubar','none',...
+           'toolbar','none',...
+           'numbertitle','off');
     params.axesHandles(1) = subplot(1,1,1);
     cla(params.axesHandles(1));
+    tb = get(params.axesHandles(1),'toolbar');
+    tb.Visible = 'on';
 end
 
 
@@ -236,12 +243,6 @@ if nargout > 4 || writeResult
 end
 
 
-%% Save to output mat file
-
-if writeResult
-    save(badFramesMatFilePath, 'badFrames','imStats','initialRef','params');
-end
-
 
 %% if verbosity enabled, show the found blink frames
 
@@ -272,3 +273,13 @@ if params.enableVerbosity
 end
 
 
+
+%% Save to output mat file
+
+if writeResult
+    % remove unnecessary fields
+    params = RemoveFields(params,{'commandWindowHandle','axesHandles'}); 
+    
+    % save results
+    save(badFramesMatFilePath, 'badFrames','imStats','initialRef','params');
+end

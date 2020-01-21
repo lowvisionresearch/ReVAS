@@ -13,11 +13,13 @@ try
     
     % use default params, but correct for torsion
     p = struct; 
+    p.overwrite = true;
     p.fixTorsion = true;
     p.anchorStripHeight = 32;
     p.enableVerbosity = 1;
-    [offset, bestTilt, p, peakValues, cMap] = ...
-        ReReference(localRefPath, globalRefPath, p); %#ok<*ASGLU>
+    p.globalRefArgument = globalRefPath;
+    [offset, bestTilt, p, peakValues] = ReReference(localRefPath, p); %#ok<*ASGLU>
+    delete(p.outputFilePath);
     
     assert(abs(bestTilt - 3.25) < 0.1);
 
@@ -30,10 +32,10 @@ try
     localRef = params.referenceFrame;
     
     angle = -1.35;
-    newGlobalRef = padarray(imrotate(localRef,angle,'bilinear'),21);
-    [offset, bestTilt, p, peakValues, cMap] = ...
-        ReReference(localRef, newGlobalRef, p);
+    p.globalRefArgument = padarray(imrotate(localRef,angle,'bilinear'),21);
+    [offset, bestTilt, p, peakValues] = ReReference(localRef, p);
     
+    % check if we found the tilt correctly (to some degree)
     assert(abs(bestTilt - angle) < 0.1);
 
     success = true;
