@@ -1,11 +1,7 @@
 function [offset, bestTilt, varargout] = ...
-    ReReference(localRefArgument, globalRefArgument, params)
+    ReReference(localRefArgument, params)
 %REREFERENCE computes the offsets required to re-reference one reference
 %   onto another.
-%
-%   This function is not meant to be a part of the core pipeline, i.e., it
-%   does not write/modify any files. It's meant to be used as an
-%   intermediate routine. 
 %
 %   -----------------------------------
 %   Input
@@ -14,18 +10,21 @@ function [offset, bestTilt, varargout] = ...
 %   |localRefArgument| is a 2D array representing a local ref or a full
 %   path to a file containing 'referenceFrame' or 'params.referenceFrame'.
 %
-%   |globalRefArgument| is a 2D array representing a local ref or a full
-%   path to a file containing 'referenceFrame' or 'params.referenceFrame'.
-%
 %   |params| is a struct as specified below.
 %
 %   -----------------------------------
 %   Fields of the 'params' structure
 %   --------------------------------
+%   overwrite               : set to true to overwrite existing files.
+%                             Set to false to abort the function call if the
+%                             files already exist. (default false)
+%   globalRefArgument       : is a 2D array representing a local ref or a 
+%                             full path to a file containing 
+%                             'referenceFrame' or 'params.referenceFrame'.
 %   enableGPU               : a logical. if set to true, use GPU. (works for 
 %                             'mex' method only.
-%   enableVerbosity         : set to true to report back plots during execution. (
-%                             default false)
+%   enableVerbosity         : set to true to report back plots during
+%                             execution. (default false)
 %   corrMethod              : method to use for cross-correlation. you can 
 %                             choose from 'normxcorr' for matlab's built-in
 %                             normxcorr2, 'mex' for opencv's correlation, or 
@@ -64,11 +63,11 @@ function [offset, bestTilt, varargout] = ...
 %
 %   varargout{1} : params.
 %   varargout{2} : peakValues.
-%   varargout{3} : cMap for bestTilt
 %
 %   -----------------------------------
 %   Example usage
 %   -----------------------------------
+%   TO DO
 
 
 %% Allow for aborting if not parallel processing
@@ -79,6 +78,19 @@ global abortTriggered;
 if isempty(abortTriggered)
     abortTriggered = false;
 end
+
+
+%% Determine inputType type.
+if ischar(localRefArgument)
+    % A path was passed in.
+    % Read and once finished with this module, write the result.
+    writeResult = true;
+else
+    % A video matrix was passed in.
+    % Do not write the result; return it instead.
+    writeResult = false;
+end
+
 
 %% Set parameters to defaults if not specified.
 
@@ -105,8 +117,46 @@ end
 % check if axes handles are provided, if not, create axes.
 if params.enableVerbosity && isempty(params.axesHandles)
     fh = figure(2020);
-    set(fh,'name','Re-reference','units','normalized','outerposition',[0.16 0.053 0.67 0.51]);
+    set(fh,'name','Re-reference',...
+           'units','normalized',...
+           'outerposition',[0.16 0.053 0.67 0.51],...
+           'menubar','none',...
+           'toolbar','none',...
+           'numbertitle','off');
     params.axesHandles(1) = subplot(1,1,1);
+    cla(params.axesHandles(1))
+    tb = get(params.axesHandles(1),'toolbar');
+    tb.Visible = 'on';
+end
+
+
+%% Handle overwrite scenarios.
+
+if writeResult
+    outputFilePath = Filename(localRefArgument, 'reref');
+    params.outputFilePath = outputFilePath;
+    
+    if ~exist(outputFilePath, 'file')
+        % left blank to continue without issuing RevasMessage in this case
+    elseif ~params.overwrite
+        RevasMessage(['ReReference() did not execute because it would overwrite existing file. (' outputFilePath ')'], params);
+        RevasMessage('ReReference() is returning results from existing file.',params); 
+        
+        % try loading existing file contents
+        load(outputFilePath,'offset','bestTilt','params',...
+            'peakValues','cMap');
+        
+        if nargout > 2
+            varargout{1} = params;
+        end
+        if nargout > 3
+            varargout{2} = peakValues;
+        end
+        
+        return;
+    else
+        RevasMessage(['ReReference() is proceeding and overwriting an existing file. (' outputFilePath ')'], params);  
+    end
 end
 
 
@@ -119,7 +169,7 @@ end
 
 %% Handle |globalRefArgument| scenarios.
 
-globalRef = HandleInputArgument(globalRefArgument);
+globalRef = HandleInputArgument(params.globalRefArgument);
 if isempty(globalRef)
     error('ReReference: error occured while loading global ref!');
 end
@@ -231,7 +281,7 @@ rereferenceStrip = correctedLocalRef(anchorSt:anchorEn, stripLeft:stripRight);
 xPeakLocal = params.anchorStripWidth + stripLeft - 1;
 yPeakLocal = anchorSt + size(anchorStrip,1) - 1;
 
-[offset, ~, ~, cMap] = ReReferenceHelper(rereferenceStrip, anchorOp, anchorStripSize, [xPeakLocal yPeakLocal]);
+offset = ReReferenceHelper(rereferenceStrip, anchorOp, anchorStripSize, [xPeakLocal yPeakLocal]);
 
 
 
@@ -248,20 +298,24 @@ if ~abortTriggered && params.enableVerbosity
 end
 
 
+%% Save filtered data.
+if writeResult && ~abortTriggered
+    
+    % remove unnecessary fields
+    params = RemoveFields(params,{'commandWindowHandle','axesHandles','globalRefArgument'}); 
+
+    % save output
+    save(outputFilePath,'offset','bestTilt','params','peakValues');
+end
+
 %% return optional outputs
 
 if nargout > 2
     varargout{1} = params;
 end
 
-
 if nargout > 3
     varargout{2} = peakValues;
-end
-
-
-if nargout > 4
-    varargout{3} = cMap;
 end
 
 

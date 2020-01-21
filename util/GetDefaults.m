@@ -1,8 +1,19 @@
 function [default, validate] = GetDefaults(module)
+% [default, validate] = GetDefaults(module)
+%
+%   Returns default parameter values and validation functions for each
+%   corepipeline module. Case-insensitive. 'module' is a char array
+%   representing the name of the corepipeline function.
+%
+% Mehmet N. Agaoglu 1/19/2020 
+%
+
+% make lower case for more robust matches
+module = lower(module);
 
 switch module
       
-    case 'FindBlinkFrames'
+    case 'findblinkframes'
         % default values
         default.overwrite = false;
         default.enableVerbosity = false;
@@ -21,7 +32,7 @@ switch module
         validate.numberOfBins = @(x) IsPositiveInteger(x) & (x<=256);
         validate.meanDifferenceThreshold = @IsPositiveRealNumber;    
         
-    case 'TrimVideo'
+    case 'trimvideo'
         % default values
         default.overwrite = false;
         default.badFrames = false;
@@ -32,7 +43,7 @@ switch module
         validate.badFrames = @(x) all(islogical(x));
         validate.borderTrimAmount = @(x) all(IsNaturalNumber(x)) & (length(x)==4);
         
-    case 'RemoveStimuli'
+    case 'removestimuli'
         % default values
         default.overwrite = false;
         default.enableVerbosity = false;
@@ -61,7 +72,7 @@ switch module
         validate.stimulusThickness = @IsPositiveInteger;
         validate.stimulusPolarity = @(x) islogical(x) | (isnumeric(x) & any(x == [0 1]));
      
-    case 'GammaCorrect'
+    case 'gammacorrect'
         % default values
         default.overwrite = false;
         default.method = 'simpleGamma';
@@ -78,7 +89,7 @@ switch module
         validate.histLevels = @IsPositiveInteger;
         validate.badFrames = @(x) all(islogical(x));  
         
-    case 'BandpassFilter'
+    case 'bandpassfilter'
         % default values
         default.overwrite = false;
         default.badFrames = false;
@@ -91,7 +102,7 @@ switch module
         validate.smoothing = @IsPositiveRealNumber;
         validate.lowSpatialFrequencyCutoff = @IsNonNegativeRealNumber;
     
-    case 'StripAnalysis' 
+    case 'stripanalysis' 
         % default values
         default.overwrite = false;
         default.enableGPU = false;
@@ -141,7 +152,7 @@ switch module
         validate.trim = @(x) all(IsNaturalNumber(x)) & (length(x)==2);
         
         
-    case 'MakeReference'
+    case 'makereference'
         
         % default values
         default.overwrite = false;
@@ -180,7 +191,7 @@ switch module
         validate.enhanceStrips = @islogical;
         
         
-    case 'ReReference'
+    case 'rereference'
         
         % default values
         default.enableGPU = false;
@@ -192,6 +203,7 @@ switch module
         default.anchorStripHeight = 15;
         default.anchorStripWidth = [];
         default.axesHandles = [];
+        default.globalRefArgument = [];
         
         % validation functions
         validate.enableGPU = @islogical;
@@ -203,8 +215,9 @@ switch module
         validate.anchorRowNumber = @(x) isempty(x) | IsPositiveInteger(x);
         validate.anchorStripWidth = @(x) isempty(x) | IsPositiveInteger(x);
         validate.axesHandles = @(x) isempty(x) | all(ishandle(x));
+        validate.globalRefArgument = @(x) (ischar(x) | (isnumeric(x) & size(x,1)>1 & size(x,2)>1)) & ~islogical(x);
 
-    case 'FilterEyePosition'
+    case 'filtereyeposition'
         
         % default values
         default.overwrite = false;
@@ -230,7 +243,7 @@ switch module
         validate.samplingRate = @(x) isempty(x) | IsPositiveInteger(x);
         validate.axesHandles = @(x) isempty(x) | all(ishandle(x));
         
-    case 'FindSaccadesAndDrifts'
+    case 'findsaccadesanddrifts'
         
         % default values
         default.enableVerbosity = false;

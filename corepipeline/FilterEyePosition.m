@@ -137,7 +137,12 @@ end
 % check if axes handles are provided, if not, create axes.
 if params.enableVerbosity && isempty(params.axesHandles)
     fh = figure(2020);
-    set(fh,'name','Filter Eye Position','units','normalized','outerposition',[0.16 0.053 0.67 0.51]);
+    set(fh,'name','Filter Eye Position',...
+           'units','normalized',...
+           'outerposition',[0.16 0.053 0.67 0.51],...
+           'menubar','none',...
+           'toolbar','none',...
+           'numbertitle','off');
     if params.enableVerbosity == 1
         params.axesHandles(1) = subplot(1,1,1); % hor and ver
     else
@@ -147,6 +152,8 @@ if params.enableVerbosity && isempty(params.axesHandles)
        
     for i=1:length(params.axesHandles)
         cla(params.axesHandles(i));
+        tb = get(params.axesHandles(i),'toolbar');
+        tb.Visible = 'on';
     end
 end
 
@@ -393,12 +400,8 @@ end
 %% Save filtered data.
 if writeResult && ~abortTriggered
     
-    try
-        % remove pointers to graphics objects
-        params = rmfield(params,'commandWindowHandle');
-        params = rmfield(params,'axesHandles');
-    catch
-    end
+    % remove unnecessary fields
+    params = RemoveFields(params,{'commandWindowHandle','axesHandles'}); 
     
     data.filteredEyePositions = filteredEyePositions;
     data.filteredFullArray = filteredFullArray;

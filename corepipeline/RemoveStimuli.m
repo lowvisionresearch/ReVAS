@@ -83,6 +83,8 @@ function [outputVideo, varargout] = RemoveStimuli(inputVideo, params)
 %       RemoveStimuli(inputVideo, params);
 
 
+
+
 %% Allow for aborting if not parallel processing
 global abortTriggered;
 
@@ -120,12 +122,19 @@ params = ValidateField(params,default,validate,callerStr);
 % check if axes handles are provided, if not, create axes.
 if params.enableVerbosity && isempty(params.axesHandles)
     fh = figure(2020);
-    set(fh,'name','Remove Stimuli','units','normalized','outerposition',[0.16 0.053 0.67 0.51]);
+    set(fh,'name','Remove Stimuli',...
+           'units','normalized',...
+           'outerposition',[0.16 0.053 0.67 0.51],...
+           'menubar','none',...
+           'toolbar','none',...
+           'numbertitle','off');
     params.axesHandles(1) = subplot(2,3,[1 2 4 5]);
     params.axesHandles(2) = subplot(2,3,3);
     params.axesHandles(3) = subplot(2,3,6);
     for i=1:3
         cla(params.axesHandles(i));
+        tb = get(params.axesHandles(i),'toolbar');
+        tb.Visible = 'on';
     end
 end
 

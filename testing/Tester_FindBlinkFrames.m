@@ -47,7 +47,7 @@ try
     assert(sum(badFrames) == 0);
     
     success = true;
-catch 
+catch
     success = false;
 end
 
