@@ -16,7 +16,7 @@ function outputFilePath = Filename(inputFilePath, moduleToApply, varargin)
 %   - strip
 %   - filtered
 %   - reref
-%   - sacsdrift
+%   - sacsdrifts
 %
 %  MTS 8/23/19 wrote the initial version
 %  MNA 12/26/19 modified according to new ReVAS guidelines.

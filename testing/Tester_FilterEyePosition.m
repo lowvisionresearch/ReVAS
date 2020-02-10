@@ -37,6 +37,7 @@ try
     % use a filepath as input and only plot the final output
     save(hiddenFile,'positionDeg','timeSec');
     p.enableVerbosity = 1;
+    p.axesHandles = [];
     [~, ~, p] = FilterEyePosition(hiddenFile, p);
     delete(hiddenFile);
     delete(p.outputFilePath);

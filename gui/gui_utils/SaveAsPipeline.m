@@ -5,6 +5,8 @@ function SaveAsPipeline(varargin)
 %
 % Mehmet N. Agaoglu 1/20/2020 
 
+fprintf('%s: SaveAsPipeline launched!\n',datestr(datetime));
+
 % first argument is the source
 src = varargin{1};
 
@@ -16,12 +18,16 @@ revas = varargin{3};
 
 if ~isfield(revas.gui.UserData,'pipeline') || ...
    ~isfield(revas.gui.UserData,'pipeParams') 
-    error('SavePipeline: nothing to save! First load an existing one.')
+    errordlg('SavePipeline: nothing to save! First load an existing one.',...
+        'SaveAsPipeline error','modal')
+    fprintf('%s: SaveAsPipeline returned with an error: Nothing to save!\n',datestr(datetime));
+    return;
 end
 
 % dialog box to select a pipe file name
 [file,path,~] = uiputfile('*.mat','Enter a pipeline filename');
 if file == 0
+    fprintf('%s: SaveAsPipeline is returning without saving. User cancelled the operation.\n',datestr(datetime));
     return;
 else
     revas.gui.UserData.pipelineFile = fullfile(path,file);
@@ -35,3 +41,5 @@ save(revas.gui.UserData.pipelineFile,'pipeline','pipeParams');
 % disable save menu
 set(siblingObjs(contains({siblingObjs.Text},'Save') & ...
                ~contains({siblingObjs.Text},'Save As')),'Enable','off');
+
+fprintf('%s: Pipeline has been saved in %s\n',datestr(datetime),revas.gui.UserData.pipelineFile);

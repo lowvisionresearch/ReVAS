@@ -1,22 +1,29 @@
-function params = ModifyParams(callerStr, varargin)
-% params = ModifyParams(callerStr, varargin)
+function params = ModifyParams(inputArgument, varargin)
+% params = ModifyParams(inputArgument, varargin)
 %
 %   Generic tool for creating sub-GUIs for parameter selection, adjustment,
 %   and editing. For a given callerStr, it gets parameter fields, default
 %   values, and validation functions from GetDefaults function, removes
 %   the fields that cannot be set by the user, and creates a GUI with
 %   uicontrols for each remaining parameter. 
+% 
+%   inputArgument must either be a char array, name of the module, e.g.,
+%   StripAnalysis, or a cell array with a length of two
+%   {callerStr,default}
 %
 %   Mehmet N. Agaoglu 1/19/2020 mnagaoglu@gmail.com
 
+fprintf('%s: ModifyParams launched!\n',datestr(datetime));
+
 if nargin < 1 
-    error('CreateParamsGUI needs at least one argument (callerStr)!');
+    error('ModifyParams needs at least one argument (callerStr)!');
 end
+
 
 % to allow for non-UI calls, we have the optional flag noGUI. If it is set
 % to true, we get params and return.
 if nargin < 2
-    noGUI = false;
+    noGUI = 0;
 else
     noGUI = varargin{1};
 end
@@ -38,7 +45,20 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % get default parameters and validation functions
-[default, validate] = GetDefaults(callerStr);
+if ischar(inputArgument)
+    callerStr = inputArgument;
+    [default, validate] = GetDefaults(callerStr);  
+elseif iscell(inputArgument) && length(inputArgument) == 2
+    callerStr = inputArgument{1};
+    default = inputArgument{2};
+    [~, validate] = GetDefaults(callerStr);
+else
+    errStr = ['ModifyParams: callerStr must either be a char array, name of the module'...
+           'e.g., StripAnalysis, or a cell array with a length of two '...
+           '{callerStr,default,validate}'];
+    errordlg(errStr,'ModifyParams error','modal');
+    fprintf('%s: ModifyParams returned with an error: %s\n',datestr(datetime),errStr);
+end
 
 % in case user closes the GUI window, return default values
 params = default;
@@ -65,11 +85,21 @@ if noGUI
     return;
 end
 
+
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%
+% Determine parameter types. UI controls will be created accordingly.
+%
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % first look for logical or string type params, and also get tooltip strings
 numOfParams = length(paramNames);
 logicalParams = false(numOfParams,1);
 strParams = false(numOfParams,1);
-specialParams = false(numOfParams,1);
+multiTypeParams = false(numOfParams,1);
 tooltips = cell(numOfParams,1);
 characterLength = nan(numOfParams,1);
 for i=1:numOfParams
@@ -77,7 +107,7 @@ for i=1:numOfParams
     % tooltips show the validation functions
     tooltips{i} = func2str(validate.(paramNames{i}));
     
-    % character length will be used to properly positioning uicontrols
+    % character length will be used to properly position uicontrols
     characterLength(i) = length(paramNames{i});
     
     % label params as logical(checkbox) or string(popup menu)
@@ -86,31 +116,16 @@ for i=1:numOfParams
     
     % some parameters accept filepath, array, or number. Treat them as edit
     % boxes.
-    specialParams(i) = logicalParams(i) & contains(tooltips{i},'ischar') & ...
+    multiTypeParams(i) = logicalParams(i) & contains(tooltips{i},'ischar') & ...
         isempty(default.(paramNames{i}));
+
 end
 % make sure we remove duplicate classification of parameter type
-logicalParams(specialParams) = false;
-
-% special case is for enableVerbosity in StripAnalysis and MakeReference,
-% which provide more verbosity options. 'none' no verbosity, 'video'
-% plots per video, 'frame' plots per frame, 'strip' plots per strip.
-if contains(callerStr,'StripAnalysis','IgnoreCase',true) || ...
-   contains(callerStr,'MakeReference','IgnoreCase',true)    
-    ix = contains(paramNames, 'enableVerbosity');
-    logicalParams(ix) = false;
-    strParams(ix) = true;
-    validate.(paramNames{ix}) = @(x) any(contains({'none','video','frame','strip'},x));
-    default.(paramNames{ix}) = 'none';
-    tooltips{ix} = func2str(validate.(paramNames{ix}));
-    enableSpecialVerbosity = true;
-else
-    enableSpecialVerbosity = false;
-end
+logicalParams(multiTypeParams) = false;
 
 % now get different options for string type params.
 strParamsIndex = find(strParams);
-options = cell(sum(strParams));
+options = cell(sum(strParams),1);
 for i=1:length(options)
     strToEvaluate = regexp(tooltips{strParamsIndex(i)},'{.*}','match');
     options{i} = eval(strToEvaluate{1});
@@ -131,10 +146,16 @@ helpStr = ReadHelp(callerStr);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % get display dimensions and place the gui to the right edge of the display
-r = groot;
-screenSize = r.ScreenSize;
-ppi = r.ScreenPixelsPerInch;
-fontSize = 12;
+if isempty(parent)
+    r = groot;
+    screenSize = r.ScreenSize;
+    ppi = r.ScreenPixelsPerInch;
+    fontSize = 12;
+else
+    screenSize = parent.UserData.screenSize;
+    ppi = parent.UserData.ppi;
+    fontSize = parent.UserData.fontSize;
+end
 guiSize = [min(screenSize(3), max(characterLength)*3*ppi/fontSize)...
            min(screenSize(4), (numOfParams + 2)*fontSize*2.5)];
 rowSize = guiSize(2)/(numOfParams + 2);
@@ -220,8 +241,8 @@ for i=1:length(strParamsIndices)
 
     % location of the current uicontrol
     yLoc = guiSize(2) - (i + length(logicalParamsIndices)) * rowSize;
-    labelPos = [1 yLoc-rowSize/4 guiSize(1)*0.55 rowSize];
-    thisPosition = [guiSize(1)*0.6 labelPos(2)+rowSize/4 guiSize(1)*0.3 labelPos(4)];
+    labelPos = [1 yLoc-rowSize/4 guiSize(1)*0.35 rowSize];
+    thisPosition = [guiSize(1)*0.4 labelPos(2)+rowSize/4 guiSize(1)*0.45 labelPos(4)];
     
     % value of default string
     thisDefault = default.(paramNames{strParamsIndices(i)});
@@ -264,7 +285,7 @@ for i=1:length(strParamsIndices)
 
 end
 
-% Finally, layout all numeric fields. 
+% Layout all numeric fields. 
 % Note that for every numeric field, we have to put a static text field as
 % its label.
 numericParamsIndices = find(numericParams);
@@ -361,7 +382,7 @@ uiwait(gui.fig);
     end
 
     function StringCallback(src,~,varargin)
-        if ~enableSpecialVerbosity
+        if ~(strcmp(src.Tag, 'enableVerbosity'))
             params.(src.Tag) = src.String{src.Value};
         else
             params.(src.Tag) = src.Value;
@@ -369,7 +390,7 @@ uiwait(gui.fig);
     end
 
     function NumericCallback(src,~,varargin)
-        value = str2double(src.String);
+        value = str2num(['[' src.String ']']); %#ok<ST2NM>
         validateFunc = varargin{1};
         
         if ~validateFunc(value)
@@ -383,12 +404,14 @@ uiwait(gui.fig);
     end
 
     function OkCallback(varargin)
+        fprintf('%s: ModifyParams, user clicked OK.\n',datestr(datetime));
         delete(gui.fig);
     end
 
     % If user clicks Cancel, return an empty array.
     function CancelCallback(varargin)
         params = [];
+        fprintf('%s: ModifyParams, user cancelled.\n',datestr(datetime));
         delete(gui.fig); 
     end
     

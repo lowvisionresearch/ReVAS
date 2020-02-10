@@ -106,7 +106,7 @@ switch module
         % default values
         default.overwrite = false;
         default.enableGPU = false;
-        default.enableVerbosity = false;
+        default.enableVerbosity = 'none';
         default.dynamicReference = true;
         default.goodFrameCriterion = 0.8;
         default.swapFrameCriterion = 0.8;
@@ -130,7 +130,7 @@ switch module
         % validation functions 
         validate.overwrite = @islogical;
         validate.enableGPU = @islogical;
-        validate.enableVerbosity = @(x) islogical(x) | (isscalar(x) & x>=0);
+        validate.enableVerbosity = @(x) any(contains({'none','video','frame','strip'},x));
         validate.dynamicReference = @islogical;
         validate.goodFrameCriterion = @(x) IsPositiveRealNumber(x) & (x<=1);
         validate.swapFrameCriterion = @(x) IsPositiveRealNumber(x) & (x<=1);
@@ -156,7 +156,7 @@ switch module
         
         % default values
         default.overwrite = false;
-        default.enableVerbosity = false;
+        default.enableVerbosity = 'none';
         default.badFrames = false;
         default.rowNumbers = []; % fail, if not provided
         default.positions = []; % fail, if not provided
@@ -174,7 +174,7 @@ switch module
         
         % validation functions 
         validate.overwrite = @islogical;
-        validate.enableVerbosity = @(x) islogical(x) | (isscalar(x) & x>=0);
+        validate.enableVerbosity = @(x) any(contains({'none','video','frame'},x));
         validate.badFrames = @(x) all(islogical(x));
         validate.rowNumbers = @(x) (length(x)>=1 & IsPositiveInteger(x));
         validate.positions = @(x) (isnumeric(x) & size(x,1)>=1 & size(x,2)==2);
@@ -226,8 +226,10 @@ switch module
         default.maxPosition = 10; % deg
         default.maxVelocity = 500; % deg/sec
         default.beforeAfterMs = 1; % msec
-        default.filters = {'medfilt1','sgolayfilt','notch','notch'}; 
-        default.filterParams = {7,[3 21],[29 31 2],[59 61 2]};
+        default.medfilt1 = 7;
+        default.sgolayfilt = [3 21];
+        default.notch1 = [29 31 2];
+        default.notch2 = [59 61 2];
         default.samplingRate = [];
         default.axesHandles = [];
         
@@ -238,8 +240,10 @@ switch module
         validate.maxPosition = @IsNonNegativeRealNumber;
         validate.maxVelocity = @IsNonNegativeRealNumber;
         validate.beforeAfterMs = @IsNonNegativeRealNumber;
-        validate.filters = @(x) all(contains(x,{'notch','medfilt1','sgolayfilt'}));
-        validate.filterParams = @(x) iscell(x); % intentionally left without much control since filters may have any type of params
+        validate.medfilt1 = @(x) (IsNonNegativeRealNumber(x) & length(x)==1);
+        validate.sgolayfilt = @(x) isempty(x) | (IsNonNegativeRealNumber(x) & length(x)==2);
+        validate.notch1 = @(x) isempty(x) | (IsNonNegativeRealNumber(x) & length(x)==3);
+        validate.notch2 = @(x) isempty(x) | (IsNonNegativeRealNumber(x) & length(x)==3);
         validate.samplingRate = @(x) isempty(x) | IsPositiveInteger(x);
         validate.axesHandles = @(x) isempty(x) | all(ishandle(x));
         
