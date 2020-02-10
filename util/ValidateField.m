@@ -20,7 +20,13 @@ for i=1:length(fields)
         str = [];
         if iscell(thisFieldContents)
             for j=1:length(thisFieldContents)
-                str = [str ' -> ' num2str(thisFieldContents{j})]; %#ok<AGROW>
+                if iscell(thisFieldContents{j})
+                    for k=1:length(thisFieldContents{j})
+                        str = [str ' -> ' num2str(thisFieldContents{j}{k}) ', ']; %#ok<AGROW>
+                    end
+                else
+                    str = [str ' -> ' num2str(thisFieldContents{j})]; %#ok<AGROW>
+                end
             end
         else
             str = num2str(thisFieldContents);

@@ -6,6 +6,8 @@ function RevasAbout(varargin)
 % Mehmet N. Agaoglu 1/19/2020
 %
 
+fprintf('%s: RevasAbout launched!\n',datestr(datetime));
+
 revas = varargin{3};
 guiSize = round([min(revas.screenSize(3)*0.75, 360) min(revas.screenSize(4)*0.75, 480)]);
 versionNo = RevasVersion;

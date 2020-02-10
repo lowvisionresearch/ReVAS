@@ -46,16 +46,17 @@ function [filteredEyePositions, timeSec, varargout ]= FilterEyePosition(inputArg
 %   beforeAfterMs       : buffer zone in miliseconds. When removing
 %                         artifacts, n samples corresponding to
 %                         beforeAfterMs will also be removed.
-%   filters             : an nx1 or 1xn cell array of char arrays/strings for
-%                         different types of filters. Any arbitrary
-%                         function can be used. Filtering will be applied
-%                         in the order indicated in this array.
-%                         As of 12/29/31, the following filters are
-%                         supported: 'medfilt1', 'notch', 'sgolayfilt'.
-%   filterParams        : an nx1 or 1xn cell array of parameters for
-%                         corresponding filters in "filters". Each
-%                         row of the cell array can contain an array of
-%                         parameters.
+%   medfilt1            : median filtering window in samples. can be left
+%                         empty to skip it.
+%   sgolayfilt          : savitsky-golay filter parameters. Must be two
+%                         numbers, e.g., [3 21], the first one is the
+%                         order, the second is the window.
+%   notch1              : first notch filter parameters. must have three
+%                         values, left and right cutoff, and order. e.g.
+%                         [29 31 2].
+%   notch2              : same as notch1. provided if user wants to do
+%                         notch filtering for two different frequency 
+%                         bands. e.g., [59 61 2].
 %   samplingRate        : Sampling rate in Hz for output. By default it's
 %                         empty, i.e., input position is filtered without
 %                         changing sampling rate. If set to any positive
@@ -80,10 +81,10 @@ function [filteredEyePositions, timeSec, varargout ]= FilterEyePosition(inputArg
 %   Example usage
 %   -----------------------------------
 %       inputPath = 'MyFile.mat';
-%       params.filters = {@medfilt1, @sgolayfilt};
-%       params.filterParams = {11,[3 15]}; 
-%                     % 11 is for medfilt1, [3 15] 
-%                     % is for sgolayfilt (3 is degree of poly, 15 size of kernel)
+%       params.filter1 = 'medfilt1';
+%       params.filter1Params = 7;
+%       params.filter2 = 'sgolayfilt';
+%       params.filter2Params = [3 21];
 %       FilterEyePosition(inputPath, params);
 % 
 %   -----------------------------------
@@ -124,12 +125,6 @@ end
 [~,callerStr] = fileparts(mfilename);
 [default, validate] = GetDefaults(callerStr);
 params = ValidateField(params,default,validate,callerStr);
-
-% just one more additional check
-% it is to make sure each filter has corresponding parameters
-if length(params.filters) ~= length(params.filterParams)
-    error('FilterEyePosition: number of filters and number of entries in filterParams do not match.');
-end
 
 
 %% Handle verbosity 
@@ -298,16 +293,25 @@ filteredEyePositions = eyePositionInterp;
 % user asks for more detailed feedback, we store the output of each
 % filtering step and show at the end
 if params.enableVerbosity > 1
-    filteringResults = nan([size(filteredEyePositions), length(params.filters)]);
+    filteringResults = nan([size(filteredEyePositions), 4]);
 end
     
+% go over each filter type
+filters = {'medfilt1','sgolayfilt','notch','notch'};
+filterParams = {params.medfilt1, params.sgolayfilt, params.notch1, params.notch2};
+skippedFilters = false(4,1);
 
-% go over each filter type in the order they are given.
-for i=1:length(params.filters)
+for i=1:4
     if ~abortTriggered
     
-        currentFilter = params.filters{i}; 
-        currentFilterParameters = params.filterParams{i};
+        % parse the "filter" field
+        currentFilter = filters{i}; 
+        currentFilterParameters = filterParams{i};
+        
+        if isempty(currentFilterParameters)
+            skippedFilters(i) = true;
+            continue;
+        end
 
         % construct an expression for filter parameters
         paramsStr = [];
@@ -322,10 +326,14 @@ for i=1:length(params.filters)
         if params.enableVerbosity > 1
             filteringResults(:,:,i) = filteredEyePositions;
         end
-    
     end
 end
 
+% remove cells, columns for skipped filters
+if params.enableVerbosity > 1
+    filteringResults(:,:,skippedFilters) = [];
+end
+filters(skippedFilters) = [];
 
 %% Remove the interpolated regions.
 % the following interpolates/stitches gap region appropriately. If the gap
@@ -367,12 +375,12 @@ if ~abortTriggered && params.enableVerbosity
     % plot all levels of filtering
     if params.enableVerbosity > 1
         forLegend = {'raw'};
-        for i=1:length(params.filters)
+        for i=1:length(filters)
             tempResult = filteringResults(:,:,i);
             tempResult(nanIndices,:) = nan;
             plot(params.axesHandles(1), timeSec, tempResult(:,1), '-','linewidth',1 + i*.5);
             plot(params.axesHandles(2), timeSec, tempResult(:,2), '-','linewidth',1 + i*.5);
-            forLegend{i+1} = params.filters{i};
+            forLegend{i+1} = filters{i};
         end
         legend(params.axesHandles(1),forLegend,'location','best');
         title(params.axesHandles(1),'horizontal');

@@ -6,11 +6,16 @@ function PipelineTool(varargin)
 %
 % Mehmet N. Agaoglu 1/19/2020 
 
+fprintf('%s: PipelineTool launched!\n',datestr(datetime));
+
 % first argument is the source
 src = varargin{1};
 
 % get siblings 
 siblingObjs = get(get(src,'parent'),'children');
+
+% keep track of changes
+isChange = false;
 
 % the third argument is the handle from main gui
 revas = varargin{3};
@@ -53,7 +58,9 @@ for i=1:length(modules)
     moduleNames = [moduleNames; {fileName}]; %#ok<AGROW>
 end
 if ~isempty(missingModules)
-    warndlg('NewPipeline found some modules in corepipeline with missing entries in GetDefaults.m','Missing info','modal');
+    warStr = 'NewPipeline found some modules in corepipeline with missing entries in GetDefaults.m';
+    warndlg(warStr,'Missing info','modal');
+    fprintf('%s: PipelineTool, %s\n',datestr(datetime),warStr);
 end
 
 
@@ -100,7 +107,7 @@ lbPipe = ...
     'value',0,...
     'tooltip',['Modules will be executed in the order shown here.' newline...
                'Double click to edit parameters of a module.'],...
-    'callback',{@EditParamsCallback});
+    'callback',{@EditParamsCallback,revas});
 
 % populate it if revas already has a pipeline AND edit pipeline was pressed
 if strcmp(src.Text,'Edit')
@@ -210,33 +217,51 @@ uiwait(fig);
             
             % call parameter GUI to adjust params. if output is not empty,
             % update the pipeParams.
-            params = ModifyParams(thisModule{1}, false, fig);
-            if ~isempty(params)
-                revas.gui.UserData.pipeParams{lbPipe.Value,1}= params;
+            inp = {thisModule{1}, revas.gui.UserData.pipeParams{lbPipe.Value}};
+            newParams = ModifyParams(inp, false, fig);
+            if ~isempty(newParams)
+                oldParams = revas.gui.UserData.pipeParams{lbPipe.Value,1};
+                isChange = CompareFieldsHelper(oldParams,newParams);
+                if isChange
+                    revas.gui.UserData.pipeParams{lbPipe.Value,1} = newParams;
+                end
             end
         end
     end
 
     function OkCallback(varargin)
-        % assign the output if pipeline is not empty
-        if lbPipe.Value ~= 0
-            % assign the pipeline to output
-            revas.gui.UserData.pipeline = lbPipe.String;
-
+        
+        % if pipeline changed, enable Save, Edit, and Save As menus.
+        if isChange
             % enable save and saveas menus
             set(siblingObjs(~contains({siblingObjs.Text},{'New','Open'})),'Enable','on');
         end
         
+        % assign the pipeline to output
+        revas.gui.UserData.pipeline = lbPipe.String;
+        
         % call the pipeline config function to populate/update the pipeline
-        % panel
+        % panel. if pipeline is empty, disable
+        pl = revas.gui.UserData.pipeline;
+        revas.gui.UserData.lbPipeline.String = pl;
+        revas.gui.UserData.lbPipeline.Value = length(pl);
+        
+        % disable pipe listbox if pipeline is empty
+        if isempty(pl)
+            revas.gui.UserData.lbPipeline.Visible = 'off';
+        else
+            revas.gui.UserData.lbPipeline.Visible = 'on';
+        end
         
         % close the gui
+        fprintf('%s: PipelineTool closed.\n',datestr(datetime));
         delete(fig);
     end
 
     % If user clicks Cancel, return an empty array.
     function CancelCallback(varargin)
         % close the gui
+        fprintf('%s: PipelineTool cancelled.\n',datestr(datetime));
         delete(fig); 
     end
 
