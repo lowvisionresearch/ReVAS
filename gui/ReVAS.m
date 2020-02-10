@@ -15,7 +15,7 @@ if exist(logFile,'file')
     end
 end
 eval(['diary ' logFile]);
-fprintf('\n\n%s: ReVAS launched!\n',datestr(datetime))
+fprintf('\n\n%s: ReVAS %s launched!\n',datestr(datetime), versionNo)
 
 % set the abort level
 global abortTriggered;
@@ -57,6 +57,15 @@ revas.gui.UserData.ppi = revas.ppi;
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Create menus
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% video menu
+revas.pipelineMenu = uimenu(revas.gui,'Text','File');
+uimenu(revas.pipelineMenu,'Text','Raw','MenuSelectedFcn',{@FileSelect,'.avi',{'trim','nostim','gammscaled','bandfilt'}});
+uimenu(revas.pipelineMenu,'Text','Trimmed','MenuSelectedFcn',{@FileSelect,'_trim.avi'});
+uimenu(revas.pipelineMenu,'Text','Stimulus Removed','MenuSelectedFcn',{@FileSelect,'_nostim.avi'});
+uimenu(revas.pipelineMenu,'Text','Gamma Corrected','MenuSelectedFcn',{@FileSelect,'_gammscaled.avi'});
+uimenu(revas.pipelineMenu,'Text','Bandpass Filtered','MenuSelectedFcn',{@FileSelect,'_bandfilt.avi'});
+uimenu(revas.pipelineMenu,'Text','Eye Position','MenuSelectedFcn',{@FileSelect,{'_position.mat','_filtered.mat'}},'Separator','on');
+
 % pipeline menu
 revas.pipelineMenu = uimenu(revas.gui,'Text','Pipeline');
 revas.gui.UserData.new = uimenu(revas.pipelineMenu,'Text','New','Accelerator','N','MenuSelectedFcn',{@PipelineTool,revas});
@@ -91,7 +100,14 @@ revas.gui.UserData.filePanel = uipanel('Parent',revas.gui,...
              'position',filePanelPos,...
              'tag','filePanel');   
          
-         
+revas.gui.UserData.fileMessage = uicontrol(revas.gui.UserData.filePanel,...
+             'style','text',...
+             'units','normalized',...
+             'position',[.1 .1 .8 .8],...
+             'fontsize',revas.fontSize,...
+             'fontweight','bold',...
+             'horizontalalignment','center',...
+             'string','Please select some videos or eye position files using File menu.');         
          
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % pipeline panel
@@ -111,7 +127,7 @@ revas.gui.UserData.pipeMessage = uicontrol(revas.gui.UserData.pipelinePanel,...
              'fontsize',revas.fontSize,...
              'fontweight','bold',...
              'horizontalalignment','center',...
-             'string','Please create a new pipeline, or open an existing one.'); 
+             'string','Please create a new pipeline, or open an existing one using Pipeline menu.'); 
          
 % pipeline listbox
 revas.gui.UserData.lbPipeline = uicontrol(revas.gui.UserData.pipelinePanel,...
@@ -298,6 +314,9 @@ set(revas.gui,'visible','on');
             thisField = gParamsNames{fld};
             revas.gui.UserData.(thisField).Value = double(gParams.(thisField));
         end
+    end
+
+    function FileSelect(varargin)
     end
 
     function RunPipeline(varargin)
