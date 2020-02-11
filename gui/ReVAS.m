@@ -59,12 +59,12 @@ revas.gui.UserData.ppi = revas.ppi;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % video menu
 revas.pipelineMenu = uimenu(revas.gui,'Text','File');
-uimenu(revas.pipelineMenu,'Text','Raw','MenuSelectedFcn',{@FileSelect,'.avi',{'trim','nostim','gammscaled','bandfilt'}});
-uimenu(revas.pipelineMenu,'Text','Trimmed','MenuSelectedFcn',{@FileSelect,'_trim.avi'});
-uimenu(revas.pipelineMenu,'Text','Stimulus Removed','MenuSelectedFcn',{@FileSelect,'_nostim.avi'});
-uimenu(revas.pipelineMenu,'Text','Gamma Corrected','MenuSelectedFcn',{@FileSelect,'_gammscaled.avi'});
-uimenu(revas.pipelineMenu,'Text','Bandpass Filtered','MenuSelectedFcn',{@FileSelect,'_bandfilt.avi'});
-uimenu(revas.pipelineMenu,'Text','Eye Position','MenuSelectedFcn',{@FileSelect,{'_position.mat','_filtered.mat'}},'Separator','on');
+uimenu(revas.pipelineMenu,'Text','Raw','MenuSelectedFcn',{@RevasFileSelect,{'.avi'},{'trim','nostim','gammscaled','bandfilt'},revas});
+uimenu(revas.pipelineMenu,'Text','Trimmed','MenuSelectedFcn',{@RevasFileSelect,{'_trim.avi'},{},revas});
+uimenu(revas.pipelineMenu,'Text','Stimulus Removed','MenuSelectedFcn',{@RevasFileSelect,{'_nostim.avi'},{},revas});
+uimenu(revas.pipelineMenu,'Text','Gamma Corrected','MenuSelectedFcn',{@RevasFileSelect,{'_gammscaled.avi'},{},revas});
+uimenu(revas.pipelineMenu,'Text','Bandpass Filtered','MenuSelectedFcn',{@RevasFileSelect,{'_bandfilt.avi'},{},revas});
+uimenu(revas.pipelineMenu,'Text','Eye Position','MenuSelectedFcn',{@RevasFileSelect,{'_position.mat','_filtered.mat'},{},revas},'Separator','on');
 
 % pipeline menu
 revas.pipelineMenu = uimenu(revas.gui,'Text','Pipeline');
@@ -92,7 +92,7 @@ uimenu(revas.helpMenu,'Text','Documentation','Accelerator','D','MenuSelectedFcn'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % file selection panel
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-filePanelPos = [0 0.4 1/3 0.6];
+filePanelPos = [0 0.4 3/8 0.6];
 revas.gui.UserData.filePanel = uipanel('Parent',revas.gui,...
              'units','normalized',...
              'Title','File Selection',...
@@ -108,6 +108,21 @@ revas.gui.UserData.fileMessage = uicontrol(revas.gui.UserData.filePanel,...
              'fontweight','bold',...
              'horizontalalignment','center',...
              'string','Please select some videos or eye position files using File menu.');         
+
+% file listbox
+revas.gui.UserData.lbFile = uicontrol(revas.gui.UserData.filePanel,...
+             'style','listbox',...
+             'units','normalized',...
+             'position',[0 0 1 1],...
+             'fontsize',revas.fontSize,...
+             'string',{},...
+             'value',0,...
+             'tooltip','Select files that you want to analyze.',...
+             'callback',{@DoNothing,revas},...
+             'visible','off',...
+             'min',1,...
+             'max',3);         
+         
          
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % pipeline panel
@@ -145,7 +160,8 @@ revas.gui.UserData.lbPipeline = uicontrol(revas.gui.UserData.pipelinePanel,...
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % global flags panel
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%         
-globalPanelPos = [sum(pipePanelPos([1 3])) pipePanelPos(2:4)];
+globalPanelPos = [sum(pipePanelPos([1 3])) pipePanelPos(2) ...
+    (1-pipePanelPos(3)-filePanelPos(3)) pipePanelPos(4)];
 revas.gui.UserData.globalPanel = uipanel('Parent',revas.gui,...
              'units','normalized',...
              'Title','Global Flags',...
@@ -234,6 +250,7 @@ revas.gui.UserData.statusBar = axes(revas.gui,...
 
 revas.gui.UserData.pipeline = {};
 revas.gui.UserData.pipeParams = {};
+revas.gui.UserData.fileList = {};
          
 % Make visible 
 set(revas.gui,'visible','on');
@@ -316,8 +333,6 @@ set(revas.gui,'visible','on');
         end
     end
 
-    function FileSelect(varargin)
-    end
 
     function RunPipeline(varargin)
     end
