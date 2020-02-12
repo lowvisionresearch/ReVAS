@@ -13,8 +13,6 @@ function params = ModifyParams(inputArgument, varargin)
 %
 %   Mehmet N. Agaoglu 1/19/2020 mnagaoglu@gmail.com
 
-fprintf('%s: ModifyParams launched!\n',datestr(datetime));
-
 if nargin < 1 
     error('ModifyParams needs at least one argument (callerStr)!');
 end
@@ -59,6 +57,7 @@ else
     errordlg(errStr,'ModifyParams error','modal');
     fprintf('%s: ModifyParams returned with an error: %s\n',datestr(datetime),errStr);
 end
+fprintf('%s: ModifyParams launched for %s!\n',datestr(datetime), callerStr);
 
 % in case user closes the GUI window, return default values
 params = default;

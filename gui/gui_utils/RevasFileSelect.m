@@ -5,7 +5,6 @@ function RevasFileSelect(varargin)
 %
 
 % first argument is the source
-src = varargin{1};
 
 % the second argument is empty.
 
@@ -18,11 +17,43 @@ exclude = varargin{4};
 % the fifth argument is the handle to main GUI
 revas = varargin{5};
 
-% select files
-fileList = FileSelect(include, exclude);
+% name of the hidden file that keeps track of last used fileList
+fileListFile = revas.gui.UserData.fileListFile;
 
+% if include is an empty array, the callback was triggered by Last Selected
+% menu. So we just load the previously used fileList from a hidden file and
+% do not initiate the file selection GUI.
+if isempty(include)
+    load(fileListFile,'fileList')
+else
+    % select files
+    fileList = FileSelect(include, exclude);
+    
+    % if user cancelled without selection, abort
+    if ~iscell(fileList) && fileList == 0
+        fprintf('%s: File selection cancelled.\n',datestr(datetime));
+        return;
+    end
+
+    % save the list in a hidden file
+    save(fileListFile,'fileList');
+    
+    % enable the Last Selected menu
+    revas.gui.UserData.lastselected.Enable = 'on';
+end
+
+% prepare list for better (less crowded) presentation on GUI
+betterList = arrayfun(@(x) regexp(x{1},'(?!.*\/.*\/)(.*\..*)','match'),fileList);
 
 revas.gui.UserData.fileList = fileList;
-revas.gui.UserData.lbFile.String = fileList;
+revas.gui.UserData.lbFile.String = betterList;
 revas.gui.UserData.lbFile.Value = 1;
 revas.gui.UserData.lbFile.Visible = 'on';
+
+fprintf('%s: %d files have been selected.\n',datestr(datetime),length(fileList));
+
+
+
+
+
+
