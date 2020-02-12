@@ -1,30 +1,30 @@
 function ReVAS
 
+% check if another instance of ReVAS is already open.
+figHandles = findobj('Type', 'figure','tag','revasgui');
+if ~isempty(figHandles)
+    errordlg('Another instance of ReVAS GUI is found.','Multiple ReVAS Instances','modal');
+    return;
+end
+
 % get version number from readme.md
 versionNo = RevasVersion;
 
-% log file name.
+% get log file name and start diary
 logFile = [fileparts(which('ReVAS')) filesep 'log.txt']; 
-
-% if log file grows too big, rename it and open a new file.
-if exist(logFile,'file')
-    stats = dir(logFile);
-    if stats.bytes > 10^8
-        movefile(logFile,...
-            [logFile(1:end-4) '-' regexprep(datestr(datetime),'[ :]','-') '.txt'])
-    end
-end
 eval(['diary ' logFile]);
-fprintf('\n\n%s: ReVAS %s launched!\n',datestr(datetime), versionNo)
+
+% name of the hidden file that keeps track of last used fileList
+fileListFile = [fileparts(which('ReVAS')) filesep '.filelist.mat'];
 
 % set the abort level
 global abortTriggered;
 abortTriggered = false;
 
-% to keep track of user changes to UI
+% to keep track of user changes to pipeline
 isChange = false;
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Create GUI figure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % get display dimensions and place the gui to the right edge of the display
@@ -45,6 +45,7 @@ revas.gui = figure('units','pixels',...
     'numbertitle','off',...
     'resize','on',...
     'visible','on',...
+    'tag','revasgui',...
     'closerequestfcn',{@RevasClose});
 
 % save some of the config under UserData so that other child GUIs can also
@@ -52,9 +53,11 @@ revas.gui = figure('units','pixels',...
 revas.gui.UserData.screenSize = revas.screenSize;
 revas.gui.UserData.fontSize = revas.fontSize;
 revas.gui.UserData.ppi = revas.ppi;
+revas.gui.UserData.logFile = logFile;
+revas.gui.UserData.fileListFile = fileListFile;
 
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Create menus
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % video menu
@@ -65,14 +68,15 @@ uimenu(revas.pipelineMenu,'Text','Stimulus Removed','MenuSelectedFcn',{@RevasFil
 uimenu(revas.pipelineMenu,'Text','Gamma Corrected','MenuSelectedFcn',{@RevasFileSelect,{'_gammscaled.avi'},{},revas});
 uimenu(revas.pipelineMenu,'Text','Bandpass Filtered','MenuSelectedFcn',{@RevasFileSelect,{'_bandfilt.avi'},{},revas});
 uimenu(revas.pipelineMenu,'Text','Eye Position','MenuSelectedFcn',{@RevasFileSelect,{'_position.mat','_filtered.mat'},{},revas},'Separator','on');
+revas.gui.UserData.lastselected = uimenu(revas.pipelineMenu,'Text','Last Used','MenuSelectedFcn',{@RevasFileSelect,{},{},revas},'Separator','on','Enable',OnOffUtil(exist(fileListFile,'file')));
 
 % pipeline menu
 revas.pipelineMenu = uimenu(revas.gui,'Text','Pipeline');
 revas.gui.UserData.new = uimenu(revas.pipelineMenu,'Text','New','Accelerator','N','MenuSelectedFcn',{@PipelineTool,revas});
 revas.gui.UserData.open = uimenu(revas.pipelineMenu,'Text','Open','Accelerator','O','MenuSelectedFcn',{@OpenPipeline,revas});
-revas.gui.UserData.edit = uimenu(revas.pipelineMenu,'Text','Edit','Accelerator','E','MenuSelectedFcn',{@PipelineTool,revas},'Enable','of');
-revas.gui.UserData.save = uimenu(revas.pipelineMenu,'Text','Save','Accelerator','S','MenuSelectedFcn',{@SavePipeline,revas},'Enable','of');
-revas.gui.UserData.saveas = uimenu(revas.pipelineMenu,'Text','Save As','Accelerator','A','MenuSelectedFcn',{@SaveAsPipeline,revas},'Enable','of');
+revas.gui.UserData.edit = uimenu(revas.pipelineMenu,'Text','Edit','Accelerator','E','MenuSelectedFcn',{@PipelineTool,revas},'Enable','off');
+revas.gui.UserData.save = uimenu(revas.pipelineMenu,'Text','Save','Accelerator','S','MenuSelectedFcn',{@SavePipeline,revas},'Enable','off');
+revas.gui.UserData.saveas = uimenu(revas.pipelineMenu,'Text','Save As','Accelerator','A','MenuSelectedFcn',{@SaveAsPipeline,revas},'Enable','off');
 
 % help menu
 revas.helpMenu = uimenu(revas.gui,'Text','Help');
@@ -80,7 +84,7 @@ uimenu(revas.helpMenu,'Text','About','Accelerator','I','MenuSelectedFcn',{@Revas
 uimenu(revas.helpMenu,'Text','Report An Issue','MenuSelectedFcn',{@RevasReportIssue,revas});
 uimenu(revas.helpMenu,'Text','Documentation','Accelerator','D','MenuSelectedFcn',{@RevasDocumentation,revas});
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %
 % Create uicontrols
@@ -118,7 +122,7 @@ revas.gui.UserData.lbFile = uicontrol(revas.gui.UserData.filePanel,...
              'string',{},...
              'value',0,...
              'tooltip','Select files that you want to analyze.',...
-             'callback',{@DoNothing,revas},...
+             'callback',{@SelectFileCallback,revas},...
              'visible','off',...
              'min',1,...
              'max',3);         
@@ -251,12 +255,20 @@ revas.gui.UserData.statusBar = axes(revas.gui,...
 revas.gui.UserData.pipeline = {};
 revas.gui.UserData.pipeParams = {};
 revas.gui.UserData.fileList = {};
+revas.gui.UserData.enableState = {};
          
 % Make visible 
 set(revas.gui,'visible','on');
+fprintf('\n\n%s: ReVAS %s launched!\n',datestr(datetime), versionNo);
 
-    %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %
+    %
     % pipeline menu callbacks
+    %
+    %
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     function RevasReportIssue(varargin)
         fprintf('\n\n%s: Launching web browser for filing an issue.\n',datestr(datetime))
@@ -333,19 +345,82 @@ set(revas.gui,'visible','on');
         end
     end
 
-
-    function RunPipeline(varargin)
+    function SelectFileCallback(varargin)
     end
 
 
-    %% close callback
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %
+    %
+    %  Run Pipeline
+    %
+    %
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    function RunPipeline(src,varargin)
+        
+        if ~src.Value
+            src.Value = 0;
+            return;
+        end
+        
+        % Check if we have at least one file in file list 
+        if isempty(revas.gui.UserData.fileList)
+            warndlg('Please use File Menu to select some files.',...
+                'No file selected.','modal');
+            src.Value = ~src.Value;
+            return;
+        end
+        
+        % Check if we have at least and one module in the pipeline
+        if isempty(revas.gui.UserData.pipeline)
+            warndlg('Please use Pipeline Menu to open an existing pipeline or create a new one.',...
+                'No pipeline.','modal');
+            src.Value = ~src.Value;
+            return;
+        end
+        
+        % all uicontrols that have Enable property
+        objs = findall([findobj(revas.gui,'type','uipanel'); ...
+                        findobj(revas.gui,'type','uimenu')], '-property', 'Enable');
+        % save the enable state of all uicontrols that have Enable property
+        revas.gui.UserData.enableState = get(objs,'Enable');
+        set(objs, 'Enable', 'off');
+
+        % run the rest of the operation within try catch. if an error
+        % occurs, we should be able to re-enable the UIControls.
+        try
+            selectedFiles = revas.gui.UserData.lbFile.Value;
+            fprintf('%s: Pipeline running with %d selected files...\n',datestr(datetime),length(selectedFiles));
+            ExecutePipeline(revas.gui.UserData.fileList(selectedFiles),...
+                            revas.gui.UserData.pipeline,...
+                            revas.gui.UserData.pipeParams,...
+                            revas.gParams);
+        catch runPipeError
+            
+        end
+        
+        % restore enable state of UIControls
+        arrayfun(@(x,y) set(x,'Enable',y{1}), objs, revas.gui.UserData.enableState);
+        src.Value = 0;
+        
+    end
+
+
     function RevasClose(varargin)
+        
+        % if Run button is on, i.e., a pipeline is running, do not exit.
+        % Give a warning only.
+        if revas.gui.UserData.runButton.Value
+            warndlg('Pipeline is running... Please abort the process and then quit ReVAS.',...
+                'Unfinished Business','modal');
+            return;
+        end
         
         % if there are unsaved changes to the pipeline, ask user if she
         % wants to save them.
         if isChange
             answer = questdlg('There are unsaved changes to the pipeline. What do you want to do?', ...
-                'ReVAS Close: Unsaved changes to pipeline', ...
+                'Oops! Unsaved changes to pipeline', ...
                 'Exit w/o Saving','Cancel','Save & Exit','Save & Exit');
             % Handle response
             switch answer
@@ -364,3 +439,16 @@ set(revas.gui,'visible','on');
 
 
 end
+
+
+
+
+
+%         % if log file grows too big, rename it and open a new file.
+%         if exist(logFile,'file')
+%             stats = dir(logFile);
+%             if stats.bytes > 10^8
+%                 movefile(logFile,...
+%                     [logFile(1:end-4) '-' regexprep(datestr(datetime),'[ :]','-') '.txt'])
+%             end
+%         end
