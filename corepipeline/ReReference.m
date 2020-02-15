@@ -1,14 +1,21 @@
-function [offset, bestTilt, varargout] = ...
-    ReReference(localRefArgument, params)
+function [outputArgument, params, varargout] = ReReference(inputArgument, params)
+% [outputArgument, params, varargout] = ReReference(inputArgument, params)
 %REREFERENCE computes the offsets required to re-reference one reference
 %   onto another.
 %
 %   -----------------------------------
 %   Input
 %   -----------------------------------
-%
-%   |localRefArgument| is a 2D array representing a local ref or a full
-%   path to a file containing 'referenceFrame' or 'params.referenceFrame'.
+%   |inputArgument| is a file path for the eye position data that has to
+%   have two arrays, |position| and |timeSec|. Or, if it is not 
+%   a file path, then it must be a nx3 double array, where n is
+%   the number of data points. The last column of |inputArgument| is always
+%   treated as the time signal. The other columns are treated as eye
+%   position signals, which will be subjected to re-referencing. 
+%   The result is that the re-referenced version of this file is stored with
+%   '_reref' appended to the original file name. If |inputArgument| 
+%   is not a file name but actual eye position data, then the re-referenced 
+%   position data are not stored.
 %
 %   |params| is a struct as specified below.
 %
@@ -18,9 +25,14 @@ function [offset, bestTilt, varargout] = ...
 %   overwrite               : set to true to overwrite existing files.
 %                             Set to false to abort the function call if the
 %                             files already exist. (default false)
-%   globalRefArgument       : is a 2D array representing a local ref or a 
-%                             full path to a file containing 
-%                             'referenceFrame' or 'params.referenceFrame'.
+%   referenceFrame          : local reference frame. is a 2D array 
+%                             representing a local ref or a full path to a 
+%                             file containing 'referenceFrame' or 
+%                             'params.referenceFrame'.
+%   globalRefArgument       : global reference frame. is a 2D array 
+%                             representing a local ref or a full path to a 
+%                             file containing 'referenceFrame' or 
+%                             'params.referenceFrame'.
 %   enableGPU               : a logical. if set to true, use GPU. (works for 
 %                             'mex' method only.
 %   enableVerbosity         : set to true to report back plots during
@@ -61,8 +73,9 @@ function [offset, bestTilt, varargout] = ...
 %
 %   |bestTilt| is the best tilt for localRef to be mapped onto globalRef
 %
-%   varargout{1} : params.
-%   varargout{2} : peakValues.
+%   varargout{1} : offset
+%   varargout{2} : bestTilt
+%   varargout{3} : peakValues.
 %
 %   -----------------------------------
 %   Example usage
@@ -79,9 +92,16 @@ if isempty(abortTriggered)
     abortTriggered = false;
 end
 
+%% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
+if isfield(params,'logBox')
+    logBox = params.logBox;
+else
+    logBox = [];
+end
+
 
 %% Determine inputType type.
-if ischar(localRefArgument)
+if ischar(inputArgument)
     % A path was passed in.
     % Read and once finished with this module, write the result.
     writeResult = true;
@@ -108,7 +128,7 @@ params = ValidateField(params,default,validate,callerStr);
 % check if CUDA enabled GPU exists
 if params.enableGPU && (gpuDeviceCount < 1)
     params.enableGPU = false;
-    RevasWarning('No supported GPU available. StripAnalysis is reverting back to CPU', params);
+    RevasWarning('No supported GPU available. Rereference is reverting back to CPU', logBox);
 end
 
 
@@ -133,36 +153,68 @@ end
 %% Handle overwrite scenarios.
 
 if writeResult
-    outputFilePath = Filename(localRefArgument, 'reref');
+    outputFilePath = Filename(inputArgument, 'reref');
     params.outputFilePath = outputFilePath;
     
     if ~exist(outputFilePath, 'file')
         % left blank to continue without issuing RevasMessage in this case
     elseif ~params.overwrite
-        RevasMessage(['ReReference() did not execute because it would overwrite existing file. (' outputFilePath ')'], params);
-        RevasMessage('ReReference() is returning results from existing file.',params); 
+        RevasMessage(['ReReference() did not execute because it would overwrite existing file. (' outputFilePath ')'], logBox);
+        RevasMessage('ReReference() is returning results from existing file.',logBox); 
         
         % try loading existing file contents
-        load(outputFilePath,'offset','bestTilt','params',...
-            'peakValues','cMap');
-        
+        load(outputFilePath,'position','timeSec','offset','bestTilt','params','peakValues');
+        outputArgument = outputFilePath;
+        params.position = position;
+        params.timeSec = timeSec;
+        params.offset = offset;
+        params.bestTilt = bestTilt;
         if nargout > 2
-            varargout{1} = params;
+            varargout{1} = offset;
         end
         if nargout > 3
-            varargout{2} = peakValues;
+            varargout{2} = bestTilt;
+        end
+        if nargout > 4
+            varargout{3} = peakValues;
         end
         
         return;
     else
-        RevasMessage(['ReReference() is proceeding and overwriting an existing file. (' outputFilePath ')'], params);  
+        RevasMessage(['ReReference() is proceeding and overwriting an existing file. (' outputFilePath ')'], logBox);  
     end
 end
 
+%% Handle inputArgument scenarios
 
-%% Handle |localRefArgument| scenarios.
+if writeResult
+    % check if input file exists
+    if exist(inputArgument,'file') 
+        [~,~,ext] = fileparts(inputArgument);
+        if strcmp(ext,'.mat')
+            % load the data
+            load(inputArgument,'position','timeSec');
+        end
+    end
+    
+    if isfield(params,'position') && isfield(params,'timeSec')
+        position = params.position;
+        timeSec = params.timeSec;
+    end
+    
+    if ~exist('position','var')
+        error('ReReference: eye position array cannot be found!');   
+    end
 
-localRef = HandleInputArgument(localRefArgument);
+else % inputArgument is not a file path, but carries the eye position data.    
+    position = inputArgument(:,1:size(inputArgument,2)-1);
+    timeSec = inputArgument(:,size(inputArgument,2)); % last column is always 'time'
+end
+
+
+%% Handle local reference frame scenarios.
+
+localRef = HandleInputArgument(params.referenceFrame);
 if isempty(localRef)
     error('ReReference: error occured while loading local ref!');
 end
@@ -283,7 +335,16 @@ yPeakLocal = anchorSt + size(anchorStrip,1) - 1;
 
 offset = ReReferenceHelper(rereferenceStrip, anchorOp, anchorStripSize, [xPeakLocal yPeakLocal]);
 
+% apply re-referencing
+position = position + offset;
 
+
+%% assign outputs
+if writeResult
+    outputArgument = outputFilePath;
+else
+    outputArgument = [position timeSec];
+end
 
 
 %% Plot stimuli on reference frame
@@ -302,20 +363,28 @@ end
 if writeResult && ~abortTriggered
     
     % remove unnecessary fields
-    params = RemoveFields(params,{'commandWindowHandle','axesHandles','globalRefArgument'}); 
+    params = RemoveFields(params,{'logBox','axesHandles','globalRefArgument',...
+        'referenceFrame'}); 
 
     % save output
-    save(outputFilePath,'offset','bestTilt','params','peakValues');
+    save(outputFilePath,'position','timeSec','offset','bestTilt','params','peakValues');
 end
 
 %% return optional outputs
 
-if nargout > 2
-    varargout{1} = params;
-end
+params.position = position;
+params.timeSec = timeSec;
+params.offset = offset;
+params.bestTilt = bestTilt;
 
+if nargout > 2
+    varargout{1} = offset;
+end
 if nargout > 3
-    varargout{2} = peakValues;
+    varargout{2} = bestTilt;
+end
+if nargout > 4
+    varargout{3} = peakValues;
 end
 
 

@@ -50,6 +50,12 @@ function [correlationMap, xPeak, yPeak, peakValue, cache] = ...
 %
 
 
+% check for stripWidth. If it's larger than refFrame width, crop.
+w = size(params.referenceFrame,2);
+if size(thisStrip,2) > w
+    thisStrip(:,(w+1):end) = [];
+end
+
 switch params.corrMethod
     case 'mex'
         if params.enableGPU % TO-DO: revise matchTemplateOCV_GPU to return peak location and value 

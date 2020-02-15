@@ -101,6 +101,24 @@ switch module
         validate.badFrames = @(x) all(islogical(x));
         validate.smoothing = @IsPositiveRealNumber;
         validate.lowSpatialFrequencyCutoff = @IsNonNegativeRealNumber;
+        
+    case 'pixel2degree'
+        % default values
+        default.fov = 10;
+        default.frameWidth = 512;
+        
+        % validation functions
+        validate.fov = @(x) isnumeric(x) & (x>0) & (x<100);
+        validate.frameWidth = @IsPositiveInteger;
+        
+    case 'degree2pixel'
+        % default values
+        default.fov = 10;
+        default.frameWidth = 512;
+        
+        % validation functions
+        validate.fov = @(x) isnumeric(x) & (x>0) & (x<100);
+        validate.frameWidth = @IsPositiveInteger;
     
     case 'stripanalysis' 
         % default values
@@ -130,7 +148,7 @@ switch module
         % validation functions 
         validate.overwrite = @islogical;
         validate.enableGPU = @islogical;
-        validate.enableVerbosity = @(x) any(contains({'none','video','frame','strip'},x));
+        validate.enableVerbosity = @(x) CategoryOrLogicalOrNumeric(x,{'none','video','frame','strip'});
         validate.dynamicReference = @islogical;
         validate.goodFrameCriterion = @(x) IsPositiveRealNumber(x) & (x<=1);
         validate.swapFrameCriterion = @(x) IsPositiveRealNumber(x) & (x<=1);
@@ -159,9 +177,9 @@ switch module
         default.enableVerbosity = 'none';
         default.badFrames = false;
         default.rowNumbers = []; % fail, if not provided
-        default.positions = []; % fail, if not provided
+        default.position = []; % fail, if not provided
         default.timeSec = []; % fail, if not provided
-        default.peakValues = []; % fail, if not provided
+        default.peakValueArray = []; % fail, if not provided
         default.oldStripHeight = []; % fail, if not provided
         default.newStripHeight = 3;
         default.newStripWidth = [];
@@ -174,12 +192,12 @@ switch module
         
         % validation functions 
         validate.overwrite = @islogical;
-        validate.enableVerbosity = @(x) any(contains({'none','video','frame'},x));
+        validate.enableVerbosity = @(x) CategoryOrLogicalOrNumeric(x,{'none','video','frame'});
         validate.badFrames = @(x) all(islogical(x));
         validate.rowNumbers = @(x) (length(x)>=1 & IsPositiveInteger(x));
-        validate.positions = @(x) (isnumeric(x) & size(x,1)>=1 & size(x,2)==2);
+        validate.position = @(x) (isnumeric(x) & size(x,1)>=1 & size(x,2)==2);
         validate.timeSec = @(x) (isnumeric(x) & size(x,1)>=1 & size(x,2)==1);
-        validate.peakValues = @IsNonNegativeRealNumber;
+        validate.peakValueArray = @IsNonNegativeRealNumber;
         validate.oldStripHeight = @IsPositiveInteger;
         validate.newStripHeight = @IsPositiveInteger;
         validate.newStripWidth = @(x) isempty(x) | IsPositiveInteger(x);
@@ -204,6 +222,7 @@ switch module
         default.anchorStripWidth = [];
         default.axesHandles = [];
         default.globalRefArgument = [];
+        default.referenceFrame = [];
         
         % validation functions
         validate.enableGPU = @islogical;
@@ -216,7 +235,8 @@ switch module
         validate.anchorStripWidth = @(x) isempty(x) | IsPositiveInteger(x);
         validate.axesHandles = @(x) isempty(x) | all(ishandle(x));
         validate.globalRefArgument = @(x) (ischar(x) | (isnumeric(x) & size(x,1)>1 & size(x,2)>1)) & ~islogical(x);
-
+        validate.referenceFrame = @(x) (ischar(x) | (isnumeric(x) & size(x,1)>1 & size(x,2)>1)) & ~islogical(x);
+        
     case 'filtereyeposition'
         
         % default values
@@ -232,7 +252,7 @@ switch module
         default.notch2 = [59 61 2];
         default.samplingRate = [];
         default.axesHandles = [];
-        
+   
         % validation functions
         validate.overwrite = @islogical;
         validate.enableVerbosity = @(x) islogical(x) | (isscalar(x) & x>=0);
@@ -246,7 +266,7 @@ switch module
         validate.notch2 = @(x) isempty(x) | (IsNonNegativeRealNumber(x) & length(x)==3);
         validate.samplingRate = @(x) isempty(x) | IsPositiveInteger(x);
         validate.axesHandles = @(x) isempty(x) | all(ishandle(x));
-        
+
     case 'findsaccadesanddrifts'
         
         % default values
@@ -285,3 +305,13 @@ end
 
 
 
+
+function tf = CategoryOrLogicalOrNumeric(x,categories)
+
+if ischar(x)
+    tf = any(contains(categories,x));
+    return;
+end
+
+tf = islogical(x) | isnumeric(x);
+    

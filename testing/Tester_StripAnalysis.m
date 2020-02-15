@@ -20,10 +20,10 @@ try
     % use fullpath to a video
     p = struct; 
     p.overwrite = true;
-    p.enableVerbosity = 2;
+    p.enableVerbosity = 'frame';
     p.minPeakThreshold = 0.4;
     p.adaptiveSearch = true;
-    [position1, timeSec, rawPosition, peakValueArray, p] = ...
+    [~, p, position1, timeSec, rawPosition, peakValueArray] = ...
         StripAnalysis(inputVideo, p); %#ok<*ASGLU>
     delete(p.outputFilePath);
   
@@ -36,7 +36,7 @@ try
     % use fft method
     p = struct; 
     p.overwrite = true;
-    p.enableVerbosity = 1;
+    p.enableVerbosity = 'video';
     p.minPeakThreshold = 0.4;
     p.stripWidth = 128;
     p.adaptiveSearch = false;
@@ -44,7 +44,7 @@ try
     p.badFrames([2 6]) = true;
     p.dynamicReference = false;
     p.corrMethod = 'fft';
-    [position2, timeSec, rawPosition, peakValueArray, p] = ...
+    [~,p, position2, timeSec, rawPosition, peakValueArray] = ...
         StripAnalysis(videoArray, p); %#ok<*ASGLU>
    
     
@@ -57,7 +57,7 @@ try
         p.minPeakThreshold = 0.45;
         p.corrMethod = 'cuda';
         p.enableVerbosity = 2;
-        [position2, timeSec, rawPosition, peakValueArray, p] = ...
+        [~,p, position2, timeSec, rawPosition, peakValueArray] = ...
             StripAnalysis(videoArray, p); %#ok<*ASGLU>
     end
    
@@ -67,3 +67,4 @@ catch
 end
 
 warning(origState);
+

@@ -23,14 +23,14 @@ try
     % use default params
     p = struct; 
     p.overwrite = true;
-    p.enableVerbosity = 2;
+    p.enableVerbosity = 'frame';
     p.rowNumbers = stripResults.params.rowNumbers;
     p.oldStripHeight = stripResults.params.stripHeight;
     p.newStripWidth = 256;
-    p.positions = stripResults.position;
+    p.position = stripResults.position;
     p.timeSec = stripResults.timeSec;
-    p.peakValues = stripResults.peakValueArray;
-    [refFrame, outputFilePath, params] = MakeReference(inputVideo, p); %#ok<*ASGLU>
+    p.peakValueArray = stripResults.peakValueArray;
+    [~,params, refFrame, outputFilePath] = MakeReference(inputVideo, p); %#ok<*ASGLU>
     delete(outputFilePath);
     
     %% Second test
@@ -39,12 +39,12 @@ try
     videoArray = ReadVideoToArray(inputVideo);
     p.newStripWidth = [];
     p.enhanceStrips = false;
-    p.enableVerbosity = 2;
-    [refFrame, outputFilePath, params] = MakeReference(videoArray, p);
+    p.enableVerbosity = 'frame';
+    [~, params, refFrame, outputFilePath] = MakeReference(videoArray, p);
 
     
     success = true;
-catch 
+catch err
     success = false;
 end
 

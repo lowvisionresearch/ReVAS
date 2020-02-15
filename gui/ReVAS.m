@@ -4,6 +4,7 @@ function ReVAS
 figHandles = findobj('Type', 'figure','tag','revasgui');
 if ~isempty(figHandles)
     errordlg('Another instance of ReVAS GUI is found.','Multiple ReVAS Instances','modal');
+    figure(figHandles)
     return;
 end
 
@@ -183,12 +184,13 @@ gParams.enableGPU = 0;
 gParams.enableParallel = 0;
 gParams.saveLog = 1;
 gParamsNames = fieldnames(gParams);
-rowSize = 0.8 / length(gParamsNames);
+gParams.fov = 10;
+rowSize = 0.8 / (length(gParamsNames)+2);
 
 for i=1:length(gParamsNames)
 
     % location of the current uicontrol
-    yLoc = 0.9 - (i)*rowSize;
+    yLoc = 0.95 - (i)*rowSize;
     xLoc = 0.2;
     thisPosition = [xLoc yLoc globalPanelPos(1) rowSize];
     
@@ -220,10 +222,8 @@ for i=1:length(gParamsNames)
         'callback',{@GParamsCallback},...
         'enable',enable);
 end
-         
-         
-         
-         
+
+     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % log, status, and run 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
@@ -234,7 +234,9 @@ revas.gui.UserData.logBox = uicontrol(revas.gui,...
              'position',logBoxPos,...
              'fontsize',revas.fontSize,...
              'string',{},...
-             'value',0,...
+             'value',1,...
+             'min',1,...
+             'max',3,...
              'tooltip','Log window.');  
          
 runPos = [.45 0 0.1 logBoxPos(2)];
@@ -246,6 +248,16 @@ revas.gui.UserData.runButton = uicontrol(revas.gui,...
              'string','Run',...
              'value',0,...
              'callback',{@RunPipeline}); 
+         
+abortPos = [.45 0 0.1 logBoxPos(2)];        
+revas.gui.UserData.abortButton = uicontrol(revas.gui,...
+             'style','togglebutton',...
+             'units','normalized',...
+             'position',abortPos,...
+             'fontsize',revas.fontSize,...
+             'string','Abort',...
+             'value',0,...
+             'visible','off');          
 
 revas.gui.UserData.statusBar = axes(revas.gui,...
              'units','normalized',...
@@ -259,7 +271,7 @@ revas.gui.UserData.enableState = {};
          
 % Make visible 
 set(revas.gui,'visible','on');
-fprintf('\n\n%s: ReVAS %s launched!\n',datestr(datetime), versionNo);
+RevasMessage(sprintf('ReVAS %s launched!',versionNo),revas.gui.UserData.logBox);
 
 
 
@@ -300,8 +312,8 @@ fprintf('\n\n%s: ReVAS %s launched!\n',datestr(datetime), versionNo);
                 isChange = CompareFieldsHelper(oldParams,newParams);
                 if isChange
                     revas.gui.UserData.pipeParams{val,1} = newParams;
-                    fprintf('%s: New parameters for %s: \n',datestr(datetime), thisModule{1});
-                    disp(newParams);
+                    str = evalc('disp(newParams)');
+                    RevasMessage(sprintf('New parameters for %s: \n %s',thisModule{1},str),revas.gui.UserData.logBox)
                 end
             end
         end
@@ -319,10 +331,11 @@ fprintf('\n\n%s: ReVAS %s launched!\n',datestr(datetime), versionNo);
         gParams.(src.String) = src.Value;
         
         switch src.String
-            case 'enableGPU'
+            case {'enableGPU','enableVerbosity'}
                 gParams.enableParallel = ~src.Value & feature('numcores') > 1;
             case 'enableParallel'
                 gParams.enableGPU = ~src.Value & gpuDeviceCount > 0;
+                gParams.enableVerbosity = ~src.Value & gParams.enableVerbosity;
             case 'saveLog'
                 if src.Value
                     diary on;
@@ -333,8 +346,8 @@ fprintf('\n\n%s: ReVAS %s launched!\n',datestr(datetime), versionNo);
                 % do nothing
         end
         
-        fprintf('%s: Global Flags: \n',datestr(datetime));
-        disp(gParams);
+        str = evalc('disp(gParams)');
+        RevasMessage(sprintf('Global Flags: \n %s',str),revas.gui.UserData.logBox);
         RefreshGlobalFlagPanel;
     end
 
@@ -359,7 +372,6 @@ fprintf('\n\n%s: ReVAS %s launched!\n',datestr(datetime), versionNo);
     function RunPipeline(src,varargin)
         
         if ~src.Value
-            src.Value = 0;
             return;
         end
         
@@ -367,7 +379,7 @@ fprintf('\n\n%s: ReVAS %s launched!\n',datestr(datetime), versionNo);
         if isempty(revas.gui.UserData.fileList)
             warndlg('Please use File Menu to select some files.',...
                 'No file selected.','modal');
-            src.Value = ~src.Value;
+            src.Value = 0;
             return;
         end
         
@@ -375,9 +387,10 @@ fprintf('\n\n%s: ReVAS %s launched!\n',datestr(datetime), versionNo);
         if isempty(revas.gui.UserData.pipeline)
             warndlg('Please use Pipeline Menu to open an existing pipeline or create a new one.',...
                 'No pipeline.','modal');
-            src.Value = ~src.Value;
+            src.Value = 0;
             return;
         end
+        
         
         % all uicontrols that have Enable property
         objs = findall([findobj(revas.gui,'type','uipanel'); ...
@@ -385,22 +398,45 @@ fprintf('\n\n%s: ReVAS %s launched!\n',datestr(datetime), versionNo);
         % save the enable state of all uicontrols that have Enable property
         revas.gui.UserData.enableState = get(objs,'Enable');
         set(objs, 'Enable', 'off');
+        
+        % make the abort button visible
+        revas.gui.UserData.abortButton.Visible = 'on';
+        
+        % make run button invisible
+        revas.gui.UserData.runButton.Visible = 'off';
 
         % run the rest of the operation within try catch. if an error
         % occurs, we should be able to re-enable the UIControls.
         try
             selectedFiles = revas.gui.UserData.lbFile.Value;
-            fprintf('%s: Pipeline running with %d selected files...\n',datestr(datetime),length(selectedFiles));
-            ExecutePipeline(revas.gui.UserData.fileList(selectedFiles),...
-                            revas.gui.UserData.pipeline,...
-                            revas.gui.UserData.pipeParams,...
-                            revas.gParams);
-        catch runPipeError
+            RevasMessage(sprintf('Pipeline launched with %d selected files...',length(selectedFiles)),revas.gui.UserData.logBox)
+            ExecutePipeline(revas,gParams);
             
+        catch runPipeError
+            errStr = getReport(runPipeError);
+            RevasError(sprintf(' \n %s',errStr),revas.gui.UserData.logBox);
+        end
+        
+        if abortTriggered
+            RevasMessage('Pipeline was aborted by user.',revas.gui.UserData.logBox);
+            revas.gui.UserData.abortButton.Value = 0;
+            abortTriggered = 0;
+        else
+            if ~exist('runPipeError','var')
+                RevasMessage('All files have been processed. Pipeline stopped.',revas.gui.UserData.logBox);
+            else
+                RevasMessage('Pipeline stopped with an error. Check the log.',revas.gui.UserData.logBox);
+            end
         end
         
         % restore enable state of UIControls
         arrayfun(@(x,y) set(x,'Enable',y{1}), objs, revas.gui.UserData.enableState);
+        
+        % make abort button hidden again
+        revas.gui.UserData.abortButton.Visible = 'off';
+        
+        % set runButton to default state
+        revas.gui.UserData.runButton.Visible = 'on';
         src.Value = 0;
         
     end
@@ -411,9 +447,18 @@ fprintf('\n\n%s: ReVAS %s launched!\n',datestr(datetime), versionNo);
         % if Run button is on, i.e., a pipeline is running, do not exit.
         % Give a warning only.
         if revas.gui.UserData.runButton.Value
-            warndlg('Pipeline is running... Please abort the process and then quit ReVAS.',...
-                'Unfinished Business','modal');
-            return;
+            answer = questdlg('Pipeline is running... Please abort the process and then quit ReVAS.',...
+                'Unfinished Business','Exit Anyway','Cancel','modal');
+            % Handle response
+            switch answer
+                case 'Exit Anyway'
+                    % do nothing
+                case 'Cancel'
+                    return;
+                otherwise
+                    % do nothing
+            end
+            
         end
         
         % if there are unsaved changes to the pipeline, ask user if she
@@ -430,16 +475,18 @@ fprintf('\n\n%s: ReVAS %s launched!\n',datestr(datetime), versionNo);
                     return;
                 case 'Save & Exit'
                     SavePipeline(revas.gui.UserData.save,[],revas);
+                otherwise 
+                    % do nothing
             end
         end
-        fprintf('%s: ReVAS closed!\n',datestr(datetime))
+        RevasMessage(sprintf('ReVAS closed!\n'),revas.gui.UserData.logBox)
+            
         diary off;
         delete(revas.gui);
     end
 
 
 end
-
 
 
 

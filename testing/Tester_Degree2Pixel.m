@@ -1,4 +1,4 @@
-function success = Tester_FilterEyePosition
+function success = Tester_Degree2Pixel
 
 % suppress warnings
 origState = warning;
@@ -13,20 +13,15 @@ try
     % load raw position and time
     load(inputFile,'timeSec','position');
     
-    % since this example file contains uninverted position shifts, we need
-    % to invert to get eye position. We also need to convert from pixel
-    % units to visual degrees.
-    pixelSizeDeg = 0.83 / 512;
-    positionDeg = -position * pixelSizeDeg;
+    positionDeg = position * 0.83/512;
     
     %% First test
     
     % use default params and plot intermediate filtering stages
     p = struct; 
-    p.overwrite = true;
-    p.enableVerbosity = 2;
-    p.maxGapDurationMs = 50;
-    [~, p] = FilterEyePosition([positionDeg timeSec], p);
+    p.fov = 0.83;
+    p.frameWidth = 512;
+    [outArg, p] = Degree2Pixel([positionDeg timeSec], p);
     
 
     %% Second test
@@ -36,9 +31,16 @@ try
     
     % use a filepath as input and only plot the final output
     save(hiddenFile,'positionDeg','timeSec');
-    p.enableVerbosity = 1;
-    p.axesHandles = [];
-    [~, p] = FilterEyePosition(hiddenFile, p);
+    [~, p] = Degree2Pixel(hiddenFile, p);
+    
+    % load position
+    load(hiddenFile,'position');
+    
+    % compare with outArg
+    nonnan = ~isnan(position(:,1));
+    assert(all(all(outArg(nonnan,1:end-1) == position(nonnan,:))))
+    
+    % clean up
     delete(hiddenFile);
     delete(p.outputFilePath);
     

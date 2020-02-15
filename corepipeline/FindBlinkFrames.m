@@ -1,4 +1,4 @@
-function [badFrames, varargout] = FindBlinkFrames(inputVideo, params)
+function [inputVideo, params, varargout] = FindBlinkFrames(inputVideo, params)
 %FIND BLINK FRAMES  Records in a mat file the frames in which a blink
 %                   occurred. Blinks are considered to be frames in which
 %                   the frame's mean and standard deviation are reduced
@@ -52,12 +52,13 @@ function [badFrames, varargout] = FindBlinkFrames(inputVideo, params)
 %   -----------------------------------
 %   Output
 %   -----------------------------------
-%   |badFrames| is index array (logical) where 1s indicate bad frames.
+%   |inputVideo| is directly passed from input argument.
+%
+%   |params| structure with badFrames as a new field
 %
 %   varargout{1} = badFramesMatFilePath
 %   varargout{2} = image statistics extracted from all frames.
 %   varargout{3} = candidate for initial reference frame based on means.
-%   varargout{4} = params.
 %
 %                          
 %   -----------------------------------
@@ -78,6 +79,14 @@ global abortTriggered;
 if isempty(abortTriggered)
     abortTriggered = false;
 end
+
+%% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
+if isfield(params,'logBox')
+    logBox = params.logBox;
+else
+    logBox = [];
+end
+
 
 %% Determine inputVideo type.
 if ischar(inputVideo)
@@ -131,19 +140,17 @@ if writeResult
         % left blank to continue without issuing warning in this case
     elseif ~params.overwrite
         load(badFramesMatFilePath,'badFrames','imStats','initialRef');
+        params.badFrames = badFrames;
         if nargout > 2
             varargout{2} = imStats;
         end
         if nargout > 3
             varargout{3} = initialRef;
         end
-        if nargout > 4
-            varargout{4} = params;
-        end
-        RevasWarning(['FindBadFrames() did not execute because it would overwrite existing file. (' badFramesMatFilePath ')'], params);
+        RevasWarning(['FindBadFrames() did not execute because it would overwrite existing file. (' badFramesMatFilePath ')'], logBox);
         return;
     else
-        RevasWarning(['FindBadFrames() is proceeding and overwriting an existing file. (' badFramesMatFilePath ')'], params);
+        RevasWarning(['FindBadFrames() is proceeding and overwriting an existing file. (' badFramesMatFilePath ')'], logBox);
     end
 end
 
@@ -218,6 +225,9 @@ end
 % waste time in crappy frames
 badFrames = conv(badFrames,[1 1 1],'same') ~= 0;
 
+% include badFrames as a field under params structure to be used in
+% successive stages in the pipeline
+params.badFrames = badFrames;
 
 %% Return image stats if user asks for it or results are to be written to a file
 
@@ -236,10 +246,6 @@ end
 if nargout > 3 || writeResult
     [~,initialRef] = max(means);
     varargout{3} = initialRef;
-end
-
-if nargout > 4 || writeResult
-    varargout{4} = params;
 end
 
 
@@ -278,7 +284,7 @@ end
 
 if writeResult
     % remove unnecessary fields
-    params = RemoveFields(params,{'commandWindowHandle','axesHandles'}); 
+    params = RemoveFields(params,{'logBox','axesHandles'}); 
     
     % save results
     save(badFramesMatFilePath, 'badFrames','imStats','initialRef','params');

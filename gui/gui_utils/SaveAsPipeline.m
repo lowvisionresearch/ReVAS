@@ -5,8 +5,6 @@ function SaveAsPipeline(varargin)
 %
 % Mehmet N. Agaoglu 1/20/2020 
 
-fprintf('%s: SaveAsPipeline launched!\n',datestr(datetime));
-
 % first argument is the source
 src = varargin{1};
 
@@ -15,19 +13,20 @@ siblingObjs = get(get(src,'parent'),'children');
 
 % the third argument is the handle from main gui
 revas = varargin{3};
+RevasMessage(sprintf('SaveAsPipeline launched.'),revas.gui.UserData.logBox);
 
 if ~isfield(revas.gui.UserData,'pipeline') || ...
    ~isfield(revas.gui.UserData,'pipeParams') 
     errordlg('SavePipeline: nothing to save! First load an existing one.',...
         'SaveAsPipeline error','modal')
-    fprintf('%s: SaveAsPipeline returned with an error: Nothing to save!\n',datestr(datetime));
+    RevasError(sprintf('SaveAsPipeline returned with an error: Nothing to save.'),revas.gui.UserData.logBox);
     return;
 end
 
 % dialog box to select a pipe file name
 [file,path,~] = uiputfile('*.mat','Enter a pipeline filename');
 if file == 0
-    fprintf('%s: SaveAsPipeline is returning without saving. User cancelled the operation.\n',datestr(datetime));
+    RevasMessage(sprintf('SaveAsPipeline is returning without saving. User cancelled the operation.'),revas.gui.UserData.logBox);
     return;
 else
     revas.gui.UserData.pipelineFile = fullfile(path,file);
@@ -42,4 +41,4 @@ save(revas.gui.UserData.pipelineFile,'pipeline','pipeParams');
 set(siblingObjs(contains({siblingObjs.Text},'Save') & ...
                ~contains({siblingObjs.Text},'Save As')),'Enable','off');
 
-fprintf('%s: Pipeline has been saved in %s\n',datestr(datetime),revas.gui.UserData.pipelineFile);
+RevasMessage(sprintf('Pipeline has been saved in %s',revas.gui.UserData.pipelineFile),revas.gui.UserData.logBox);

@@ -5,8 +5,6 @@ function OpenPipeline(varargin)
 %
 % Mehmet N. Agaoglu 1/20/2020 
 
-fprintf('%s: OpenPipeline launched!\n',datestr(datetime));
-
 % first argument is the source
 src = varargin{1};
 
@@ -15,11 +13,12 @@ siblingObjs = get(get(src,'parent'),'children');
 
 % the third argument is the handle from main gui
 revas = varargin{3};
+RevasMessage(sprintf('OpenPipeline launched.'),revas.gui.UserData.logBox);
 
 % dialog box to select a pipe file
 [file,path,~] = uigetfile('*.mat','Select a pipeline file');
 if file == 0
-    fprintf('%s: OpenPipeline closed without loading a pipeline.\n',datestr(datetime));
+    RevasMessage(sprintf('OpenPipeline closed without loading a pipeline.'),revas.gui.UserData.logBox);
     return;
 end
 
@@ -31,7 +30,7 @@ m = load(pipelineFile,'pipeline','pipeParams');
 if ~isfield(m,'pipeline') || ~isfield(m,'pipeParams')
     errordlg('Pipeline file must have ''pipeline'' and ''pipeParams'' fields.',...
         'OpenPipeline Error','modal');
-    fprintf('%s: OpenPipeline closed due to an error. Selected file does not have required fields.\n',datestr(datetime));
+    RevasError(sprintf('OpenPipeline closed due to an error. Selected file does not have required fields.'),revas.gui.UserData.logBox);
     return;
 end
 
@@ -47,5 +46,6 @@ revas.gui.UserData.lbPipeline.Visible = 'on';
 set(siblingObjs(contains({siblingObjs.Text},'Edit') | ...
                 contains({siblingObjs.Text},'Save As')),'Enable','on');
             
-            
-fprintf('%s: Existing pipeline loaded from %s.\n',datestr(datetime),pipelineFile);
+
+RevasMessage(sprintf('Existing pipeline loaded from %s.',pipelineFile),revas.gui.UserData.logBox);
+

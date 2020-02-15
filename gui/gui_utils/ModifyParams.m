@@ -30,8 +30,10 @@ end
 % object.
 if nargin < 3
     parent = [];
+    logBoxHandle = [];
 else
     parent = varargin{2};
+    logBoxHandle = parent.UserData.logBox;
 end
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -55,9 +57,12 @@ else
            'e.g., StripAnalysis, or a cell array with a length of two '...
            '{callerStr,default,validate}'];
     errordlg(errStr,'ModifyParams error','modal');
-    fprintf('%s: ModifyParams returned with an error: %s\n',datestr(datetime),errStr);
+    params = [];
+    RevasError(sprintf('ModifyParams returned with an error: %s',errStr),logBoxHandle);
+    return;
+
 end
-fprintf('%s: ModifyParams launched for %s!\n',datestr(datetime), callerStr);
+RevasMessage(sprintf('ModifyParams launched for %s!',callerStr),logBoxHandle);
 
 % in case user closes the GUI window, return default values
 params = default;
@@ -67,6 +72,7 @@ paramNames = fieldnames(default);
 
 % remove field that user cannot modify via GUI, e.g., axesHandles
 toRemove = contains(paramNames, 'axesHandles')    | ...
+           contains(paramNames, 'logBox')         | ...
            contains(paramNames, 'referenceFrame') | ...
            contains(paramNames, 'peakValues')     | ...
            contains(paramNames, 'position')       | ...
@@ -136,6 +142,8 @@ numericParams = ~logicalParams & ~strParams;
 % read the documentation for the callerStr module.
 helpStr = ReadHelp(callerStr);
 
+
+
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %
@@ -190,6 +198,8 @@ gui.fig = figure('units','pixels',...
 
 % see if we have a suitable GPU. If not, we will disable relevant controls
 nGPU = gpuDeviceCount; 
+
+
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -403,14 +413,14 @@ uiwait(gui.fig);
     end
 
     function OkCallback(varargin)
-        fprintf('%s: ModifyParams, user clicked OK.\n',datestr(datetime));
+        RevasMessage(sprintf('ModifyParams, user clicked OK.'),logBoxHandle);
         delete(gui.fig);
     end
 
     % If user clicks Cancel, return an empty array.
     function CancelCallback(varargin)
         params = [];
-        fprintf('%s: ModifyParams, user cancelled.\n',datestr(datetime));
+        RevasMessage(sprintf('ModifyParams, user cancelled.'),logBoxHandle);
         delete(gui.fig); 
     end
     

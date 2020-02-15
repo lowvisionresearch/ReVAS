@@ -1,4 +1,4 @@
-function [outputVideo, varargout] = GammaCorrect(inputVideo, params)
+function [outputVideo, params] = GammaCorrect(inputVideo, params)
 %GAMMA CORRECT Applies gamma correction or some other contrast enhancement
 % operation to the video.
 %
@@ -44,8 +44,7 @@ function [outputVideo, varargout] = GammaCorrect(inputVideo, params)
 %   |outputVideo| is path to new video if 'inputVideo' is also a path. If
 %   'inputVideo' is a 3D array, |outputVideo| is also a 3D array.
 %
-%   |varargout| is a variable output argument holder. Used to return the 
-%   'params' structure. 
+%   |params| structure
 %
 %   Example usage: 
 %       inputVideo = 'tslo-dark.avi';
@@ -62,6 +61,14 @@ global abortTriggered;
 if isempty(abortTriggered)
     abortTriggered = false;
 end
+
+%% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
+if isfield(params,'logBox')
+    logBox = params.logBox;
+else
+    logBox = [];
+end
+
 
 %% Determine inputVideo type.
 if ischar(inputVideo)
@@ -94,14 +101,10 @@ if writeResult
     if ~exist(outputVideoPath, 'file')
         % left blank to continue without issuing warning in this case
     elseif ~params.overwrite
-        RevasWarning(['GammaCorrect() did not execute because it would overwrite existing file. (' outputVideoPath ')'], params);
-        
-        if nargout > 1
-            varargout{1} = params;
-        end
+        RevasWarning(['GammaCorrect() did not execute because it would overwrite existing file. (' outputVideoPath ')'], logBox);
         return;
     else
-        RevasWarning(['GammaCorrect() is proceeding and overwriting an existing file. (' outputVideoPath ')'], params);
+        RevasWarning(['GammaCorrect() is proceeding and overwriting an existing file. (' outputVideoPath ')'], logBox);
     end
 end
 
@@ -192,10 +195,5 @@ if writeResult
     if abortTriggered
         delete(outputVideoPath)
     end
-end
-
-%% return the params structure if requested
-if nargout > 1
-    varargout{1} = params;
 end
 

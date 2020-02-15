@@ -1,5 +1,5 @@
-function [refFrame, varargout] = MakeReference(inputVideo, params)
-%[refFrame, varargout] = MakeReference(inputVideo, params)
+function [inputVideo, params, varargout] = MakeReference(inputVideo, params)
+%[inputVideo, params, varargout] = MakeReference(inputVideo, params)
 %
 %   Make a reference frame. Uses the output of 'StripAnalysis.m' to get
 %   position shifts for building the reference frame. Uses some heuristics
@@ -41,11 +41,11 @@ function [refFrame, varargout] = MakeReference(inputVideo, params)
 %                       StripAnalysis)
 %   newStripHeight    : strip height to be used for making the reference.
 %   newStripWidth     : strip width for making the reference.
-%   positions         : position traces after compensating for strip
+%   position          : position traces after compensating for strip
 %                       location within parent frame. Also compensates for
 %                       trim operation, if any. 
-%   timeSec           : time array for positions. in seconds.
-%   peakValues        : Peak values. See help StripAnalysis.m for more
+%   timeSec           : time array for position. in seconds.
+%   peakValueArray    : Peak values. See help StripAnalysis.m for more
 %                       info.
 %   badFrames         : vector containing the frame numbers of the blink 
 %                       frames. (default [])
@@ -69,12 +69,14 @@ function [refFrame, varargout] = MakeReference(inputVideo, params)
 %   -----------------------------------
 %   Output
 %   -----------------------------------
-%   |refFrame| is a 2D array representing the reference frame.
+%   |inputVideo| is directly passed from input.  
+%
+%   |params| structure.
 %
 %   |varargout| is a variable output argument holder.
-%   varargout{1} = refFrameFilePath
-%   varargout{2} = params
-%   varargout{3} = refFrameZero.
+%   varargout{1} = refFrame, a 2D array representing the reference frame.
+%   varargout{2} = refFrameFilePath, refFrame file path (if exists)
+%   varargout{3} = refFrameZero, zero padded version of reference frame
 %
 
 %% Allow for aborting if not parallel processing
@@ -84,6 +86,14 @@ global abortTriggered;
 % cannot abort when run in parallel.
 if isempty(abortTriggered)
     abortTriggered = false;
+end
+
+
+%% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
+if isfield(params,'logBox')
+    logBox = params.logBox;
+else
+    logBox = [];
 end
  
 
@@ -112,6 +122,9 @@ params = ValidateField(params,default,validate,callerStr);
 
 
 %% Handle verbosity 
+if ischar(params.enableVerbosity)
+    params.enableVerbosity = find(contains({'none','video','frame'},params.enableVerbosity))-1;
+end
 
 % check if axes handles are provided, if not, create axes.
 if params.enableVerbosity && isempty(params.axesHandles)
@@ -142,24 +155,26 @@ if writeResult
     if ~exist(outputFilePath, 'file')
         % left blank to continue without issuing RevasMessage in this case
     elseif ~params.overwrite
-        RevasMessage(['MakeReference() did not execute because it would overwrite existing file. (' outputFilePath ')'], params);
-        RevasMessage('MakeReference() is returning results from existing file.',params); 
+        
+        RevasMessage(['MakeReference() did not execute because it would overwrite existing file. (' outputFilePath ')'], logBox);
+        RevasMessage('MakeReference() is returning results from existing file.',logBox); 
         
         % try loading existing file contents
         load(outputFilePath,'refFrame','params','refFrameZero');
-        if nargout > 1
-            varargout{1} = outputFilePath;
-        end
+        params.referenceFrame = refFrame;
         if nargout > 2
-            varargout{2} = params;
+            varargout{1} = refFrame;
         end
         if nargout > 3
+            varargout{2} = outputFilePath;
+        end
+        if nargout > 4
             varargout{3} = refFrameZero;
         end
         
         return;
     else
-        RevasMessage(['MakeReference() is proceeding and overwriting an existing file. (' outputFilePath ')'], params);  
+        RevasMessage(['MakeReference() is proceeding and overwriting an existing file. (' outputFilePath ')'], logBox);  
     end
 else
     outputFilePath = [];
@@ -187,9 +202,9 @@ params = HandleBadFrames(numberOfFrames, params, callerStr);
 
 % check for duplicate samples
 dupIx = diff(params.timeSec) == 0;
-params.peakValues(dupIx) = [];
+params.peakValueArray(dupIx) = [];
 params.timeSec(dupIx) = [];
-params.positions(dupIx,:) = [];
+params.position(dupIx,:) = [];
 
 newRowNumbers = 1:params.newStripHeight:(height-params.newStripHeight+1);
 stripsPerFrame = length(newRowNumbers);
@@ -199,24 +214,24 @@ dtPerScanLine = diff(params.timeSec(1:2)) / diff(params.rowNumbers(1:2));
 
 % estimate the extent of motion, i.e., how much motion occurred during a
 % video will determine the size of the final reference frame 
-deltaPos = [0; sqrt(sum((diff(params.positions,[],1)/height).^2,2))] * oldNumberOfStrips;
-usefulSamples = (params.peakValues >= params.minPeakThreshold) & ...
+deltaPos = [0; sqrt(sum((diff(params.position,[],1)/height).^2,2))] * oldNumberOfStrips;
+usefulSamples = (params.peakValueArray >= params.minPeakThreshold) & ...
                 (deltaPos <= params.maxMotionThreshold);
 
 % interpolate position for new strip height
 newTimeSec = dtPerScanLine * ...
     reshape((0:(numberOfFrames-1)) * (sum(params.trim) + height) + newRowNumbers', newNumberOfStrips, 1);
 newUsefulSamples = interp1(params.timeSec,double(usefulSamples),newTimeSec) > 0.5;
-newPositions = interp1(params.timeSec(usefulSamples), params.positions(usefulSamples,:), newTimeSec, 'linear');
-newPositions(~newUsefulSamples,:) = nan;
+newposition = interp1(params.timeSec(usefulSamples), params.position(usefulSamples,:), newTimeSec, 'linear');
+newposition(~newUsefulSamples,:) = nan;
 
 % if subpixel operation is enabled, i.e. subpixelForRef ~= 0, everything
 % needs to upsampled/resized/scaled by 2^subpixelForRef.
 sizeFactor = 2^params.subpixelForRef;
 
 % create an accumulator and a counter array based on motion.
-minPos = min(params.positions(usefulSamples,:),[],1);
-maxPos = max(params.positions(usefulSamples,:),[],1);
+minPos = min(params.position(usefulSamples,:),[],1);
+maxPos = max(params.position(usefulSamples,:),[],1);
 refWidth = round((maxPos(1) - minPos(1) + width + 1) * sizeFactor);
 refHeight = round((maxPos(2) - minPos(2) + height + 1) * sizeFactor);
 accumulator = zeros(refHeight, refWidth);
@@ -236,7 +251,7 @@ isFirstTimePlotting = true;
 if ~abortTriggered && params.enableVerbosity 
     
     % show peak value criterion
-    scatter(params.axesHandles(2),params.timeSec,params.peakValues,10,'filled'); 
+    scatter(params.axesHandles(2),params.timeSec,params.peakValueArray,10,'filled'); 
     hold(params.axesHandles(2),'on');
     plot(params.axesHandles(2),params.timeSec([1 end]),params.minPeakThreshold*ones(1,2),'-','linewidth',2);
     set(params.axesHandles(2),'fontsize',14);
@@ -298,7 +313,7 @@ for fr = 1:numberOfFrames
             thisSample = stripsPerFrame * (fr-1) + sn;
             
             % if it's not a useful sample, skip it.
-            if any(isnan(newPositions(thisSample,:)))
+            if any(isnan(newposition(thisSample,:)))
                 continue;
             end
             
@@ -314,7 +329,7 @@ for fr = 1:numberOfFrames
             end
             
             % compute location in ref frame
-            xy = round(sizeFactor * (newPositions(thisSample,:) - minPos + [0 newRowNumbers(sn)]) + 1);
+            xy = round(sizeFactor * (newposition(thisSample,:) - minPos + [0 newRowNumbers(sn)]) + 1);
             indY = xy(2):(xy(2)+ size(thisStrip,1) - 1);
             indX = xy(1):(xy(1)+ sizeFactor * stripWidth - 1);
             
@@ -409,33 +424,29 @@ end
 if writeResult && ~abortTriggered
     
     % remove unnecessary fields
-    params = RemoveFields(params,{'commandWindowHandle','axesHandles'}); 
+    params = RemoveFields(params,{'logBox','axesHandles'}); 
     
     % Save under file labeled 'final'.
     save(outputFilePath, 'refFrame','refFrameZero','params');
 
 end
 
+% add reference frame to params as a field to be used in successive stages
+% in the pipeline
+params.referenceFrame = refFrame;
 
 %% return the params structure if requested
 
-if nargout > 1
-    varargout{1} = outputFilePath;
-end
+
 if nargout > 2
-    varargout{2} = params;
+    varargout{1} = refFrame;
 end
 if nargout > 3
+    varargout{2} = outputFilePath;
+end
+if nargout > 4
     varargout{3} = refFrameZero;
 end
     
-
-
-
-
-
-
-
-
 
 

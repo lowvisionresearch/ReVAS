@@ -11,6 +11,10 @@ try
     localRefPath = FindFile('tslo-localRef.mat');
     globalRefPath = FindFile('tslo-globalRef-tilted-3_25.tif');
     
+    % make up some position traces
+    position = rand(540,2);
+    timeSec = linspace(0,1,540)';
+    
     % use default params, but correct for torsion
     p = struct; 
     p.overwrite = true;
@@ -18,8 +22,8 @@ try
     p.anchorStripHeight = 32;
     p.enableVerbosity = 1;
     p.globalRefArgument = globalRefPath;
-    [offset, bestTilt, p, peakValues] = ReReference(localRefPath, p); %#ok<*ASGLU>
-    delete(p.outputFilePath);
+    p.referenceFrame = localRefPath;
+    [~,p,offset, bestTilt, peakValues] = ReReference([position timeSec], p); %#ok<*ASGLU>
     
     assert(abs(bestTilt - 3.25) < 0.1);
 
@@ -31,12 +35,19 @@ try
     load(localRefPath,'params');
     localRef = params.referenceFrame;
     
+    % save made-up position traces to a hidden file
+    hiddenFile = '.demoPositionFile.mat';
+    save(hiddenFile,'position','timeSec');
+    
     angle = -1.35;
     p.globalRefArgument = padarray(imrotate(localRef,angle,'bilinear'),21);
-    [offset, bestTilt, p, peakValues] = ReReference(localRef, p);
+    [outputFilePath, p, offset, bestTilt, peakValues] = ReReference(hiddenFile, p);
     
     % check if we found the tilt correctly (to some degree)
     assert(abs(bestTilt - angle) < 0.1);
+    
+    delete(hiddenFile);
+    delete(outputFilePath);
 
     success = true;
 
