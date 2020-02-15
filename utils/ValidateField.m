@@ -4,6 +4,13 @@ function params = ValidateField(params,default,validate,callerStr)
 %    Helper function to validate input arguments in various functions.
 %
 
+% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
+if isfield(params,'logBox')
+    logBox = params.logBox;
+else
+    logBox = [];
+end
+
 % get all field names
 fields = fieldnames(default);
 
@@ -34,7 +41,7 @@ for i=1:length(fields)
         
         % inform the user about using default values and show the default
         % values as well.
-        RevasWarning([callerStr ' is using default parameter for ' fields{i} ': ' str], params);
+        RevasWarning([callerStr ' is using default parameter for ' fields{i} ': ' str], logBox);
     end
 
 end

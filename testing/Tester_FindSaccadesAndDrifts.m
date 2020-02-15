@@ -19,7 +19,7 @@ try
     p = struct; 
     p.overwrite = true;
     p.enableVerbosity = 1;
-    [sHybrid, ~, ~, p] = ...
+    [~, p] = ...
         FindSaccadesAndDrifts([filteredEyePositions timeSec],  p);
     
     
@@ -27,23 +27,23 @@ try
     
     % use ivt method. it cannot find any saccades in this example!!!
     p.algorithm = 'ivt';
-    sIvt = FindSaccadesAndDrifts([filteredEyePositions timeSec],  p);
+    [~,p2] = FindSaccadesAndDrifts([filteredEyePositions timeSec],  p);
     
-    assert(isempty(sIvt));
+    assert(isempty(p2.saccades));
 
     %% third test
     
     % try EK algorithm. should result in similar outcome as hybrid.
     p.algorithm = 'ek';
-    sEk = FindSaccadesAndDrifts([filteredEyePositions timeSec],  p);
+    [~,p3] = FindSaccadesAndDrifts([filteredEyePositions timeSec],  p);
     
     %% fourth test
     
     % try with a file input
-    [sEk2,~,~,p] = FindSaccadesAndDrifts(inputFile,  p);
-    delete(p.outputFilePath);
+    [~,p4] = FindSaccadesAndDrifts(inputFile,  p);
+    delete(p4.outputFilePath);
     
-    assert(length(sEk) == length(sEk2));
+    assert(length(p3.saccades) == length(p4.saccades));
     
     success = true;
     

@@ -1,4 +1,5 @@
-function [filteredEyePositions, timeSec, varargout ]= FilterEyePosition(inputArgument, params)
+function [outputArgument, params]= FilterEyePosition(inputArgument, params)
+% [outputArgument, params]= FilterEyePosition(inputArgument, params)
 %FILTER EYE POSITION fixes temporal gaps in the eye position traces due to
 %   blinks or bad strips, applies a series of filters, and then removes
 %   interpolated regions. Fixing gaps is required for filter functions to work
@@ -21,7 +22,7 @@ function [filteredEyePositions, timeSec, varargout ]= FilterEyePosition(inputArg
 %   The result is that the filtered version of this file is stored with
 %   '_filtered' appended to the original file name. If |inputArgument| 
 %   is not a file name but actual eye position data, then the filtered 
-%   position data are not stored, and the second output argument is an empty array.
+%   position data are not stored.
 %
 %   |params| is a struct as specified below.
 %
@@ -66,16 +67,18 @@ function [filteredEyePositions, timeSec, varargout ]= FilterEyePosition(inputArg
 %                         provided or empty, new figures are created.
 %                         (relevant only when enableVerbosity is true)
 %
+%
 %   -----------------------------------
 %   Output
 %   -----------------------------------
-%   |filteredEyePositions| is the filtered eye position traces. Rows
-%   represent time in ascending order and columns represent different eye
-%   traces (horizontal, vertical, or multiple traces from different videos.
+%   |outputArgument| is the same type as inputArgument but after filtering.
+%   If inputArgument is an array of eye positions and time, then
+%   outputArgument is also an array of filtered eye positions and time. If
+%   inputArgument is a file containin eye positions, then outputArgument is
+%   a file containing filtered eye positions.
 %
-%   |timeSec|. time in seconds after required interpolation.
+%   |params| structure.
 %
-%   |varargout| is for returning params.
 %
 %   -----------------------------------
 %   Example usage
@@ -101,6 +104,14 @@ global abortTriggered;
 % cannot abort when run in parallel.
 if isempty(abortTriggered)
     abortTriggered = false;
+end
+
+
+%% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
+if isfield(params,'logBox')
+    logBox = params.logBox;
+else
+    logBox = [];
 end
 
 
@@ -162,18 +173,12 @@ if writeResult
     if ~exist(outputFilePath, 'file')
         % left blank to continue without issuing RevasMessage in this case
     elseif ~params.overwrite
-        RevasMessage(['FilterEyePosition() did not execute because it would overwrite existing file. (' outputFilePath ')'], params);
-        RevasMessage('FilterEyePosition() is returning results from existing file.',params); 
-        
-        % try loading existing file contents
-        load(outputFilePath,'filteredEyePositions','timeSec');
-        if nargout > 2
-            varargout{1} = params;
-        end
-        
+        RevasMessage(['FilterEyePosition() did not execute because it would overwrite existing file. (' outputFilePath ')'], logBox);
+        RevasMessage('FilterEyePosition() is returning results from existing file.',logBox); 
+        outputArgument = outputFilePath;
         return;
     else
-        RevasMessage(['FilterEyePosition() is proceeding and overwriting an existing file. (' outputFilePath ')'], params);  
+        RevasMessage(['FilterEyePosition() is proceeding and overwriting an existing file. (' outputFilePath ')'], logBox);  
     end
 end
 
@@ -182,12 +187,23 @@ end
 
 if writeResult
     % check if input file exists
-    if ~exist(inputArgument,'file')
-        error('FilterEyePosition: eye position file does not exist!');
+    if exist(inputArgument,'file') 
+        [~,~,ext] = fileparts(inputArgument);
+        if strcmp(ext,'.mat')
+            % load the data
+            load(inputArgument,'positionDeg','timeSec');
+        end
     end
     
-    % load the data
-    load(inputArgument,'positionDeg','timeSec');
+    if isfield(params,'positionDeg') && isfield(params,'timeSec')
+        positionDeg = params.positionDeg;
+        timeSec = params.timeSec;
+    end
+    
+    if ~exist('positionDeg','var')
+        error('FilterEyePosition: eye position array cannot be found!');   
+    end
+    
     eyePositionTraces = positionDeg;
 
 else % inputArgument is not a file path, but carries the eye position data.    
@@ -358,6 +374,13 @@ filteredFullArray = filteredEyePositions;
 filteredEyePositions(nanIndices,:) = nan;
 
 
+%% assign outputs
+if writeResult
+    outputArgument = outputFilePath;
+else
+    outputArgument = [filteredEyePositions timeSec];
+end
+
 
 %% visualize results if user requested
 if ~abortTriggered && params.enableVerbosity 
@@ -409,7 +432,7 @@ end
 if writeResult && ~abortTriggered
     
     % remove unnecessary fields
-    params = RemoveFields(params,{'commandWindowHandle','axesHandles'}); 
+    params = RemoveFields(params,{'logBox','axesHandles'}); 
     
     data.filteredEyePositions = filteredEyePositions;
     data.filteredFullArray = filteredFullArray;
@@ -417,12 +440,6 @@ if writeResult && ~abortTriggered
     data.timeSec = timeSec;
     data.params = params;
     save(outputFilePath,'-struct','data');
-end
-
-
-%% return the params structure if requested
-if nargout > 2
-    varargout{1} = params;
 end
 
 

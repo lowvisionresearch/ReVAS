@@ -15,16 +15,16 @@ try
     p = struct; 
     
     % test with a video path
-    [badFrames, outputFilePath, imStats, initialRef] = FindBlinkFrames(inputVideo, p); %#ok<*ASGLU>
+    [~, p, outputFilePath, imStats, initialRef] = FindBlinkFrames(inputVideo, p); %#ok<*ASGLU>
     delete(outputFilePath);
     
     %% Second test
     % test with a video array
     p.enableVerbosity = true;
     videoArray = ReadVideoToArray(inputVideo);
-    [badFrames2, ~, imStats, initialRef,params] = FindBlinkFrames(videoArray,p);
+    [~, p2, imStats, initialRef] = FindBlinkFrames(videoArray,p);
 
-    assert(all(badFrames2 == badFrames));
+    assert(all(p.badFrames == p2.badFrames));
     
     %% Third test
     % video without a blink
@@ -41,10 +41,10 @@ try
         inputVideo = [filepath filesep inputVideo];
     end 
     % test with a video path
-    [badFrames, outputFilePath, imStats, initialRef] = FindBlinkFrames(inputVideo, p); %#ok<*ASGLU>
+    [~, p3, outputFilePath, imStats, initialRef] = FindBlinkFrames(inputVideo, p); %#ok<*ASGLU>
     delete(outputFilePath);
     
-    assert(sum(badFrames) == 0);
+    assert(sum(p3.badFrames) == 0);
     
     success = true;
 catch

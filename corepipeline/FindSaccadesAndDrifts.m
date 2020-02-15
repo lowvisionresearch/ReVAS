@@ -1,4 +1,4 @@
-function [saccades, drifts, labels, varargout] = ...
+function [inputArgument, params, varargout] = ...
     FindSaccadesAndDrifts(inputArgument,  params)
 %FIND SACCADES AND DRIFTS saccade and drift parsing.
 %
@@ -116,19 +116,27 @@ function [saccades, drifts, labels, varargout] = ...
 %   -----------------------------------
 %   Output
 %   -----------------------------------
-%   |saccades| is an array of a saccade structure, each of which contains detailed
-%   info about a single saccade.
+%   |inputArgument| is the same as input. directly passed from input.
 %
-%   |drifts| is the same as saccades, except it has info on drift "events". 
+%   |params| structure with saccades, drifts, and labels, as fields.
+%           |saccades| is an array of a saccade structure, each of which contains detailed
+%           info about a single saccade.
+%           |drifts| is the same as saccades, except it has info on drift "events". 
+%           |labels| is an array of integers representing event labels. 1: saccade,
+%           2: drift, 3: blink/data loss.
 %
-%   |labels| is an array of integers representing event labels. 1: saccade,
-%   2: drift, 3: blink/data loss.
-%
-%   varargout{1} = params.
-%   varargout{2} = st.
-%   varargout{3} = en.
-%   varargout{4} = driftSt.
-%   varargout{5} = driftEn.
+%   varargout{1} = st.
+%   varargout{2} = en.
+%   varargout{3} = driftSt.
+%   varargout{4} = driftEn.
+
+%% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
+if isfield(params,'logBox')
+    logBox = params.logBox;
+else
+    logBox = [];
+end
+
 
 %% Determine inputType type.
 if ischar(inputArgument)
@@ -183,30 +191,30 @@ if writeResult
     if ~exist(outputFilePath, 'file')
         % left blank to continue without issuing RevasMessage in this case
     elseif ~params.overwrite
-        RevasMessage(['FindSaccadesAndDrifts() did not execute because it would overwrite existing file. (' outputFilePath ')'], params);
-        RevasMessage('FindSaccadesAndDrifts() is returning results from existing file.',params); 
+        RevasMessage(['FindSaccadesAndDrifts() did not execute because it would overwrite existing file. (' outputFilePath ')'], logBox);
+        RevasMessage('FindSaccadesAndDrifts() is returning results from existing file.',logBox); 
         
         % try loading existing file contents
         load(outputFilePath,'saccades','drifts','labels','st','en','driftSt','driftEn');
+        params.saccades = saccades;
+        params.drifts = drifts;
+        params.labels = labels;
         if nargout > 3
-            varargout{1} = params;
+            varargout{1} = st;
         end
         if nargout > 4
-            varargout{2} = st;
+            varargout{2} = en;
         end
         if nargout > 5
-            varargout{3} = en;
+            varargout{3} = driftSt;
         end
         if nargout > 6
-            varargout{4} = driftSt;
-        end
-        if nargout > 7
-            varargout{5} = driftEn;
+            varargout{4} = driftEn;
         end
         
         return;
     else
-        RevasMessage(['FindSaccadesAndDrifts() is proceeding and overwriting an existing file. (' outputFilePath ')'], params);  
+        RevasMessage(['FindSaccadesAndDrifts() is proceeding and overwriting an existing file. (' outputFilePath ')'], logBox);  
     end
 end
 
@@ -416,29 +424,30 @@ end
 if writeResult
     
     % remove unnecessary fields
-    params = RemoveFields(params,{'commandWindowHandle','axesHandles'}); 
+    params = RemoveFields(params,{'logBox','axesHandles'}); 
     
     save(outputFilePath,'saccades','drifts','labels','params',...
         'st','en','driftSt','driftEn');
 end
 
+% append events under params structure
+params.saccades = saccades;
+params.drifts = drifts;
+params.labels = labels;
 
-%% return the params structure if requested
+%% handle variable output arguments
 
 if nargout > 3
-    varargout{1} = params;
+    varargout{1} = st;
 end
 if nargout > 4
-    varargout{2} = st;
+    varargout{2} = en;
 end
 if nargout > 5
-    varargout{3} = en;
+    varargout{3} = driftSt;
 end
 if nargout > 6
-    varargout{4} = driftSt;
-end
-if nargout > 7
-    varargout{5} = driftEn;
+    varargout{4} = driftEn;
 end
 
 
@@ -505,6 +514,10 @@ function [onsets, offsets] = GetEventOnsetsAndOffsets(indices)
     onsetOffset = [0; diff(indices)];
     onsets = find(onsetOffset == 1);
     offsets = find(onsetOffset == -1);
+    
+    if isempty(onsets) || isempty(offsets)
+        return;
+    end
 
     % address missing onset at the beginning
     if offsets(1) < onsets(1)

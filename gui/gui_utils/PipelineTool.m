@@ -6,8 +6,6 @@ function PipelineTool(varargin)
 %
 % Mehmet N. Agaoglu 1/19/2020 
 
-fprintf('%s: PipelineTool launched!\n',datestr(datetime));
-
 % first argument is the source
 src = varargin{1};
 
@@ -19,6 +17,8 @@ isChange = false;
 
 % the third argument is the handle from main gui
 revas = varargin{3};
+RevasMessage(sprintf('PipelineTool launched.'),revas.gui.UserData.logBox);
+
 screenSize = revas.screenSize;
 fontSize = revas.fontSize;
 parentPos = revas.gui.OuterPosition;
@@ -33,7 +33,8 @@ fig = figure('units','pixels',...
     'numbertitle','off',...
     'resize','off',...
     'visible','off',...
-    'windowstyle','modal');
+    'windowstyle','modal',...
+    'closerequestfcn',{@CancelCallback});
 
 % check all available core modules
 corePath = fileparts(which('StripAnalysis'));
@@ -60,7 +61,7 @@ end
 if ~isempty(missingModules)
     warStr = 'NewPipeline found some modules in corepipeline with missing entries in GetDefaults.m';
     warndlg(warStr,'Missing info','modal');
-    fprintf('%s: PipelineTool, %s\n',datestr(datetime),warStr);
+    RevasWarning(sprintf('%s.',warStr),revas.gui.UserData.logBox);
 end
 
 
@@ -218,7 +219,7 @@ uiwait(fig);
             % call parameter GUI to adjust params. if output is not empty,
             % update the pipeParams.
             inp = {thisModule{1}, revas.gui.UserData.pipeParams{lbPipe.Value}};
-            newParams = ModifyParams(inp, false, fig);
+            newParams = ModifyParams(inp, false, revas.gui);
             if ~isempty(newParams)
                 oldParams = revas.gui.UserData.pipeParams{lbPipe.Value,1};
                 isChange = CompareFieldsHelper(oldParams,newParams);
@@ -254,14 +255,14 @@ uiwait(fig);
         end
         
         % close the gui
-        fprintf('%s: PipelineTool closed.\n',datestr(datetime));
+        RevasMessage(sprintf('New pipeline loaded, PipelineTool closed.'),revas.gui.UserData.logBox);
         delete(fig);
     end
 
     % If user clicks Cancel, return an empty array.
     function CancelCallback(varargin)
         % close the gui
-        fprintf('%s: PipelineTool cancelled.\n',datestr(datetime));
+        RevasMessage(sprintf('PipelineTool closed without loading a pipeline.'),revas.gui.UserData.logBox);
         delete(fig); 
     end
 

@@ -16,6 +16,7 @@ exclude = varargin{4};
 
 % the fifth argument is the handle to main GUI
 revas = varargin{5};
+RevasMessage(sprintf('RevasFileSelect launched'),revas.gui.UserData.logBox);
 
 % name of the hidden file that keeps track of last used fileList
 fileListFile = revas.gui.UserData.fileListFile;
@@ -31,7 +32,7 @@ else
     
     % if user cancelled without selection, abort
     if ~iscell(fileList) && fileList == 0
-        fprintf('%s: File selection cancelled.\n',datestr(datetime));
+        RevasMessage(sprintf('RevasFileSelect closed without selecting files.'),revas.gui.UserData.logBox);
         return;
     end
 
@@ -50,8 +51,7 @@ revas.gui.UserData.lbFile.String = betterList;
 revas.gui.UserData.lbFile.Value = 1;
 revas.gui.UserData.lbFile.Visible = 'on';
 
-fprintf('%s: %d files have been selected.\n',datestr(datetime),length(fileList));
-
+RevasMessage(sprintf(' %d files have been selected.',length(fileList)),revas.gui.UserData.logBox);
 
 
 

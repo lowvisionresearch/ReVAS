@@ -4,6 +4,14 @@ if nargin < 3
     callerStr = '';
 end
 
+% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
+if isfield(params,'logBox')
+    logBox = params.logBox;
+else
+    logBox = [];
+end
+
+
 % if badFrames is provided and has the right length
 if length(params.badFrames) == numberOfFrames
     params.skipFrame = params.badFrames;
@@ -22,5 +30,5 @@ if length(params.badFrames) > numberOfFrames
     end
     params.skipFrame = false(numberOfFrames,1);
     RevasWarning([callerStr ': size mismatch between ''badFrames'' ' ...
-        'and input video. Using all frames for this video.'], params);  
+        'and input video. Using all frames for this video.'], logBox);  
 end

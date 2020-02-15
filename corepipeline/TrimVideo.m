@@ -1,4 +1,4 @@
-function [outputVideo, varargout] = TrimVideo(inputVideo, params)
+function [outputVideo, params] = TrimVideo(inputVideo, params)
 %TRIM VIDEO Removes boundaries of video. 
 %
 %   -----------------------------------
@@ -37,8 +37,7 @@ function [outputVideo, varargout] = TrimVideo(inputVideo, params)
 %   |outputVideo| is path to new video if 'inputVideo' is also a path. If
 %   'inputVideo' is a 3D array, |outputVideo| is also a 3D array.
 %
-%   |varargout| is a variable output argument holder. Used to return the 
-%   'params' structure. 
+%   |params| structure.
 %
 %
 %   -----------------------------------
@@ -58,6 +57,15 @@ global abortTriggered;
 if isempty(abortTriggered)
     abortTriggered = false;
 end
+
+
+%% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
+if isfield(params,'logBox')
+    logBox = params.logBox;
+else
+    logBox = [];
+end
+
 
 
 %% Determine inputVideo type.
@@ -91,15 +99,12 @@ if writeResult
     if ~exist(outputVideoPath, 'file')
         % left blank to continue without issuing warning in this case
     elseif ~params.overwrite
-        RevasWarning(['TrimVideo() did not execute because it would overwrite existing file. (' outputVideoPath ')'], params);    
-        outputVideo = outputVideoPath;
         
-        if nargout > 1
-            varargout{1} = params;
-        end
+        RevasWarning(['TrimVideo() did not execute because it would overwrite existing file. (' outputVideoPath ')'], logBox);    
+        outputVideo = outputVideoPath;
         return;
     else
-        RevasWarning(['TrimVideo() is proceeding and overwriting an existing file. (' outputVideoPath ')'], params);  
+        RevasWarning(['TrimVideo() is proceeding and overwriting an existing file. (' outputVideoPath ')'], logBox);  
     end
 end
 
@@ -173,6 +178,7 @@ for fr = 1:numberOfFrames
     end
 end % end of video
 
+params.trim = params.borderTrimAmount(3:4);
 
 %% return results, close up objects
 
@@ -187,8 +193,4 @@ if writeResult
     end
 end
 
-%% return the params structure if requested
-if nargout > 1
-    varargout{1} = params;
-end
 

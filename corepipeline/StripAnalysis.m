@@ -1,6 +1,5 @@
-function [position, timeSec, rawPosition, peakValueArray, varargout] = ...
-    StripAnalysis(inputVideo, params)
-%[position, timeSec, rawPosition, peakValueArray, varargout] = StripAnalysis(inputVideo, params)
+function [inputVideo, params, varargout] = StripAnalysis(inputVideo, params)
+%[inputVideo, params, varargout] = StripAnalysis(inputVideo, params)
 %   
 %   Extract eye movements in units of pixels. Cross-correlation of
 %   horizontal strips with a pre-defined reference frame.
@@ -96,17 +95,21 @@ function [position, timeSec, rawPosition, peakValueArray, varargout] = ...
 %   -----------------------------------
 %   Output
 %   -----------------------------------
-%   |position| is a Nx2 array of useful eye motions. Useful in the sense
-%   that peak values are above minPeakThreshold criterion.
+%   |inputVideo| is directly passed from input.  
 %
-%   |timeSec| is a Nx1 array of time in seconds.
+%   |params| structure. additional fields are:
+%           |position| is a Nx2 array of useful eye motions. Useful in the sense
+%           that peak values are above minPeakThreshold criterion.
+%           |timeSec| is a Nx1 array of time in seconds.
+%           |rawPosition| is a Nx2 array of raw eye motion.
+%           |peakValueArray| is a Nx1 array of peaks of cross-correlation maps.
 %
-%   |rawPosition| is a Nx2 array of raw eye motion.
-%
-%   |peakValueArray| is a Nx1 array of peaks of cross-correlation maps.
-%
-%   |varargout| is a variable output argument holder. Used to return the 
-%   'params' structure and 'peakPosition'. 
+%   |varargout| is a variable output argument holder. 
+%   varargout{1} = 'position'
+%   varargout{2} = 'timeSec'
+%   varargout{3} = 'rawPosition'
+%   varargout{4} = 'peakValueArray'
+%   varargout{5} = 'peakPosition'
 %
 %   -----------------------------------
 %   Example usage
@@ -118,7 +121,7 @@ function [position, timeSec, rawPosition, peakValueArray, varargout] = ...
 %       params.samplingRate = 540;
 %       params.minimumPeakThreshold = 0.3;
 %       
-%       [position, timeSec, rawPosition] = StripAnalysis(inputVideo, params);
+%       [~,~,position, timeSec, rawPosition] = StripAnalysis(inputVideo, params);
 %
 
 %% Allow for aborting if not parallel processing
@@ -129,6 +132,15 @@ global abortTriggered;
 if isempty(abortTriggered)
     abortTriggered = false;
 end
+
+
+%% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
+if isfield(params,'logBox')
+    logBox = params.logBox;
+else
+    logBox = [];
+end
+
 
 %% Determine inputVideo type.
 if ischar(inputVideo)
@@ -159,12 +171,12 @@ params = ValidateField(params,default,validate,callerStr);
 isCuda = contains(params.corrMethod,'cuda');
 if (params.enableGPU || isCuda) && (gpuDeviceCount < 1)
     params.enableGPU = false;
-    RevasWarning('StripAnalysis: No supported GPU available. Fall back to CPU', params);
+    RevasWarning('StripAnalysis: No supported GPU available. Fall back to CPU', logBox);
     
     % if corrMethod was specified as cuda, then we need to change that too.
     if isCuda
         params.corrMethod = 'mex';
-        RevasWarning('StripAnalysis: CUDA method cannot be used. Fall back to MEX method.', params);
+        RevasWarning('StripAnalysis: CUDA method cannot be used. Fall back to MEX method.', logBox);
     end    
 end
 
@@ -173,11 +185,14 @@ end
 if (isCuda || strcmp(params.corrMethod,'fft'))...
         && params.adaptiveSearch
     params.adaptiveSearch = false;
-    RevasWarning('StripAnalysis: Adaptive search is not supported in CUDA and FFT modes. Fall back to full search.', params);
+    RevasWarning('StripAnalysis: Adaptive search is not supported in CUDA and FFT modes. Fall back to full search.', logBox);
 end
 
 
 %% Handle verbosity 
+if ischar(params.enableVerbosity)
+    params.enableVerbosity = find(contains({'none','video','frame','strip'},params.enableVerbosity))-1;
+end
 
 % check if axes handles are provided, if not, create axes.
 if params.enableVerbosity && isempty(params.axesHandles)
@@ -209,21 +224,35 @@ if writeResult
     if ~exist(outputFilePath, 'file')
         % left blank to continue without issuing RevasMessage in this case
     elseif ~params.overwrite
-        RevasMessage(['StripAnalysis() did not execute because it would overwrite existing file. (' outputFilePath ')'], params);
-        RevasMessage('StripAnalysis() is returning results from existing file.',params); 
+        RevasMessage(['StripAnalysis() did not execute because it would overwrite existing file. (' outputFilePath ')'], logBox);
+        RevasMessage('StripAnalysis() is returning results from existing file.',logBox); 
         
         % try loading existing file contents
         load(outputFilePath,'position', 'timeSec', 'rawPosition', 'peakValueArray','params','peakPosition');
+        params.position = position;
+        params.timeSec = timeSec;
+        params.rawPosition = rawPosition;
+        params.peakValueArray = peakValueArray;
+
+        if nargout > 2
+            varargout{1} = position;
+        end
+        if nargout > 3
+            varargout{2} = timeSec;
+        end
         if nargout > 4
-            varargout{1} = params;
+            varargout{3} = rawPosition;
         end
         if nargout > 5
-            varargout{2} = peakPosition;
+            varargout{4} = peakValueArray;
+        end
+        if nargout > 6
+            varargout{5} = peakPosition;
         end
         
         return;
     else
-        RevasMessage(['StripAnalysis() is proceeding and overwriting an existing file. (' outputFilePath ')'], params);  
+        RevasMessage(['StripAnalysis() is proceeding and overwriting an existing file. (' outputFilePath ')'], logBox);  
     end
 end
 
@@ -349,7 +378,7 @@ if params.adaptiveSearch
     
     if historyCapacity < 2
         historyCapacity = 2;
-        RevasMessage(['StripAnalysis(): setting historyCapacity to 2. (' outputFilePath ')'], params);  
+        RevasMessage(['StripAnalysis(): setting historyCapacity to 2. (' outputFilePath ')'], logBox);  
     end
     
     movementHistory = nan(historyCapacity,1);
@@ -363,7 +392,7 @@ if params.adaptiveSearch
         params.searchWindowHeight = params.stripHeight + 1;
         RevasWarning(['StripAnalysis(): stripHeight (' num2str(params.stripHeight) ') '...
             'is larger than searchWindowHeight (' num2str(params.searchWindowHeight) ').'...
-            'Setting searchWindowHeight to ' num2str(params.stripHeight+1)],params);  
+            'Setting searchWindowHeight to ' num2str(params.stripHeight+1)],logBox);  
     end
 else
     numOfAttempts = 1;
@@ -638,7 +667,7 @@ while fr <= numberOfFrames
 
                     % give a warning to let user know about the reference frame
                     % update
-                    RevasMessage(['StripAnalysis: Reference frame changed at frame ' num2str(fr) '!'],params);
+                    RevasMessage(['StripAnalysis: Reference frame changed at frame ' num2str(fr) '!'],logBox);
 
                 else
                     % if re-referencing to new reference results in an
@@ -836,19 +865,34 @@ end
 if writeResult && ~abortTriggered
     
     % remove unnecessary fields
-    params = RemoveFields(params,{'commandWindowHandle','axesHandles'}); 
+    params = RemoveFields(params,{'logBox','axesHandles'}); 
     
     % Save under file labeled 'final'.
     save(outputFilePath, 'position', 'rawPosition', 'timeSec', 'params','peakValueArray','peakPosition');
+    
 end
 
+params.position = position;
+params.timeSec = timeSec;
+params.rawPosition = rawPosition;
+params.peakValueArray = peakValueArray;
 
-%% return the params structure if requested
 
+%% handle variable output arguments
+
+if nargout > 2
+    varargout{1} = position;
+end
+if nargout > 3
+    varargout{2} = timeSec;
+end
 if nargout > 4
-    varargout{1} = params;
+    varargout{3} = rawPosition;
 end
 if nargout > 5
-    varargout{2} = peakPosition;
+    varargout{4} = peakValueArray;
+end
+if nargout > 6
+    varargout{5} = peakPosition;
 end
 

@@ -1,4 +1,4 @@
-function [outputVideo, varargout] = RemoveStimuli(inputVideo, params)
+function [outputVideo, params, varargout] = RemoveStimuli(inputVideo, params)
 %REMOVE STIMULI Finds and removes stimuli from each frame. 
 % Stimulus locations are saved in a mat file, and the video with stimuli
 % removed is saved with "_nostim" suffix.
@@ -63,9 +63,10 @@ function [outputVideo, varargout] = RemoveStimuli(inputVideo, params)
 %   |outputVideo| is either the path to the video, or the video matrix
 %   itself after stimulus removal. 
 %
+%   |params| structure.
+%
 %   varargout{1} = matFilePath
 %   varargout{2} = stimulus locations.
-%   varargout{3} = params.
 %
 %   -----------------------------------
 %   Example usage
@@ -92,6 +93,14 @@ global abortTriggered;
 % cannot abort when run in parallel.
 if isempty(abortTriggered)
     abortTriggered = false;
+end
+
+
+%% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
+if isfield(params,'logBox')
+    logBox = params.logBox;
+else
+    logBox = [];
 end
 
 
@@ -147,7 +156,7 @@ if writeResult
     params.outputVideoPath = outputVideoPath;
     params.matFilePath = matFilePath;
     
-    if nargout > 1
+    if nargout > 2
         varargout{1} = matFilePath;
     end
     
@@ -158,18 +167,18 @@ if writeResult
         % if file exists and overwrite is set to false, then read the file
         % contents and return that.
         load(matFilePath,'stimulusLocations','params');
-        if nargout > 2
+        params.stimulusLocations = stimulusLocations;
+        if nargout > 3
             varargout{2} = stimulusLocations;
         end
-        if nargout > 3
-            varargout{3} = params;
-        end
         
-        RevasWarning('RemoveStimuli() did not execute because it would overwrite existing file.', params);
+        RevasWarning('RemoveStimuli() did not execute because it would overwrite existing file.', logBox);
         return;
     else
-        RevasWarning('RemoveStimuli() is proceeding and overwriting an existing file.', params);
+        RevasWarning('RemoveStimuli() is proceeding and overwriting an existing file.', logBox);
     end
+else
+    matFilePath = [];
 end
 
 %% Handle stimulus separately
@@ -408,7 +417,6 @@ for fr = 1:numberOfFrames
     end % end of abort
 end % end of video
 
-
 %% return results, close up objects
 
 if writeResult
@@ -425,16 +433,15 @@ else
 end
 
 
-%% if requested, return the stimulus locations as output
+%% handle variable output arguments
 
 if nargout > 2 
+    varargout{1} = matFilePath;
+end
+if nargout > 3 
     varargout{2} = stimulusLocations;
 end
 
-%% return the params structure if requested
-if nargout > 3
-    varargout{3} = params;
-end
 
 %% Save to output mat file
 
@@ -442,6 +449,8 @@ if writeResult
     save(matFilePath, 'stimulusLocations', 'params', 'peakValues',...
         'rawStimulusLocations','timeSec');
 end
+params.stimulusLocations = stimulusLocations;
+
 
 %% if verbosity enabled, show the extracted stimulus locations
 
