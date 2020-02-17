@@ -50,8 +50,8 @@ if ischar(inputArgument)
     [default, validate] = GetDefaults(callerStr);  
 elseif iscell(inputArgument) && length(inputArgument) == 2
     callerStr = inputArgument{1};
-    default = inputArgument{2};
-    [~, validate] = GetDefaults(callerStr);
+    previousParams = inputArgument{2};
+    [default, validate] = GetDefaults(callerStr);
 else
     errStr = ['ModifyParams: callerStr must either be a char array, name of the module'...
            'e.g., StripAnalysis, or a cell array with a length of two '...
@@ -65,7 +65,11 @@ end
 RevasMessage(sprintf('ModifyParams launched for %s!',callerStr),logBoxHandle);
 
 % in case user closes the GUI window, return default values
-params = default;
+if ~exist('previousParams','var')
+    params = default;
+else
+    params = previousParams;
+end
 
 % parameter names
 paramNames = fieldnames(default);
@@ -74,7 +78,7 @@ paramNames = fieldnames(default);
 toRemove = contains(paramNames, 'axesHandles')    | ...
            contains(paramNames, 'logBox')         | ...
            contains(paramNames, 'referenceFrame') | ...
-           contains(paramNames, 'peakValues')     | ...
+           contains(paramNames, 'peakValueArray') | ...
            contains(paramNames, 'position')       | ...
            contains(paramNames, 'timeSec')        | ...
            contains(paramNames, 'rowNumbers')     | ...
@@ -83,7 +87,7 @@ toRemove = contains(paramNames, 'axesHandles')    | ...
            contains(paramNames, 'trim')           | ...
            contains(paramNames, 'tilts')          | ...
            contains(paramNames, 'toneCurve');
-params = rmfield(params,paramNames(toRemove));
+params = rmfield(default,paramNames(toRemove));
 paramNames(toRemove) = [];
 
 if noGUI
@@ -127,6 +131,7 @@ for i=1:numOfParams
 end
 % make sure we remove duplicate classification of parameter type
 logicalParams(multiTypeParams) = false;
+strParams(multiTypeParams) = false;
 
 % now get different options for string type params.
 strParamsIndex = find(strParams);
@@ -209,6 +214,12 @@ nGPU = gpuDeviceCount;
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% if some existing parameters were passed to the GUI, populate the GUI with
+% those, not the default values.
+if exist('previousParams','var')
+    default = previousParams;
+end
+
 % start with the logical params
 logicalParamsIndices = find(logicalParams);
 logicalParamsNames = flipud(sort(paramNames(logicalParamsIndices))); %#ok<FLPST>
@@ -219,7 +230,7 @@ for i=1:length(logicalParamsIndices)
     % location of the current uicontrol
     yLoc = guiSize(2) - (i)*rowSize;
     xLoc = (guiSize(1) - maxCharLength * ppi/fontSize) /2;
-    thisPosition = [xLoc yLoc guiSize(1) rowSize];
+    thisPos = [xLoc yLoc guiSize(1) rowSize];
     
     % disable enableGPU field if there is no available GPU
     enable = 'on';
@@ -234,7 +245,7 @@ for i=1:length(logicalParamsIndices)
         uicontrol(gui.fig,...
         'style','checkbox',...
         'units','pix',...
-        'position',thisPosition,...
+        'position',thisPos,...
         'fontsize',fontSize,...
         'string',logicalParamsNames{i},...
         'value',double(default.(logicalParamsNames{i})),...
@@ -251,7 +262,7 @@ for i=1:length(strParamsIndices)
     % location of the current uicontrol
     yLoc = guiSize(2) - (i + length(logicalParamsIndices)) * rowSize;
     labelPos = [1 yLoc-rowSize/4 guiSize(1)*0.35 rowSize];
-    thisPosition = [guiSize(1)*0.4 labelPos(2)+rowSize/4 guiSize(1)*0.45 labelPos(4)];
+    thisPos = [guiSize(1)*0.4 labelPos(2)+rowSize/4 guiSize(1)*0.45 labelPos(4)];
     
     % value of default string
     thisDefault = default.(paramNames{strParamsIndices(i)});
@@ -271,7 +282,7 @@ for i=1:length(strParamsIndices)
         uicontrol(gui.fig,...
         'style','popupmenu',...
         'units','pix',...
-        'position',thisPosition,...
+        'position',thisPos,...
         'fontsize',fontSize,...
         'string',options{i},...
         'value',thisValue,...
@@ -305,7 +316,7 @@ for i=1:length(numericParamsIndices)
     % location of the current uicontrol
     yLoc = guiSize(2) - (i + yStart) * rowSize;
     labelPos = [1 yLoc-rowSize/4 guiSize(1)*0.55 rowSize];
-    thisPosition = [guiSize(1)*0.6 labelPos(2)+rowSize/4 guiSize(1)*0.3 labelPos(4)];
+    thisPos = [guiSize(1)*0.6 labelPos(2)+rowSize/4 guiSize(1)*0.3 labelPos(4)];
     
     % create the uicontrol
     fld = (paramNames{numericParamsIndices(i)});
@@ -313,12 +324,28 @@ for i=1:length(numericParamsIndices)
         uicontrol(gui.fig,...
         'style','edit',...
         'units','pix',...
-        'position',thisPosition,...
+        'position',thisPos,...
         'fontsize',fontSize,...
         'string',num2str(default.(paramNames{numericParamsIndices(i)})),...
         'tooltip',tooltips{numericParamsIndices(i)},...
         'tag',paramNames{numericParamsIndices(i)},...
         'callback',{@NumericCallback,validate.(paramNames{numericParamsIndices(i)})});
+    
+    % if this is a multitype parameter, also include a small button to act
+    % like a browse button to select a file.
+    if multiTypeParams(numericParamsIndices(i))
+        browsePos = [thisPos(1)+thisPos(3) thisPos(2) 0.2*thisPos(3) thisPos(4)];
+        gui.ui.([fld 'Browse']) = ...
+            uicontrol(gui.fig,...
+            'style','push',...
+            'units','pix',...
+            'position',browsePos,...
+            'fontsize',fontSize,...
+            'string','',...
+            'tooltip','Browse to select a file',...
+            'tag',[paramNames{numericParamsIndices(i)} 'Browse'],...
+            'callback',{@BrowseCallback});
+    end
     
     % create the label
     gui.ui.([fld 'Label']) = ...
@@ -387,7 +414,7 @@ uiwait(gui.fig);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     function LogicalCallback(src,~,varargin)
-        params.(src.String) = src.Value;
+        params.(src.String) = logical(src.Value);
     end
 
     function StringCallback(src,~,varargin)
@@ -400,6 +427,7 @@ uiwait(gui.fig);
 
     function NumericCallback(src,~,varargin)
         value = str2num(['[' src.String ']']); %#ok<ST2NM>
+
         validateFunc = varargin{1};
         
         if ~validateFunc(value)
@@ -410,6 +438,22 @@ uiwait(gui.fig);
         else
             params.(src.Tag) = value;
         end
+    end
+
+    function BrowseCallback(src,~,varargin)
+        
+        % get the source parameter
+        ts = regexp(src.Tag,'Browse','split');
+        ts = ts{1};
+        
+        [file,path] = uigetfile({'*.mat;*.tif;*.png;*.jpg;*.bmp'},[ts 'Select a File']);
+         
+         if ~isequal(file,0)
+             filePath = fullfile(path,file);
+             gui.ui.(ts).String = filePath;
+             params.(ts) = filePath;
+         end
+             
     end
 
     function OkCallback(varargin)

@@ -23,7 +23,10 @@ if ~isfield(revas.gui.UserData,'pipeline') || ...
     return;
 end
 
-if ~isfield(revas.gui.UserData,'pipelineFile')
+if ~isfield(revas.gui.UserData,'pipelineFile') || ...
+    isempty(revas.gui.UserData.pipelineFile)   || ...
+   ~isfile(revas.gui.UserData.pipelineFile) || ...
+   ~exist(revas.gui.UserData.pipelineFile,'file')
     % there is no file name associate with this pipeline, so probably it
     % has been just created. We need Save As to save.
     RevasMessage(sprintf('SavePipeline is calling SaveAsPipeline.'),revas.gui.UserData.logBox);
@@ -40,5 +43,5 @@ save(revas.gui.UserData.pipelineFile,'pipeline','pipeParams');
 set(siblingObjs(contains({siblingObjs.Text},'Save') & ...
                ~contains({siblingObjs.Text},'Save As')),'Enable','off');
 
-fprintf('%s: Changes have been saved to the pipeline.\n',datestr(datetime));
+revas.gui.UserData.isChange = false;
 RevasMessage(sprintf('Changes saved to the current pipeline file %s',revas.gui.UserData.pipelineFile),revas.gui.UserData.logBox);

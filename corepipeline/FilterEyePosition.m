@@ -434,9 +434,7 @@ if writeResult && ~abortTriggered
     % remove unnecessary fields
     params = RemoveFields(params,{'logBox','axesHandles'}); 
     
-    data.filteredEyePositions = filteredEyePositions;
-    data.filteredFullArray = filteredFullArray;
-    data.nanIndices = nanIndices;
+    data.positionDeg = filteredEyePositions;
     data.timeSec = timeSec;
     data.params = params;
     save(outputFilePath,'-struct','data');

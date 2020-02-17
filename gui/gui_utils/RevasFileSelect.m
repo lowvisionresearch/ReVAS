@@ -40,7 +40,7 @@ else
     save(fileListFile,'fileList');
     
     % enable the Last Selected menu
-    revas.gui.UserData.lastselected.Enable = 'on';
+    revas.gui.UserData.lastselectedfiles.Enable = 'on';
 end
 
 % prepare list for better (less crowded) presentation on GUI

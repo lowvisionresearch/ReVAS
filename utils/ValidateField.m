@@ -41,7 +41,7 @@ for i=1:length(fields)
         
         % inform the user about using default values and show the default
         % values as well.
-        RevasWarning([callerStr ' is using default parameter for ' fields{i} ': ' str], logBox);
+        RevasMessage([callerStr ' is using default parameter for ' fields{i} ': ' str], logBox);
     end
 
 end

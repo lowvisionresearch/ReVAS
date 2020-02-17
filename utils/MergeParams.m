@@ -1,12 +1,12 @@
-function mergedParams = MergeParams(smallParams,bigParams)
+function mergedParams = MergeParams(baseParams,updatedParams)
 
-sNames = fieldnames(smallParams);
-bNames = fieldnames(bigParams);
-diffNames = setdiff(sNames,bNames);
+bNames = fieldnames(baseParams);
+uNames = fieldnames(updatedParams);
+diffNames = setdiff(bNames,uNames);
 
-mergedParams = bigParams;
+mergedParams = updatedParams;
 for i=1:length(diffNames)
-    if isfield(smallParams,diffNames{i})
-        mergedParams.(diffNames{i}) = smallParams.(diffNames{i});
+    if isfield(baseParams,diffNames{i})
+        mergedParams.(diffNames{i}) = baseParams.(diffNames{i});
     end
 end

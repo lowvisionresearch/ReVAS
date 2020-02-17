@@ -228,8 +228,7 @@ if writeResult
     end
     
     % load the data
-    load(inputArgument,'filteredEyePositions','timeSec');
-    positionDeg = filteredEyePositions;
+    load(inputArgument,'positionDeg','timeSec');
 
 else % inputArgument is not a file path, but carries the eye position data.    
     positionDeg = inputArgument(:,1:size(inputArgument,2)-1);
@@ -310,6 +309,8 @@ aboveThreshold = velocityThreshold < vectorialVelocity;
 if sum(aboveThreshold) == 0
     labels(labels ~= 3) = 2; 
     saccades = [];
+    st = [];
+    en = [];
 else
 
     % compute saccade onset and offset indices
@@ -383,6 +384,8 @@ if sum(driftIndices) > 0
 else
     
     drifts = [];
+    driftSt = [];
+    driftEn = [];
     labels(driftIndices) = 3;
 end
 
