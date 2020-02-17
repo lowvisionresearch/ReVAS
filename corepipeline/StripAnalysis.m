@@ -1,5 +1,5 @@
-function [inputVideo, params, varargout] = StripAnalysis(inputVideo, params)
-%[inputVideo, params, varargout] = StripAnalysis(inputVideo, params)
+function [outputArgument, params, varargout] = StripAnalysis(inputVideo, params)
+%[outputArgument, params, varargout] = StripAnalysis(inputVideo, params)
 %   
 %   Extract eye movements in units of pixels. Cross-correlation of
 %   horizontal strips with a pre-defined reference frame.
@@ -95,7 +95,9 @@ function [inputVideo, params, varargout] = StripAnalysis(inputVideo, params)
 %   -----------------------------------
 %   Output
 %   -----------------------------------
-%   |inputVideo| is directly passed from input.  
+%   |outputArgument| is a file path to position traces if inputVideo is 
+%   also a path to a video. If inputVideo is an array, outputArgument is an
+%   array of nx3 [position timeSec], where n is samples in time.
 %
 %   |params| structure. additional fields are:
 %           |position| is a Nx2 array of useful eye motions. Useful in the sense
@@ -229,6 +231,8 @@ if writeResult
         
         % try loading existing file contents
         load(outputFilePath,'position', 'timeSec', 'rawPosition', 'peakValueArray','params','peakPosition');
+        
+        outputArgument = outputFilePath;
         params.position = position;
         params.timeSec = timeSec;
         params.rawPosition = rawPosition;
@@ -870,6 +874,12 @@ if writeResult && ~abortTriggered
     % Save under file labeled 'final'.
     save(outputFilePath, 'position', 'rawPosition', 'timeSec', 'params','peakValueArray','peakPosition');
     
+end
+
+if writeResult
+    outputArgument = outputFilePath;
+else
+    outputArgument = [position timeSec];
 end
 
 params.position = position;

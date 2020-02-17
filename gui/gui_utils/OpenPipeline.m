@@ -15,23 +15,44 @@ siblingObjs = get(get(src,'parent'),'children');
 revas = varargin{3};
 RevasMessage(sprintf('OpenPipeline launched.'),revas.gui.UserData.logBox);
 
-% dialog box to select a pipe file
-[file,path,~] = uigetfile('*.mat','Select a pipeline file');
-if file == 0
-    RevasMessage(sprintf('OpenPipeline closed without loading a pipeline.'),revas.gui.UserData.logBox);
-    return;
-end
+% the fourth arguement is a flag indicating whether ot not we load pipeline
+% from file or query user for file name
+isFile = varargin{4};
 
-% create a matfile object
-pipelineFile = fullfile(path,file);
-m = load(pipelineFile,'pipeline','pipeParams');
+% name of the hidden file that keeps track of last used pipeline
+hiddenFile = revas.gui.UserData.lastUsedPipelineFile;
 
-% check if this file has required fields
-if ~isfield(m,'pipeline') || ~isfield(m,'pipeParams')
-    errordlg('Pipeline file must have ''pipeline'' and ''pipeParams'' fields.',...
-        'OpenPipeline Error','modal');
-    RevasError(sprintf('OpenPipeline closed due to an error. Selected file does not have required fields.'),revas.gui.UserData.logBox);
-    return;
+% if the src is 'Last Used' menu, load pipeline from there
+if isFile
+    load(hiddenFile,'pipelineFile');
+    m = load(pipelineFile,'pipeline','pipeParams');
+    
+else
+    % dialog box to select a pipe file
+    [file,path,~] = uigetfile('*.mat','Select a pipeline file');
+    if file == 0
+        RevasMessage(sprintf('OpenPipeline closed without loading a pipeline.'),revas.gui.UserData.logBox);
+        return;
+    end
+
+    % create a matfile object
+    pipelineFile = fullfile(path,file);
+    m = load(pipelineFile,'pipeline','pipeParams');
+
+    % check if this file has required fields
+    if ~isfield(m,'pipeline') || ~isfield(m,'pipeParams')
+        errordlg('Pipeline file must have ''pipeline'' and ''pipeParams'' fields.',...
+            'OpenPipeline Error','modal');
+        RevasError(sprintf('OpenPipeline closed due to an error. Selected file does not have required fields.'),revas.gui.UserData.logBox);
+        return;
+    end
+
+    % save loaded pipe as the last used one to the hidden file
+    save(hiddenFile,'pipelineFile');
+    
+    % enable the Last Used menu
+    revas.gui.UserData.lastusedpipe.Enable = 'on';
+    
 end
 
 % assign output
@@ -46,6 +67,9 @@ revas.gui.UserData.lbPipeline.Visible = 'on';
 set(siblingObjs(contains({siblingObjs.Text},'Edit') | ...
                 contains({siblingObjs.Text},'Save As')),'Enable','on');
             
-
-RevasMessage(sprintf('Existing pipeline loaded from %s.',pipelineFile),revas.gui.UserData.logBox);
+if isFile
+    RevasMessage('Last used pipeline loaded.',revas.gui.UserData.logBox);
+else
+    RevasMessage(sprintf('Existing pipeline loaded from %s.',pipelineFile),revas.gui.UserData.logBox);
+end
 

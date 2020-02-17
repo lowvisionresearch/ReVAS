@@ -26,8 +26,20 @@ end
 % handle global flags, also add logBox handle 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for i = 1:length(pipeParams)
+    % overwrite is always a global override..
     pipeParams{i}.overwrite = gParams.overwrite == 1;
-    pipeParams{i}.enableVerbosity = gParams.enableVerbosity == 1;
+    
+    % global enableVerbosity can override each module or can let each one
+    % do whatever they want to do.
+    switch gParams.enableVerbosity
+        case 'no'
+            pipeParams{i}.enableVerbosity = false;
+        case 'yes'
+            pipeParams{i}.enableVerbosity = true;
+        case 'module'
+            % do nothing
+    end 
+    
     pipeParams{i}.logBox = revas.gui.UserData.logBox;
 end
 
@@ -44,7 +56,7 @@ sPipe = patch(revas.gui.UserData.statusBar,[0 .000001*[1 1] 0]',[0.5 0.5 1 1]',[
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 numFiles = length(selectedFiles);
 for f = 1:numFiles
-    abortTriggered = revas.gui.UserData.abortButton.Value;
+%     abortTriggered = revas.gui.UserData.abortButton.Value;
     if abortTriggered
         break;
     end
@@ -52,6 +64,10 @@ for f = 1:numFiles
     try
         pipeLength = length(pipeline);
         for p = 1:length(pipeline)
+            if abortTriggered
+                break;
+            end
+    
             thisModule = str2func(pipeline{p});
             if p==1
                 if gParams.inMemory
@@ -71,19 +87,17 @@ for f = 1:numFiles
                         processedVideo = inputArgument;
                     case 'MakeReference'
                         inputArgument = processedVideo;
-                    case 'ReReference'
-                        inputArgument = params.referenceFrame;
                     otherwise
                         % do nothing
                 end
                         
                 [inputArgument, params] = thisModule(inputArgument,params);
             end
-            fprintf('%s done\n',pipeline{p});
+            RevasMessage(sprintf('%s done for %s.',pipeline{p},revas.gui.UserData.lbFile.String{selectedFileIndices(f)}),revas.gui.UserData.logBox);
             sPipe.XData = [0 p/pipeLength p/pipeLength 0]';
         end
     catch pipeErr
-        errStr = getReport(pipeErr);
+        errStr = getReport(pipeErr,'extended','hyperlinks','off');
         RevasError(sprintf(' \n %s',errStr),revas.gui.UserData.logBox);
     end
     

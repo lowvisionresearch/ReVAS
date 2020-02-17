@@ -1,17 +1,22 @@
 function isDifferent = CompareFieldsHelper(p1,p2)
 % isDifferent = CompareFieldsHelper(p1,p2)
 %
-%   Compare the fields of two structures. Returns false if there is any
-%   difference.
+%   Compare two structures. Returns false if there is any difference.
 %
 % 
 
-fields = fieldnames(p1);
+fields1 = fieldnames(p1);
+fields2 = fieldnames(p2);
+
+if length(fields1) ~= length(fields2)
+    isDifferent = true;
+    return;
+end
 
 isDifferent = false;
-for fld = 1:length(fields)
-    var1 = p1.(fields{fld});
-    var2 = p2.(fields{fld});
+for fld = 1:length(fields1)
+    var1 = p1.(fields1{fld});
+    var2 = p2.(fields1{fld});
 
     % first check lengths.. easiest check
     if length(var1) ~= length(var2)

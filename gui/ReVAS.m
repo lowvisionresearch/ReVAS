@@ -18,12 +18,12 @@ eval(['diary ' logFile]);
 % name of the hidden file that keeps track of last used fileList
 fileListFile = [fileparts(which('ReVAS')) filesep '.filelist.mat'];
 
+% name of the hidden file that keeps track of last used pipeline
+lastUsedPipelineFile = [fileparts(which('ReVAS')) filesep '.pipeline.mat'];
+
 % set the abort level
 global abortTriggered;
 abortTriggered = false;
-
-% to keep track of user changes to pipeline
-isChange = false;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Create GUI figure
@@ -45,7 +45,7 @@ revas.gui = figure('units','pixels',...
     'name',['ReVAS ' versionNo],...
     'numbertitle','off',...
     'resize','on',...
-    'visible','on',...
+    'visible','off',...
     'tag','revasgui',...
     'closerequestfcn',{@RevasClose});
 
@@ -56,28 +56,32 @@ revas.gui.UserData.fontSize = revas.fontSize;
 revas.gui.UserData.ppi = revas.ppi;
 revas.gui.UserData.logFile = logFile;
 revas.gui.UserData.fileListFile = fileListFile;
+revas.gui.UserData.lastUsedPipelineFile = lastUsedPipelineFile;
 
+% to keep track of user changes to pipeline
+revas.gui.UserData.isChange = false;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Create menus
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % video menu
-revas.pipelineMenu = uimenu(revas.gui,'Text','File');
-uimenu(revas.pipelineMenu,'Text','Raw','MenuSelectedFcn',{@RevasFileSelect,{'.avi'},{'trim','nostim','gammscaled','bandfilt'},revas});
-uimenu(revas.pipelineMenu,'Text','Trimmed','MenuSelectedFcn',{@RevasFileSelect,{'_trim.avi'},{},revas});
-uimenu(revas.pipelineMenu,'Text','Stimulus Removed','MenuSelectedFcn',{@RevasFileSelect,{'_nostim.avi'},{},revas});
-uimenu(revas.pipelineMenu,'Text','Gamma Corrected','MenuSelectedFcn',{@RevasFileSelect,{'_gammscaled.avi'},{},revas});
-uimenu(revas.pipelineMenu,'Text','Bandpass Filtered','MenuSelectedFcn',{@RevasFileSelect,{'_bandfilt.avi'},{},revas});
-uimenu(revas.pipelineMenu,'Text','Eye Position','MenuSelectedFcn',{@RevasFileSelect,{'_position.mat','_filtered.mat'},{},revas},'Separator','on');
-revas.gui.UserData.lastselected = uimenu(revas.pipelineMenu,'Text','Last Used','MenuSelectedFcn',{@RevasFileSelect,{},{},revas},'Separator','on','Enable',OnOffUtil(exist(fileListFile,'file')));
+revas.fileMenu = uimenu(revas.gui,'Text','File');
+uimenu(revas.fileMenu,'Text','Raw','MenuSelectedFcn',{@RevasFileSelect,{'.avi'},{'trim','nostim','gammscaled','bandfilt'},revas});
+uimenu(revas.fileMenu,'Text','Trimmed','MenuSelectedFcn',{@RevasFileSelect,{'_trim.avi'},{},revas});
+uimenu(revas.fileMenu,'Text','Stimulus Removed','MenuSelectedFcn',{@RevasFileSelect,{'_nostim.avi'},{},revas});
+uimenu(revas.fileMenu,'Text','Gamma Corrected','MenuSelectedFcn',{@RevasFileSelect,{'_gammscaled.avi'},{},revas});
+uimenu(revas.fileMenu,'Text','Bandpass Filtered','MenuSelectedFcn',{@RevasFileSelect,{'_bandfilt.avi'},{},revas});
+uimenu(revas.fileMenu,'Text','Eye Position','MenuSelectedFcn',{@RevasFileSelect,{'_position.mat','_filtered.mat'},{},revas},'Separator','on');
+revas.gui.UserData.lastselectedfiles = uimenu(revas.fileMenu,'Text','Last Used','MenuSelectedFcn',{@RevasFileSelect,{},{},revas},'Separator','on','Enable',OnOffUtil(exist(fileListFile,'file')));
 
 % pipeline menu
 revas.pipelineMenu = uimenu(revas.gui,'Text','Pipeline');
-revas.gui.UserData.new = uimenu(revas.pipelineMenu,'Text','New','Accelerator','N','MenuSelectedFcn',{@PipelineTool,revas});
-revas.gui.UserData.open = uimenu(revas.pipelineMenu,'Text','Open','Accelerator','O','MenuSelectedFcn',{@OpenPipeline,revas});
-revas.gui.UserData.edit = uimenu(revas.pipelineMenu,'Text','Edit','Accelerator','E','MenuSelectedFcn',{@PipelineTool,revas},'Enable','off');
-revas.gui.UserData.save = uimenu(revas.pipelineMenu,'Text','Save','Accelerator','S','MenuSelectedFcn',{@SavePipeline,revas},'Enable','off');
-revas.gui.UserData.saveas = uimenu(revas.pipelineMenu,'Text','Save As','Accelerator','A','MenuSelectedFcn',{@SaveAsPipeline,revas},'Enable','off');
+uimenu(revas.pipelineMenu,'Text','New','Accelerator','N','MenuSelectedFcn',{@PipelineTool,revas});
+uimenu(revas.pipelineMenu,'Text','Open','Accelerator','O','MenuSelectedFcn',{@OpenPipeline,revas,0});
+uimenu(revas.pipelineMenu,'Text','Edit','Accelerator','E','MenuSelectedFcn',{@PipelineTool,revas},'Enable','off');
+uimenu(revas.pipelineMenu,'Text','Save','Accelerator','S','MenuSelectedFcn',{@SavePipeline,revas},'Enable','off');
+uimenu(revas.pipelineMenu,'Text','Save As','Accelerator','A','MenuSelectedFcn',{@SaveAsPipeline,revas},'Enable','off');
+revas.gui.UserData.lastusedpipe = uimenu(revas.pipelineMenu,'Text','Last Used','MenuSelectedFcn',{@OpenPipeline,revas,1},'Separator','on','Enable',OnOffUtil(exist(lastUsedPipelineFile,'file')));
 
 % help menu
 revas.helpMenu = uimenu(revas.gui,'Text','Help');
@@ -123,7 +127,6 @@ revas.gui.UserData.lbFile = uicontrol(revas.gui.UserData.filePanel,...
              'string',{},...
              'value',0,...
              'tooltip','Select files that you want to analyze.',...
-             'callback',{@SelectFileCallback,revas},...
              'visible','off',...
              'min',1,...
              'max',3);         
@@ -179,48 +182,66 @@ revas.gui.UserData.globalPanel = uipanel('Parent',revas.gui,...
 gParams = struct;
 gParams.overwrite = 1;
 gParams.inMemory = 0;
-gParams.enableVerbosity = 1;
+gParams.enableVerbosity = 'no';
 gParams.enableGPU = 0;
 gParams.enableParallel = 0;
 gParams.saveLog = 1;
 gParamsNames = fieldnames(gParams);
-gParams.fov = 10;
+
+% make sure enableVerbosity is at the top
+iv = contains(gParamsNames,'enableVerbosity');
+gParamsNames = [gParamsNames(iv); gParamsNames(~iv)];
+
 rowSize = 0.8 / (length(gParamsNames)+2);
 
 for i=1:length(gParamsNames)
 
     % location of the current uicontrol
-    yLoc = 0.95 - (i)*rowSize;
+    yLoc = 0.9 - (i)*rowSize - (i>1)*0.05;
     xLoc = 0.2;
     thisPosition = [xLoc yLoc globalPanelPos(1) rowSize];
     
     % disable fields if there is no GPU or multiple logical cores
-    enable = true;
-    switch gParamsNames{i}
-        case 'enableGPU'
-            enable = gpuDeviceCount ~= 0;
-        case 'enableParallel'
-            enable = feature('numcores') > 1;
-        otherwise 
-            % do nothing
-    end
-    if enable
-        enable = 'on';
-    else
-        enable = 'off';
-    end
+    enable = IsEnabledUI(gParamsNames{i});
     
-    % create the uicontrol
-    revas.gui.UserData.((gParamsNames{i})) = ...
-        uicontrol(revas.gui.UserData.globalPanel,...
-        'style','checkbox',...
-        'units','normalized',...
-        'position',thisPosition,...
-        'fontsize',revas.fontSize,...
-        'string',gParamsNames{i},...
-        'value',double(gParams.(gParamsNames{i})),...
-        'callback',{@GParamsCallback},...
-        'enable',enable);
+    % create the uicontrol. create a checkbox for all options except for
+    % enableVerbosity, which needs three options, therefore we create a
+    % popup menu for it.
+    if strcmp(gParamsNames{i}, 'enableVerbosity')
+        revas.gui.UserData.((gParamsNames{i})) = ...
+            uicontrol(revas.gui.UserData.globalPanel,...
+            'style','popup',...
+            'units','normalized',...
+            'position',thisPosition,...
+            'fontsize',revas.fontSize,...
+            'string',{'no','yes','module'},...
+            'value',1,...
+            'callback',{@GParamsCallback,revas},...
+            'tag',gParamsNames{i},...
+            'enable',enable);
+        
+        % create the label
+        revas.gui.UserData.([gParamsNames{i} 'Label']) = ...
+            uicontrol(revas.gui.UserData.globalPanel,...
+            'style','text',...
+            'units','normalized',...
+            'position',[thisPosition(1) thisPosition(2)+rowSize thisPosition(3:4)],...
+            'fontsize',revas.fontSize,...
+            'horizontalalignment','center',...
+            'string','Visualize results?');
+    else
+        revas.gui.UserData.((gParamsNames{i})) = ...
+            uicontrol(revas.gui.UserData.globalPanel,...
+            'style','checkbox',...
+            'units','normalized',...
+            'position',thisPosition,...
+            'fontsize',revas.fontSize,...
+            'string',gParamsNames{i},...
+            'value',double(gParams.(gParamsNames{i})),...
+            'callback',{@GParamsCallback},...
+            'tag',gParamsNames{i},...
+            'enable',enable);
+    end
 end
 
      
@@ -292,6 +313,23 @@ RevasMessage(sprintf('ReVAS %s launched!',versionNo),revas.gui.UserData.logBox);
         web('https://github.com/lowvisionresearch/ReVAS/wiki', '-browser');
     end
 
+    function enable = IsEnabledUI(paramName)
+        enable = true;
+        switch paramName
+            case 'enableGPU'
+                enable = gpuDeviceCount ~= 0;
+            case 'enableParallel'
+                enable = feature('numcores') > 1;
+            otherwise 
+                % do nothing
+        end
+        if enable
+            enable = 'on';
+        else
+            enable = 'off';
+        end
+    end
+
     function EditParamsCallback(varargin)
 
         % do this only when user double-clicks on an item
@@ -309,8 +347,8 @@ RevasMessage(sprintf('ReVAS %s launched!',versionNo),revas.gui.UserData.logBox);
                 oldParams = revas.gui.UserData.pipeParams{val,1};
                 
                 % see if there was any change
-                isChange = CompareFieldsHelper(oldParams,newParams);
-                if isChange
+                revas.gui.UserData.isChange = CompareFieldsHelper(oldParams,newParams);
+                if revas.gui.UserData.isChange
                     revas.gui.UserData.pipeParams{val,1} = newParams;
                     str = evalc('disp(newParams)');
                     RevasMessage(sprintf('New parameters for %s: \n %s',thisModule{1},str),revas.gui.UserData.logBox)
@@ -319,7 +357,7 @@ RevasMessage(sprintf('ReVAS %s launched!',versionNo),revas.gui.UserData.logBox);
         end
         
         % if there is any change, enable save menus
-        if isChange
+        if revas.gui.UserData.isChange
             % enable save and saveas menus
             % get siblings 
             childrenObjs = get(revas.pipelineMenu,'children');
@@ -327,15 +365,20 @@ RevasMessage(sprintf('ReVAS %s launched!',versionNo),revas.gui.UserData.logBox);
         end
     end
 
+
     function GParamsCallback(src,~,varargin)
-        gParams.(src.String) = src.Value;
         
-        switch src.String
-            case {'enableGPU','enableVerbosity'}
-                gParams.enableParallel = ~src.Value & feature('numcores') > 1;
+        if strcmp(src.Tag,'enableVerbosity')
+            gParams.(src.Tag) = src.String{src.Value};
+        else
+            gParams.(src.Tag) = src.Value;
+        end
+        
+        switch src.Tag
+            case 'enableGPU'
+                gParams.enableParallel = ~src.Value & feature('numcores') > 1 & gParams.enableParallel;
             case 'enableParallel'
                 gParams.enableGPU = ~src.Value & gpuDeviceCount > 0;
-                gParams.enableVerbosity = ~src.Value & gParams.enableVerbosity;
             case 'saveLog'
                 if src.Value
                     diary on;
@@ -346,19 +389,20 @@ RevasMessage(sprintf('ReVAS %s launched!',versionNo),revas.gui.UserData.logBox);
                 % do nothing
         end
         
-        str = evalc('disp(gParams)');
-        RevasMessage(sprintf('Global Flags: \n %s',str),revas.gui.UserData.logBox);
+        str = [src.Tag ': ' num2str(src.Value)];
+        RevasMessage(sprintf('Global Flag changed: %s',str),revas.gui.UserData.logBox);
         RefreshGlobalFlagPanel;
     end
 
     function RefreshGlobalFlagPanel
         for fld=1:length(gParamsNames)
             thisField = gParamsNames{fld};
-            revas.gui.UserData.(thisField).Value = double(gParams.(thisField));
+            if strcmp(thisField,'enableVerbosity')
+                revas.gui.UserData.(thisField).Value = find(contains(revas.gui.UserData.(thisField).String,gParams.(thisField)));
+            else
+            	revas.gui.UserData.(thisField).Value = double(gParams.(thisField));
+            end
         end
-    end
-
-    function SelectFileCallback(varargin)
     end
 
 
@@ -413,7 +457,7 @@ RevasMessage(sprintf('ReVAS %s launched!',versionNo),revas.gui.UserData.logBox);
             ExecutePipeline(revas,gParams);
             
         catch runPipeError
-            errStr = getReport(runPipeError);
+            errStr = getReport(runPipeError,'extended','hyperlinks','off');
             RevasError(sprintf(' \n %s',errStr),revas.gui.UserData.logBox);
         end
         
@@ -442,6 +486,14 @@ RevasMessage(sprintf('ReVAS %s launched!',versionNo),revas.gui.UserData.logBox);
     end
 
 
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %
+    %
+    %  Close up 
+    %
+    %
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     function RevasClose(varargin)
         
         % if Run button is on, i.e., a pipeline is running, do not exit.
@@ -463,7 +515,7 @@ RevasMessage(sprintf('ReVAS %s launched!',versionNo),revas.gui.UserData.logBox);
         
         % if there are unsaved changes to the pipeline, ask user if she
         % wants to save them.
-        if isChange
+        if revas.gui.UserData.isChange
             answer = questdlg('There are unsaved changes to the pipeline. What do you want to do?', ...
                 'Oops! Unsaved changes to pipeline', ...
                 'Exit w/o Saving','Cancel','Save & Exit','Save & Exit');
@@ -474,7 +526,8 @@ RevasMessage(sprintf('ReVAS %s launched!',versionNo),revas.gui.UserData.logBox);
                 case 'Cancel'
                     return;
                 case 'Save & Exit'
-                    SavePipeline(revas.gui.UserData.save,[],revas);
+                    saveMenu = findobj(revas.pipelineMenu,'Text','Save');
+                    SavePipeline(saveMenu,[],revas);
                 otherwise 
                     % do nothing
             end

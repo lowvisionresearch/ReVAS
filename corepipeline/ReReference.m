@@ -48,7 +48,7 @@ function [outputArgument, params, varargout] = ReReference(inputArgument, params
 %                             with a range of tilts. (default true)
 %   tilts                   : a 1D array with a set of tilt values.
 %                             (relevant only when fixTorsion is true)
-%                             (default -5:1:5)
+%                             (default -5:0.25:5)
 %   anchorStripHeight       : height of the strip to be taken from localRef
 %                             for rereferencing. (default 15)
 %   anchorStripWidth        : width of the strip to be taken from localRef
@@ -436,8 +436,28 @@ if ischar(inputArgument) % inputArgument is a file path
             load(inputArgument,'params');
             output = params.referenceFrame;
         catch
-            % maybe this is an image file
-            output = imread(inputArgument);
+            
+            try
+                % maybe this is an image file
+                im = imread(inputArgument);
+            
+                % if it's an rgb image, convert to grayscale
+                if size(im,3) > 1
+                    im = rgb2gray(im);
+                end
+
+                % if it's a double image, convert it to uint8
+                if max(im(:)) < 1 &&  ~isa(im,'uint8')
+                    output = uint8(im*255);
+                else
+                    output = im;
+                end  
+                
+            catch handleErr
+                RevasError('An error occurred in ReReference in HandleInputArgument.');
+                handleErr.rethrow;
+            end
+            
         end
     end
 

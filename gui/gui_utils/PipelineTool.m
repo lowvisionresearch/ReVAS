@@ -13,7 +13,8 @@ src = varargin{1};
 siblingObjs = get(get(src,'parent'),'children');
 
 % keep track of changes
-isChange = false;
+isPipeChanged = false;
+isParamsChanged = false;
 
 % the third argument is the handle from main gui
 revas = varargin{3};
@@ -191,6 +192,8 @@ uiwait(fig);
         
         % get defaults for the added module. 
         revas.gui.UserData.pipeParams{lbPipe.Value,1} = ModifyParams(newModule{1}, true);
+        
+        isPipeChanged = true;
     end
 
     function RemoveCallback(varargin)
@@ -207,6 +210,8 @@ uiwait(fig);
         
         % make the last item in the pipeline as the selected item
         lbPipe.Value = length(lbPipe.String);
+        
+        isPipeChanged = true;
     end
 
     function EditParamsCallback(varargin)
@@ -222,8 +227,8 @@ uiwait(fig);
             newParams = ModifyParams(inp, false, revas.gui);
             if ~isempty(newParams)
                 oldParams = revas.gui.UserData.pipeParams{lbPipe.Value,1};
-                isChange = CompareFieldsHelper(oldParams,newParams);
-                if isChange
+                isParamsChanged = CompareFieldsHelper(oldParams,newParams);
+                if isParamsChanged
                     revas.gui.UserData.pipeParams{lbPipe.Value,1} = newParams;
                 end
             end
@@ -233,7 +238,7 @@ uiwait(fig);
     function OkCallback(varargin)
         
         % if pipeline changed, enable Save, Edit, and Save As menus.
-        if isChange
+        if isPipeChanged || isParamsChanged
             % enable save and saveas menus
             set(siblingObjs(~contains({siblingObjs.Text},{'New','Open'})),'Enable','on');
         end

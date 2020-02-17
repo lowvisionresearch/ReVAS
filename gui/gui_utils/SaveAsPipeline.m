@@ -41,4 +41,5 @@ save(revas.gui.UserData.pipelineFile,'pipeline','pipeParams');
 set(siblingObjs(contains({siblingObjs.Text},'Save') & ...
                ~contains({siblingObjs.Text},'Save As')),'Enable','off');
 
+revas.gui.UserData.isChange = false;
 RevasMessage(sprintf('Pipeline has been saved in %s',revas.gui.UserData.pipelineFile),revas.gui.UserData.logBox);
