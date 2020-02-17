@@ -279,7 +279,7 @@ tempNans = sum(isnan(eyePositionInterp),2);
 firstNonnan = find(~tempNans,1,'first');
 lastNonnan = find(~tempNans,1,'last');
 
-eyePositionInterp(1:firstNonnan,:) = eyePositionInterp(firstNonnan+1,:);
+eyePositionInterp(1:firstNonnan,:) = repmat(eyePositionInterp(firstNonnan+1,:),length(1:firstNonnan),1);
 eyePositionInterp(lastNonnan:end,:) = repmat(eyePositionInterp(lastNonnan-1,:),size(eyePositionInterp,1)-lastNonnan+1,1);
 
 
