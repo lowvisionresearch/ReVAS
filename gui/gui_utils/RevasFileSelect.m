@@ -44,7 +44,7 @@ else
 end
 
 % prepare list for better (less crowded) presentation on GUI
-betterList = arrayfun(@(x) regexp(x{1},'(?!.*\/.*\/)(.*\..*)','match'),fileList);
+betterList = arrayfun(@(x) regexp(x{1},['(?!.*\' filesep '.*\' filesep ')(.*\..*)'],'match'),fileList);
 
 revas.gui.UserData.fileList = fileList;
 revas.gui.UserData.lbFile.String = betterList;

@@ -78,7 +78,7 @@ for f = 1:numFiles
                     
                 [inputArgument, params] = thisModule(inputArgument,pipeParams{p});
             else
-                params = MergeParams(pipeParams{p},params);
+                params = MergeParams(params,pipeParams{p});
                 params.axesHandles = [];
                 
                 % cover special cases in connections between modules

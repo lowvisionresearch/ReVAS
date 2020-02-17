@@ -32,11 +32,11 @@ abortTriggered = false;
 r = groot;
 revas.ppi = r.ScreenPixelsPerInch;
 revas.screenSize = r.ScreenSize;
-revas.fontSize = 12;
+revas.fontSize = 10;
 revas.ppi = r.ScreenPixelsPerInch;
 
 % create gui
-guiSize = [min(revas.screenSize(3)*0.5,640) min(revas.screenSize(4)*0.5,480)];
+guiSize = [min(revas.screenSize(3)*0.75,1080) min(revas.screenSize(4)*0.75,720)];
 revasPos = [(revas.screenSize(3:4)-guiSize)/2 guiSize];
 revas.gui = figure('units','pixels',...
     'position',revasPos,...
