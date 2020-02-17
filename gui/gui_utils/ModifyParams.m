@@ -64,13 +64,6 @@ else
 end
 RevasMessage(sprintf('ModifyParams launched for %s!',callerStr),logBoxHandle);
 
-% in case user closes the GUI window, return default values
-if ~exist('previousParams','var')
-    params = default;
-else
-    params = previousParams;
-end
-
 % parameter names
 paramNames = fieldnames(default);
 
@@ -87,8 +80,15 @@ toRemove = contains(paramNames, 'axesHandles')    | ...
            contains(paramNames, 'trim')           | ...
            contains(paramNames, 'tilts')          | ...
            contains(paramNames, 'toneCurve');
-params = rmfield(default,paramNames(toRemove));
+default = rmfield(default,paramNames(toRemove));
 paramNames(toRemove) = [];
+
+% in case user closes the GUI window, return default values
+if ~exist('previousParams','var')
+    params = default;
+else
+    params = previousParams;
+end
 
 if noGUI
     return;
@@ -266,7 +266,12 @@ for i=1:length(strParamsIndices)
     
     % value of default string
     thisDefault = default.(paramNames{strParamsIndices(i)});
-    thisValue = find(contains(options{i}, thisDefault));
+    
+    if isnumeric(thisDefault)
+        thisValue = thisDefault;
+    else
+        thisValue = find(contains(options{i}, thisDefault));
+    end
     
     % remove CUDA option if there is no available GPU
     if strcmp(paramNames{strParamsIndices(i)},'corrMethod')
@@ -418,11 +423,7 @@ uiwait(gui.fig);
     end
 
     function StringCallback(src,~,varargin)
-        if ~(strcmp(src.Tag, 'enableVerbosity'))
-            params.(src.Tag) = src.String{src.Value};
-        else
-            params.(src.Tag) = src.Value;
-        end
+        params.(src.Tag) = src.String{src.Value};
     end
 
     function NumericCallback(src,~,varargin)
