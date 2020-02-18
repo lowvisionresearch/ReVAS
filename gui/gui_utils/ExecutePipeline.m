@@ -55,47 +55,23 @@ sPipe = patch(revas.gui.UserData.statusBar,[0 .000001*[1 1] 0]',[0.5 0.5 1 1]',[
 % run pipeline 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 numFiles = length(selectedFiles);
-for f = 1:numFiles
-%     abortTriggered = revas.gui.UserData.abortButton.Value;
+for f = 1:numFiles    
     if abortTriggered
         break;
     end
     
     try
-        pipeLength = length(pipeline);
-        for p = 1:length(pipeline)
-            if abortTriggered
-                break;
-            end
-    
-            thisModule = str2func(pipeline{p});
-            if p==1
-                if gParams.inMemory
-                    inputArgument = ReadVideoToArray(selectedFiles{f});
-                else
-                    inputArgument = selectedFiles{f};
-                end
-                    
-                [inputArgument, params] = thisModule(inputArgument,pipeParams{p});
-            else
-                params = MergeParams(params,pipeParams{p});
-                params.axesHandles = [];
-                
-                % cover special cases in connections between modules
-                switch pipeline{p}
-                    case 'StripAnalysis'
-                        processedVideo = inputArgument;
-                    case 'MakeReference'
-                        inputArgument = processedVideo;
-                    otherwise
-                        % do nothing
-                end
-                        
-                [inputArgument, params] = thisModule(inputArgument,params);
-            end
-            RevasMessage(sprintf('%s done for %s.',pipeline{p},revas.gui.UserData.lbFile.String{selectedFileIndices(f)}),revas.gui.UserData.logBox);
-            sPipe.XData = [0 p/pipeLength p/pipeLength 0]';
-        end
+        
+        PipeSingleFile(gParams.inMemory,...
+            pipeline,...
+            pipeParams,...
+            selectedFiles{f},...
+            revas.gui.UserData.lbFile,...
+            revas.gui.UserData.logBox,...
+            selectedFileIndices(f),...
+            sPipe,...
+            revas.gui.UserData.abortButton);
+        
     catch pipeErr
         errStr = getReport(pipeErr,'extended','hyperlinks','off');
         RevasError(sprintf(' \n %s',errStr),revas.gui.UserData.logBox);
@@ -109,4 +85,48 @@ end
 
 % restore statusBar
 delete(get(revas.gui.UserData.statusBar,'children'));
+
+
+
+
+
+function PipeSingleFile(inMemory,pipeline,pipeParams,thisFile,fileBox,logBox,fileNo,sPipe,abortButton)
+
+global abortTriggered;
+
+pipeLength = length(pipeline);
+for p = 1:length(pipeline)
+    abortTriggered = abortButton.Value;
+    if abortTriggered
+        break;
+    end
+
+    thisModule = str2func(pipeline{p});
+    if p==1
+        if inMemory
+            inputArgument = ReadVideoToArray(thisFile);
+        else
+            inputArgument = thisFile;
+        end
+        params = pipeParams{p};
+    end
+
+    params = MergeParams(params,pipeParams{p});
+    params.axesHandles = [];
+
+    % cover special cases in connections between modules
+    switch pipeline{p}
+        case 'StripAnalysis'
+            processedVideo = inputArgument;
+        case 'MakeReference'
+            inputArgument = processedVideo;
+        otherwise
+            % do nothing
+    end
+
+    [inputArgument, params] = thisModule(inputArgument,params);
+
+    RevasMessage(sprintf('%s done for %s.',pipeline{p},fileBox.String{fileNo}),logBox);
+    sPipe.XData = [0 p/pipeLength p/pipeLength 0]';
+end
 

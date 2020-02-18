@@ -443,15 +443,6 @@ if nargout > 3
 end
 
 
-%% Save to output mat file
-
-if writeResult
-    save(matFilePath, 'stimulusLocations', 'params', 'peakValues',...
-        'rawStimulusLocations','timeSec');
-end
-params.stimulusLocations = stimulusLocations;
-
-
 %% if verbosity enabled, show the extracted stimulus locations
 
 if ~abortTriggered && params.enableVerbosity
@@ -491,4 +482,16 @@ if ~abortTriggered && params.enableVerbosity
     grid(params.axesHandles(3),'on');
 end
 
+
+
+%% Save to output mat file
+if writeResult
+    
+    % remove unnecessary fields
+    params = RemoveFields(params,{'logBox','axesHandles'}); 
+    
+    save(matFilePath, 'stimulusLocations', 'params', 'peakValues',...
+        'rawStimulusLocations','timeSec');
+end
+params.stimulusLocations = stimulusLocations;
 
