@@ -3,7 +3,6 @@ function ReVAS
 % check if another instance of ReVAS is already open.
 figHandles = findobj('Type', 'figure','tag','revasgui');
 if ~isempty(figHandles)
-    errordlg('Another instance of ReVAS GUI is found.','Multiple ReVAS Instances','modal');
     figure(figHandles)
     return;
 end
@@ -76,7 +75,7 @@ uimenu(revas.fileMenu,'Text','Stimulus Removed','MenuSelectedFcn',{@RevasFileSel
 uimenu(revas.fileMenu,'Text','Gamma Corrected','MenuSelectedFcn',{@RevasFileSelect,{'_gammscaled.avi'},{},revas});
 uimenu(revas.fileMenu,'Text','Bandpass Filtered','MenuSelectedFcn',{@RevasFileSelect,{'_bandfilt.avi'},{},revas});
 uimenu(revas.fileMenu,'Text','Eye Position','MenuSelectedFcn',{@RevasFileSelect,{'_position.mat','_filtered.mat'},{},revas},'Separator','on');
-revas.gui.UserData.lastselectedfiles = uimenu(revas.fileMenu,'Text','Last Used','MenuSelectedFcn',{@RevasFileSelect,{},{},revas},'Separator','on','Enable',OnOffUtil(exist(fileListFile,'file')));
+revas.gui.UserData.lastselectedfiles = uimenu(revas.fileMenu,'Text','Last Used','Accelerator','F','MenuSelectedFcn',{@RevasFileSelect,{},{},revas},'Separator','on','Enable',OnOffUtil(exist(fileListFile,'file')));
 
 % pipeline menu
 revas.pipelineMenu = uimenu(revas.gui,'Text','Pipeline');
@@ -85,7 +84,12 @@ uimenu(revas.pipelineMenu,'Text','Open','Accelerator','O','MenuSelectedFcn',{@Op
 uimenu(revas.pipelineMenu,'Text','Edit','Accelerator','E','MenuSelectedFcn',{@PipelineTool,revas},'Enable','off');
 uimenu(revas.pipelineMenu,'Text','Save','Accelerator','S','MenuSelectedFcn',{@SavePipeline,revas},'Enable','off');
 uimenu(revas.pipelineMenu,'Text','Save As','Accelerator','A','MenuSelectedFcn',{@SaveAsPipeline,revas},'Enable','off');
-revas.gui.UserData.lastusedpipe = uimenu(revas.pipelineMenu,'Text','Last Used','MenuSelectedFcn',{@OpenPipeline,revas,1},'Separator','on','Enable',OnOffUtil(exist(lastUsedPipelineFile,'file')));
+revas.gui.UserData.lastusedpipe = uimenu(revas.pipelineMenu,'Text','Last Used','Accelerator','P','MenuSelectedFcn',{@OpenPipeline,revas,1},'Separator','on','Enable',OnOffUtil(exist(lastUsedPipelineFile,'file')));
+
+% run menu
+revas.runMenu = uimenu(revas.gui,'Text','Run');
+uimenu(revas.runMenu,'Text','Selected files','Accelerator','R','MenuSelectedFcn',{@RunMenuCallback,1});
+uimenu(revas.runMenu,'Text','All files','MenuSelectedFcn',{@RunMenuCallback,0});
 
 % help menu
 revas.helpMenu = uimenu(revas.gui,'Text','Help');
@@ -106,9 +110,9 @@ runPos = [.45 0 0.1 0.05];
 abortPos = runPos;
 logBoxPos = [0 0.05 1 0.125];
 statusPos = [0 sum(logBoxPos([2 4])) 1 0.025];
-globalPanelPos = [0 sum(statusPos([2 4])) 0.2 0.25];
-pipePanelPos = [0 sum(globalPanelPos([2 4])) 0.2 0.30];
-filePanelPos = [0 sum(pipePanelPos([2 4])) 0.2 0.25];
+globalPanelPos = [0 sum(statusPos([2 4])) 0.15 0.25];
+pipePanelPos = [0 sum(globalPanelPos([2 4])) 0.15 0.30];
+filePanelPos = [0 sum(pipePanelPos([2 4])) 0.15 0.25];
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -201,13 +205,13 @@ gParamsNames = fieldnames(gParams);
 iv = contains(gParamsNames,'enableVerbosity');
 gParamsNames = [gParamsNames(iv); gParamsNames(~iv)];
 
-rowSize = 0.9 / (length(gParamsNames)+1);
+rowSize = 0.8 / (length(gParamsNames)+1);
 
 for i=1:length(gParamsNames)
 
     % location of the current uicontrol
-    yLoc = 0.9 - (i)*rowSize - (i>1)*0.05;
-    xLoc = 0.2;
+    yLoc = 0.85 - (i)*rowSize - (i>1)*0.1;
+    xLoc = 0.1;
     thisPosition = [xLoc yLoc 0.75 rowSize];
     
     % disable fields if there is no GPU or multiple logical cores
@@ -252,8 +256,6 @@ for i=1:length(gParamsNames)
             'enable',enable);
     end
 end
-% now align all children
-align(get(revas.gui.UserData.globalPanel,'children'),'center','distribute');
      
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % log, status, and run 
@@ -336,6 +338,22 @@ RevasMessage(sprintf('ReVAS %s launched!',versionNo),revas.gui.UserData.logBox);
         else
             enable = 'off';
         end
+    end
+
+    function RunMenuCallback(varargin)
+        isSelected = varargin{3};
+        
+        % run with all files
+        if ~isSelected
+            % select all files
+            revas.gui.UserData.lbFile.Value = 1:length(revas.gui.UserData.lbFile.String);
+        end
+        
+        % simulate button press on Run
+        revas.gui.UserData.runButton.Value = 1;
+        
+        % call RunPipeline
+        RunPipeline(revas.gui.UserData.runButton);
     end
 
     function EditParamsCallback(varargin)
