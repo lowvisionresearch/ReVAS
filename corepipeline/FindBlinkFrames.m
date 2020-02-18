@@ -29,7 +29,7 @@ function [inputVideo, params, varargout] = FindBlinkFrames(inputVideo, params)
 %   -----------------------------------
 %   overwrite           :   set to 1 to overwrite existing files resulting 
 %                           from calling FindBlinkFrames.
-%                           Set to 0 to abort the function call if the
+%                           Set to 0 to params.abort the function call if the
 %                           files exist in the current directory.
 %   enableVerbosity     :   set to true to report back plots during execution.
 %                           (default false)
@@ -71,14 +71,6 @@ function [inputVideo, params, varargout] = FindBlinkFrames(inputVideo, params)
 %       params.meanDifferenceThreshold = 256;
 %       FindBlinkFrames(videoPath, params);
 
-%% Allow for aborting if not parallel processing
-global abortTriggered;
-
-% parfor does not support global variables.
-% cannot abort when run in parallel.
-if isempty(abortTriggered)
-    abortTriggered = false;
-end
 
 %% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
 if isfield(params,'logBox')
@@ -172,9 +164,11 @@ stds = zeros(numberOfFrames,1);
 skews = zeros(numberOfFrames,1);
 kurtoses = zeros(numberOfFrames,1);
 
+isGUI = isfield(params,'logBox');
+
 % go over frames and compute image stats for each frame
 for fr = 1:numberOfFrames
-    if ~abortTriggered
+    if ~params.abort.Value
         % get next frame
         if writeResult
             % handle rgb frames
@@ -195,39 +189,47 @@ for fr = 1:numberOfFrames
         stds(fr) = sqrt(sum((bins - means(fr)) .^ 2 .* counts) / (numOfPixels-1));
         skews(fr) = sum((bins - means(fr)) .^ 3 .* counts) / ((numOfPixels - 1) * stds(fr)^3);
         kurtoses(fr) = sum((bins - means(fr)) .^ 4 .* counts) / ((numOfPixels - 1) * stds(fr)^4);
+    else
+        break;
+    end
+    
+    if isGUI
+        pause(.001);
     end
 end
 
 
 %% Identify bad frames
 
-% use all image stats to detect 2 clusters
-[idx, centroids] = kmeans([means stds skews kurtoses],2);
+if ~params.abort.Value
+    % use all image stats to detect 2 clusters
+    [idx, centroids] = kmeans([means stds skews kurtoses],2);
 
-% if centroids are too close, no blinks found.
-if abs(diff(centroids(:,1))) < params.meanDifferenceThreshold
-    badFrames = false(numberOfFrames,1);
-else
-    % select the cluster with smaller mean as the bad frames
-    [~,whichClusterRepresentsBadFrames] = min(centroids(:,2));
-    badFrames = idx == whichClusterRepresentsBadFrames;
-    
-    % Lump together blinks that are < |stitchCriteria| frames apart
-    [st, en] = GetOnsetOffset(badFrames);
-    [st, en] = MergeEvents(st, en, params.stitchCriteria);
-    
-    % note that we keep badFrames in a logical array format to preserve the
-    % length of the original video.
-    badFrames = GetIndicesFromOnsetOffset(st,en,numberOfFrames);
+    % if centroids are too close, no blinks found.
+    if abs(diff(centroids(:,1))) < params.meanDifferenceThreshold
+        badFrames = false(numberOfFrames,1);
+    else
+        % select the cluster with smaller mean as the bad frames
+        [~,whichClusterRepresentsBadFrames] = min(centroids(:,2));
+        badFrames = idx == whichClusterRepresentsBadFrames;
+
+        % Lump together blinks that are < |stitchCriteria| frames apart
+        [st, en] = GetOnsetOffset(badFrames);
+        [st, en] = MergeEvents(st, en, params.stitchCriteria);
+
+        % note that we keep badFrames in a logical array format to preserve the
+        % length of the original video.
+        badFrames = GetIndicesFromOnsetOffset(st,en,numberOfFrames);
+    end
+
+    % include one frame before and one frame after to really make sure we don't
+    % waste time in crappy frames
+    badFrames = conv(badFrames,[1 1 1],'same') ~= 0;
+
+    % include badFrames as a field under params structure to be used in
+    % successive stages in the pipeline
+    params.badFrames = badFrames;
 end
-
-% include one frame before and one frame after to really make sure we don't
-% waste time in crappy frames
-badFrames = conv(badFrames,[1 1 1],'same') ~= 0;
-
-% include badFrames as a field under params structure to be used in
-% successive stages in the pipeline
-params.badFrames = badFrames;
 
 %% Return image stats if user asks for it or results are to be written to a file
 
@@ -252,7 +254,7 @@ end
 
 %% if verbosity enabled, show the found blink frames
 
-if params.enableVerbosity
+if params.enableVerbosity && ~params.abort.Value
     
     badFrameNumbers = find(badFrames);
     p = [];
@@ -282,9 +284,9 @@ end
 
 %% Save to output mat file
 
-if writeResult
+if writeResult && ~params.abort.Value
     % remove unnecessary fields
-    params = RemoveFields(params,{'logBox','axesHandles'}); 
+    params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
     
     % save results
     save(badFramesMatFilePath, 'badFrames','imStats','initialRef','params');
