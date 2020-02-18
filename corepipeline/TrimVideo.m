@@ -16,7 +16,7 @@ function [outputVideo, params] = TrimVideo(inputVideo, params)
 %   Fields of the |params| 
 %   -----------------------------------
 %   overwrite           : set to true to overwrite existing files.
-%                         Set to false to abort the function call if the
+%                         Set to false to params.abort the function call if the
 %                         files already exist. (default false)
 %   borderTrimAmount    : specifies the number of rows and columns to be
 %                         removed as a vector with the number of
@@ -48,15 +48,6 @@ function [outputVideo, params] = TrimVideo(inputVideo, params)
 %       params.borderTrimAmount = [0 0 12 0];
 %       params.badFrames = false;
 %       TrimVideo(inputVideo, params);
-
-%% Allow for aborting if not parallel processing
-global abortTriggered;
-
-% parfor does not support global variables.
-% cannot abort when run in parallel.
-if isempty(abortTriggered)
-    abortTriggered = false;
-end
 
 
 %% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
@@ -144,10 +135,12 @@ params = HandleBadFrames(numberOfFrames, params, callerStr);
 
 
 %% Write out new video or return a 3D array
-    
+
+isGUI = isfield(params,'logBox');
+
 % Read, trim, and write frame by frame.
 for fr = 1:numberOfFrames
-    if ~abortTriggered
+    if ~params.abort.Value
 
         % get next frame
         if writeResult
@@ -175,6 +168,12 @@ for fr = 1:numberOfFrames
             nextFrameNumber = sum(~params.badFrames(1:fr));
             outputVideo(:, :, nextFrameNumber) = frame; 
         end
+    else 
+        break;
+    end
+    
+    if isGUI
+        pause(.001);
     end
 end % end of video
 
@@ -188,7 +187,7 @@ if writeResult
     close(writer);
     
     % if aborted midway through video, delete the partial video.
-    if abortTriggered
+    if params.abort.Value
         delete(outputVideoPath)
     end
 end

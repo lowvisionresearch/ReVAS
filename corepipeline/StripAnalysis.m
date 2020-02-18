@@ -17,7 +17,7 @@ function [outputArgument, params, varargout] = StripAnalysis(inputVideo, params)
 %   -----------------------------------
 %
 %   overwrite         : set to true to overwrite existing files. Set to 
-%                       false to abort the function call if the files
+%                       false to params.abort the function call if the files
 %                       already exist. (default false)
 %   enableVerbosity   : set to true to report back plots during execution. (
 %                       default false)
@@ -126,15 +126,6 @@ function [outputArgument, params, varargout] = StripAnalysis(inputVideo, params)
 %       [~,~,position, timeSec, rawPosition] = StripAnalysis(inputVideo, params);
 %
 
-%% Allow for aborting if not parallel processing
-global abortTriggered;
-
-% parfor does not support global variables.
-% cannot abort when run in parallel.
-if isempty(abortTriggered)
-    abortTriggered = false;
-end
-
 
 %% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
 if isfield(params,'logBox')
@@ -220,7 +211,7 @@ end
 %% Handle overwrite scenarios.
 
 if writeResult
-    outputFilePath = Filename(inputVideo, 'strip', params.samplingRate);
+    outputFilePath = Filename(inputVideo, 'strip', params);
     params.outputFilePath = outputFilePath;
     
     if ~exist(outputFilePath, 'file')
@@ -418,12 +409,13 @@ lastFrameSwap = nan;
 % the big loop. :)
 override = false;
 isFirstTimePlotting = true;
+isGUI = isfield(params,'logBox');
 
 % loop across frames
 fr = 1;
 while fr <= numberOfFrames
 
-    if ~abortTriggered
+    if ~params.abort.Value
         
         % if it's a blink frame, skip it.
         if params.skipFrame(fr)
@@ -787,9 +779,16 @@ while fr <= numberOfFrames
 
             drawnow; % maybe needed in GUI mode.
         end % en of plot
-    end % abortTriggered
+    else
+        break;
+    end % params.abort.Value
     
     fr = fr + 1;
+    
+    % in gui mode, we need this delay so that UI interactions can propagate
+    if isGUI
+        pause(.001);
+    end
 end % end of video
 
 
@@ -806,7 +805,7 @@ params.lastFrameSwap = lastFrameSwap;
 
 
 %% Plot stimuli on reference frame
-if ~abortTriggered && params.enableVerbosity 
+if ~params.abort.Value && params.enableVerbosity 
     
     % compute position on the reference frame
     center = fliplr(size(params.referenceFrame)/2);
@@ -866,10 +865,10 @@ end
 
 %% Save to output mat file
 
-if writeResult && ~abortTriggered
+if writeResult && ~params.abort.Value
     
     % remove unnecessary fields
-    params = RemoveFields(params,{'logBox','axesHandles'}); 
+    params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
     
     % Save under file labeled 'final'.
     save(outputFilePath, 'position', 'rawPosition', 'timeSec', 'params','peakValueArray','peakPosition');

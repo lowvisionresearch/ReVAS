@@ -23,7 +23,7 @@ function [outputArgument, params, varargout] = ReReference(inputArgument, params
 %   Fields of the 'params' structure
 %   --------------------------------
 %   overwrite               : set to true to overwrite existing files.
-%                             Set to false to abort the function call if the
+%                             Set to false to params.abort the function call if the
 %                             files already exist. (default false)
 %   referenceFrame          : local reference frame. is a 2D array 
 %                             representing a local ref or a full path to a 
@@ -83,14 +83,6 @@ function [outputArgument, params, varargout] = ReReference(inputArgument, params
 %   TO DO
 
 
-%% Allow for aborting if not parallel processing
-global abortTriggered;
-
-% parfor does not support global variables.
-% cannot abort when run in parallel.
-if isempty(abortTriggered)
-    abortTriggered = false;
-end
 
 %% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
 if isfield(params,'logBox')
@@ -285,11 +277,11 @@ halfStripSize = round(anchorStripSize/2);
 
 %% Find tilt
 
-
+isGUI = isfield(params,'logBox');
 
 % locate strip on global ref
 for i=1:length(tilts)
-    if ~abortTriggered
+    if ~params.abort.Value
     
         % rotate strip
         tempStrip = imrotate(anchorStrip, tilts(i),'bilinear');
@@ -300,6 +292,12 @@ for i=1:length(tilts)
 
         % find peak values vs tilt
         [~,~,~, peakValues(i)] = LocateStrip(thisStrip,anchorOp); 
+    else
+        break;
+    end
+    
+    if isGUI
+        pause(.001);
     end
 end
 
@@ -348,7 +346,7 @@ end
 
 
 %% Plot stimuli on reference frame
-if ~abortTriggered && params.enableVerbosity 
+if ~params.abort.Value && params.enableVerbosity 
     
     finalLocalRef = imtranslate(correctedLocalRef,offset,'fillvalues',nan);
     padToSize = max([size(finalLocalRef); size(globalRef)],[],1);
@@ -360,11 +358,11 @@ end
 
 
 %% Save filtered data.
-if writeResult && ~abortTriggered
+if writeResult && ~params.abort.Value
     
     % remove unnecessary fields
     params = RemoveFields(params,{'logBox','axesHandles','globalRefArgument',...
-        'referenceFrame'}); 
+        'referenceFrame','abort'}); 
 
     % save output
     save(outputFilePath,'position','timeSec','offset','bestTilt','params','peakValues');

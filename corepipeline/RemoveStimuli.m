@@ -21,7 +21,7 @@ function [outputVideo, params, varargout] = RemoveStimuli(inputVideo, params)
 %   Fields of the |params| 
 %   -----------------------------------
 %   overwrite          : set to true to overwrite existing files.
-%                        Set to false to abort the function call if the
+%                        Set to false to params.abort the function call if the
 %                        files already exist. (default false)
 %   enableVerbosity    : set to true to report back plots during execution.
 %                        (default false)
@@ -83,17 +83,6 @@ function [outputVideo, params, varargout] = RemoveStimuli(inputVideo, params)
 %       params.removalAreaSize = [11 11];
 %       RemoveStimuli(inputVideo, params);
 
-
-
-
-%% Allow for aborting if not parallel processing
-global abortTriggered;
-
-% parfor does not support global variables.
-% cannot abort when run in parallel.
-if isempty(abortTriggered)
-    abortTriggered = false;
-end
 
 
 %% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
@@ -279,9 +268,11 @@ end
 isFirstTimePlotting = true;
 
 %% Find stimulus locations
+
+isGUI = isfield(params,'logBox');
     
 for fr = 1:numberOfFrames
-    if ~abortTriggered
+    if ~params.abort.Value
         
         % get next frame
         if writeResult
@@ -408,13 +399,15 @@ for fr = 1:numberOfFrames
                 set(p31(1),'YData',rawStimulusLocations(:,1));
                 set(p31(2),'YData',rawStimulusLocations(:,2));
             end
-
             drawnow; % maybe needed in GUI mode.
-           
         end
-        
-        
-    end % end of abort
+    else
+        break;
+    end % end of params.abort
+    
+    if isGUI
+        pause(.001);
+    end
 end % end of video
 
 %% return results, close up objects
@@ -425,7 +418,7 @@ if writeResult
     close(writer);
     
     % if aborted midway through video, delete the partial video.
-    if abortTriggered
+    if params.abort.Value
         delete(outputVideoPath)
     end
 else
@@ -445,7 +438,7 @@ end
 
 %% if verbosity enabled, show the extracted stimulus locations
 
-if ~abortTriggered && params.enableVerbosity
+if ~params.abort.Value && params.enableVerbosity
     
     % show cross-correlation output
     axes(params.axesHandles(1)); 
@@ -488,7 +481,7 @@ end
 if writeResult
     
     % remove unnecessary fields
-    params = RemoveFields(params,{'logBox','axesHandles'}); 
+    params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
     
     save(matFilePath, 'stimulusLocations', 'params', 'peakValues',...
         'rawStimulusLocations','timeSec');

@@ -3,7 +3,7 @@ function outputFilePath = Filename(inputFilePath, moduleToApply, varargin)
 %  Utility function for converting one file name to another, according to
 %  the conventions used by ReVAS.
 %
-%  varargin{1} can be samplingRate for 'strip' and iteration for 'ref'.
+%  varargin{1} is params.
 %
 %  Options for moduleToApply are:
 %   - trim
@@ -24,7 +24,7 @@ function outputFilePath = Filename(inputFilePath, moduleToApply, varargin)
 %
 
 if nargin > 2
-    optional = varargin{1};
+    params = varargin{1};
 end
 
 % Deconstruct input file path.
@@ -35,32 +35,36 @@ if isempty(inputExtension)
     inputExtension = '.avi';
 end
 
-switch moduleToApply
-    case 'trim'
+switch lower(moduleToApply)
+    case {'trim','trimvideo'}
         outputFilePath = fullfile(inputDir, [inputFileName '_trim' inputExtension]);
-    case 'removestim'
+    case {'removestim','removestimuli'}
         outputFilePath = fullfile(inputDir, [inputFileName '_nostim' inputExtension]);
-    case 'blink'
+    case {'blink','findblinkframes'}
         outputFilePath = fullfile(inputDir, [inputFileName '_blinkframes.mat']);
     case 'stimlocs'
         outputFilePath = fullfile(inputDir, [inputFileName '_stimlocs.mat']);
-    case 'gamma'
+    case {'gamma','gammacorrect'}
         outputFilePath = fullfile(inputDir, [inputFileName '_gamscaled' inputExtension]);
-    case 'bandpass'
+    case {'bandpass','bandpassfilter'}
         outputFilePath = fullfile(inputDir, [inputFileName '_bandfilt' inputExtension]);
-    case 'ref'
+    case {'ref','makereference'}
         outputFilePath = fullfile(inputDir, [inputFileName '_reference.mat']);
-    case 'strip'
+    case {'strip','stripanalysis'}
         % Set samplingRate to default value if necessary
         if nargin < 3
-            optional = 540;
+            params.samplingRate = 540;
         end
-        outputFilePath = fullfile(inputDir, [inputFileName '_' num2str(optional) '_hz_position.mat']);
-    case 'filtered'
+        outputFilePath = fullfile(inputDir, [inputFileName '_' num2str(params.samplingRate) '_hz_position.mat']);
+    case {'filtered','filtereyeposition'}
         outputFilePath = fullfile(inputDir, [inputFileName '_filtered.mat']);
-    case 'reref'
+    case {'reref','rereference'}
         outputFilePath = fullfile(inputDir, [inputFileName '_reref' inputExtension]);
-    case 'sacsdrifts'
+    case {'sacsdrifts','findsaccadesanddrifts'}
         outputFilePath = fullfile(inputDir, [inputFileName '_sacsdrifts.mat']);
+    case 'inmemory'
+        outputFilePath = fullfile(inputDir, [inputFileName '_inmemory.mat']);
+    otherwise
+        outputFilePath = inputFilePath;
 end
 

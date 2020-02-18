@@ -427,7 +427,7 @@ end
 if writeResult
     
     % remove unnecessary fields
-    params = RemoveFields(params,{'logBox','axesHandles'}); 
+    params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
     
     save(outputFilePath,'saccades','drifts','labels','params',...
         'st','en','driftSt','driftEn');

@@ -15,7 +15,7 @@ function [outputVideo, params] = GammaCorrect(inputVideo, params)
 %   Fields of the |params| 
 %   -----------------------------------
 %   overwrite          : set to true to overwrite existing files.
-%                        Set to false to abort the function call if the
+%                        Set to false to params.abort the function call if the
 %                        files already exist. (default false)
 %   method             : 'simpleGamma' for simple gamma correction, 
 %                        'toneMapping' for boosting only low-mid grays, 
@@ -53,14 +53,6 @@ function [outputVideo, params] = GammaCorrect(inputVideo, params)
 %       params.gammaExponent = 0.6;
 %       GammaCorrect(inputVideo, params);
 
-%% Allow for aborting if not parallel processing
-global abortTriggered;
-
-% parfor does not support global variables.
-% cannot abort when run in parallel.
-if isempty(abortTriggered)
-    abortTriggered = false;
-end
 
 %% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
 if isfield(params,'logBox')
@@ -140,9 +132,11 @@ if strcmpi(params.method,'simpleGamma')
     simpleGammaToneCurve = uint8((linspace(0,1,256).^params.gammaExponent)*255);
 end
 
+isGUI = isfield(params,'logBox');
+
 % Read, do contrast enhancement, and write frame by frame.
 for fr = 1:numberOfFrames
-    if ~abortTriggered
+    if ~params.abort.Value
 
         % get next frame
         if writeResult
@@ -181,6 +175,12 @@ for fr = 1:numberOfFrames
             nextFrameNumber = sum(~params.badFrames(1:fr));
             outputVideo(:, :, nextFrameNumber) = frame; 
         end
+    else
+        break;
+    end % abort
+    
+    if isGUI
+        pause(.001);
     end
 end % end of video
 
@@ -192,7 +192,7 @@ if writeResult
     close(writer);
     
     % if aborted midway through video, delete the partial video.
-    if abortTriggered
+    if params.abort.Value
         delete(outputVideoPath)
     end
 end

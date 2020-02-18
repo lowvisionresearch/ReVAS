@@ -25,7 +25,7 @@ function [inputVideo, params, varargout] = MakeReference(inputVideo, params)
 %   -----------------------------------
 %
 %   overwrite         : set to true to overwrite existing files. Set to 
-%                       false to abort the function call if the files
+%                       false to params.abort the function call if the files
 %                       already exist. (default false)
 %   enableVerbosity   : set to true to report back plots during execution.(
 %                       default false)
@@ -78,15 +78,6 @@ function [inputVideo, params, varargout] = MakeReference(inputVideo, params)
 %   varargout{2} = refFrameFilePath, refFrame file path (if exists)
 %   varargout{3} = refFrameZero, zero padded version of reference frame
 %
-
-%% Allow for aborting if not parallel processing
-global abortTriggered;
-
-% parfor does not support global variables.
-% cannot abort when run in parallel.
-if isempty(abortTriggered)
-    abortTriggered = false;
-end
 
 
 %% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
@@ -248,7 +239,7 @@ stripWidth = stripRight - stripLeft + 1;
 isFirstTimePlotting = true;
 
 %% plot peak values and delta motion in advance
-if ~abortTriggered && params.enableVerbosity 
+if ~params.abort.Value && params.enableVerbosity 
     
     % show peak value criterion
     scatter(params.axesHandles(2),params.timeSec,params.peakValueArray,10,'filled'); 
@@ -280,10 +271,11 @@ end
 %% Make reference frame
 
 % the big loop. :)
+isGUI = isfield(params,'logBox');
 
 % loop across frames
 for fr = 1:numberOfFrames
-    if ~abortTriggered
+    if ~params.abort.Value
         
         % if it's a blink frame, skip it.
         if params.skipFrame(fr)
@@ -364,9 +356,13 @@ for fr = 1:numberOfFrames
             title(params.axesHandles(1),['Frame no: ' num2str(fr)]);
             drawnow;
         end
-        
-    end
+    else
+        break;
+    end % abort
 
+    if isGUI
+        pause(.001);
+    end
 end
 
 %% resize if needed
@@ -405,7 +401,7 @@ refFrame(zeroInd) = noise;
 
 
 %% visualize reference frame
-if ~abortTriggered && params.enableVerbosity 
+if ~params.abort.Value && params.enableVerbosity 
     % plot reference frame
     axes(params.axesHandles(1));
     imagesc(refFrame);
@@ -421,10 +417,10 @@ end
 
 %% Save to output mat file
 
-if writeResult && ~abortTriggered
+if writeResult && ~params.abort.Value
     
     % remove unnecessary fields
-    params = RemoveFields(params,{'logBox','axesHandles'}); 
+    params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
     
     % Save under file labeled 'final'.
     save(outputFilePath, 'refFrame','refFrameZero','params');

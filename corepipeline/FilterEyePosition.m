@@ -30,7 +30,7 @@ function [outputArgument, params]= FilterEyePosition(inputArgument, params)
 %   Fields of the |params| 
 %   -----------------------------------
 %   overwrite           : set to true to overwrite existing files.
-%                         Set to false to abort the function call if the
+%                         Set to false to params.abort the function call if the
 %                         files already exist. (default false)
 %   enableVerbosity     : set to true to report back plots during execution.
 %                         (default false)
@@ -97,14 +97,6 @@ function [outputArgument, params]= FilterEyePosition(inputArgument, params)
 %       inputArray = [eyePositionDeg time];
 %       filteredPositions = FilterEyePosition(inputArray, params);
 
-%% Allow for aborting if not parallel processing
-global abortTriggered;
-
-% parfor does not support global variables.
-% cannot abort when run in parallel.
-if isempty(abortTriggered)
-    abortTriggered = false;
-end
 
 
 %% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
@@ -317,8 +309,10 @@ filters = {'medfilt1','sgolayfilt','notch','notch'};
 filterParams = {params.medfilt1, params.sgolayfilt, params.notch1, params.notch2};
 skippedFilters = false(4,1);
 
+isGUI = isfield(params,'logBox');
+
 for i=1:4
-    if ~abortTriggered
+    if ~params.abort.Value
     
         % parse the "filter" field
         currentFilter = filters{i}; 
@@ -342,6 +336,12 @@ for i=1:4
         if params.enableVerbosity > 1
             filteringResults(:,:,i) = filteredEyePositions;
         end
+    else
+        break;
+    end
+    
+    if isGUI
+        pause(.001);
     end
 end
 
@@ -370,7 +370,6 @@ for i=1:length(regionsToBeFixed)
     nanIndices(start(regionsToBeFixed(i)):stop(regionsToBeFixed(i))) = false;
 end
 
-filteredFullArray = filteredEyePositions;
 filteredEyePositions(nanIndices,:) = nan;
 
 
@@ -383,7 +382,7 @@ end
 
 
 %% visualize results if user requested
-if ~abortTriggered && params.enableVerbosity 
+if ~params.abort.Value && params.enableVerbosity 
     
     if length(params.axesHandles) > 1
         for i=1:length(params.axesHandles)
@@ -429,10 +428,10 @@ end
 
 
 %% Save filtered data.
-if writeResult && ~abortTriggered
+if writeResult && ~params.abort.Value
     
     % remove unnecessary fields
-    params = RemoveFields(params,{'logBox','axesHandles'}); 
+    params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
     
     data.positionDeg = filteredEyePositions;
     data.timeSec = timeSec;

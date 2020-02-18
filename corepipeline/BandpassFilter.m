@@ -15,7 +15,7 @@ function [outputVideo, params] = BandpassFilter(inputVideo, params)
 %   Fields of the |params| 
 %   -----------------------------------
 %   overwrite                 : set to true to overwrite existing files.
-%                               Set to false to abort the function call if the
+%                               Set to false to params.abort the function call if the
 %                               files already exist. (default false)
 %   smoothing                 : Used to remove high-frequency noise in the
 %                               frames. Represents the standard deviation
@@ -49,14 +49,6 @@ function [outputVideo, params] = BandpassFilter(inputVideo, params)
 %       params.lowSpatialFrequencyCutoff = 3;
 %       BandpassFilter(inputVideo, params);
 
-%% Allow for aborting if not parallel processing
-global abortTriggered;
-
-% parfor does not support global variables.
-% cannot abort when run in parallel.
-if isempty(abortTriggered)
-    abortTriggered = false;
-end
 
 %% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
 if isfield(params,'logBox')
@@ -149,9 +141,11 @@ radiusMatrix = sqrt((repmat(xVector,height,1) .^ 2) + ...
 highPassFilter = double(radiusMatrix > params.lowSpatialFrequencyCutoff);
 highPassFilter(floor(height/2) + 1, floor(width/2) + 1) = 1;
 
+isGUI = isfield(params,'logBox');
+
 % Read, apply filters, and write frame by frame.
 for fr = 1:numberOfFrames
-    if ~abortTriggered
+    if ~params.abort.Value
         
         % get next frame
         if writeResult
@@ -185,6 +179,12 @@ for fr = 1:numberOfFrames
             nextFrameNumber = sum(~params.badFrames(1:fr));
             outputVideo(:, :, nextFrameNumber) = frame;
         end
+    else
+        break;
+    end
+    
+    if isGUI
+        pause(.001);
     end
 end
 
@@ -196,7 +196,7 @@ if writeResult
     close(writer);
     
     % if aborted midway through video, delete the partial video.
-    if abortTriggered
+    if params.abort.Value
         delete(outputVideoPath)
     end
 end

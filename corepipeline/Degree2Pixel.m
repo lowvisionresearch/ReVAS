@@ -116,7 +116,7 @@ end
 if writeResult 
     
     % remove unnecessary fields
-    params = RemoveFields(params,{'logBox','axesHandles'}); 
+    params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
     
     % append the file with converted position traces
     save(outputFilePath,'position','-append');
