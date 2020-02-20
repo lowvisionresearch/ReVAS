@@ -173,14 +173,15 @@ if params.enableVerbosity && isempty(params.axesHandles)
            'menubar','none',...
            'toolbar','none',...
            'numbertitle','off');
-    for i=1:2
-        params.axesHandles(i) = subplot(2,1,i); 
-        cla(params.axesHandles(i));
-        tb = get(params.axesHandles(i),'toolbar');
-        tb.Visible = 'on';
-    end
+
+    params.axesHandles(1) = subplot(1,1,1); 
 end
 
+if params.enableVerbosity
+    cla(params.axesHandles(1));
+    tb = get(params.axesHandles(1),'toolbar');
+    tb.Visible = 'on';
+end
 
 %% Handle overwrite scenarios.
 
@@ -392,33 +393,36 @@ end
 %% Verbosity for Results.
 if params.enableVerbosity
     
-    sacIx = labels == 1;
-    driftIx = labels == 2;
-    blinkIx = labels == 3;
+    sacIx = 1*(labels == 1);
+    sacIx(sacIx==0) = nan;
+    blinkIx = 1*(labels == 3);
+    blinkIx(blinkIx==0) = nan;
     
+    cla(params.axesHandles(1));
+    ph = [];
+    style = {'-','-'};
+    cols = lines(8);
+    alp = 0.2;
+    
+    dataLims = [nanmin(positionDeg(:)) nanmax(positionDeg(:))];
+    ylims = mean(dataLims) + diff(dataLims) * 1.2 * [-1 1]/2;
+    dy = abs(diff(ylims))*0.05;
     for i=1:2
-        cla(params.axesHandles(i));
-        dataLims = [nanmin(positionDeg(:,i)) nanmax(positionDeg(:,i))];
-        ylims = mean(dataLims) + diff(dataLims) * 1.2 * [-1 1]/2;
-        hold(params.axesHandles(i),'on');
-        plot(params.axesHandles(i), timeSec, positionDeg(:,i), 'linewidth',1.5);
-        scatter(params.axesHandles(i), timeSec(blinkIx), zeros(sum(blinkIx),1),10,'filled');
-        scatter(params.axesHandles(i), timeSec(driftIx), positionDeg(driftIx,i),20,'filled');
-        scatter(params.axesHandles(i), timeSec(sacIx), positionDeg(sacIx,i),40,'filled');
-        set(params.axesHandles(i),'fontsize',14);
-        
-        ylim(params.axesHandles(i), ylims);
-        xlim(params.axesHandles(i),[0 max(timeSec)]);
-        hold(params.axesHandles(i),'off');
-        grid(params.axesHandles(i),'on');
-        
+        hold(params.axesHandles(1),'on');
+        ph(i) = plot(params.axesHandles(1), timeSec, positionDeg(:,i),style{i}, 'linewidth',1.5,'color',cols(i,:));
+        sh(1) = plot(params.axesHandles(1), timeSec, sacIx.*positionDeg(:,i),style{i}, 'linewidth',4,'color',cols(i,:));
     end
+    sh(2) = plot(params.axesHandles(1), timeSec, blinkIx.*zeros(size(timeSec)),style{i}, 'linewidth',4,'color','k');
+    
+    set(params.axesHandles(1),'fontsize',10);
+    ylim(params.axesHandles(1), ylims);
+    xlim(params.axesHandles(1),[0 max(timeSec)]);
+    hold(params.axesHandles(1),'off');
+    grid(params.axesHandles(1),'on');
     ylabel(params.axesHandles(1),'position (deg)');
-    xlabel(params.axesHandles(2),'time (sec)');
-    legend(params.axesHandles(2),{'position','blink/data loss','drift','saccade'},...
+    xlabel(params.axesHandles(1),'time (sec)');
+    legend(params.axesHandles(1),[ph sh],{'hor-pos','ver-pos','saccade','blink/data loss'},...
         'orientation','horizontal','location','south');
-    title(params.axesHandles(1),'horizontal');
-    title(params.axesHandles(2),'vertical');
     
 end
 

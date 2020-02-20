@@ -29,10 +29,10 @@ try
     
     % use a filepath as input and only plot the final output
     save(hiddenFile,'position','timeSec');
-    [~, p] = Pixel2Degree(hiddenFile, p);
+    [outputFile, ~] = Pixel2Degree(hiddenFile, p);
     
     % load positionDeg
-    load(hiddenFile,'positionDeg');
+    load(outputFile,'positionDeg');
     
     % compare with outArg
     nonnan = ~isnan(positionDeg(:,1));
@@ -40,7 +40,7 @@ try
     
     % clean up
     delete(hiddenFile);
-    delete(p.outputFilePath);
+    delete(outputFile);
     
     
     success = true;

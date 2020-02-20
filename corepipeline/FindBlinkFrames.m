@@ -114,6 +114,9 @@ if params.enableVerbosity && isempty(params.axesHandles)
            'toolbar','none',...
            'numbertitle','off');
     params.axesHandles(1) = subplot(1,1,1);
+end
+
+if params.enableVerbosity
     cla(params.axesHandles(1));
     tb = get(params.axesHandles(1),'toolbar');
     tb.Visible = 'on';
@@ -271,11 +274,10 @@ if params.enableVerbosity && ~params.abort.Value
     scatter(params.axesHandles(1),badFrameNumbers, skews(badFrames),mSize,get(p(3),'color'),'filled'); 
     scatter(params.axesHandles(1),badFrameNumbers, kurtoses(badFrames),mSize,get(p(4),'color'),'filled'); 
     
-    title(params.axesHandles(1),'Image stats and detected blink frames');
     xlabel(params.axesHandles(1),'Frame number');
     ylabel(params.axesHandles(1),'Image stats');
     legend(params.axesHandles(1),{'means', 'stds','skews','kurtoses','badFrames'});
-    set(params.axesHandles(1),'fontsize',14);
+    set(params.axesHandles(1),'fontsize',10);
     grid(params.axesHandles(1),'on');
     drawnow;
 end

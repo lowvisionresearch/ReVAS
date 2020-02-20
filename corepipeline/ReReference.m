@@ -136,6 +136,9 @@ if params.enableVerbosity && isempty(params.axesHandles)
            'toolbar','none',...
            'numbertitle','off');
     params.axesHandles(1) = subplot(1,1,1);
+end
+
+if params.enableVerbosity
     cla(params.axesHandles(1))
     tb = get(params.axesHandles(1),'toolbar');
     tb.Visible = 'on';

@@ -31,10 +31,10 @@ try
     
     % use a filepath as input and only plot the final output
     save(hiddenFile,'positionDeg','timeSec');
-    [~, p] = Degree2Pixel(hiddenFile, p);
+    [outputFile, p] = Degree2Pixel(hiddenFile, p);
     
     % load position
-    load(hiddenFile,'position');
+    load(outputFile,'position');
     
     % compare with outArg
     nonnan = ~isnan(position(:,1));

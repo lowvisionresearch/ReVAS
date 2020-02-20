@@ -20,6 +20,7 @@ function [outputArgument, params] = Pixel2Degree(inputArgument, params)
 %   -----------------------------------
 %   Fields of the |params| 
 %   -----------------------------------
+%   overwrite           : true/false
 %   fov                 : field of view in degrees.
 %   frameWidth          : width of the original video frame in pixels.
 %
@@ -30,7 +31,7 @@ function [outputArgument, params] = Pixel2Degree(inputArgument, params)
 %   If inputArgument is an array of eye positions and time, then
 %   outputArgument is also an array of eye positions in degrees and time. If
 %   inputArgument is a file containin eye positions, then outputArgument is
-%   the same file containing eye positions in degrees (positionDeg). 
+%   also a file containing eye positions in degrees (positionDeg). 
 %
 %   |params| structure.
 %
@@ -51,6 +52,12 @@ function [outputArgument, params] = Pixel2Degree(inputArgument, params)
 % 
 % MNA 2/15/2020
 
+%% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
+if isfield(params,'logBox')
+    logBox = params.logBox;
+else
+    logBox = [];
+end
 
 %% Determine inputType type.
 if ischar(inputArgument)
@@ -82,8 +89,26 @@ if writeResult
     params.outputFilePath = outputFilePath;
 end
 
+%% Handle overwrite scenarios
+if writeResult
+    outputFilePath = Filename(inputArgument, 'deg');
+    params.outputFilePath = outputFilePath;
+    
+    if ~exist(outputFilePath, 'file')
+        % left blank to continue without issuing RevasMessage in this case
+    elseif ~params.overwrite
+        RevasMessage(['Pixel2Degree() did not execute because it would overwrite existing file. (' outputFilePath ')'], logBox);
+        RevasMessage('Pixel2Degree() is returning results from existing file.',logBox); 
+        outputArgument = outputFilePath;
+        return;
+    else
+        RevasMessage(['Pixel2Degree() is proceeding and overwriting an existing file. (' outputFilePath ')'], logBox);  
+    end
+end
+    
 %% Handle inputArgument scenarios
 if writeResult
+    
     % check if input file exists
     if exist(inputArgument,'file') 
         [~,~,ext] = fileparts(inputArgument);
@@ -119,7 +144,7 @@ if writeResult
     params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
     
     % append the file with converted position traces
-    save(outputFilePath,'positionDeg','-append');
+    save(outputFilePath,'positionDeg','timeSec','params');
     
     outputArgument = outputFilePath;
 else

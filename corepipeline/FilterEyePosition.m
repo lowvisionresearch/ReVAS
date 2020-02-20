@@ -30,8 +30,6 @@ function [outputArgument, params]= FilterEyePosition(inputArgument, params)
 %   Fields of the |params| 
 %   -----------------------------------
 %   overwrite           : set to true to overwrite existing files.
-%                         Set to false to params.abort the function call if the
-%                         files already exist. (default false)
 %   enableVerbosity     : set to true to report back plots during execution.
 %                         (default false)
 %   maxGapDurationMs    : maximum allowable gap duration
@@ -148,6 +146,9 @@ if params.enableVerbosity && isempty(params.axesHandles)
         params.axesHandles(2) = subplot(1,2,2); % ver
     end
        
+end
+
+if params.enableVerbosity
     for i=1:length(params.axesHandles)
         cla(params.axesHandles(i));
         tb = get(params.axesHandles(i),'toolbar');
@@ -415,7 +416,7 @@ if ~params.abort.Value && params.enableVerbosity
     
     % beautify the plot
     for i=1:length(params.axesHandles)
-        set(params.axesHandles(i),'fontsize',14);
+        set(params.axesHandles(i),'fontsize',10);
         xlabel(params.axesHandles(i),'time (sec)');
         ylabel(params.axesHandles(i),'position (deg)');
         ylim(params.axesHandles(i),[nanmin(filteredEyePositions(:)) nanmax(filteredEyePositions(:))] * 1.2);
@@ -436,6 +437,7 @@ if writeResult && ~params.abort.Value
     data.positionDeg = filteredEyePositions;
     data.timeSec = timeSec;
     data.params = params;
+    data.outputArgument = outputArgument;
     save(outputFilePath,'-struct','data');
 end
 

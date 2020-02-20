@@ -200,13 +200,16 @@ if params.enableVerbosity && isempty(params.axesHandles)
     params.axesHandles(2) = subplot(2,3,2);
     params.axesHandles(3) = subplot(2,3,3);
     params.axesHandles(4) = subplot(2,3,[5 6]);
+    
+end
+
+if params.enableVerbosity
     for i=1:4
         cla(params.axesHandles(i));
         tb = get(params.axesHandles(i),'toolbar');
         tb.Visible = 'on';
     end
 end
-
 
 %% Handle overwrite scenarios.
 
@@ -720,7 +723,7 @@ while fr <= numberOfFrames
                 sh21 = scatter(params.axesHandles(2),timeSec,peakValueArray,10,'filled'); 
                 hold(params.axesHandles(2),'on');
                 plot(params.axesHandles(2),timeSec([1 end]),params.minPeakThreshold*ones(1,2),'-','linewidth',2);
-                set(params.axesHandles(2),'fontsize',12);
+                set(params.axesHandles(2),'fontsize',10);
                 xlabel(params.axesHandles(2),'time (sec)');
                 ylabel(params.axesHandles(2),'peak value');
                 ylim(params.axesHandles(2),[0 1]);
@@ -732,7 +735,7 @@ while fr <= numberOfFrames
                 sh31 = scatter(params.axesHandles(3),timeSec,100*deltaPos,10,'filled');
                 hold(params.axesHandles(3),'on');
                 plot(params.axesHandles(3),timeSec([1 end]),params.maxMotionThreshold*ones(1,2)*100,'-','linewidth',2);
-                set(params.axesHandles(3),'fontsize',12);
+                set(params.axesHandles(3),'fontsize',10);
                 xlabel(params.axesHandles(3),'time (sec)');
                 ylabel(params.axesHandles(3),'motion (%/fr)');
                 xlim(params.axesHandles(3),[0 timeSec(thisSample)]);
@@ -743,7 +746,7 @@ while fr <= numberOfFrames
 
                 % show useful output traces
                 p41 = plot(params.axesHandles(4),timeSec(usefulIx),tempPos,'-o','linewidth',1.5,'markersize',2);
-                set(params.axesHandles(4),'fontsize',12);
+                set(params.axesHandles(4),'fontsize',10);
                 xlabel(params.axesHandles(4),'time (sec)');
                 ylabel(params.axesHandles(4),'position (px)');
                 legend(params.axesHandles(4),{'hor','ver'});
@@ -827,7 +830,7 @@ if ~params.abort.Value && params.enableVerbosity
     scatter(params.axesHandles(2),timeSec,peakValueArray,10,'filled'); 
     hold(params.axesHandles(2),'on');
     plot(params.axesHandles(2),timeSec([1 end]),params.minPeakThreshold*ones(1,2),'-','linewidth',2);
-    set(params.axesHandles(2),'fontsize',12);
+    set(params.axesHandles(2),'fontsize',10);
     xlabel(params.axesHandles(2),'time (sec)');
     ylabel(params.axesHandles(2),'peak value');
     ylim(params.axesHandles(2),[0 1]);
@@ -839,7 +842,7 @@ if ~params.abort.Value && params.enableVerbosity
     scatter(params.axesHandles(3),timeSec,100*deltaPos,10,'filled');
     hold(params.axesHandles(3),'on');
     plot(params.axesHandles(3),timeSec([1 end]),params.maxMotionThreshold*ones(1,2)*100,'-','linewidth',2);
-    set(params.axesHandles(3),'fontsize',12);
+    set(params.axesHandles(3),'fontsize',10);
     xlabel(params.axesHandles(3),'time (sec)');
     ylabel(params.axesHandles(3),'motion (%/fr)');
     xlim(params.axesHandles(3),[0 timeSec(thisSample)]);
@@ -850,7 +853,7 @@ if ~params.abort.Value && params.enableVerbosity
 
     % plot useful position traces.
     plot(params.axesHandles(4),timeSec,position,'-o','linewidth',1.5,'markersize',2);
-    set(params.axesHandles(4),'fontsize',12);
+    set(params.axesHandles(4),'fontsize',10);
     xlabel(params.axesHandles(4),'time (sec)');
     ylabel(params.axesHandles(4),'position (px)');
     legend(params.axesHandles(4),{'hor','ver'});

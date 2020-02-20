@@ -129,6 +129,10 @@ if params.enableVerbosity && isempty(params.axesHandles)
     params.axesHandles(1) = subplot(2,3,[1 2 4 5]);
     params.axesHandles(2) = subplot(2,3,3);
     params.axesHandles(3) = subplot(2,3,6);
+    
+end
+
+if params.enableVerbosity
     for i=1:3
         cla(params.axesHandles(i));
         tb = get(params.axesHandles(i),'toolbar');
@@ -453,7 +457,7 @@ if ~params.abort.Value && params.enableVerbosity
     plot(params.axesHandles(2),timeSec,peakValues,'-','linewidth',2); 
     hold(params.axesHandles(2),'on');
     plot(params.axesHandles(2),timeSec([1 end]),params.minPeakThreshold*ones(1,2),'--','color',.7*[1 1 1],'linewidth',2);
-    set(params.axesHandles(2),'fontsize',14);
+    set(params.axesHandles(2),'fontsize',10);
     xlabel(params.axesHandles(2),'time (sec)');
     ylabel(params.axesHandles(2),'peak value');
     ylim(params.axesHandles(2),[0 1]);
@@ -463,7 +467,7 @@ if ~params.abort.Value && params.enableVerbosity
     
     % show useful stimulus locations traces
     plot(params.axesHandles(3),timeSec,stimulusLocations,'-','linewidth',2);
-    set(params.axesHandles(3),'fontsize',14);
+    set(params.axesHandles(3),'fontsize',10);
     xlabel(params.axesHandles(3),'time (sec)');
     ylabel(params.axesHandles(3),'stimulus location (px)');
     legend(params.axesHandles(3),{'hor','ver'});

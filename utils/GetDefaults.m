@@ -1,15 +1,24 @@
-function [default, validate] = GetDefaults(module)
-% [default, validate] = GetDefaults(module)
+function [default, validate, before, after, keyword, axesHandles] = GetDefaults(module)
+% [default, validate, before, after, keyword, axesHandles] = GetDefaults(module)
 %
 %   Returns default parameter values and validation functions for each
 %   corepipeline module. Case-insensitive. 'module' is a char array
 %   representing the name of the corepipeline function.
 %
-% Mehmet N. Agaoglu 1/19/2020 
+%   In addition, it returns before and after cell arrays, indicating which
+%   modules can preceed or succeed a given module. 'none' means original,
+%   unprocessed video. It also returns the keyword to be used in
+%   that module's output file name. Finally, it also returns tag names for
+%   axes handles to be sent to these modules in GUI mode.
 %
+% Mehmet N. Agaoglu 1/19/2020 wrote initial version
+% MNA               2/19/2020 added keyword.
 
 % make lower case for more robust matches
 module = lower(module);
+
+% see if there is an .m extension, if so remove it
+[~,module,~] = fileparts(module);
 
 switch module
       
@@ -30,7 +39,17 @@ switch module
         validate.axesHandles = @(x) isempty(x) | all(ishandle(x));
         validate.stitchCriteria = @IsPositiveInteger;
         validate.numberOfBins = @(x) IsPositiveInteger(x) & (x<=256);
-        validate.meanDifferenceThreshold = @IsPositiveRealNumber;    
+        validate.meanDifferenceThreshold = @IsPositiveRealNumber;  
+        
+        % list which modules can preceed or succeed this one
+        before = {'trimvideo','removestimuli','gammacorrect'};
+        after = {'none','trimvideo','removestimuli','gammacorrect','bandpassfilter'};
+        
+        % keyword to be used in filenames
+        keyword = 'blinkframes';
+        
+        % axes handle tags.. useful only in GUI mode
+        axesHandles = {'blinkAx'};
         
     case 'trimvideo'
         % default values
@@ -42,6 +61,15 @@ switch module
         validate.overwrite = @islogical;
         validate.badFrames = @(x) all(islogical(x));
         validate.borderTrimAmount = @(x) all(IsNaturalNumber(x)) & (length(x)==4);
+        
+        % list which modules can preceed or succeed this one
+        before = {'none','trimvideo','removestimuli','gammacorrect','bandpassfilter','findblinkframes'};
+        after = {'none','trimvideo','removestimuli','gammacorrect','bandpassfilter','findblinkframes','stripanalysis'};
+        
+        % keyword to be used in filenames
+        keyword = 'trim';
+        
+        axesHandles = {};
         
     case 'removestimuli'
         % default values
@@ -71,7 +99,17 @@ switch module
         validate.stimulusSize = @IsPositiveInteger;
         validate.stimulusThickness = @IsPositiveInteger;
         validate.stimulusPolarity = @(x) islogical(x) | (isnumeric(x) & any(x == [0 1]));
+        
+        % list which modules can preceed or succeed this one
+        before = {'none','trimvideo','findblinkframes'};
+        after = {'none','trimvideo','findblinkframes','gammacorrect','bandpassfilter','stripanalysis'};
      
+        % keyword to be used in filenames
+        keyword = 'nostim';
+        
+        % axes handle tags.. useful only in GUI mode
+        axesHandles = {'imAx','peakAx','stimAx'};
+        
     case 'gammacorrect'
         % default values
         default.overwrite = false;
@@ -89,6 +127,15 @@ switch module
         validate.histLevels = @IsPositiveInteger;
         validate.badFrames = @(x) all(islogical(x));  
         
+        % list which modules can preceed or succeed this one
+        before = {'none','trimvideo','findblinkframes','removestimuli','gammacorrect','bandpassfilter'};
+        after = {'none','trimvideo','findblinkframes','gammacorrect','bandpassfilter','stripanalysis'};
+        
+        % keyword to be used in filenames
+        keyword = 'gamscaled';
+        
+        axesHandles = {};
+        
     case 'bandpassfilter'
         % default values
         default.overwrite = false;
@@ -102,23 +149,54 @@ switch module
         validate.smoothing = @IsPositiveRealNumber;
         validate.lowSpatialFrequencyCutoff = @IsNonNegativeRealNumber;
         
+        % list which modules can preceed or succeed this one
+        before = {'none','trimvideo','findblinkframes','removestimuli','gammacorrect','bandpassfilter'};
+        after = {'none','trimvideo','gammacorrect','bandpassfilter','stripanalysis'};
+        
+        % keyword to be used in filenames
+        keyword = 'bandfilt';
+        
+        axesHandles = {};
+        
     case 'pixel2degree'
         % default values
+        default.overwrite = false;
         default.fov = 10;
         default.frameWidth = 512;
         
         % validation functions
+        validate.overwrite = @islogical;
         validate.fov = @(x) isnumeric(x) & (x>0) & (x<100);
         validate.frameWidth = @IsPositiveInteger;
+        
+        % list which modules can preceed or succeed this one
+        before = {'stripanalysis','rereference'};
+        after = {'none','filtereyeposition','findsaccadesanddrifts','degree2pixel'};
+        
+        % keyword to be used in filenames
+        keyword = 'deg';
+        
+        axesHandles = {};
         
     case 'degree2pixel'
         % default values
+        default.overwrite = false;
         default.fov = 10;
         default.frameWidth = 512;
         
         % validation functions
+        validate.overwrite = @islogical;
         validate.fov = @(x) isnumeric(x) & (x>0) & (x<100);
         validate.frameWidth = @IsPositiveInteger;
+        
+        % list which modules can preceed or succeed this one
+        before = {'filtereyeposition','pixel2degree'};
+        after = {'none','makereference','rereference'};
+        
+        % keyword to be used in filenames
+        keyword = 'px';
+        
+        axesHandles = {};
     
     case 'stripanalysis' 
         % default values
@@ -169,6 +247,15 @@ switch module
         validate.subpixelDepth = @IsNaturalNumber;
         validate.trim = @(x) all(IsNaturalNumber(x)) & (length(x)==2);
         
+        % list which modules can preceed or succeed this one
+        before = {'none','trimvideo','removestimuli','gammacorrect','bandpassfilter','findblinkframes','makereference'};
+        after = {'none','stripanalysis','pixel2degree','makereference','rereference'};
+        
+        % keyword to be used in filenames
+        keyword = 'position';
+        
+        % axes handle tags.. useful only in GUI mode
+        axesHandles = {'imAx','peakAx','motAx','posAx'};
         
     case 'makereference'
         
@@ -208,6 +295,15 @@ switch module
         validate.trim = @(x) all(IsNaturalNumber(x)) & (length(x)==2);
         validate.enhanceStrips = @islogical;
         
+        % list which modules can preceed or succeed this one
+        before = {'degree2pixel','stripanalysis'};
+        after = {'none','stripanalysis'};
+        
+        % keyword to be used in filenames
+        keyword = 'reference';
+        
+        % axes handle tags.. useful only in GUI mode
+        axesHandles = {'imAx','peakAx','motAx'};
         
     case 'rereference'
         
@@ -236,6 +332,16 @@ switch module
         validate.axesHandles = @(x) isempty(x) | all(ishandle(x));
         validate.globalRefArgument = @(x) (ischar(x) | (isnumeric(x) & size(x,1)>1 & size(x,2)>1)) & ~islogical(x);
         validate.referenceFrame = @(x) (ischar(x) | (isnumeric(x) & size(x,1)>1 & size(x,2)>1)) & ~islogical(x);
+        
+        % list which modules can preceed or succeed this one
+        before = {'degree2pixel','stripanalysis'};
+        after = {'none','pixel2degree'};
+        
+        % keyword to be used in filenames
+        keyword = 'reref';
+        
+        % axes handle tags.. useful only in GUI mode
+        axesHandles = {'imAx'};
         
     case 'filtereyeposition'
         
@@ -266,7 +372,17 @@ switch module
         validate.notch2 = @(x) isempty(x) | (IsNonNegativeRealNumber(x) & length(x)==3);
         validate.samplingRate = @(x) isempty(x) | IsPositiveInteger(x);
         validate.axesHandles = @(x) isempty(x) | all(ishandle(x));
+        
+        % list which modules can preceed or succeed this one
+        before = {'pixel2degree'};
+        after = {'none','degree2pixel','findsaccadesanddrifts'};
 
+        % keyword to be used in filenames
+        keyword = 'filtered';
+        
+        % axes handle tags.. useful only in GUI mode
+        axesHandles = {'posAx'};
+        
     case 'findsaccadesanddrifts'
         
         % default values
@@ -298,6 +414,26 @@ switch module
         validate.lambdaForPeak = @IsNonNegativeRealNumber;
         validate.windowSize = @IsNonNegativeRealNumber;
         validate.lambdaForOnsetOffset = @IsNonNegativeRealNumber;
+        
+        % list which modules can preceed or succeed this one
+        before = {'pixel2degree','filtereyeposition'};
+        after = {'none','findsaccadesanddrifts'};
+        
+        % keyword to be used in filenames
+        keyword = 'sacsanddrifts';
+        
+        % axes handle tags.. useful only in GUI mode
+        axesHandles = {'posAx'};
+        
+    case 'none'
+        
+        default = [];
+        validate = [];
+        before = {'trimvideo','removestimuli','findblinkframes',...
+            'bandpassfilter','stripanalysis','pixel2degree','degree2pixel',...
+            'rereference','makereference','filtereyeposition','findsaccadesanddrifts'};
+        after = before;
+        axesHandles = [];
         
     otherwise
         error('GetDefaults: unknown module name.');
