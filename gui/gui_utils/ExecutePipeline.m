@@ -15,7 +15,9 @@ pipeParams = revas.gui.UserData.pipeParams;
 % handle parallel processing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if gParams.enableParallel
+    RevasMessage('Openning a parallel pool...',revas.gui.UserData.logBox);
     myPool = gcp; 
+    RevasMessage(sprintf('Parallel pool is ready. Connected to %d workers.',myPool.NumWorkers),revas.gui.UserData.logBox);
 end
 
 
@@ -41,6 +43,7 @@ for i = 1:length(pipeParams)
     pipeParams{i}.logBox = revas.gui.UserData.logBox;
     pipeParams{i}.abort = revas.gui.UserData.abortButton;
 end
+RevasMessage('Distributed global flags.',revas.gui.UserData.logBox);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -50,6 +53,9 @@ xlim(revas.gui.UserData.statusBar,[0 1]);
 ylim(revas.gui.UserData.statusBar,[0 1]);
 sFiles = patch(revas.gui.UserData.statusBar,[0 .000001*[1 1] 0]',[0 0 .5 .5]',[1 .6 .3],'EdgeColor','none');
 sPipe = patch(revas.gui.UserData.statusBar,[0 .000001*[1 1] 0]',[0.5 0.5 1 1]',[1 .6 .3],'EdgeColor','none');
+
+% get axes handles
+axesHandles = findobj(revas.gui.UserData.visualizePanel,'type','axes');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -64,6 +70,7 @@ if gParams.enableParallel
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % send files to queue
     for f = 1:numFiles
+        % queue this file to be processed by one of the workers
         fevalRequests(f) = parfeval(myPool,@PipeSingleFile,0,...
             gParams.inMemory,...
             pipeline,...
@@ -74,7 +81,8 @@ if gParams.enableParallel
             selectedFileIndices(f),...
             sPipe,...
             revas.gui.UserData.abortButton,...
-            gParams.overwrite); %#ok<AGROW>
+            gParams.overwrite,...
+            axesHandles); %#ok<AGROW>
     end
 
     % now check results as they become available and update UI as much as
@@ -124,7 +132,8 @@ else
                 selectedFileIndices(f),...
                 sPipe,...
                 revas.gui.UserData.abortButton,...
-                gParams.overwrite); 
+                gParams.overwrite,...
+                axesHandles); 
             
         catch pipeErr
             isError = true;
@@ -146,75 +155,3 @@ delete(get(revas.gui.UserData.statusBar,'children'));
 
 
 
-function PipeSingleFile(inMemory,pipeline,pipeParams,thisFile,fileBox,logBox,fileNo,sPipe,abortButton,overwrite)
-
-
-pipeLength = length(pipeline);
-for p = 1:length(pipeline)
-    if abortButton.Value
-        break;
-    end
-
-    % get a pointer to current module function
-    thisModule = str2func(pipeline{p});
-    
-    % handle first module
-    if p==1
-        
-        % handle whether we write out intermediate results or just stay in
-        % memory.
-        if inMemory
-            inputArgument = ReadVideoToArray(thisFile);
-        else
-            inputArgument = thisFile;
-        end
-        
-        % get parameters for first module
-        params = pipeParams{p};
-    end
-
-    % merge cumulative params structure with current module's parameters.
-    params = MergeParams(params,pipeParams{p});
-    params.axesHandles = [];
-
-    % cover special cases in connections between modules. 
-    % TO-DO: better handling of module connections
-    switch pipeline{p}
-        case 'StripAnalysis'
-            processedVideo = inputArgument;
-        case 'MakeReference'
-            inputArgument = processedVideo;
-        otherwise
-            % do nothing
-    end
-
-    % run the module
-    [inputArgument, params] = thisModule(inputArgument,params);
-
-    % log and status update
-    RevasMessage(sprintf('%s done for %s.',pipeline{p},fileBox.String{fileNo}),logBox);
-    sPipe.XData = [0 p/pipeLength p/pipeLength 0]';
-    
-end
-
-% if inMemory mode is requested, we writeout whatever we have at the final
-% stage of the pipeline to a file with name reflecting all modules +
-% inMemory flag.
-if inMemory
-    
-    % create file name
-    for i=1:length(pipeline)
-        thisFile = Filename(thisFile,pipeline{i},pipeParams{i});
-    end
-    thisFile = Filename(thisFile,'inmemory');
-    
-    finalOutput = inputArgument;
-    if ~exist(thisFile,'file') || overwrite
-        
-        % remove unnecessary fields
-        params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
-        
-        save(thisFile,'params','finalOutput');
-    end
-        
-end

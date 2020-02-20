@@ -11,7 +11,7 @@ try
     inputFile = FindFile('aoslo_demo_pos_540hz.mat');
     
     % load raw position and time
-    load(inputFile,'timeSec','filteredEyePositions');
+    load(inputFile,'timeSec','positionDeg');
     
     %% First test
     
@@ -20,14 +20,14 @@ try
     p.overwrite = true;
     p.enableVerbosity = 1;
     [~, p] = ...
-        FindSaccadesAndDrifts([filteredEyePositions timeSec],  p);
+        FindSaccadesAndDrifts([positionDeg timeSec],  p);
     
     
     %% Second test
     
     % use ivt method. it cannot find any saccades in this example!!!
     p.algorithm = 'ivt';
-    [~,p2] = FindSaccadesAndDrifts([filteredEyePositions timeSec],  p);
+    [~,p2] = FindSaccadesAndDrifts([positionDeg timeSec],  p);
     
     assert(isempty(p2.saccades));
 
@@ -35,7 +35,7 @@ try
     
     % try EK algorithm. should result in similar outcome as hybrid.
     p.algorithm = 'ek';
-    [~,p3] = FindSaccadesAndDrifts([filteredEyePositions timeSec],  p);
+    [~,p3] = FindSaccadesAndDrifts([positionDeg timeSec],  p);
     
     %% fourth test
     

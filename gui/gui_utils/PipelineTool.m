@@ -237,6 +237,14 @@ uiwait(fig);
 
     function OkCallback(varargin)
         
+        % check if there is any violation of module cascading
+        if ~IsValidPipeline(lbPipe.String)
+            errordlg('Pipeline has violations. Please correct them before clicking OK.',...
+                'Pipeline Violation Error','modal');
+            RevasError('Pipeline has violations. See documentation for the pipeline matrix.',revas.gui.UserData.logBox);
+            return;
+        end
+            
         % if pipeline changed, enable Save, Edit, and Save As menus.
         if isPipeChanged || isParamsChanged
             % enable save and saveas menus

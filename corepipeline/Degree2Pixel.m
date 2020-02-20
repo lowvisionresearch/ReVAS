@@ -20,6 +20,7 @@ function [outputArgument, params] = Degree2Pixel(inputArgument, params)
 %   -----------------------------------
 %   Fields of the |params| 
 %   -----------------------------------
+%   overwrite           : true/false
 %   fov                 : field of view in degrees.
 %   frameWidth          : width of the original video frame in pixels.
 %
@@ -51,6 +52,12 @@ function [outputArgument, params] = Degree2Pixel(inputArgument, params)
 % 
 % MNA 2/15/2020
 
+%% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
+if isfield(params,'logBox')
+    logBox = params.logBox;
+else
+    logBox = [];
+end
 
 %% Determine inputType type.
 if ischar(inputArgument)
@@ -80,6 +87,23 @@ params = ValidateField(params,default,validate,callerStr);
 if writeResult
     outputFilePath = inputArgument;
     params.outputFilePath = outputFilePath;
+end
+
+%% Handle overwrite scenarios
+if writeResult
+    outputFilePath = Filename(inputArgument, 'px');
+    params.outputFilePath = outputFilePath;
+    
+    if ~exist(outputFilePath, 'file')
+        % left blank to continue without issuing RevasMessage in this case
+    elseif ~params.overwrite
+        RevasMessage(['Degree2Pixel() did not execute because it would overwrite existing file. (' outputFilePath ')'], logBox);
+        RevasMessage('Degree2Pixel() is returning results from existing file.',logBox); 
+        outputArgument = outputFilePath;
+        return;
+    else
+        RevasMessage(['Degree2Pixel() is proceeding and overwriting an existing file. (' outputFilePath ')'], logBox);  
+    end
 end
 
 %% Handle inputArgument scenarios
@@ -119,7 +143,7 @@ if writeResult
     params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
     
     % append the file with converted position traces
-    save(outputFilePath,'position','-append');
+    save(outputFilePath,'position','timeSec','params');
     
     outputArgument = outputFilePath;
 else

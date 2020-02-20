@@ -129,6 +129,9 @@ if params.enableVerbosity && isempty(params.axesHandles)
     params.axesHandles(1) = subplot(2,3,[1 2 4 5]);
     params.axesHandles(2) = subplot(2,3,3);
     params.axesHandles(3) = subplot(2,3,6);
+end
+
+if params.enableVerbosity
     for i=1:3
         cla(params.axesHandles(i));
         tb = get(params.axesHandles(i),'toolbar');
