@@ -475,7 +475,6 @@ RevasMessage(sprintf('ReVAS %s launched!',versionNo),revas.gui.UserData.logBox);
         end
     end
 
-
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %
     %

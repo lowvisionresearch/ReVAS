@@ -274,6 +274,7 @@ anchorOp.adaptiveSearch = false;
 anchorOp.rowStart = 1;
 anchorOp.rowEnd = size(globalRef,1);
 anchorOp.referenceFrame = globalRef;
+anchorOp.copyMap = 0;
 
 % if torsional search is enabled, rotate anchor strip before locating on
 % glboal ref

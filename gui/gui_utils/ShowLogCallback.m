@@ -1,16 +1,10 @@
 function ShowLogCallback(src,~,varargin)
-% ShowLogCallback(src,~,varargin)
-%
-% Show log in a larger separate window if user doubleclicks the logbox.
-%
-% MNA 2/17/2020
 
-    
 revas = varargin{1};
 
 % do this only when user double-clicks on an item
 if strcmp(get(revas.gui,'SelectionType'),'open')
-    
+
     % create a modal figure
     fig = figure('units','normalized',...
         'position',[.2 .2 .4 .4],...
@@ -21,7 +15,7 @@ if strcmp(get(revas.gui,'SelectionType'),'open')
         'resize','on',...
         'visible','off',...
         'windowstyle','modal');
-    
+
     % create only on UI element which is a listbox
     logBox = uicontrol(fig,...
          'style','listbox',...
@@ -33,11 +27,9 @@ if strcmp(get(revas.gui,'SelectionType'),'open')
          'min',1,...
          'max',3,...
          'tooltip','Log window.');  %#ok<NASGU>
-     
-    % Make visible 
-    set(fig,'visible','on');
 
-    % prevent all other processes from starting until closed.
-    uiwait(fig);   
-    
+    % Make visible 
+    set(fig,'visible','on'); 
+
+
 end
