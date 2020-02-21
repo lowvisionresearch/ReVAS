@@ -30,8 +30,11 @@ try
     p.position = stripResults.position;
     p.timeSec = stripResults.timeSec;
     p.peakValueArray = stripResults.peakValueArray;
+    p.makeStabilizedVideo = true;
     [~,params, refFrame, outputFilePath] = MakeReference(inputVideo, p); %#ok<*ASGLU>
     delete(outputFilePath);
+    
+    delete(params.stabilizedVideoName);
     
     %% Second test
     
@@ -41,10 +44,9 @@ try
     p.enhanceStrips = false;
     p.enableVerbosity = 'frame';
     [~, params, refFrame, outputFilePath] = MakeReference(videoArray, p);
-
     
     success = true;
-catch err
+catch 
     success = false;
 end
 

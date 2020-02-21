@@ -130,13 +130,6 @@ function [inputArgument, params, varargout] = ...
 %   varargout{3} = driftSt.
 %   varargout{4} = driftEn.
 
-%% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
-if isfield(params,'logBox')
-    logBox = params.logBox;
-else
-    logBox = [];
-end
-
 
 %% Determine inputType type.
 if ischar(inputArgument)
@@ -162,8 +155,22 @@ end
 params = ValidateField(params,default,validate,callerStr);
 
 
-%% Handle verbosity 
+%% Handle GUI mode
+% params can have a field called 'logBox' to show messages/warnings 
+if isfield(params,'logBox')
+    logBox = params.logBox;
+else
+    logBox = [];
+end
 
+% params will have access to a uicontrol object in GUI mode. so if it does
+% not already have that, create the field and set it to false so that this
+% module can be used without the GUI
+if ~isfield(params,'abort')
+    params.abort.Value = false;
+end
+
+%% Handle verbosity 
 % check if axes handles are provided, if not, create axes.
 if params.enableVerbosity && isempty(params.axesHandles)
     fh = figure(2020);
@@ -391,7 +398,7 @@ else
 end
 
 %% Verbosity for Results.
-if params.enableVerbosity
+if params.enableVerbosity && ~params.abort.Value
     
     sacIx = 1*(labels == 1);
     sacIx(sacIx==0) = nan;
@@ -428,7 +435,7 @@ end
 
 
 %% Save filtered data
-if writeResult
+if writeResult && ~params.abort.Value
     
     % remove unnecessary fields
     params = RemoveFields(params,{'logBox','axesHandles','abort'}); 

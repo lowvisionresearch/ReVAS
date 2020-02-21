@@ -50,14 +50,6 @@ function [outputVideo, params] = BandpassFilter(inputVideo, params)
 %       BandpassFilter(inputVideo, params);
 
 
-%% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
-if isfield(params,'logBox')
-    logBox = params.logBox;
-else
-    logBox = [];
-end
-
-
 %% Determine inputVideo type.
 if ischar(inputVideo)
     % A path was passed in.
@@ -81,6 +73,23 @@ end
 [default, validate] = GetDefaults(callerStr);
 params = ValidateField(params,default,validate,callerStr);
 
+
+%% Handle GUI mode
+% params can have a field called 'logBox' to show messages/warnings 
+if isfield(params,'logBox')
+    logBox = params.logBox;
+    isGUI = true;
+else
+    logBox = [];
+    isGUI = false;
+end
+
+% params will have access to a uicontrol object in GUI mode. so if it does
+% not already have that, create the field and set it to false so that this
+% module can be used without the GUI
+if ~isfield(params,'abort')
+    params.abort.Value = false;
+end
 
 %% Handle overwrite scenarios.
 if writeResult
@@ -140,8 +149,6 @@ radiusMatrix = sqrt((repmat(xVector,height,1) .^ 2) + ...
 % gradient, darker foveal pit, etc.)
 highPassFilter = double(radiusMatrix > params.lowSpatialFrequencyCutoff);
 highPassFilter(floor(height/2) + 1, floor(width/2) + 1) = 1;
-
-isGUI = isfield(params,'logBox');
 
 % Read, apply filters, and write frame by frame.
 for fr = 1:numberOfFrames

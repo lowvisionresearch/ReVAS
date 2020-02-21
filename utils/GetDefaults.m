@@ -276,6 +276,7 @@ switch module
         default.maxMotionThreshold = 0.06; % proportion of frame size
         default.trim = [0 0];
         default.enhanceStrips = true;
+        default.makeStabilizedVideo = false;
         
         % validation functions 
         validate.overwrite = @islogical;
@@ -294,6 +295,7 @@ switch module
         validate.maxMotionThreshold = @(x) IsPositiveRealNumber(x) & (x<=1);
         validate.trim = @(x) all(IsNaturalNumber(x)) & (length(x)==2);
         validate.enhanceStrips = @islogical;
+        validate.makeStabilizedVideo = @islogical;
         
         % list which modules can preceed or succeed this one
         before = {'degree2pixel','stripanalysis'};

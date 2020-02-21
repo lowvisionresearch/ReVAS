@@ -97,14 +97,6 @@ function [outputArgument, params]= FilterEyePosition(inputArgument, params)
 
 
 
-%% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
-if isfield(params,'logBox')
-    logBox = params.logBox;
-else
-    logBox = [];
-end
-
-
 %% Determine inputType type.
 if ischar(inputArgument)
     % A path was passed in.
@@ -128,8 +120,24 @@ end
 params = ValidateField(params,default,validate,callerStr);
 
 
-%% Handle verbosity 
+%% Handle GUI mode
+% params can have a field called 'logBox' to show messages/warnings 
+if isfield(params,'logBox')
+    logBox = params.logBox;
+    isGUI = true;
+else
+    logBox = [];
+    isGUI = false;
+end
 
+% params will have access to a uicontrol object in GUI mode. so if it does
+% not already have that, create the field and set it to false so that this
+% module can be used without the GUI
+if ~isfield(params,'abort')
+    params.abort.Value = false;
+end
+
+%% Handle verbosity 
 % check if axes handles are provided, if not, create axes.
 if params.enableVerbosity && isempty(params.axesHandles)
     fh = figure(2020);
@@ -309,8 +317,6 @@ end
 filters = {'medfilt1','sgolayfilt','notch','notch'};
 filterParams = {params.medfilt1, params.sgolayfilt, params.notch1, params.notch2};
 skippedFilters = false(4,1);
-
-isGUI = isfield(params,'logBox');
 
 for i=1:4
     if ~params.abort.Value

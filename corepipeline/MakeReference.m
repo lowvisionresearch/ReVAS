@@ -65,6 +65,7 @@ function [inputVideo, params, varargout] = MakeReference(inputVideo, params)
 %                       individual strips before summation. (defaults to
 %                       true). We use imadjust function for a simple
 %                       contrast enhancement.
+%   makeStabilizedVideo: true/false.
 %
 %   -----------------------------------
 %   Output
@@ -78,14 +79,6 @@ function [inputVideo, params, varargout] = MakeReference(inputVideo, params)
 %   varargout{2} = refFrameFilePath, refFrame file path (if exists)
 %   varargout{3} = refFrameZero, zero padded version of reference frame
 %
-
-
-%% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
-if isfield(params,'logBox')
-    logBox = params.logBox;
-else
-    logBox = [];
-end
  
 
 %% Determine inputVideo type.
@@ -110,6 +103,24 @@ end
 [~,callerStr] = fileparts(mfilename);
 [default, validate] = GetDefaults(callerStr);
 params = ValidateField(params,default,validate,callerStr);
+
+
+%% Handle GUI mode
+% params can have a field called 'logBox' to show messages/warnings 
+if isfield(params,'logBox')
+    logBox = params.logBox;
+    isGUI = true;
+else
+    logBox = [];
+    isGUI = false;
+end
+
+% params will have access to a uicontrol object in GUI mode. so if it does
+% not already have that, create the field and set it to false so that this
+% module can be used without the GUI
+if ~isfield(params,'abort')
+    params.abort.Value = false;
+end
 
 
 %% Handle verbosity 
@@ -145,6 +156,11 @@ end
 if writeResult
     outputFilePath = Filename(inputVideo, 'ref');
     params.outputFilePath = outputFilePath;
+    
+    if params.makeStabilizedVideo 
+        stabilizedVideoName = regexprep(outputFilePath,'_reference.mat','_stabilized.avi');
+        params.stabilizedVideoName = stabilizedVideoName;
+    end  
     
     if ~exist(outputFilePath, 'file')
         % left blank to continue without issuing RevasMessage in this case
@@ -183,6 +199,12 @@ if writeResult
     height = reader.Height;
     numberOfFrames = reader.FrameRate * reader.Duration;
     
+    if params.makeStabilizedVideo 
+        writer = VideoWriter(stabilizedVideoName, 'Grayscale AVI');
+        writer.FrameRate = reader.Framerate;
+        open(writer);
+    end
+    
 else
     [height, width, numberOfFrames] = size(inputVideo); 
 end
@@ -217,19 +239,10 @@ newTimeSec = dtPerScanLine * ...
     reshape((0:(numberOfFrames-1)) * (sum(params.trim) + height) + newRowNumbers', newNumberOfStrips, 1);
 newUsefulSamples = interp1(params.timeSec,double(usefulSamples),newTimeSec) > 0.5;
 newposition = interp1(params.timeSec(usefulSamples), params.position(usefulSamples,:), newTimeSec, 'linear');
-newposition(~newUsefulSamples,:) = nan;
 
 % if subpixel operation is enabled, i.e. subpixelForRef ~= 0, everything
 % needs to upsampled/resized/scaled by 2^subpixelForRef.
 sizeFactor = 2^params.subpixelForRef;
-
-% create an accumulator and a counter array based on motion.
-minPos = min(params.position(usefulSamples,:),[],1);
-maxPos = max(params.position(usefulSamples,:),[],1);
-refWidth = round((maxPos(1) - minPos(1) + width + 1) * sizeFactor);
-refHeight = round((maxPos(2) - minPos(2) + height + 1) * sizeFactor);
-accumulator = zeros(refHeight, refWidth);
-counter = zeros(refHeight, refWidth);
 
 % set strip width to frame width, iff params.stripWidth is empty
 if isempty(params.newStripWidth) || ~IsPositiveInteger(params.newStripWidth)
@@ -238,6 +251,14 @@ end
 stripLeft = max(1,round((width - params.newStripWidth)/2));
 stripRight = min(width,round((width + params.newStripWidth)/2)-1);
 stripWidth = stripRight - stripLeft + 1;
+
+% create an accumulator and a counter array based on motion.
+minPos = min(params.position(usefulSamples,:),[],1);
+maxPos = max(params.position(usefulSamples,:),[],1);
+refWidth = round((maxPos(1) - minPos(1) + params.newStripWidth + 1) * sizeFactor);
+refHeight = round((maxPos(2) - minPos(2) + height + 1) * sizeFactor);
+accumulator = zeros(refHeight, refWidth);
+counter = zeros(refHeight, refWidth);
 
 isFirstTimePlotting = true;
 
@@ -274,7 +295,6 @@ end
 %% Make reference frame
 
 % the big loop. :)
-isGUI = isfield(params,'logBox');
 
 % loop across frames
 for fr = 1:numberOfFrames
@@ -286,6 +306,10 @@ for fr = 1:numberOfFrames
             % the unused frame)
             if writeResult
                 reader.CurrentTime = fr/reader.FrameRate;
+                
+                if params.makeStabilizedVideo
+                    writeVideo(writer,255*ones(refHeight,refWidth,'uint8'));
+                end
             end
             continue;
         else
@@ -300,6 +324,12 @@ for fr = 1:numberOfFrames
             end
         end
         
+        % preallocate stabilized frame
+        if params.makeStabilizedVideo && writeResult
+            stabFrame = zeros(refHeight, refWidth);
+            stabCount = zeros(refHeight, refWidth);
+        end
+        
         
         % loop across strips within current frame
         for sn = 1:stripsPerFrame
@@ -307,14 +337,25 @@ for fr = 1:numberOfFrames
             % get current strip
             thisSample = stripsPerFrame * (fr-1) + sn;
             
-            % if it's not a useful sample, skip it.
-            if any(isnan(newposition(thisSample,:)))
-                continue;
-            end
-            
             % get new strip
             thisStrip = imresize((frame(newRowNumbers(sn) : min([height,(newRowNumbers(sn)+params.newStripHeight-1)]),...
                 stripLeft:stripRight)),sizeFactor);
+            
+            % compute location in ref frame
+            xy = round(sizeFactor * (newposition(thisSample,:) - minPos + [0 newRowNumbers(sn)]) + 1);
+            indY = xy(2):(xy(2)+ size(thisStrip,1) - 1);
+            indX = xy(1):(xy(1)+ sizeFactor * stripWidth - 1);
+            
+            % compute stabilized video frame
+            if params.makeStabilizedVideo && writeResult && ~any(isnan(xy))
+                stabFrame(indY,indX) = stabFrame(indY,indX) + double(thisStrip);
+                stabCount(indY, indX) = stabCount(indY, indX) + 1;
+            end
+            
+            % if it's not a useful sample, skip it.
+            if ~newUsefulSamples(thisSample) || any(isnan(xy))
+                continue;
+            end
             
             % enhance contrast
             if params.enhanceStrips
@@ -323,18 +364,19 @@ for fr = 1:numberOfFrames
                 thisStrip = double(thisStrip);
             end
             
-            % compute location in ref frame
-            xy = round(sizeFactor * (newposition(thisSample,:) - minPos + [0 newRowNumbers(sn)]) + 1);
-            indY = xy(2):(xy(2)+ size(thisStrip,1) - 1);
-            indX = xy(1):(xy(1)+ sizeFactor * stripWidth - 1);
-            
             % accumulate
             accumulator(indY, indX) = accumulator(indY, indX) + thisStrip;
 
-            
             % count
             counter(indY, indX) = counter(indY, indX) + 1;
             
+        end
+        
+        % write stabilized video frame
+        if params.makeStabilizedVideo && writeResult
+            nonzeros = stabCount>=0;
+            stabFrame(nonzeros) = stabFrame(nonzeros)./stabCount(nonzeros);
+            writeVideo(writer,uint8(stabFrame));
         end
         
         
@@ -427,6 +469,11 @@ if writeResult && ~params.abort.Value
     
     % Save under file labeled 'final'.
     save(outputFilePath, 'refFrame','refFrameZero','params');
+    
+    % close up writer object
+    if params.makeStabilizedVideo
+        close(writer);
+    end
 
 end
 
