@@ -21,17 +21,18 @@
 ///////////////////////////////////////////////////////////////////////////
 void checkInputs(int nrhs, const mxArray *prhs[])
 {    
-	const mwSize * tdims, *fdims;
+	const mwSize * tdims, *fdims, *flagdims;
         
     // Check number of inputs
-    if (nrhs != 2)
+    if (nrhs != 3)
     {
-        mexErrMsgTxt("Incorrect number of inputs. Function expects 2 inputs.");
+        mexErrMsgTxt("Incorrect number of inputs. Function expects 3 inputs.");
     }
     
     // Check input dimensions
     tdims = mxGetDimensions(prhs[0]);
     fdims = mxGetDimensions(prhs[1]);
+    flagdims = mxGetDimensions(prhs[2]);
     
     if (mxGetNumberOfDimensions(prhs[0])>2)
     {
@@ -41,6 +42,14 @@ void checkInputs(int nrhs, const mxArray *prhs[])
     if (mxGetNumberOfDimensions(prhs[1])>2)
     {
         mexErrMsgTxt("Incorrect number of dimensions. Second input must be a matrix.");
+    }
+    if (mxGetNumberOfDimensions(prhs[2])>2)
+    {
+        mexErrMsgTxt("Incorrect number of dimensions. Third input must be a single value (0 or 1).");
+    }
+    if (flagdims[0] != flagdims[1] || flagdims[1]!=1)
+    {
+        mexErrMsgTxt("Copy map flag should be either 1 or 0.");
     }
     
     if (tdims[0] > fdims[0])
@@ -71,6 +80,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // Convert mxArray inputs into OpenCV types
     cv::Ptr<cv::Mat> templateImgCV = ocvMxArrayToImage_uint8(prhs[0], true);
     cv::Ptr<cv::Mat> imgCV         = ocvMxArrayToImage_uint8(prhs[1], true);
+    bool copyMap = (bool)*mxGetPr(prhs[2]);
     
     // Pad input image
     cv::Mat imgCVPadded((int)imgCV->rows + 2*(templateImgCV->rows - 1), 
@@ -105,7 +115,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
    cv::minMaxLoc( outCV, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat() );
 
     // Put the data back into the output MATLAB array
-    plhs[0] = ocvMxArrayFromImage_single(outCV);
+    if (copyMap)
+        plhs[0] = ocvMxArrayFromImage_single(outCV);
+    else 
+        plhs[0] = mxCreateDoubleScalar(0);
     plhs[1] = mxCreateDoubleScalar(maxLoc.x + 1);
     plhs[2] = mxCreateDoubleScalar(maxLoc.y + 1);
     plhs[3] = mxCreateDoubleScalar(maxVal);

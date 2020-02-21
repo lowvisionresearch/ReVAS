@@ -63,7 +63,7 @@ switch params.corrMethod
             [xPeak, yPeak, peakValue] = FindPeak(correlationMap, params.enableGPU);
         else
             [correlationMap,xPeak,yPeak,peakValue] = ...
-                matchTemplateOCV(thisStrip, params.referenceFrame(params.rowStart:params.rowEnd,:)); 
+                matchTemplateOCV(thisStrip, params.referenceFrame(params.rowStart:params.rowEnd,:),params.copyMap); 
         end
 
     case 'normxcorr'
@@ -78,12 +78,10 @@ switch params.corrMethod
             FastStripCorrelation(thisStrip, params.referenceFrame(params.rowStart:params.rowEnd,:), cache, params.enableGPU);
         
     case 'cuda'
-        [corrmap,xPeak,yPeak,peakValue,~] = cuda_match(single(thisStrip),params.copyMap);
+        [correlationMap,xPeak,yPeak,peakValue,~] = cuda_match(single(thisStrip),params.copyMap);
         if params.copyMap
-            correlationMap = fftshift(corrmap);
+            correlationMap = fftshift(correlationMap);
             correlationMap = correlationMap(1:params.outsize(1),1:params.outsize(2));
-        else
-            correlationMap = corrmap;
         end
         
         % casting needed

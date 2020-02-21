@@ -302,7 +302,7 @@ for fr = 1:numberOfFrames
         end
 
         % locate the stimulus
-        [correlationMap,xPeak,yPeak,peakValues(fr)] = matchTemplateOCV(stimulusMatrix, frame); %#ok<ASGLU>
+        [correlationMap,xPeak,yPeak,peakValues(fr)] = matchTemplateOCV(stimulusMatrix, frame,0); %#ok<ASGLU>
 
         % update stimulus locations
         rawStimulusLocations(fr,:) = [xPeak yPeak] - floor([sw sh]/2);

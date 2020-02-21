@@ -360,14 +360,14 @@ if isCuda
     params.referenceFrame = single(params.referenceFrame);
     cuda_prep(params.referenceFrame,params.stripHeight,params.stripWidth,true);
     params.outsize =  size(params.referenceFrame)+[params.stripHeight-1,params.stripWidth-1];
-    
-    % enable correlation map transfer from GPU only when verbosity is set
-    % to highest value
-    if params.enableVerbosity > 2
-        params.copyMap = 1;
-    else
-        params.copyMap = 0;
-    end
+end
+
+% enable correlation map transfer from GPU or openCV only when verbosity is
+% higher than 2 or when subpixel interpolation is requested
+if params.enableVerbosity > 2 || params.subpixelDepth ~= 0
+    params.copyMap = 1;
+else
+    params.copyMap = 0;
 end
 
 % Variable for fft corrmethod
@@ -628,6 +628,7 @@ while fr <= numberOfFrames
                 anchorOp.referenceFrame = uint8(params.referenceFrame);
                 anchorOp.rowStart = 1;
                 anchorOp.rowEnd = refHeight;
+                anchorOp.copyMap = 1;
 
                 % find the anchor strip in current reference frame
                 [cm, xPeakAnchor, yPeakAnchor, ~] = LocateStrip(anchorStrip,anchorOp,struct);
