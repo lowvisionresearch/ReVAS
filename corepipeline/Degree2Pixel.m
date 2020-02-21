@@ -52,13 +52,6 @@ function [outputArgument, params] = Degree2Pixel(inputArgument, params)
 % 
 % MNA 2/15/2020
 
-%% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
-if isfield(params,'logBox')
-    logBox = params.logBox;
-else
-    logBox = [];
-end
-
 %% Determine inputType type.
 if ischar(inputArgument)
     % A path was passed in.
@@ -81,6 +74,22 @@ end
 [~,callerStr] = fileparts(mfilename);
 [default, validate] = GetDefaults(callerStr);
 params = ValidateField(params,default,validate,callerStr);
+
+
+%% Handle GUI mode
+% params can have a field called 'logBox' to show messages/warnings 
+if isfield(params,'logBox')
+    logBox = params.logBox;
+else
+    logBox = [];
+end
+
+% params will have access to a uicontrol object in GUI mode. so if it does
+% not already have that, create the field and set it to false so that this
+% module can be used without the GUI
+if ~isfield(params,'abort')
+    params.abort.Value = false;
+end
 
 
 %% Handle overwrite scenarios.
@@ -137,7 +146,7 @@ end
 
 
 %% Save converted data.
-if writeResult 
+if writeResult && ~params.abort.Value
     
     % remove unnecessary fields
     params = RemoveFields(params,{'logBox','axesHandles','abort'}); 

@@ -83,15 +83,6 @@ function [outputArgument, params, varargout] = ReReference(inputArgument, params
 %   TO DO
 
 
-
-%% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
-if isfield(params,'logBox')
-    logBox = params.logBox;
-else
-    logBox = [];
-end
-
-
 %% Determine inputType type.
 if ischar(inputArgument)
     % A path was passed in.
@@ -114,6 +105,25 @@ end
 [~,callerStr] = fileparts(mfilename);
 [default, validate] = GetDefaults(callerStr);
 params = ValidateField(params,default,validate,callerStr);
+
+
+%% Handle GUI mode
+% params can have a field called 'logBox' to show messages/warnings 
+if isfield(params,'logBox')
+    logBox = params.logBox;
+    isGUI = true;
+else
+    logBox = [];
+    isGUI = false;
+end
+
+% params will have access to a uicontrol object in GUI mode. so if it does
+% not already have that, create the field and set it to false so that this
+% module can be used without the GUI
+if ~isfield(params,'abort')
+    params.abort.Value = false;
+end
+
 
 %% Handle GPU 
 
@@ -279,8 +289,6 @@ anchorStripSize = size(anchorStrip);
 halfStripSize = round(anchorStripSize/2);
 
 %% Find tilt
-
-isGUI = isfield(params,'logBox');
 
 % locate strip on global ref
 for i=1:length(tilts)

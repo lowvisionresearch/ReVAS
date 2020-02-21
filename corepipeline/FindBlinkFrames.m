@@ -72,14 +72,6 @@ function [inputVideo, params, varargout] = FindBlinkFrames(inputVideo, params)
 %       FindBlinkFrames(videoPath, params);
 
 
-%% in GUI mode, params can have a field called 'logBox' to show messages/warnings 
-if isfield(params,'logBox')
-    logBox = params.logBox;
-else
-    logBox = [];
-end
-
-
 %% Determine inputVideo type.
 if ischar(inputVideo)
     % A path was passed in.
@@ -102,8 +94,26 @@ end
 [default, validate] = GetDefaults(callerStr);
 params = ValidateField(params,default,validate,callerStr);
 
-%% Handle verbosity 
 
+%% Handle GUI mode
+% params can have a field called 'logBox' to show messages/warnings 
+if isfield(params,'logBox')
+    logBox = params.logBox;
+    isGUI = true;
+else
+    logBox = [];
+    isGUI = false;
+end
+
+% params will have access to a uicontrol object in GUI mode. so if it does
+% not already have that, create the field and set it to false so that this
+% module can be used without the GUI
+if ~isfield(params,'abort')
+    params.abort.Value = false;
+end
+
+
+%% Handle verbosity 
 % check if axes handles are provided, if not, create axes.
 if params.enableVerbosity && isempty(params.axesHandles)
     fh = figure(2020);
@@ -166,8 +176,6 @@ means = zeros(numberOfFrames,1);
 stds = zeros(numberOfFrames,1);
 skews = zeros(numberOfFrames,1);
 kurtoses = zeros(numberOfFrames,1);
-
-isGUI = isfield(params,'logBox');
 
 % go over frames and compute image stats for each frame
 for fr = 1:numberOfFrames

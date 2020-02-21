@@ -105,12 +105,13 @@ uimenu(revas.helpMenu,'Text','Documentation','Accelerator','D','MenuSelectedFcn'
 % layout
 runPos = [.45 0 0.1 0.05]; 
 abortPos = runPos;
-logBoxPos = [0 0.05 1 0.125];
+logBoxPos = [0 sum(runPos([2 4])) 1 1/32];
 statusPos = [0 sum(logBoxPos([2 4])) 1 0.025];
-globalPanelPos = [0 sum(statusPos([2 4])) 0.15 0.25];
-pipePanelPos = [0 sum(globalPanelPos([2 4])) 0.15 0.30];
-filePanelPos = [0 sum(pipePanelPos([2 4])) 0.15 0.25];
-visualizePanelPos = [0.15 0.2 0.85 0.8];
+leftPanelWidth = 0.15;
+globalPanelPos = [0 sum(statusPos([2 4])) leftPanelWidth 0.25];
+pipePanelPos = [0 sum(globalPanelPos([2 4])) leftPanelWidth 0.30];
+filePanelPos = [0 sum(pipePanelPos([2 4])) leftPanelWidth 1-sum(pipePanelPos([2 4]))];
+visualizePanelPos = [0.15 sum(statusPos([2 4])) 0.85 1-sum(statusPos([2 4]))];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % visualization panel
