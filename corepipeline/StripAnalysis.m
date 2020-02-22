@@ -835,6 +835,7 @@ if ~params.abort.Value && params.enableVerbosity
     axis(params.axesHandles(1),'image')
     xlim(params.axesHandles(1),[1 size(params.referenceFrame,2)])
     ylim(params.axesHandles(1),[1 size(params.referenceFrame,1)])
+    title(params.axesHandles(1),'eye motion');
     
     % show peak values
     scatter(params.axesHandles(2),timeSec,peakValueArray,10,'filled'); 
@@ -878,10 +879,11 @@ end
 
 %% Save to output mat file
 
-if writeResult && ~params.abort.Value
-    
-    % remove unnecessary fields
-    params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
+% remove unnecessary fields
+abort = params.abort.Value;
+params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
+
+if writeResult && ~abort
     
     % Save under file labeled 'final'.
     save(outputFilePath, 'position', 'rawPosition', 'timeSec', 'params','peakValueArray','peakPosition');

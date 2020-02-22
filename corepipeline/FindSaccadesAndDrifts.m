@@ -363,7 +363,7 @@ else
 
     % also get the indices which are marked as part of this event type but did
     % not satisfy the constraints.
-    labels(IndicesForRange(st(toRemove),en(toRemove),timeSec)) = 3;
+    labels(IndicesForRange(st(toRemove),en(toRemove),timeSec)) = 2;
 
     % don't forget to remove the stuff we're supposed to remove.
     st(toRemove) = [];
@@ -409,14 +409,12 @@ if params.enableVerbosity && ~params.abort.Value
     ph = [];
     style = {'-','-'};
     cols = lines(8);
-    alp = 0.2;
     
     dataLims = [nanmin(positionDeg(:)) nanmax(positionDeg(:))];
     ylims = mean(dataLims) + diff(dataLims) * 1.2 * [-1 1]/2;
-    dy = abs(diff(ylims))*0.05;
     for i=1:2
         hold(params.axesHandles(1),'on');
-        ph(i) = plot(params.axesHandles(1), timeSec, positionDeg(:,i),style{i}, 'linewidth',1.5,'color',cols(i,:));
+        ph(i) = plot(params.axesHandles(1), timeSec, positionDeg(:,i),style{i}, 'linewidth',1.5,'color',cols(i,:)); %#ok<AGROW>
         sh(1) = plot(params.axesHandles(1), timeSec, sacIx.*positionDeg(:,i),style{i}, 'linewidth',4,'color',cols(i,:));
     end
     sh(2) = plot(params.axesHandles(1), timeSec, blinkIx.*zeros(size(timeSec)),style{i}, 'linewidth',4,'color','k');
@@ -435,10 +433,12 @@ end
 
 
 %% Save filtered data
-if writeResult && ~params.abort.Value
-    
-    % remove unnecessary fields
-    params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
+
+% remove unnecessary fields
+abort = params.abort.Value;
+params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
+
+if writeResult && ~abort
     
     save(outputFilePath,'saccades','drifts','labels','params',...
         'st','en','driftSt','driftEn');

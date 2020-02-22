@@ -57,6 +57,10 @@ sPipe = patch(revas.gui.UserData.statusBar,[0 .000001*[1 1] 0]',[0.5 0.5 1 1]',[
 % get axes handles
 axesHandles = findobj(revas.gui.UserData.visualizePanel,'type','axes');
 
+% to preserve the tags
+for i=1:length(axesHandles)
+    set(axesHandles(i),'NextPlot','add');
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % run pipeline 

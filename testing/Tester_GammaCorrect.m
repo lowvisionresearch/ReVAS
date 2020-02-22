@@ -15,6 +15,7 @@ try
     % use default params
     p = struct; 
     p.overwrite = true;
+    p.enableVerbosity = true;
 
     % test with a video path with default settings 
     outputVideoPath = GammaCorrect(inputVideo, p); %#ok<*ASGLU>
@@ -47,7 +48,7 @@ try
     %% cleanup
     delete(outputVideoPath);
 
-catch 
+catch err
     success = false;
 end
 

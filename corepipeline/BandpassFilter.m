@@ -17,6 +17,8 @@ function [outputVideo, params] = BandpassFilter(inputVideo, params)
 %   overwrite                 : set to true to overwrite existing files.
 %                               Set to false to params.abort the function call if the
 %                               files already exist. (default false)
+%   enableVerbosity           : true/false. if true, plots first frame
+%                               after filtering.
 %   smoothing                 : Used to remove high-frequency noise in the
 %                               frames. Represents the standard deviation
 %                               of a Gaussian kernel, in pixels. (default 1)
@@ -31,6 +33,7 @@ function [outputVideo, params] = BandpassFilter(inputVideo, params)
 %   badFrames                 : specifies blink/bad frames. we can skip those but
 %                               we need to make sure to keep a record of 
 %                               discarded frames. 
+%   axesHandles               : handles to an axes object.
 %                             
 %   -----------------------------------
 %   Output
@@ -89,6 +92,27 @@ end
 % module can be used without the GUI
 if ~isfield(params,'abort')
     params.abort.Value = false;
+end
+
+
+%% Handle verbosity 
+
+% check if axes handles are provided, if not, create axes.
+if params.enableVerbosity && isempty(params.axesHandles)
+    fh = figure(2020);
+    set(fh,'name','Bandpass filtering',...
+           'units','normalized',...
+           'outerposition',[0.16 0.053 0.4 0.51],...
+           'menubar','none',...
+           'toolbar','none',...
+           'numbertitle','off');
+    params.axesHandles(1) = subplot(1,1,1);
+end
+
+if params.enableVerbosity
+    cla(params.axesHandles(1))
+    tb = get(params.axesHandles(1),'toolbar');
+    tb.Visible = 'on';
 end
 
 %% Handle overwrite scenarios.
@@ -178,13 +202,20 @@ for fr = 1:numberOfFrames
         % normalize to maximize contrast
         maxMin = [max(I2(:))  min(I2(:))];
         rangeOfValues = abs(diff(maxMin));
-        frame = uint8(255*(I2 - maxMin(2))/rangeOfValues);
+        newFrame = uint8(255*(I2 - maxMin(2))/rangeOfValues);
+
+        % only show the output for first frame
+        if params.enableVerbosity && fr == 1
+            axes(params.axesHandles(1)); %#ok<LAXES>
+            imshow([frame uint8(255*ones(size(frame,1),10)) newFrame],'border','tight');
+            title(params.axesHandles(1),'Bandpass filtered')
+        end
 
         if writeResult
-            writeVideo(writer, frame);
+            writeVideo(writer, newFrame);
         else
             nextFrameNumber = sum(~params.badFrames(1:fr));
-            outputVideo(:, :, nextFrameNumber) = frame;
+            outputVideo(:, :, nextFrameNumber) = newFrame;
         end
     else
         break;
@@ -208,4 +239,6 @@ if writeResult
     end
 end
 
+% remove unnecessary fields
+params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
 

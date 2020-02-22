@@ -54,13 +54,17 @@ switch module
     case 'trimvideo'
         % default values
         default.overwrite = false;
+        default.enableVerbosity = false;
         default.badFrames = false;
         default.borderTrimAmount = [0 0 12 0];
+        default.axesHandles = [];
         
         % validation functions
         validate.overwrite = @islogical;
+        validate.enableVerbosity = @(x) islogical(x) | (isscalar(x) & x>=0);
         validate.badFrames = @(x) all(islogical(x));
         validate.borderTrimAmount = @(x) all(IsNaturalNumber(x)) & (length(x)==4);
+        validate.axesHandles = @(x) isempty(x) | all(ishandle(x));
         
         % list which modules can preceed or succeed this one
         before = {'none','trimvideo','removestimuli','gammacorrect','bandpassfilter','findblinkframes'};
@@ -69,7 +73,7 @@ switch module
         % keyword to be used in filenames
         keyword = 'trim';
         
-        axesHandles = {};
+        axesHandles = {'imAx'};
         
     case 'removestimuli'
         % default values
@@ -113,19 +117,23 @@ switch module
     case 'gammacorrect'
         % default values
         default.overwrite = false;
+        default.enableVerbosity = false;
         default.method = 'simpleGamma';
         default.gammaExponent = 0.6;
         default.toneCurve = uint8(0:255); 
         default.histLevels = 64;
         default.badFrames = false;
+        default.axesHandles = [];
         
         % validation functions 
         validate.overwrite = @islogical;
+        validate.enableVerbosity = @(x) islogical(x) | (isscalar(x) & x>=0);
         validate.method = @(x) any(contains({'simpleGamma','histEq','toneMapping'},x));
         validate.gammaExponent = @IsNonNegativeRealNumber;
         validate.toneCurve = @(x) isa(x, 'uint8') & length(x)==256;
         validate.histLevels = @IsPositiveInteger;
         validate.badFrames = @(x) all(islogical(x));  
+        validate.axesHandles = @(x) isempty(x) | all(ishandle(x));
         
         % list which modules can preceed or succeed this one
         before = {'none','trimvideo','findblinkframes','removestimuli','gammacorrect','bandpassfilter'};
@@ -134,20 +142,24 @@ switch module
         % keyword to be used in filenames
         keyword = 'gamscaled';
         
-        axesHandles = {};
+        axesHandles = {'imAx'};
         
     case 'bandpassfilter'
         % default values
         default.overwrite = false;
+        default.enableVerbosity = false;
         default.badFrames = false;
         default.smoothing = 1;
         default.lowSpatialFrequencyCutoff = 3;
+        default.axesHandles = [];
         
         % validation functions
         validate.overwrite = @islogical;
+        validate.enableVerbosity = @(x) islogical(x) | (isscalar(x) & x>=0);
         validate.badFrames = @(x) all(islogical(x));
         validate.smoothing = @IsPositiveRealNumber;
         validate.lowSpatialFrequencyCutoff = @IsNonNegativeRealNumber;
+        validate.axesHandles = @(x) isempty(x) | all(ishandle(x));
         
         % list which modules can preceed or succeed this one
         before = {'none','trimvideo','findblinkframes','removestimuli','gammacorrect','bandpassfilter'};
@@ -156,7 +168,7 @@ switch module
         % keyword to be used in filenames
         keyword = 'bandfilt';
         
-        axesHandles = {};
+        axesHandles = {'imAx'};
         
     case 'pixel2degree'
         % default values
@@ -311,7 +323,7 @@ switch module
         
         % default values
         default.enableGPU = false;
-        default.corrMethod = 'mex';
+        default.reRefCorrMethod = 'mex';
         default.enableVerbosity = false;
         default.fixTorsion = false;
         default.tilts = -5:.25:5;
@@ -324,7 +336,7 @@ switch module
         
         % validation functions
         validate.enableGPU = @islogical;
-        validate.corrMethod = @(x) any(contains({'mex','normxcorr','fft','cuda'},x));
+        validate.reRefCorrMethod = @(x) any(contains({'mex','normxcorr'},x));
         validate.enableVerbosity = @(x) islogical(x) | (isscalar(x) & x>=0);
         validate.fixTorsion = @islogical;
         validate.tilts = @(x) IsRealNumber(x) & isvector(x);
@@ -393,12 +405,12 @@ switch module
         default.velocityMethod = 2;
         default.axesHandles = [];
         default.minInterSaccadeInterval = 20; % ms
-        default.minSaccadeAmplitude = 0.03; % deg
+        default.minSaccadeAmplitude = 0.06; % deg
         default.maxSaccadeAmplitude = 10; % deg
-        default.minSaccadeDuration = 6; % ms
+        default.minSaccadeDuration = 8; % ms
         default.maxSaccadeDuration = 100; % ms
-        default.velocityThreshold = 20; % deg/sec
-        default.lambdaForPeak = 6;
+        default.velocityThreshold = 30; % deg/sec
+        default.lambdaForPeak = 8;
         default.windowSize = 200; % ms
         default.lambdaForOnsetOffset = 3;
         
