@@ -16,6 +16,7 @@ try
     % use default params
     p = struct; 
     p.overwrite = true;
+    p.enableVerbosity = true;
 
     % test with a video path with default settings 
     outputVideoPath = BandpassFilter(inputVideo, p); %#ok<*ASGLU>

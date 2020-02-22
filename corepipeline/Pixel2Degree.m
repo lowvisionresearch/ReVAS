@@ -148,10 +148,12 @@ end
 
 
 %% Save converted data.
-if writeResult && ~params.abort.Value
-    
-    % remove unnecessary fields
-    params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
+
+% remove unnecessary fields
+abort = params.abort.Value;
+params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
+
+if writeResult && ~abort
     
     % append the file with converted position traces
     save(outputFilePath,'positionDeg','timeSec','params');

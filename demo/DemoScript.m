@@ -1,182 +1,154 @@
 %% DemoScript
-%  An example script of how to use ReVAS as an API/toolbox. 
+%  An example script of how to use ReVAS as a toolbox. 
 %   
 %  There are two examples in this script. The first one takes in takes in a
-%  TSLO video and runs through all steps while writing out the result of
-%  each step. The second example an AOSLO video and goes through all
-%  (except remove-stimulus, coarse-ref, and re-referencing) steps without
-%  writing intermediate results to separate video files.  Both examples use
-%  default parameters for each video type. The exact values of these
-%  parameters were not optimized in a systematic study.
+%  TSLO video and runs through a pipeline while writing out the result of
+%  each step. The second example an AOSLO video and goes through another
+%  pipeline without writing intermediate results to separate video files.
+%  Both examples use default parameters for each video type. The exact
+%  values of these parameters were not optimized in a systematic study.
 %
 %
 %  Change history
 %  ----------------
-%  MTS 8/22/19  wrote the initial version 
-%  MNA 12/9/19 conformed to new ReVAS after major re-write of core 
-%               pipeline. major clean up, added comments, converted to 
-%               script, added demo videos, loading settings from config 
-%               file.
+%  MTS 8/22/2019  wrote the initial version 
+%  MNA 2/21/2020  conformed to new ReVAS after major re-write of core 
+%                 pipeline. major clean up, added comments, converted to 
+%                 script, added demo videos, loading settings from config 
+%                 file.
 %
 % 
+
+
+%% First Example 
+% Running pipeline with result videos written between each module.
 
 % start fresh
 clearvars;
 close all;
 clc;
 
-%% First Example 
-% Running pipeline with result videos written between each module.
-
 fprintf('\n\n\n ------------------- DemoScript 1st Example: TSLO ----------------------- \n\n\n');
 
 % get video path. The demo videos must be under /demo folder, i.e., already
 % added to MATLAB path.
-inputVideoPath = 'tslo-long.avi'; 
+inputVideoPath = FindFile('tslo.avi'); 
 originalVideoPath = inputVideoPath;
 
 % for loading default params, use an empty struct
 tp = struct;
 tp.overwrite = true;
-tp.enableVerbosity = 1;
+tp.enableVerbosity = true;
 
 %%%%%%%%%%%%%%%%%%%%%%%
 % Run desired modules.
 %%%%%%%%%%%%%%%%%%%%%%%
 
-% Find bad frames 
-[tp.badFrames, ~, ~, tp.initialRef] = FindBlinkFrames(inputVideoPath, tp);
-
 % Trimming
-tp.borderTrimAmount = [0 0 12 12];
 [inputVideoPath, tp] = TrimVideo(inputVideoPath, tp);
 
+% Find bad frames 
+[inputVideoPath, tp] = FindBlinkFrames(inputVideoPath, tp);
+
 % Stimulus removal
-% tp.stimulus = imread('cross.png');
-tp.stimulus = MakeStimulusCross(87, 19, 0); 
+% tp.stimulus = imread('cross.png'); % example of using an image file
+% tp.stimulus = MakeStimulusCross(87, 19, 0); % example of creating a custom cross
 inputVideoPath = RemoveStimuli(inputVideoPath, tp);
 
 % Contrast enhancement
-inputVideoPath = GammaCorrect(inputVideoPath, tp);
+[inputVideoPath, tp] = GammaCorrect(inputVideoPath, tp);
 
 % Bandpass filtering
-inputVideoPath = BandpassFilter(inputVideoPath, tp);
+[inputVideoPath, tp] = BandpassFilter(inputVideoPath, tp);
 
-% % Make a coarse reference frame using whole-frame template matching
-% tp.coarseRef = CoarseRef(inputVideoPath, tp);
-% 
-% % Make a finer reference frame using strip analysis
-% tp.fineRef = FineRef(inputVideoPath, tp);
+% Strip analysis
+[~, tp] = StripAnalysis(inputVideoPath, tp);
 
-%%
-clc;
-tp.adaptiveSearch = true;
-tp.axesHandles = [];
-tp.referenceFrame = 1;
-tp.enableVerbosity = 1;
-tp.goodFrameCriterion = 0.5;
-tp.swapFrameCriterion = 0.5;
-tp.lookBackTime = 15;
-tp.trim = tp.borderTrimAmount(3:4);
-samplingRate = [540 960];
-stripHeight = [15 11];
-for i=1:length(stripHeight)
-    % Extract eye motion
-    tp.axesHandles = [];
-    tp.minPeakThreshold = 0.4;
-    tp.maxMotionThreshold = 0.3;
-    tp.samplingRate = samplingRate(i);
-    tp.stripHeight = stripHeight(i);
-    tp.stripWidth = [256];
-    tp.enableReferenceFrameUpdate = true;
-    [position, timeSec, ~, peakValueArray, tp] = StripAnalysis(inputVideoPath, tp); 
+% Make reference
+[inputVideoPath, tp] = MakeReference(inputVideoPath, tp);
 
-    
-    % Filter eye motion traces
-    positionDeg = -position * 5/512;
-    save(tp.outputFilePath,'-append','positionDeg');
-    tp.axesHandles = [];
-    tp.filters = {'medfilt1','sgolayfilt'};
-    tp.filterParams = {15,[3 15]};
-    [filteredTraces, timeSec, tp] = FilterEyePosition(tp.outputFilePath, tp);
-    
-    % Make reference
-    tp.axesHandles = [];
-    tp.oldStripHeight = tp.stripHeight;
-    tp.newStripHeight = tp.stripHeight;
-    tp.positions = filteredTraces * -512/5;
-    tp.timeSec = timeSec;
-    tp.peakValues = peakValueArray;
-    tp.maxMotionThreshold = 0.1;
-    tp.minPeakThreshold = 0.35;
-    [referenceFrame, ~, tp] = MakeReference(inputVideoPath, tp);
-    tp.referenceFrame = referenceFrame;
-end
+% 2nd round of Strip analysis
+[positionPath, tp] = StripAnalysis(inputVideoPath, tp);
 
-% Eye movement classification
-tp.axesHandles = [];
-[saccades, drifts, labels, tp] =  FindSaccadesAndDrifts([filteredTraces timeSec],  tp);
+% Re-reference
+tp.globalRefArgument = imread('tslo-globalRef-tilted-3_25.tif');
+tp.fixTorsion = true;
+[positionPath, tp] = ReReference(positionPath, tp);
 
-%% Generate a stabilized video (optionally, using original video)
-% StabilizeVideo(originalVideoPath, tp);
+% convert position from pixel to degree
+[positionPath, tp] = Pixel2Degree(positionPath, tp);
 
+% eye position filtering
+[positionPath, tp] = FilterEyePosition(positionPath, tp);
 
+% eye movement classification
+[~, tp] = FindSaccadesAndDrifts(positionPath,  tp);
 
-%% Re-reference
-tp.globalRef = imread('tslo-global-ref.png');
-[rerefTraces, rerefPath] = ReReference(filteredPath, tp);
+% Make a new reference using original video and generate a stabilized video
+tp.makeStabilizedVideo = true;
+tp.newStripHeight = 1;
+[~, tp] = MakeReference(originalVideoPath, tp);
 
-% Eye movement classification
-[tsloSaccades, tsloDrifts, tsloLabels] = FindSaccadesAndDrifts(rerefPath, tp);
-
-% Visualize results
-fh = figure('units','normalized','outerposition',[.1 .5 .5 .4],'name','DemoScript: 1nd example');
-PlotResults(fh, rerefTraces, timeArray, tsloLabels);
-
+% inspect the parameter structure
+disp(tp)
 
 
 %% Second Example 
-% Running pipeline without writing result after each module.
+% Running pipeline completely in memory. 
+
+% start fresh
+clearvars;
+close all;
+clc;
 
 fprintf('\n\n\n ------------------- DemoScript 2nd Example: AOSLO ----------------------- \n\n\n');
 
 % get video path. The demo videos must be under /demo folder, i.e., already
 % added to MATLAB path.
-inputVideoPath2 = '20092L_003.avi'; 
+inputVideoPath = FindFile('aoslo.avi'); 
 
 % Read the input video into memory
-videoArray = ReadVideoToArray(inputVideoPath2);
+videoArray = ReadVideoToArray(inputVideoPath);
 
 % for loading default params, use an empty struct
 ap = struct;
-ap.enableVerbosity = 1;
+ap.enableVerbosity = true;
 
 %%%%%%%%%%%%%%%%%%%%%%%
 % Run desired modules.
 %%%%%%%%%%%%%%%%%%%%%%%
 
 % Find bad frames 
-ap.badFrames = FindBlinkFrames(videoArray, ap);
+[videoArray, ap] = FindBlinkFrames(videoArray, ap);
 
-% Trimming
-% videoArray = TrimVideo(videoArray, ap);
+% Stimulus removal
+ap.stimulus = imread('cross.png'); % example of using an image file
+videoArray = RemoveStimuli(videoArray, ap);
 
-% Make a reference frame. 
-% ap.refFrame = FineRef([], videoArray, ap);
+% Contrast enhancement
+[videoArray, ap] = GammaCorrect(videoArray, ap);
+
+% Bandpass filtering
+[videoArray, ap] = BandpassFilter(videoArray, ap);
 
 % Extract eye motion
-ap.minPeakThreshold = 0.5;
-ap.adaptiveSearch = false;
-[position, timeSec] = StripAnalysis(videoArray, ap);
+ap.enableVerbosity = 'frame';
+[~, ap] = StripAnalysis(videoArray, ap);
 
-% Post-processing of eye motion traces
-position = FilterEyePosition([position, timeSec], ap);
+% convert position from pixel to degree. 
+% note that one does not need to use Pixel2Degree module for this. In this 
+% example, we will do the conversion ourselves.
+ap.fov = 0.83;
+ap.frameWidth = 512;
+ap.positionDeg = ap.position * ap.fov / ap.frameWidth;
+
+% eye position filtering
+[filteredPositionDegAndTime, ap] = FilterEyePosition([ap.positionDeg ap.timeSec], ap);
 
 % Classify eye motion into events
-[aosloSaccades, aosloDrifts, aosloLabels] = FindSaccadesAndDrifts([position timeSec], ap); %#ok<*ASGLU>
+[~,ap] = FindSaccadesAndDrifts(filteredPositionDegAndTime, ap); %#ok<*ASGLU>
 
-% Visualize results
-fh = figure('units','normalized','outerposition',[.1 .1 .5 .4],'name','DemoScript: 2nd example');
-PlotResults(fh, position, timeSec, aosloLabels);
+% look at the parameters structure
+disp(ap)
 
 

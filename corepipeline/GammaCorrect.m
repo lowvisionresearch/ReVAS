@@ -17,6 +17,8 @@ function [outputVideo, params] = GammaCorrect(inputVideo, params)
 %   overwrite          : set to true to overwrite existing files.
 %                        Set to false to params.abort the function call if the
 %                        files already exist. (default false)
+%   enableVerbosity    : true/false. plots first frame after gamma
+%                        correction.
 %   method             : 'simpleGamma' for simple gamma correction, 
 %                        'toneMapping' for boosting only low-mid grays, 
 %                        'histEq' for histogram equalization. (default
@@ -36,6 +38,7 @@ function [outputVideo, params] = GammaCorrect(inputVideo, params)
 %   badFrames          : specifies blink/bad frames. we can skip those but
 %                        we need to make sure to keep a record of 
 %                        discarded frames. 
+%   axesHandles        : handles to an axes object.
 %
 %
 %   -----------------------------------
@@ -93,6 +96,26 @@ end
 % module can be used without the GUI
 if ~isfield(params,'abort')
     params.abort.Value = false;
+end
+
+%% Handle verbosity 
+
+% check if axes handles are provided, if not, create axes.
+if params.enableVerbosity && isempty(params.axesHandles)
+    fh = figure(2020);
+    set(fh,'name','Gamma Correction',...
+           'units','normalized',...
+           'outerposition',[0.16 0.053 0.4 0.51],...
+           'menubar','none',...
+           'toolbar','none',...
+           'numbertitle','off');
+    params.axesHandles(1) = subplot(1,1,1);
+end
+
+if params.enableVerbosity
+    cla(params.axesHandles(1))
+    tb = get(params.axesHandles(1),'toolbar');
+    tb.Visible = 'on';
 end
 
 
@@ -165,24 +188,31 @@ for fr = 1:numberOfFrames
         % apple contrast enhancement here
         switch params.method
             case 'simpleGamma'
-                frame = simpleGammaToneCurve(frame+1);
+                newFrame = simpleGammaToneCurve(frame+1);
                 
             case 'toneMapping'
-                frame = params.toneCurve(frame+1);
+                newFrame = params.toneCurve(frame+1);
                 
             case 'histEq'
-                frame = uint8(histeq(frame, params.histLevels));
+                newFrame = uint8(histeq(frame, params.histLevels));
                 
             otherwise
                 error('unknown method type for contrast GammaCorrect().');
         end
 
+        % only show the output for first frame
+        if params.enableVerbosity && fr == 1
+            axes(params.axesHandles(1)); %#ok<LAXES>
+            imshow([frame uint8(255*ones(size(frame,1),10)) newFrame],'border','tight');
+            title(params.axesHandles(1),'Gamma corrected')
+        end
+
         % write out
         if writeResult
-            writeVideo(writer, frame);
+            writeVideo(writer, newFrame);
         else
             nextFrameNumber = sum(~params.badFrames(1:fr));
-            outputVideo(:, :, nextFrameNumber) = frame; 
+            outputVideo(:, :, nextFrameNumber) = newFrame; 
         end
     else
         break;
@@ -195,7 +225,7 @@ end % end of video
 
 %% return results, close up objects
 
-if writeResult
+if writeResult 
     outputVideo = outputVideoPath;
     
     close(writer);
@@ -205,4 +235,7 @@ if writeResult
         delete(outputVideoPath)
     end
 end
+
+% remove unnecessary fields
+params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
 

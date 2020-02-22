@@ -294,10 +294,11 @@ end
 
 %% Save to output mat file
 
-if writeResult && ~params.abort.Value
-    % remove unnecessary fields
-    params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
-    
+% remove unnecessary fields
+abort = params.abort.Value;
+params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
+
+if writeResult && ~abort
     % save results
     save(badFramesMatFilePath, 'badFrames','imStats','initialRef','params');
 end

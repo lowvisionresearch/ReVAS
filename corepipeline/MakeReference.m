@@ -374,8 +374,15 @@ for fr = 1:numberOfFrames
         
         % write stabilized video frame
         if params.makeStabilizedVideo && writeResult
-            nonzeros = stabCount>=0;
+            
+            % compute the new stabilized frame
+            nonzeros = stabCount>0;
             stabFrame(nonzeros) = stabFrame(nonzeros)./stabCount(nonzeros);
+            
+            % get rid of black lines, if any by interpolation
+            stabFrame = FixBlackLines(stabFrame);
+            
+            % write it to the video
             writeVideo(writer,uint8(stabFrame));
         end
         
@@ -462,11 +469,12 @@ end
 
 %% Save to output mat file
 
-if writeResult && ~params.abort.Value
-    
-    % remove unnecessary fields
-    params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
-    
+% remove unnecessary fields
+abort = params.abort.Value;
+params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
+
+if writeResult && ~abort
+
     % Save under file labeled 'final'.
     save(outputFilePath, 'refFrame','refFrameZero','params');
     

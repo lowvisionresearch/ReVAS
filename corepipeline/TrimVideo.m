@@ -18,6 +18,7 @@ function [outputVideo, params] = TrimVideo(inputVideo, params)
 %   overwrite           : set to true to overwrite existing files.
 %                         Set to false to params.abort the function call if the
 %                         files already exist. (default false)
+%   enableVerbosity     : true/false. if true, plots first frame after filtering.
 %   borderTrimAmount    : specifies the number of rows and columns to be
 %                         removed as a vector with the number of
 %                         rows/columns to be removed from each edge
@@ -27,9 +28,10 @@ function [outputVideo, params] = TrimVideo(inputVideo, params)
 %                         is provided instead, then that amount will be
 %                         removed from the right and top only.
 %                         (default [0 24 24 0])
-%  badFrames            : specifies blink/bad frames. we can skip those but
+%   badFrames           : specifies blink/bad frames. we can skip those but
 %                         we need to make sure to keep a record of 
 %                         discarded frames.
+%   axesHandles         : handles to an axes object.
 %
 %   -----------------------------------
 %   Output
@@ -88,6 +90,26 @@ end
 % module can be used without the GUI
 if ~isfield(params,'abort')
     params.abort.Value = false;
+end
+
+%% Handle verbosity 
+
+% check if axes handles are provided, if not, create axes.
+if params.enableVerbosity && isempty(params.axesHandles)
+    fh = figure(2020);
+    set(fh,'name','Trimming',...
+           'units','normalized',...
+           'outerposition',[0.16 0.053 0.4 0.51],...
+           'menubar','none',...
+           'toolbar','none',...
+           'numbertitle','off');
+    params.axesHandles(1) = subplot(1,1,1);
+end
+
+if params.enableVerbosity
+    cla(params.axesHandles(1))
+    tb = get(params.axesHandles(1),'toolbar');
+    tb.Visible = 'on';
 end
 
 
@@ -168,6 +190,13 @@ for fr = 1:numberOfFrames
         frame = frame(top+1 : height-bottom, ...
             left+1 : width-right);
 
+        % only show the output for first frame
+        if params.enableVerbosity && fr == 1
+            axes(params.axesHandles(1)); %#ok<LAXES>
+            imshow(frame,'border','tight');
+            title(params.axesHandles(1),'Trimmed');
+        end
+
         % write out
         if writeResult
             writeVideo(writer, frame);
@@ -199,4 +228,5 @@ if writeResult
     end
 end
 
-
+% remove unnecessary fields
+params = RemoveFields(params,{'logBox','axesHandles','abort'}); 

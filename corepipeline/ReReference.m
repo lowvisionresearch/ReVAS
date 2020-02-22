@@ -269,7 +269,7 @@ anchorStrip = localRef(anchorSt:anchorEn,stripLeft:stripRight);
 % create a struct for full-reference crosscorr.
 anchorOp = struct;
 anchorOp.enableGPU = params.enableGPU;
-anchorOp.corrMethod = params.corrMethod;
+anchorOp.corrMethod = params.reRefCorrMethod;
 anchorOp.adaptiveSearch = false;
 anchorOp.rowStart = 1;
 anchorOp.rowEnd = size(globalRef,1);
@@ -285,7 +285,6 @@ else
 end
 
 peakValues = zeros(size(tilts));
-
 anchorStripSize = size(anchorStrip);
 halfStripSize = round(anchorStripSize/2);
 
@@ -365,17 +364,19 @@ if ~params.abort.Value && params.enableVerbosity
     paddedGlobalRef = padarray(globalRef, padToSize-size(globalRef),nan,'post');
     axes(params.axesHandles(1));
     imshowpair(paddedGlobalRef,finalLocalRef);
+    title(params.axesHandles(1),'Re-referenced');
 
 end
 
 
 %% Save filtered data.
-if writeResult && ~params.abort.Value
-    
-    % remove unnecessary fields
-    params = RemoveFields(params,{'logBox','axesHandles','globalRefArgument',...
-        'referenceFrame','abort'}); 
 
+% remove unnecessary fields
+abort = params.abort.Value;
+params = RemoveFields(params,{'logBox','axesHandles','globalRefArgument',...
+    'referenceFrame','abort'}); 
+
+if writeResult && ~abort
     % save output
     save(outputFilePath,'position','timeSec','offset','bestTilt','params','peakValues');
 end

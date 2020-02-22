@@ -16,6 +16,7 @@ try
     % use default params
     p = struct; 
     p.overwrite = true;
+    p.enableVerbosity = true;
     
     % test with a video path
     outputVideoPath = TrimVideo(inputVideo, p); %#ok<*ASGLU>
