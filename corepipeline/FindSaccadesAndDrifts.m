@@ -427,7 +427,7 @@ if params.enableVerbosity && ~params.abort.Value
     ylabel(params.axesHandles(1),'position (deg)');
     xlabel(params.axesHandles(1),'time (sec)');
     legend(params.axesHandles(1),[ph sh],{'hor-pos','ver-pos','saccade','blink/data loss'},...
-        'orientation','horizontal','location','south');
+        'orientation','horizontal','location','best');
     
 end
 

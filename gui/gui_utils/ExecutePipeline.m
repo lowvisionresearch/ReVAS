@@ -54,14 +54,6 @@ ylim(revas.gui.UserData.statusBar,[0 1]);
 sFiles = patch(revas.gui.UserData.statusBar,[0 .000001*[1 1] 0]',[0 0 .5 .5]',[1 .6 .3],'EdgeColor','none');
 sPipe = patch(revas.gui.UserData.statusBar,[0 .000001*[1 1] 0]',[0.5 0.5 1 1]',[1 .6 .3],'EdgeColor','none');
 
-% get axes handles
-axesHandles = findobj(revas.gui.UserData.visualizePanel,'type','axes');
-
-% to preserve the tags
-for i=1:length(axesHandles)
-    set(axesHandles(i),'NextPlot','add');
-end
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % run pipeline 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -86,7 +78,7 @@ if gParams.enableParallel
             sPipe,...
             revas.gui.UserData.abortButton,...
             gParams.overwrite,...
-            axesHandles); %#ok<AGROW>
+            revas); %#ok<AGROW>
     end
 
     % now check results as they become available and update UI as much as
@@ -137,7 +129,7 @@ else
                 sPipe,...
                 revas.gui.UserData.abortButton,...
                 gParams.overwrite,...
-                axesHandles); 
+                revas); 
             
         catch pipeErr
             isError = true;

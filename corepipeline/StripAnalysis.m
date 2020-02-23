@@ -722,7 +722,7 @@ while fr <= numberOfFrames
                 % show current reference frame if enableVerbosity is 2
                 if params.enableVerbosity == 2
                     axes(params.axesHandles(1)); %#ok<LAXES>
-                    im = imshow(params.referenceFrame);
+                    im = imshow(uint8(params.referenceFrame));
                     colormap(params.axesHandles(1),gray(256));
                     hold(params.axesHandles(1),'off');
                     axis(params.axesHandles(1),'image')
@@ -765,6 +765,12 @@ while fr <= numberOfFrames
                 setappdata(params.axesHandles(4),'LegendColorbarReclaimSpace',1);
                 yMin = prctile(tempPos(:),2.5,'all')-20;
                 yMax = prctile(tempPos(:),97.5,'all')+20;
+                if isempty(yMin) || isnan(yMin)
+                    yMin = -10;
+                end
+                if isempty(yMax) || isnan(yMax)
+                    yMax = 10;
+                end
                 ylim(params.axesHandles(4),[yMin yMax]);
                 xlim(params.axesHandles(4),[0 timeSec(thisSample)]);
                 hold(params.axesHandles(4),'off');
@@ -811,7 +817,7 @@ ix = peakValueArray >= params.minPeakThreshold & ...
 position(ix,:) = rawPosition(ix,:);
 
 % restore the initial reference frame 
-params.referenceFrame = referenceFrame;
+params.referenceFrame = uint8(referenceFrame);
 
 % save the reference frame swap events
 params.lastFrameSwap = lastFrameSwap;
@@ -870,6 +876,12 @@ if ~params.abort.Value && params.enableVerbosity
     legend(params.axesHandles(4),{'hor','ver'});
     yMin = prctile(position(:),2.5,'all')-20;
     yMax = prctile(position(:),97.5,'all')+20;
+    if isempty(yMin) || isnan(yMin)
+        yMin = -10;
+    end
+    if isempty(yMax) || isnan(yMax)
+        yMax = 10;
+    end
     ylim(params.axesHandles(4),[yMin yMax]);
     xlim(params.axesHandles(4),[0 max(timeSec)]);
     hold(params.axesHandles(4),'off');
