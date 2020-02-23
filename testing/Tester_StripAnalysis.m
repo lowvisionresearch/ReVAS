@@ -57,6 +57,8 @@ try
         p.minPeakThreshold = 0.45;
         p.corrMethod = 'cuda';
         p.enableVerbosity = 2;
+        p.stripHeight = 15;
+        p.stripWidth = 512;
         [~,p, position2, timeSec, rawPosition, peakValueArray] = ...
             StripAnalysis(videoArray, p); %#ok<*ASGLU>
     end
