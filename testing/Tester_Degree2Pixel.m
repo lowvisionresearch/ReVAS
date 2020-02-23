@@ -8,12 +8,10 @@ try
     %% read in sample position file
 
     % the video resides under /demo folder.
-    inputFile = FindFile('aoslo_demo_pos_960hz.mat');
+    inputFile = FindFile('aoslo_demo_pos.mat');
     
     % load raw position and time
-    load(inputFile,'timeSec','position');
-    
-    positionDeg = position * 0.83/512;
+    load(inputFile,'timeSec','positionDeg');
     
     %% First test
     
