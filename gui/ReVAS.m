@@ -27,15 +27,16 @@ lastUsedPipelineFile = [fileparts(which('ReVAS')) filesep '.pipeline.mat'];
 r = groot;
 revas.ppi = r.ScreenPixelsPerInch;
 revas.screenSize = r.ScreenSize;
-if ismac
+if isunix
     revas.fontSize = 12;
+    guiSize = [max(revas.screenSize(3)*0.75,1080) max(revas.screenSize(4)*0.75,720)];
 else
     revas.fontSize = 10;
+    guiSize = [max(revas.screenSize(3)*0.9,1080) max(revas.screenSize(4)*0.9,720)];
 end
 revas.ppi = r.ScreenPixelsPerInch;
 
 % create gui
-guiSize = [min(revas.screenSize(3)*0.75,1080) min(revas.screenSize(4)*0.75,720)];
 revasPos = [(revas.screenSize(3:4)-guiSize)/2 guiSize];
 revas.gui = figure('units','pix',...
     'position',revasPos,...
