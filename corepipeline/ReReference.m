@@ -373,8 +373,7 @@ end
 
 % remove unnecessary fields
 abort = params.abort.Value;
-params = RemoveFields(params,{'logBox','axesHandles','globalRefArgument',...
-    'referenceFrame','abort'}); 
+params = RemoveFields(params,{'logBox','axesHandles','abort'}); 
 
 if writeResult && ~abort
     % save output
