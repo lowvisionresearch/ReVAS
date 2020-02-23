@@ -436,6 +436,7 @@ while fr <= numberOfFrames
             if writeResult
                 reader.CurrentTime = fr/reader.FrameRate;
             end
+            fr = fr + 1;
             continue;
         else
             % get next frame

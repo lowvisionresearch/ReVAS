@@ -43,7 +43,7 @@ switch module
         
         % list which modules can preceed or succeed this one
         before = {'trimvideo','removestimuli','gammacorrect'};
-        after = {'none','trimvideo','removestimuli','gammacorrect','bandpassfilter'};
+        after = {'none','trimvideo','removestimuli','gammacorrect','bandpassfilter','stripanalysis'};
         
         % keyword to be used in filenames
         keyword = 'blinkframes';
