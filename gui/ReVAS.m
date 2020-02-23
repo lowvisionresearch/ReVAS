@@ -530,6 +530,7 @@ RevasMessage(sprintf('ReVAS %s launched!',versionNo),revas.gui.UserData.logBox);
         % run the rest of the operation within try catch. if an error
         % occurs, we should be able to re-enable the UIControls.
         try
+            
             selectedFiles = revas.gui.UserData.lbFile.Value;
             RevasMessage(sprintf('Pipeline launched with %d selected files...',length(selectedFiles)),revas.gui.UserData.logBox)
             anyError = ExecutePipeline(revas,gParams);

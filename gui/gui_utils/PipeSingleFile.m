@@ -1,5 +1,5 @@
-function PipeSingleFile(inMemory,pipeline,pipeParams,thisFile,fileBox,logBox,fileNo,sPipe,abortButton,overwrite,axesHandles)
-% PipeSingleFile(inMemory,pipeline,pipeParams,thisFile,fileBox,logBox,fileNo,sPipe,abortButton,overwrite,axesHandles)
+function PipeSingleFile(inMemory,pipeline,pipeParams,thisFile,fileBox,logBox,fileNo,sPipe,abortButton,overwrite,revas)
+% PipeSingleFile(inMemory,pipeline,pipeParams,thisFile,fileBox,logBox,fileNo,sPipe,abortButton,overwrite,revas)
 %
 %   Running a single file through a pipeline.
 %
@@ -29,9 +29,6 @@ end
 
 % to check if this is a video file 
 [~,~,ext] = fileparts(thisFile);
-
-% get all tags now
-axesTags = {axesHandles.Tag};
 
 % start the pipeline
 pipeLength = length(pipeline);
@@ -91,7 +88,7 @@ for p = startAt:length(pipeline)
     [~, ~, ~, ~, ~, tags] = GetDefaults(pipeline{p});
     params.axesHandles = [];
     for t=1:length(tags)
-        thisAx = axesHandles(strcmp(axesTags,tags{t}));
+        thisAx = revas.gui.UserData.(tags{t});
         
         % to preserve the tag
         set(thisAx,'NextPlot','add');
