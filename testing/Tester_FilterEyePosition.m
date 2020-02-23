@@ -8,16 +8,10 @@ try
     %% read in sample position file
 
     % the video resides under /demo folder.
-    inputFile = FindFile('aoslo_demo_pos_960hz.mat');
+    inputFile = FindFile('aoslo_demo_pos.mat');
     
     % load raw position and time
-    load(inputFile,'timeSec','position');
-    
-    % since this example file contains uninverted position shifts, we need
-    % to invert to get eye position. We also need to convert from pixel
-    % units to visual degrees.
-    pixelSizeDeg = 0.83 / 512;
-    positionDeg = -position * pixelSizeDeg;
+    load(inputFile,'timeSec','positionDeg');
     
     %% First test
     

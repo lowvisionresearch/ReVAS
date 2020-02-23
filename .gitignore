@@ -1,17 +1,6 @@
-*.avi
 *.asv
 *.DS_Store
-documentation/analysis_report/
-documentation/screenshots/
-pseudocode/
-testbench/
 log.txt
-configurations.mat
-ReRefTesting.m
-Test.m
-util/not_for_release
-demo/*.avi
-!demo/globalRef.tif
 *.cpp~
 *.m~
 .*.mat
