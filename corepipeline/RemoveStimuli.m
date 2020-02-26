@@ -127,6 +127,10 @@ end
 
 
 %% Handle verbosity 
+if ischar(params.enableVerbosity)
+    params.enableVerbosity = find(contains({'none','video','frame'},params.enableVerbosity))-1;
+end
+
 % check if axes handles are provided, if not, create axes.
 if params.enableVerbosity && isempty(params.axesHandles)
     fh = figure(2020);
@@ -201,7 +205,6 @@ if isnumeric(stimulusMatrix)
     end
 end
 
-
 % if stimulus is empty, construct the matrix assuming that stimulus is a
 % cross (more like a plus sign)
 if isempty(params.stimulus)
@@ -209,10 +212,14 @@ if isempty(params.stimulus)
     
     % zeropad for improved matching -- important for making this step
     % robust against being used for videos with no stimulus.
-    stimulusMatrix = padarray(stimulusMatrix, params.stimulusSize*[1 1],~(params.stimulusPolarity),'both');
+    stimulusMatrix = padarray(stimulusMatrix, 3*[1 1],~(params.stimulusPolarity),'both');
 end
 
-% make sure to conver stimulus to uint8
+% make sure it has odd dimensions
+[sy,sx] = size(stimulusMatrix);
+stimulusMatrix = padarray(stimulusMatrix,[2*floor(sy/2) 2*floor(sx/2)] - [sy sx] + [1 1],0,'pre');
+
+% make sure to convert stimulus to uint8
 stimulusMatrix = uint8(stimulusMatrix);
 
 % at this point, stimulusMatrix should be a 2D array.
@@ -261,22 +268,13 @@ peakValues = nan(numberOfFrames, 1);
 
 sw = size(stimulusMatrix,2);
 sh = size(stimulusMatrix,1);
-
+    
 if isempty(params.removalAreaSize)
-    % look at the values in stimulus. if more zeros, than it's most
-    % probably a positive polarity target (stimulus is brighter). If not,
-    % it's a black target.
-    nCounts = histcounts(stimulusMatrix(:),2);
-    if diff(nCounts) > 0
-        indices = find(~stimulusMatrix);
-    else
-        indices = find(stimulusMatrix);
-    end
-    halfWidth = floor(sw/2);
-    halfHeight = floor(sh/2);
+    remW = sw;
+    remH = sh;
 else
-    halfWidth = floor(params.removalAreaSize(1)/2);
-    halfHeight = floor(params.removalAreaSize(2)/2);
+    remW = params.removalAreaSize(1);
+    remH = params.removalAreaSize(2);
 end
 
 isFirstTimePlotting = true;
@@ -302,7 +300,7 @@ for fr = 1:numberOfFrames
         end
 
         % locate the stimulus
-        [correlationMap,xPeak,yPeak,peakValues(fr)] = matchTemplateOCV(stimulusMatrix, frame,0); %#ok<ASGLU>
+        [correlationMap,xPeak,yPeak,peakValues(fr)] = matchTemplateOCV(stimulusMatrix, frame,1); %#ok<ASGLU>
 
         % update stimulus locations
         rawStimulusLocations(fr,:) = [xPeak yPeak] - floor([sw sh]/2);
@@ -315,10 +313,31 @@ for fr = 1:numberOfFrames
             if all(~isnan(stimulusLocations(fr,:)))
                 
                 % if additional area to be removed
-                xSt = max(1,stimulusLocations(fr,1) - halfWidth);
-                xEn = min(width, stimulusLocations(fr,1) + halfWidth);
-                ySt = max(1,stimulusLocations(fr,2) - halfHeight);
-                yEn = min(height, stimulusLocations(fr,2) + halfHeight); 
+                xSt = stimulusLocations(fr,1) - floor(remW/2);
+                xEn = xSt + remW - 1;
+                ySt = stimulusLocations(fr,2) - floor(remH/2);
+                yEn = ySt + remH - 1;
+                
+                % bug fix 2/25/2020: make sure indexing stimulus matrix is correct
+                if isempty(params.removalAreaSize)
+                    sXst = abs(min(0,xSt));
+                    sXen = max(0, xEn - width);
+                    sYst = abs(min(0,ySt));
+                    sYen = max(0, yEn - height);
+                    tempStimulusMatrix = stimulusMatrix((sYst + 1) : (sh - sYen), (sXst + 1) : (sw - sXen));
+                    
+                    if params.stimulusPolarity
+                        indices = find(tempStimulusMatrix);
+                    else
+                        indices = find(~tempStimulusMatrix);
+                    end
+                end
+                
+                % make sure we don't go out of boundaries
+                xSt = max(1, xSt);
+                xEn = min(width, xEn);
+                ySt = max(1, ySt);
+                yEn = min(height, yEn);
 
                 % fill in the stimulus area with either noise or resampled
                 % pixels
@@ -373,7 +392,6 @@ for fr = 1:numberOfFrames
                 axes(params.axesHandles(1)); %#ok<LAXES>
                 im = imagesc(frame);
                 axis(params.axesHandles(1),'image');
-                title(params.axesHandles(1),[num2str(fr) ' out of ' num2str(numberOfFrames)]);
                 colormap(params.axesHandles(1),gray(256));
                 caxis(params.axesHandles(1),[0 255]);
 
@@ -411,6 +429,7 @@ for fr = 1:numberOfFrames
                 set(p31(1),'YData',rawStimulusLocations(:,1));
                 set(p31(2),'YData',rawStimulusLocations(:,2));
             end
+            title(params.axesHandles(1),['Removing stimuli. ' num2str(fr) ' out of ' num2str(numberOfFrames)]);
             drawnow; % maybe needed in GUI mode.
         end
     else
@@ -418,7 +437,7 @@ for fr = 1:numberOfFrames
     end % end of params.abort
     
     if isGUI
-        pause(.001);
+        pause(.02);
     end
 end % end of video
 
@@ -501,4 +520,5 @@ if writeResult && ~abort
         'rawStimulusLocations','timeSec');
 end
 params.stimulusLocations = stimulusLocations;
+params.stimPeakValues = peakValues;
 

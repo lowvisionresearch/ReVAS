@@ -93,6 +93,9 @@ if ~isfield(params,'abort')
 end
 
 %% Handle verbosity 
+if ischar(params.enableVerbosity)
+    params.enableVerbosity = find(contains({'none','video','frame'},params.enableVerbosity))-1;
+end
 
 % check if axes handles are provided, if not, create axes.
 if params.enableVerbosity && isempty(params.axesHandles)
@@ -190,11 +193,15 @@ for fr = 1:numberOfFrames
         frame = frame(top+1 : height-bottom, ...
             left+1 : width-right);
 
-        % only show the output for first frame
-        if params.enableVerbosity && fr == 1
+        % visualize
+        if (params.enableVerbosity == 1 && fr == 1) || params.enableVerbosity > 1
             axes(params.axesHandles(1)); %#ok<LAXES>
-            imshow(frame,'border','tight');
-            title(params.axesHandles(1),'Trimmed');
+            if fr == 1
+                imh = imshow(frame,'border','tight');
+            else
+                imh.CData = frame;
+            end
+            title(params.axesHandles(1),sprintf('Trimming frames. %d out of %d',fr, numberOfFrames));
         end
 
         % write out
@@ -209,7 +216,7 @@ for fr = 1:numberOfFrames
     end
     
     if isGUI
-        pause(.001);
+        pause(.02);
     end
 end % end of video
 

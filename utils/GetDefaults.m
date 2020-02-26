@@ -25,7 +25,7 @@ switch module
     case 'findblinkframes'
         % default values
         default.overwrite = false;
-        default.enableVerbosity = false;
+        default.enableVerbosity = true;
         default.badFrames = false;
         default.axesHandles = [];
         default.stitchCriteria = 1;
@@ -54,14 +54,14 @@ switch module
     case 'trimvideo'
         % default values
         default.overwrite = false;
-        default.enableVerbosity = false;
+        default.enableVerbosity = 'frame';
         default.badFrames = false;
         default.borderTrimAmount = [0 0 12 0];
         default.axesHandles = [];
         
         % validation functions
         validate.overwrite = @islogical;
-        validate.enableVerbosity = @(x) islogical(x) | (isscalar(x) & x>=0);
+        validate.enableVerbosity = @(x) CategoryOrLogicalOrNumeric(x,{'none','video','frame'});
         validate.badFrames = @(x) all(islogical(x));
         validate.borderTrimAmount = @(x) all(IsNaturalNumber(x)) & (length(x)==4);
         validate.axesHandles = @(x) isempty(x) | all(ishandle(x));
@@ -78,7 +78,7 @@ switch module
     case 'removestimuli'
         % default values
         default.overwrite = false;
-        default.enableVerbosity = false;
+        default.enableVerbosity = 'frame';
         default.badFrames = false;
         default.axesHandles = [];
         default.minPeakThreshold = 0.6;
@@ -92,7 +92,7 @@ switch module
         
         % validation functions 
         validate.overwrite = @islogical;
-        validate.enableVerbosity = @(x) islogical(x) | (isscalar(x) & x>=0);
+        validate.enableVerbosity = @(x) CategoryOrLogicalOrNumeric(x,{'none','video','frame'});
         validate.badFrames = @(x) all(islogical(x));
         validate.axesHandles = @(x) isempty(x) | all(ishandle(x));
         validate.minPeakThreshold = @IsNonNegativeRealNumber;
@@ -117,7 +117,7 @@ switch module
     case 'gammacorrect'
         % default values
         default.overwrite = false;
-        default.enableVerbosity = false;
+        default.enableVerbosity = 'frame';
         default.method = 'simpleGamma';
         default.gammaExponent = 0.6;
         default.toneCurve = uint8(0:255); 
@@ -127,7 +127,7 @@ switch module
         
         % validation functions 
         validate.overwrite = @islogical;
-        validate.enableVerbosity = @(x) islogical(x) | (isscalar(x) & x>=0);
+        validate.enableVerbosity = @(x) CategoryOrLogicalOrNumeric(x,{'none','video','frame'});
         validate.method = @(x) any(contains({'simpleGamma','histEq','toneMapping'},x));
         validate.gammaExponent = @IsNonNegativeRealNumber;
         validate.toneCurve = @(x) isa(x, 'uint8') & length(x)==256;
@@ -147,7 +147,7 @@ switch module
     case 'bandpassfilter'
         % default values
         default.overwrite = false;
-        default.enableVerbosity = false;
+        default.enableVerbosity = 'frame';
         default.badFrames = false;
         default.smoothing = 1;
         default.lowSpatialFrequencyCutoff = 3;
@@ -155,7 +155,7 @@ switch module
         
         % validation functions
         validate.overwrite = @islogical;
-        validate.enableVerbosity = @(x) islogical(x) | (isscalar(x) & x>=0);
+        validate.enableVerbosity = @(x) CategoryOrLogicalOrNumeric(x,{'none','video','frame'});
         validate.badFrames = @(x) all(islogical(x));
         validate.smoothing = @IsPositiveRealNumber;
         validate.lowSpatialFrequencyCutoff = @IsNonNegativeRealNumber;
@@ -214,7 +214,7 @@ switch module
         % default values
         default.overwrite = false;
         default.enableGPU = false;
-        default.enableVerbosity = 'none';
+        default.enableVerbosity = 'frame';
         default.dynamicReference = true;
         default.goodFrameCriterion = 0.8;
         default.swapFrameCriterion = 0.8;
@@ -273,7 +273,7 @@ switch module
         
         % default values
         default.overwrite = false;
-        default.enableVerbosity = 'none';
+        default.enableVerbosity = 'frame';
         default.badFrames = false;
         default.rowNumbers = []; % fail, if not provided
         default.position = []; % fail, if not provided
@@ -324,7 +324,7 @@ switch module
         % default values
         default.enableGPU = false;
         default.reRefCorrMethod = 'mex';
-        default.enableVerbosity = false;
+        default.enableVerbosity = true;
         default.fixTorsion = false;
         default.tilts = -5:.25:5;
         default.anchorRowNumber = [];
@@ -361,7 +361,7 @@ switch module
         
         % default values
         default.overwrite = false;
-        default.enableVerbosity = false;
+        default.enableVerbosity = true;
         default.maxGapDurationMs = 20; % msec
         default.maxPosition = 10; % deg
         default.maxVelocity = 500; % deg/sec
@@ -400,7 +400,7 @@ switch module
     case 'findsaccadesanddrifts'
         
         % default values
-        default.enableVerbosity = false;
+        default.enableVerbosity = true;
         default.algorithm = 'hybrid';
         default.velocityMethod = 2;
         default.axesHandles = [];

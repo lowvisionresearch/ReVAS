@@ -807,7 +807,7 @@ while fr <= numberOfFrames
     
     % in gui mode, we need this delay so that UI interactions can propagate
     if isGUI
-        pause(.001);
+        pause(.02);
     end
 end % end of video
 

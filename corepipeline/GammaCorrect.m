@@ -99,6 +99,9 @@ if ~isfield(params,'abort')
 end
 
 %% Handle verbosity 
+if ischar(params.enableVerbosity)
+    params.enableVerbosity = find(contains({'none','video','frame'},params.enableVerbosity))-1;
+end
 
 % check if axes handles are provided, if not, create axes.
 if params.enableVerbosity && isempty(params.axesHandles)
@@ -200,11 +203,15 @@ for fr = 1:numberOfFrames
                 error('unknown method type for contrast GammaCorrect().');
         end
 
-        % only show the output for first frame
-        if params.enableVerbosity && fr == 1
+        % visualize
+        if (params.enableVerbosity == 1 && fr == 1) || params.enableVerbosity > 1
             axes(params.axesHandles(1)); %#ok<LAXES>
-            imshow([frame uint8(255*ones(size(frame,1),10)) newFrame],'border','tight');
-            title(params.axesHandles(1),'Gamma corrected')
+            if fr == 1
+                imh = imshow([frame uint8(255*ones(size(frame,1),10)) newFrame],'border','tight');
+            else
+                imh.CData = [frame uint8(255*ones(size(frame,1),10)) newFrame];
+            end
+            title(params.axesHandles(1),sprintf('Gamma correcting. %d out of %d',fr, numberOfFrames))
         end
 
         % write out
@@ -219,7 +226,7 @@ for fr = 1:numberOfFrames
     end % abort
     
     if isGUI
-        pause(.001);
+        pause(.02);
     end
 end % end of video
 

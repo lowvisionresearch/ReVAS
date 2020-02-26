@@ -6,7 +6,7 @@ clc
 g = gpuDevice(1);
 %reset(g);
 % diary('log');
-vid = VideoReader('cuda/sample.avi');
+vid = VideoReader('sample.avi');
 % vid = VideoReader('ExampleIVideosForTesting/Wang_PRLVideo_20158R_V012.avi');
 
 referenceFrame = 125*single(ones(1024,1024));

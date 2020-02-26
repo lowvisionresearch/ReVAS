@@ -96,6 +96,9 @@ end
 
 
 %% Handle verbosity 
+if ischar(params.enableVerbosity)
+    params.enableVerbosity = find(contains({'none','video','frame'},params.enableVerbosity))-1;
+end
 
 % check if axes handles are provided, if not, create axes.
 if params.enableVerbosity && isempty(params.axesHandles)
@@ -204,11 +207,15 @@ for fr = 1:numberOfFrames
         rangeOfValues = abs(diff(maxMin));
         newFrame = uint8(255*(I2 - maxMin(2))/rangeOfValues);
 
-        % only show the output for first frame
-        if params.enableVerbosity && fr == 1
+        % visualize
+        if (params.enableVerbosity == 1 && fr == 1) || params.enableVerbosity > 1
             axes(params.axesHandles(1)); %#ok<LAXES>
-            imshow([frame uint8(255*ones(size(frame,1),10)) newFrame],'border','tight');
-            title(params.axesHandles(1),'Bandpass filtered')
+            if fr == 1
+                imh = imshow([frame uint8(255*ones(size(frame,1),10)) newFrame],'border','tight');
+            else
+                imh.CData = [frame uint8(255*ones(size(frame,1),10)) newFrame];
+            end
+            title(params.axesHandles(1),sprintf('Bandpass filtering. %d out of %d',fr,numberOfFrames))
         end
 
         if writeResult
@@ -222,7 +229,7 @@ for fr = 1:numberOfFrames
     end
     
     if isGUI
-        pause(.001);
+        pause(.02);
     end
 end
 
