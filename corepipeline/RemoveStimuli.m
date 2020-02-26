@@ -71,6 +71,40 @@ function [outputVideo, params, varargout] = RemoveStimuli(inputVideo, params)
 %   -----------------------------------
 %   Example usage
 %   -----------------------------------
+%
+% Various ways of removing stimulus:
+% 
+% 1. Specify file path and contrast polarity (1: positive (white stimuli on
+% black background, 0: negative), and leave removalAreaSize, stimulusSize,
+% and stimulusThickness fields empty.
+% 
+%       This removes stimulus in the shape of the image you provide. If it
+%       is a cross, a cross-shaped region will be filled.
+% 
+% 2. Specify cross size and thickness. Let?s say you enter 86 for size, 19
+% for thickness, and selected 0 polarity.
+% 
+%       This will also remove stimulus in the shape of this cross.
+% 
+% 3. Specify a file path BUT this time also provide removalAreaSize in the
+% form of "86 86? (without quotes).
+% 
+%       This removes a rectangular region around the stimulus center.
+% 
+% 4. Specify cross size and thickness of your black cross BUT this time
+% also provide removalAreaSize in the form of "86 86? (without quotes).
+% 
+%       This removes a rectangular region around the stimulus center.
+% 
+% 5. Specify the typical white cross dimensions (11px size, 1px thickness)
+% BUT this time also provide removalAreaSize in the form of "86 86?
+% (without quotes).
+% 
+%       This also removes a rectangular region around the stimulus center.
+%
+%
+% Code examples:
+%
 %       inputVideo = 'tslo.avi';
 %       params.enableVerbosity = true;
 %       params.overwrite = true;
@@ -82,6 +116,7 @@ function [outputVideo, params, varargout] = RemoveStimuli(inputVideo, params)
 %       params.stimulus = <path to an image>;
 %       params.removalAreaSize = [11 11];
 %       RemoveStimuli(inputVideo, params);
+%
 
 
 
