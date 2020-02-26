@@ -13,9 +13,13 @@ if nargin < 3 || isempty(polarity)
 end
 
 % Both size and thickness must be odd
-if ~mod(crossSize, 2) == 1 || ~mod(crossThickness, 2) == 1
-    error('cross size and thickness must be odd');
-elseif crossSize < crossThickness
+if mod(round(crossSize), 2) == 0
+    crossSize = round(crossSize) + 1;
+end
+if mod(round(crossThickness), 2) == 0
+    crossThickness = round(crossThickness) + 1;
+end
+if crossSize < crossThickness
     error('cross size must be greater than its thickness');
 end
 

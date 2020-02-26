@@ -33,9 +33,9 @@ try
     p.badFrames([1 3 5]) = true;
     
     % stimulus is a large black cross
-    p.stimulus = MakeStimulusCross(85, 19, 0); 
-    
-    [outputVideo, ~,~, stimLocs2] = RemoveStimuli(videoArray,p);
+    p.stimulus = MakeStimulusCross(87, 19, 0); 
+    p.stimulusPolarity = 0;
+    [outputVideo, p,~, stimLocs2] = RemoveStimuli(videoArray,p);
     
     % check if both methods give the same result. Note that 1 pixel shift
     % between white cross and stimulus is expected.
@@ -55,6 +55,8 @@ try
     % test with a video with stimulus already removed
     clear p;
     p = struct;
+    p.fillingMethod = 'noise';
+    p.enableVerbosity = 2;
     p.overwrite = true;
     [newVideoPath, p, matFilePath, stimLocs4] = RemoveStimuli(outputVideoPath,p);
     delete(outputVideoPath);

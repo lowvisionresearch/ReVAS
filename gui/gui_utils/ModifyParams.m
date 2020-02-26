@@ -176,7 +176,7 @@ rowSize = guiSize(2)/(numOfParams + 2);
 % dimensions and put the GUI to the top-right corner
 if ~isempty(parent)
     parentPos = get(parent,'position');
-    guiPos = [sum(parentPos([1 3])) sum(parentPos([2 4]))-guiSize(2) guiSize];
+    guiPos = [sum(parentPos([1 3]))/2 sum(parentPos([2 4]))-guiSize(2) guiSize];
     if sum(guiPos([1 3])) > screenSize(3)
         guiPos(1) = screenSize(3)-guiSize(1);
     end
