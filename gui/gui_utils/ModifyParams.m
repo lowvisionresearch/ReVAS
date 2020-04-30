@@ -278,6 +278,10 @@ for i=1:length(strParamsIndices)
         if nGPU == 0
             ix = contains(options{i},'cuda');
             options{i}(ix) = [];
+<<<<<<< HEAD
+            thisValue = 1;
+=======
+>>>>>>> db15085144bcbcbb17a80d2adad70381819db415
         end
     end
     
