@@ -47,10 +47,11 @@ function [inputArgument, params, varargout] = ...
 %   |inputArgument| would be an nx3 array, where the first two columns 
 %   represent the horizontal and vertical eye positions, respectively, and
 %   the last column has the time array.
-%   The result is that the filtered version of this file is stored with
-%   '_filtered' appended to the original file name. If |inputArgument| 
+%   The result is that extracted events are stored in a file with
+%   '_sacsanddrifts' appended to the original file name. If |inputArgument| 
 %   is not a file name but actual eye position data, then the filtered 
-%   position data are not stored, and the second output argument is an empty array.
+%   position data are not stored, and the extracted saccade and drift
+%   events are returned as fields under 'params' structure.
 %
 %   |params| is a struct as specified below.
 %
