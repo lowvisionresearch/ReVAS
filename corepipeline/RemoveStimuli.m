@@ -487,8 +487,6 @@ if writeResult
     if params.abort.Value
         delete(outputVideoPath)
     end
-else
-    outputVideo = inputVideo;
 end
 
 
