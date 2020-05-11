@@ -30,13 +30,10 @@ function [outputVideo, params] = TrimVideo(inputVideo, params)
 %                         (default [0 24 24 0])
 %   badFrames           : specifies blink/bad frames. we can skip those but
 %                         we need to make sure to keep a record of 
-<<<<<<< HEAD
 %                         discarded frames. (default empty)
 %   axesHandles         : handles to an axes object. (default empty)
-=======
 %                         discarded frames.
 %   axesHandles         : handles to an axes object.
->>>>>>> db15085144bcbcbb17a80d2adad70381819db415
 %
 %   -----------------------------------
 %   Output
