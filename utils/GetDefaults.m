@@ -13,6 +13,8 @@ function [default, validate, before, after, keyword, axesHandles] = GetDefaults(
 %
 % Mehmet N. Agaoglu 1/19/2020 wrote initial version
 % MNA               2/19/2020 added keyword.
+% MNA               5/10/2020 added dummy case for Module Guidelines wiki.
+%
 
 % make lower case for more robust matches
 module = lower(module);
@@ -21,6 +23,30 @@ module = lower(module);
 [~,module,~] = fileparts(module);
 
 switch module
+    
+    case 'dummymodule'
+        
+        % default values
+        default.overwrite = false;
+        default.enableVerbosity = 'frame';
+        default.badFrames = false;
+        default.axesHandles = [];
+        
+        % validation functions 
+        validate.overwrite = @islogical;
+        validate.enableVerbosity = @(x) CategoryOrLogicalOrNumeric(x,{'none','video','frame'});
+        validate.badFrames = @(x) all(islogical(x));
+        validate.axesHandles = @(x) isempty(x) | all(ishandle(x));
+        
+        % list which modules can preceed or succeed this one
+        before = {'none','trimvideo','stripanalysis'};
+        after = {'none','stripanalysis'};
+        
+        % keyword to be used in filenames
+        keyword = 'dummy';
+        
+        % axes handle tags.. useful only in GUI mode
+        axesHandles = {'imAx'};
       
     case 'findblinkframes'
         % default values
@@ -105,8 +131,8 @@ switch module
         validate.stimulusPolarity = @(x) islogical(x) | (isnumeric(x) & any(x == [0 1]));
         
         % list which modules can preceed or succeed this one
-        before = {'none','trimvideo','findblinkframes'};
-        after = {'none','trimvideo','findblinkframes','gammacorrect','bandpassfilter','stripanalysis'};
+        before = {'none','removestimuli','trimvideo','findblinkframes'};
+        after = {'none','removestimuli','trimvideo','findblinkframes','gammacorrect','bandpassfilter','stripanalysis'};
      
         % keyword to be used in filenames
         keyword = 'nostim';
@@ -261,7 +287,7 @@ switch module
         
         % list which modules can preceed or succeed this one
         before = {'none','trimvideo','removestimuli','gammacorrect','bandpassfilter','findblinkframes','makereference'};
-        after = {'none','stripanalysis','pixel2degree','makereference','rereference'};
+        after = {'none','pixel2degree','makereference','rereference'};
         
         % keyword to be used in filenames
         keyword = 'position';
@@ -431,7 +457,7 @@ switch module
         
         % list which modules can preceed or succeed this one
         before = {'pixel2degree','filtereyeposition'};
-        after = {'none','findsaccadesanddrifts'};
+        after = {'none'};
         
         % keyword to be used in filenames
         keyword = 'sacsanddrifts';
@@ -443,10 +469,10 @@ switch module
         
         default = [];
         validate = [];
-        before = {'trimvideo','removestimuli','findblinkframes',...
+        before = {'trimvideo','removestimuli','findblinkframes','gammacorrect',...
             'bandpassfilter','stripanalysis','pixel2degree','degree2pixel',...
             'rereference','makereference','filtereyeposition','findsaccadesanddrifts'};
-        after = before;
+        after = before(1:end-1);
         axesHandles = [];
         
     otherwise

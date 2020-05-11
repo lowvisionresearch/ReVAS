@@ -28,6 +28,14 @@ if isempty(inputExtension)
 end
 
 switch lower(moduleToApply)
+    case {'dummy','dummymodule'}
+        keyword = 'dummy';
+        module = 'dummymodule';
+        outputFilePath = fullfile(inputDir, [inputFileName '_' keyword inputExtension]);
+    case 'randomframe'
+        keyword = 'randomframe';
+        module = 'dummymodule';
+        outputFilePath = fullfile(inputDir, [inputFileName '_' keyword '.mat']);
     case {'trim','trimvideo'}
         keyword = 'trim';
         module = 'trimvideo';
