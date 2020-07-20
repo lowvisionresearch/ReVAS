@@ -169,8 +169,8 @@ void match(float *kernel, float *correlationMap, int *xPeak, int *yPeak,
     checkCudaErrors(cudaMemcpy(h_argmax, d_LocalArgMaxes, 1 * sizeof(int), cudaMemcpyDeviceToHost)); 
     xPeak[0] = (*h_argmax+fftH/2)/fftH+1; // 1D to 2D index
     yPeak[0] = (*h_argmax+1+fftW/2)%(fftH)? (*h_argmax+1)%(fftH) : fftH; // 1D to 2D index
-    xPeak[0] = (xPeak[0]+fftW/2)%fftH-1; //fftshift
-    yPeak[0] = (yPeak[0]+fftW/2)%fftW; //fftshift
+    xPeak[0] = (xPeak[0]+fftW/2)%fftW-1; //fftshift
+    yPeak[0] = (yPeak[0]+fftH/2)%fftH; //fftshift
     
     //std::cout << xPeak[0] << ", " << yPeak[0] << ": " << peakValue[0] << std::endl;
    

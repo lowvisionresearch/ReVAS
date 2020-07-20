@@ -1,30 +1,37 @@
 function InstallRevas
 
 % add paths
-if isunix
-    separator = ':';
-else
-    separator = ';';
+try
+    % OS dependent separator
+    if isunix
+        separator = ':';
+    else
+        separator = ';';
+    end
+    paths = regexp(genpath(pwd),separator,'split');
+
+    % remove git folders
+    paths(contains(paths,'git')) = [];
+
+    % remove the last empty cell
+    paths(end) = [];
+
+    % make it a single char array
+    p = [];
+    for i=1:length(paths)
+        p = [p paths{i} separator];
+    end
+
+    % add and save the path
+    addpath(p);
+    savepath;
+    disp('ReVAS is added to path successfully.');
+catch
+    disp('Adding ReVAS to path failed.');
 end
-paths = regexp(genpath(pwd),separator,'split');
-
-% remove git folders
-paths(contains(paths,'git')) = [];
-
-% remove the last empty cell
-paths(end) = [];
-
-% make it a single char array
-p = [];
-for i=1:length(paths)
-    p = [p paths{i} separator];
-end
-
-% add and save the path
-addpath(p);
-savepath;
-
+    
 %% compile template matching functions from source codes
+
 % openCV template matching CPU
 cd('third_party/visionopencv/TemplateMatching');
 fprintf('\nAttempting to compile CPU version:\n'); 
@@ -32,6 +39,10 @@ try
     mexOpenCV matchTemplateOCV.cpp; 
 catch
     disp('matchTemplateOCV compilation failed.'); 
+    disp(['Make sure you have the Computer Vision Toolbox ' ...
+          '<a href="https://www.mathworks.com/matlabcentral/fileexchange/'...
+          '47953-computer-vision-toolbox-opencv-interface">OpenCV Interface.</a>'])
+    
 end
 
 % openCV template matching GPU
@@ -46,6 +57,9 @@ try
     end
 catch
     disp('matchTemplateOCV_GPU compilation failed.')
+    disp(['Make sure you have the Computer Vision Toolbox ' ...
+          '<a href="https://www.mathworks.com/matlabcentral/fileexchange/'...
+          '47953-computer-vision-toolbox-opencv-interface">OpenCV Interface.</a>'])
 end
 
 % template matching using CUDA
@@ -55,5 +69,9 @@ try
     mexcuda -lcufft cuda_match.cpp helper/convolutionFFT2D.cu helper/cuda_utils.cu; 
 catch
     disp('Compilation of CUDA code failed.'); 
+    disp(['Make sure you have the ' ...
+         '<a href="https://developer.nvidia.com/cuda-toolkit-archive">'...
+          'CUDA Toolkit</a> installed '...
+          '(must match the version returned by gpuDevice command. '])
 end
 cd('../../')

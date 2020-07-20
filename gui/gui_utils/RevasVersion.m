@@ -1,7 +1,7 @@
 function versionStr = RevasVersion
 
 % read the current version and create the text to be shown
-fileID = fopen(FindFile('ReVAS/README.md'));
+fileID = fopen(FindFile('/README.md'));
 tline = fgetl(fileID);
 
 % remove '# ReVAS' title

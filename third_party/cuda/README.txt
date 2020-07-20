@@ -29,7 +29,7 @@ mexcuda -lcufft cuda_match.cpp helper/convolutionFFT2D.cu helper/cuda_utils.cu
 %% Setup: call once before big loop
 
 cuda_prep(parametersStructure.referenceFrame,parametersStructure.stripHeight,parametersStructure.stripWidth)
-parametersStructure.outsize =  size(parametersStructure.referenceFrame)+[parametersStructure.stripHeight-1,parametersStructure.stripWidth-1];
+params.outsize =  size(params.referenceFrame)+[params.stripHeight-1,params.stripWidth-1];
 params.copyMap = true; % note: this slows things down considerably, much faster to just use peaks
 
 %% Within loop:

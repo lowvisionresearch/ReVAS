@@ -32,7 +32,7 @@ p.maxMotionThreshold = 0.3;
 p.adaptiveSearch = false;
 p.dynamicReference = false;
 p.corrMethod = 'normxcorr';
-[pos, timeSec, rawPos, peakVals, q] = StripAnalysis(videoArray, p); %#ok<*ASGLU>
+[~,~,pos, timeSec] = StripAnalysis(videoArray, p);
 t(i).time = toc;
 t(i).cond = p.corrMethod;
 ShowResults(t,i,timeSec,pos)
@@ -42,7 +42,7 @@ tic;
 i = i + 1;
 p.enableGPU = false;
 p.adaptiveSearch = true;
-[pos, timeSec, rawPos, peakVals, q] = StripAnalysis(videoArray, p); %#ok<*ASGLU>
+[~,~,pos, timeSec] = StripAnalysis(videoArray, p);
 t(i).time = toc;
 t(i).cond = [p.corrMethod '-adaptive'];
 ShowResults(t,i,timeSec,pos)
@@ -53,7 +53,7 @@ i = i + 1;
 p.enableGPU = true;
 p.adaptiveSearch = false;
 if n > 0
-    [pos, timeSec, rawPos, peakVals, q] = StripAnalysis(videoArray, p); %#ok<*ASGLU>
+    [~,~,pos, timeSec] = StripAnalysis(videoArray, p);
     t(i).time = toc;
 else
     pos = nan;
@@ -69,7 +69,7 @@ i = i + 1;
 p.enableGPU = true;
 p.adaptiveSearch = true;
 if n > 0
-    [pos, timeSec, rawPos, peakVals, q] = StripAnalysis(videoArray, p); %#ok<*ASGLU>
+   [~,~,pos, timeSec] = StripAnalysis(videoArray, p);
     t(i).time = toc;
 else
     pos = nan;
@@ -85,7 +85,7 @@ i = i + 1;
 p.adaptiveSearch = false;
 p.enableGPU = false;
 p.corrMethod = 'fft';
-[pos, timeSec, rawPos, peakVals, q] = StripAnalysis(videoArray, p); %#ok<*ASGLU>
+[~,~,pos, timeSec] = StripAnalysis(videoArray, p);
 t(i).time = toc;
 t(i).cond = p.corrMethod;
 ShowResults(t,i,timeSec,pos)
@@ -96,7 +96,7 @@ i = i + 1;
 p.enableGPU = false;
 p.corrMethod = 'fft';
 if n > 0
-    [pos, timeSec, rawPos, peakVals, q] = StripAnalysis(videoArray, p); %#ok<*ASGLU>
+    [~,~,pos, timeSec] = StripAnalysis(videoArray, p);
     t(i).time = toc;
 else
     pos = nan;
@@ -110,7 +110,7 @@ ShowResults(t,i,timeSec,pos)
 tic;
 i = i + 1;
 p.corrMethod = 'mex';
-[pos, timeSec, rawPos, peakVals, q] = StripAnalysis(videoArray, p); %#ok<*ASGLU>
+[~,~,pos, timeSec] = StripAnalysis(videoArray, p);
 t(i).time = toc;
 t(i).cond = p.corrMethod;
 ShowResults(t,i,timeSec,pos)
@@ -121,7 +121,7 @@ i = i + 1;
 p.corrMethod = 'mex';
 p.enableGPU = true;
 if n > 0
-    [pos, timeSec, rawPos, peakVals, q] = StripAnalysis(videoArray, p); %#ok<*ASGLU>
+    [~,~,pos, timeSec] = StripAnalysis(videoArray, p);
     t(i).time = toc;
 else
     pos = nan;
@@ -137,7 +137,7 @@ i = i + 1;
 p.corrMethod = 'mex';
 p.enableGPU = false;
 p.adaptiveSearch = true;
-[pos, timeSec, rawPos, peakVals, q] = StripAnalysis(videoArray, p); %#ok<*ASGLU>
+[~,~,pos, timeSec] = StripAnalysis(videoArray, p);
 t(i).time = toc;
 t(i).cond = [p.corrMethod '-adaptive'];
 ShowResults(t,i,timeSec,pos)
@@ -149,7 +149,7 @@ p.corrMethod = 'mex';
 p.enableGPU = true;
 p.adaptiveSearch = true;
 if n > 0
-    [pos, timeSec, rawPos, peakVals, q] = StripAnalysis(videoArray, p); %#ok<*ASGLU>
+    [~,~,pos, timeSec] = StripAnalysis(videoArray, p);
     t(i).time = toc;
 else
     pos = nan;
@@ -165,7 +165,7 @@ i = i + 1;
 p.adaptiveSearch = false;
 p.corrMethod = 'cuda';
 if n > 0
-    [pos, timeSec, rawPos, peakVals, q] = StripAnalysis(videoArray, p); %#ok<*ASGLU>
+    [~,~,pos, timeSec] = StripAnalysis(videoArray, p);
     t(i).time = toc;
 else
     pos = nan;
