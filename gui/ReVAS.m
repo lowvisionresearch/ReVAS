@@ -12,7 +12,7 @@ versionNo = RevasVersion;
 
 % get log file name and start diary
 logFile = [fileparts(which('ReVAS')) filesep 'log.txt']; 
-eval(['diary ' logFile]);
+eval(['diary ''' logFile '''']);
 
 % name of the hidden file that keeps track of last used fileList
 fileListFile = [fileparts(which('ReVAS')) filesep '.filelist.mat'];
